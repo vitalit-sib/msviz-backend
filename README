@@ -1,7 +1,13 @@
 # msViz Backend
 A mass spectrometry visualization platform, developed by the PAF & Vital-IT, Swiss Institute of Bioinformatics.
 
-##
+## Development
+
+ 1. `git clone the project locally
+ 2. `cd msviz-backen`
+ 3. `./activator ui`
+
+Then, you can run the test. Edit the source code with your preferred editor (from vi to Intellij). Test will be ran in the window at each save.
 
 ## Authors
 Roman Mylonas (roman.mylonas@isb-sib.ch), Alexandre Masselot (alexandre.masselot@isb-sib.ch)
