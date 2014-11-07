@@ -12,5 +12,6 @@ object ImporterMzIdent {
    */
   def parse(filename: String)= {
     42
+    new Pipo().hihi()
   }
 }
