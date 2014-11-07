@@ -6,7 +6,7 @@ A mass spectrometry visualization platform, developed by the PAF & Vital-IT, Swi
 You must have Java installed (tested with 7, should work with 6)
 
  1. `git clone the project locally
- 2. `cd msviz-backen`
+ 2. `cd msviz-backend`
  3. `./activator ui`
 
 Then, you can run the test. Edit the source code with your preferred editor (from vi to Intellij). Test will be ran in the window at each save.
