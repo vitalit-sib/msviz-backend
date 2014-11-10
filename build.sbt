@@ -17,3 +17,4 @@ libraryDependencies ++= Seq(
   "org.expasy.mzjava" % "mzjava-core" %"1.0.0",
   "org.expasy.mzjava" % "mzjava-proteomics" %"1.0.0"
 )
+
