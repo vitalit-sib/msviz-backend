@@ -9,7 +9,7 @@ import org.expasy.mzjava.proteomics.ms.ident.{SpectrumIdentifier, PeptideMatch}
 import scala.collection.mutable.ListBuffer
 
 /**
- * @author Alexandre Masselot
+ * @author Roman Mylonas & Alexandre Masselot
  */
 object ImporterMzIdent {
 
