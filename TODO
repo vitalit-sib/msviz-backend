@@ -1,0 +1,14 @@
+# TODO
+these are to be ticket when internet connected..
+
+## mgf mascot export: no scan number in mgf
+is it possible to export scan number into mgf?
+Else, we can try to pick it up from the title...
+"TITLE=20141008_BSA_25cm_column2.10988.10988.2" => 10988
+
+## mgf mascot export: missing precursor intensity
+BEGIN IONS
+CHARGE=2+
+PEPMASS=562.259301
+RTINSECONDS[0]=3041.979
+TITLE=20141008_BSA_25cm_column2.10988.10988.2

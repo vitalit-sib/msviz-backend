@@ -10,7 +10,9 @@ package object commons {
 
   case class IntensityRank(value:Int) extends AnyVal
 
-  case class charge(value:Int) extends AnyVal
+  case class Charge(value:Int) extends AnyVal
+
+  case class MSLevel(value:Int) extends AnyVal
 
   case class RetentionTime(value:Double) extends AnyVal
 }

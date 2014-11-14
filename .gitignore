@@ -2,7 +2,7 @@ logs
 project/project
 project/target
 /target
-tmp
+/tmp
 .history
 dist
 /.idea
