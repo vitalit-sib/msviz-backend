@@ -1,4 +1,4 @@
-package ch.isbsib.proteomics.mzviz.importer
+package ch.isbsib.proteomics.mzviz.matches.importer
 
 import org.specs2.mutable.Specification
 
