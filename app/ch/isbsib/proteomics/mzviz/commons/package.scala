@@ -1,6 +1,7 @@
 package ch.isbsib.proteomics.mzviz
 
 /**
+ * value classes to be fancy
  * @author Alexandre Masselot
  */
 package object commons {
