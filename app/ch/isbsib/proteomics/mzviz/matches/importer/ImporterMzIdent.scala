@@ -1,4 +1,4 @@
-package ch.isbsib.proteomics.mzviz.importer
+package ch.isbsib.proteomics.mzviz.matches.importer
 
 import java.io.{FileInputStream, InputStream}
 import java.util

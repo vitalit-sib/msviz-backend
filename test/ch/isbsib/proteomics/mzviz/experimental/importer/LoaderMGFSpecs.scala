@@ -12,10 +12,7 @@ import scala.util.Success
  */
 class LoaderMGFSpecs extends Specification {
   "textLine2MozIntensity" should {
-    """get ("123.45 456.67",None) """ in {
-      LoaderMGF.textLine2MozIntensity(Some("123.45 456.67")) mustEqual (Success(Tuple2(Moz(123.45), Intensity(456.67))))
-    }
-    """get ("123.45 456.67",23) """ in {
+    """get ("123.45 456.67") """ in {
       LoaderMGF.textLine2MozIntensity(Some("123.45 456.67")) mustEqual (Success(Tuple2(Moz(123.45), Intensity(456.67))))
     }
 
