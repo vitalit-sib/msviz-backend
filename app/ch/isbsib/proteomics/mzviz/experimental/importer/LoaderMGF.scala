@@ -64,10 +64,9 @@ object LoaderMGF {
       case (l, iRank) => val t = textLine2MozIntensity(Some(l))
         t.map({ case (m, i) => ExpPeakMSn(m, i, IntensityRank(iRank), MSLevel(2))})
     })
-    println(lTry)
     lTry.find(_.isFailure) match {
       case None => Success(lTry.map(_.get))
-      case Some(e: Throwable) => Failure(e)
+      case Some(e: Exception) => Failure(e)
     }
   }
 
@@ -77,6 +76,7 @@ object LoaderMGF {
    * @return
    */
   def text2Precursor(text: String): Try[RefSpectrum] = {
+    val reTitleScan = """.*\.(\d+)\.\d$""".r
     val args = text2map(text)
     for {
       (moz, intens) <- textLine2MozIntensity(args.get("PEPMASS"))
@@ -84,9 +84,17 @@ object LoaderMGF {
       val z = args("CHARGE").replace("+", "").toInt
       val rt = args.getOrElse("RTINSECONDS", args("RTINSECONDS[0]")).toDouble
       val title = args.getOrElse("TITLE", "")
+
+      val scanNumber = args.getOrElse("SCANNUMBER",
+        title match {
+          case reTitleScan(s) => s
+          case _ => "-1"
+        }
+      )
+
       RefSpectrum(
-        scanNumber = ScanNumber(-1),
-        precursor = ExpPeakPrecursor(moz, intens, RetentionTime(rt), Charge(z) ),
+        scanNumber = ScanNumber(scanNumber.toInt),
+        precursor = ExpPeakPrecursor(moz, intens, RetentionTime(rt), Charge(z)),
         title = title
       )
     }
@@ -105,7 +113,6 @@ object LoaderMGF {
     } yield {
       ExpMSnSpectrum(ref = ref, peaks)
     }
-
   }
 
 
@@ -122,10 +129,10 @@ object LoaderMGF {
 
     val lPeaks: Seq[ExpMSnSpectrum] = new IonsIterator(filename)
       .map(text2MSnSpectrum)
-      .filter(_ match {
-      case Failure(e) => println(e.getMessage)
+      .filter({
+      case (Failure(e)) => println(e.getMessage)
         false
-      case Success(t) => true
+      case (Success(t)) => true
     })
       .map(_.get)
       .toSeq

@@ -13,18 +13,18 @@ import scala.util.Success
 class LoaderMGFSpecs extends Specification {
   "textLine2MozIntensity" should {
     """get ("123.45 456.67") """ in {
-      LoaderMGF.textLine2MozIntensity(Some("123.45 456.67")) mustEqual (Success(Tuple2(Moz(123.45), Intensity(456.67))))
+      LoaderMGF.textLine2MozIntensity(Some("123.45 456.67")) mustEqual Success(Tuple2(Moz(123.45), Intensity(456.67)))
     }
 
     """get ("123.45 45E+2",23) """ in {
-      LoaderMGF.textLine2MozIntensity(Some("123.45 45E+2")) mustEqual (Success(Tuple2(Moz(123.45), Intensity(4500))))
+      LoaderMGF.textLine2MozIntensity(Some("123.45 45E+2")) mustEqual Success(Tuple2(Moz(123.45), Intensity(4500)))
     }
     """get ("123.45) """ in {
-      LoaderMGF.textLine2MozIntensity(Some("123.45")) mustEqual (Success(Tuple2(Moz(123.45), Intensity(0))))
+      LoaderMGF.textLine2MozIntensity(Some("123.45")) mustEqual Success(Tuple2(Moz(123.45), Intensity(0)))
     }
 
     """get "123 xyz"  """ in {
-      LoaderMGF.textLine2MozIntensity(Some("123 xyz")).isFailure mustEqual (true)
+      LoaderMGF.textLine2MozIntensity(Some("123 xyz")).isFailure mustEqual true
     }
   }
 
@@ -84,13 +84,32 @@ class LoaderMGFSpecs extends Specification {
     }
   }
 
-//  "load" should {
-//    val run = LoaderMGF.load("test/resources/F001644.mgf")
-//    "get idRun out of filename" in {
-//      run.id must equalTo(IdRun("F001644"))
-//    }
-//    "count the msms" in {
-//      run.msnSpectra.size must equalTo(1822)
-//    }
-//  }
+  "load" should {
+    val run = LoaderMGF.load("test/resources/F001644.mgf")
+    "get idRun out of filename" in {
+      run.id must equalTo(IdRun("F001644"))
+    }
+    "count the msms" in {
+      run.msnSpectra.size must equalTo(1822)
+    }
+    "check a guy" in {
+      /*
+            BEGIN IONS
+              CHARGE=2+
+              PEPMASS=357.235892 538655.5
+            RTINSECONDS[0]=2999.76954
+            TITLE=20141008_BSA_25cm_column2.10823.10823.2
+            133.085892 8.902e+04
+            287.006805 4.126e+04
+            325.211578 5.535e+04
+      */
+      val sp = run.msnSpectra(3)
+      sp.ref.precursor.charge must equalTo(Charge(2))
+      sp.ref.precursor.moz must equalTo(Moz(357.235892))
+      sp.ref.precursor.intensity must equalTo(Intensity(538655.5))
+      sp.ref.precursor.retentionTime must equalTo(RetentionTime(2999.76954))
+      sp.ref.title must equalTo("20141008_BSA_25cm_column2.10823.10823.2")
+      sp.ref.scanNumber must equalTo(ScanNumber(10823))
+    }
+  }
 }
