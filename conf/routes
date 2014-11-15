@@ -3,3 +3,5 @@
 # ~~~~
 
 # Home page
+GET        /exp        ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.stats
+POST       /exp/msrun  ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.loadMSRun

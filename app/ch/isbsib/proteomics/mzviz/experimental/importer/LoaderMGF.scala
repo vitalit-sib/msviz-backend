@@ -126,7 +126,6 @@ object LoaderMGF {
   def load(filename: String, idRun: Option[String] = None): MSRun = {
     val actualIdRun = IdRun(idRun.getOrElse(new File(filename).getName.replace(".mgf", "")))
 
-
     val lPeaks: Seq[ExpMSnSpectrum] = new IonsIterator(filename)
       .map(text2MSnSpectrum)
       .filter({

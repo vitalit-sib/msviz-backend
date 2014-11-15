@@ -1,3 +1,5 @@
+import play.PlayScala
+
 name := """msviz-backend"""
 
 version := "1.0-SNAPSHOT"
@@ -15,6 +17,6 @@ libraryDependencies ++= Seq(
   ws,
   "org.specs2" %% "specs2" % "2.3.11" % "test",
   "org.expasy.mzjava" % "mzjava-core" %"1.0.0",
-  "org.expasy.mzjava" % "mzjava-proteomics" %"1.0.0"
+  "org.expasy.mzjava" % "mzjava-proteomics" %"1.0.0",
+  "org.reactivemongo" %% "play2-reactivemongo" % "0.10.5.0.akka23"
 )
-
