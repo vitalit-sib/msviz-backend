@@ -15,11 +15,11 @@ import JsonFormats._
  * @author Alexandre Masselot
  */
 object ExpMongoDBService  extends Controller with MongoController{
-  def msmsSpectraCollection: JSONCollection = db.collection[JSONCollection]("msmsSpectra")
+  def msnSpectraCollection: JSONCollection = db.collection[JSONCollection]("msnSpectra")
 
-  def loadMSMSRun(run:MSRun) = {
+  def msRunSave(run:MSRun) = {
     val enumerator = Enumerator(run.msnSpectra: _*)
 
-    msmsSpectraCollection.bulkInsert(enumerator)
+    msnSpectraCollection.bulkInsert(enumerator)
   }
 }

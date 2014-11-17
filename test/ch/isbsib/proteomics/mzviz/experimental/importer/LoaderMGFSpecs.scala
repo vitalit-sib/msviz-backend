@@ -75,7 +75,7 @@ class LoaderMGFSpecs extends Specification {
 
   "text2Precursor" should{
     "get it" in {
-      val prec = LoaderMGF.text2Precursor(microblock).get
+      val prec = LoaderMGF.text2Precursor(microblock, None).get
 
       prec.precursor.charge must equalTo(Charge(2))
 

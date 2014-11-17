@@ -47,9 +47,9 @@ object ExperimentalController extends Controller {
     request =>
       localFile("mgf", request).map({
         case (uploadedFile, filename) =>
-          ExpMongoDBService.loadMSMSRun(LoaderMGF.load(uploadedFile.getAbsolutePath, Some(filename)))
+          val idRun = request.body.dataParts.get("run-id").map(_.head)
+          ExpMongoDBService.msRunSave(LoaderMGF.load(uploadedFile.getAbsolutePath, idRun))
           Ok
       })
-
   }
 }

@@ -75,7 +75,7 @@ object LoaderMGF {
    * @param text MGF block
    * @return
    */
-  def text2Precursor(text: String): Try[RefSpectrum] = {
+  def text2Precursor(text: String, idRun: Option[IdRun]): Try[RefSpectrum] = {
     val reTitleScan = """.*\.(\d+)\.\d$""".r
     val args = text2map(text)
     for {
@@ -95,7 +95,8 @@ object LoaderMGF {
       RefSpectrum(
         scanNumber = ScanNumber(scanNumber.toInt),
         precursor = ExpPeakPrecursor(moz, intens, RetentionTime(rt), Charge(z)),
-        title = title
+        title = title,
+        idRun = idRun
       )
     }
   }
@@ -106,9 +107,9 @@ object LoaderMGF {
    * @param text MGF block
    * @return
    */
-  def text2MSnSpectrum(text: String): Try[ExpMSnSpectrum] = {
+  def text2MSnSpectrum(text: String, idRun:Option[IdRun]): Try[ExpMSnSpectrum] = {
     for {
-      ref <- text2Precursor(text)
+      ref <- text2Precursor(text, idRun)
       peaks <- text2peaks(text)
     } yield {
       ExpMSnSpectrum(ref = ref, peaks)
@@ -127,7 +128,7 @@ object LoaderMGF {
     val actualIdRun = IdRun(idRun.getOrElse(new File(filename).getName.replace(".mgf", "")))
 
     val lPeaks: Seq[ExpMSnSpectrum] = new IonsIterator(filename)
-      .map(text2MSnSpectrum)
+      .map(t=> text2MSnSpectrum(t, Some(actualIdRun)))
       .filter({
       case (Failure(e)) => println(e.getMessage)
         false
@@ -137,7 +138,6 @@ object LoaderMGF {
       .toSeq
     new MSRun(actualIdRun, lPeaks)
   }
-
 
   /**
    * produces an iterator over BEGIN/END IONS

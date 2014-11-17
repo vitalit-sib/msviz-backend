@@ -30,7 +30,7 @@ The configuration on where to hit the mongodb server is described in the conf/ap
 ## Load data
 ### loading an mgf file as a run
 
-    curl -X POST --form mgf=@test/resources/F001644.mgf http://localhost:9000/exp/msrun
+    curl -X POST --form mgf=@test/resources/F001644.mgf --run-id=mascot-test http://localhost:9000/exp/msrun
 
 
 ## Authors
