@@ -16,7 +16,8 @@ import scala.concurrent.Future
  * @author Alexandre Masselot
  */
 class ExpMongoDBService(val db: DefaultDB) {
-  def msnSpectraCollection: JSONCollection = db.collection[JSONCollection]("msnSpectra")
+  val msnSpectraCollectionName = "msnSpectra"
+  def msnSpectraCollection: JSONCollection = db.collection[JSONCollection](msnSpectraCollectionName)
 
 
   /**
@@ -65,7 +66,7 @@ class ExpMongoDBService(val db: DefaultDB) {
    * TODO
    */
   def countMsnSpectra: Future[Int] = {
-    db.command(Count("msnSpectra"))
+    db.command(Count(msnSpectraCollectionName))
   }
 
   /**

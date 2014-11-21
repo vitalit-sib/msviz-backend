@@ -55,7 +55,8 @@ object ExperimentalController extends Controller {
       localFile("mgf", request).map({
         case (uploadedFile, filename) =>
           val idRun = request.body.dataParts.get("run-id").map(_.head)
-          ExpMongoDBService().insert(LoaderMGF.load(uploadedFile.getAbsolutePath, idRun))
+          val msRun = LoaderMGF.load(uploadedFile.getAbsolutePath, idRun)
+          ExpMongoDBService().insert(msRun)
           Ok
       })
   }

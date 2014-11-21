@@ -35,10 +35,13 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
   val service = createDB("test")
 
   "create db" should {
-    " should just be empty" in {
-      val stats = service.stats.futureValue
-      println(stats)
-      stats("runs") must equalTo(0)
+    "countMsnSpectra=0" in {
+      val nSpectra = service.countMsnSpectra.futureValue
+      nSpectra must equalTo(0)
+    }
+    " 0 runs" in {
+      val n = service.countMsRuns.futureValue
+      n must equalTo(0)
     }
 
 

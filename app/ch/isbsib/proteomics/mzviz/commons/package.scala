@@ -16,4 +16,6 @@ package object commons {
   case class MSLevel(value:Int) extends AnyVal
 
   case class RetentionTime(value:Double) extends AnyVal
+
+  case class SpectraId(value:String) extends AnyVal
 }
