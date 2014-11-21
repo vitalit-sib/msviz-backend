@@ -3,5 +3,7 @@
 # ~~~~
 
 # Home page
-GET        /exp        ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.stats
-POST       /exp/msrun  ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.loadMSRun
+GET         /exp                   ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.stats
+GET         /exp/msrun/list        ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.listMSRunIds
+POST        /exp/msrun             ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.loadMSRun
+DELETE      /exp/msrun/:id         ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.deleteMSRun(id)

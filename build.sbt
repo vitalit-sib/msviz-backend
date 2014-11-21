@@ -13,8 +13,10 @@ resolvers ++= Seq(
   "csvjdbc" at "http://csvjdbc.sourceforge.net/maven2"
   )
 
+
 libraryDependencies ++= Seq(
   ws,
+  "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test",
   "org.specs2" %% "specs2" % "2.3.11" % "test",
   "org.expasy.mzjava" % "mzjava-core" %"1.0.0",
   "org.expasy.mzjava" % "mzjava-proteomics" %"1.0.0",

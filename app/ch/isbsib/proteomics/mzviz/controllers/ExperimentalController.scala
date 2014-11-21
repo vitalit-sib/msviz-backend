@@ -2,6 +2,7 @@ package ch.isbsib.proteomics.mzviz.controllers
 
 import java.io.File
 
+import ch.isbsib.proteomics.mzviz.experimental.IdRun
 import ch.isbsib.proteomics.mzviz.experimental.importer.LoaderMGF
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import play.api.libs.Files
@@ -27,7 +28,7 @@ import play.modules.reactivemongo.json.collection.JSONCollection
 object ExperimentalController extends Controller {
 
   def stats = Action {
-    Ok("pipo")
+    Ok("yo") //Json.obj(ExpMongoDBService.stats))
   }
 
   private def localFile(paramName: String, request: Request[MultipartFormData[Files.TemporaryFile]]): Future[Tuple2[File, String]] = {
@@ -42,14 +43,28 @@ object ExperimentalController extends Controller {
     }
   }
 
+  def listMSRunIds = Action.async {
+    ExpMongoDBService().listMsRunIds.map {
+      ids => Ok(Json.obj("msRuns" -> ids.map(_.value)))
+    }
+
+  }
 
   def loadMSRun = Action.async(parse.multipartFormData) {
     request =>
       localFile("mgf", request).map({
         case (uploadedFile, filename) =>
           val idRun = request.body.dataParts.get("run-id").map(_.head)
-          ExpMongoDBService.msRunSave(LoaderMGF.load(uploadedFile.getAbsolutePath, idRun))
+          ExpMongoDBService().insert(LoaderMGF.load(uploadedFile.getAbsolutePath, idRun))
           Ok
       })
+  }
+
+  def deleteMSRun(id: String) = Action.async {
+    ExpMongoDBService().delete(IdRun(id)).map { x=>
+      Ok("OK")
+    }
+
+
   }
 }
