@@ -5,6 +5,7 @@ import java.io.File
 import ch.isbsib.proteomics.mzviz.experimental.IdRun
 import ch.isbsib.proteomics.mzviz.experimental.importer.LoaderMGF
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
+import ch.isbsib.proteomics.mzviz.experimental.services.JsonFormats._
 import play.api.libs.Files
 import play.api.mvc.{MultipartFormData, Request, Action, Controller}
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -27,8 +28,11 @@ import play.modules.reactivemongo.json.collection.JSONCollection
  */
 object ExperimentalController extends Controller {
 
-  def stats = Action {
-    Ok("yo") //Json.obj(ExpMongoDBService.stats))
+  def stats = Action.async {
+
+    ExpMongoDBService().stats.map {st =>
+      Ok(writesMap.writes(st))
+    }
   }
 
   private def localFile(paramName: String, request: Request[MultipartFormData[Files.TemporaryFile]]): Future[Tuple2[File, String]] = {
