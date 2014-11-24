@@ -6,6 +6,7 @@ import ch.isbsib.proteomics.mzviz.commons._
 import ch.isbsib.proteomics.mzviz.experimental._
 import ch.isbsib.proteomics.mzviz.experimental.models._
 import org.expasy.mzjava.core.ms.spectrum
+import play.api.Logger
 
 import scala.io.Source
 import scala.util.{Failure, Success, Try}
@@ -70,6 +71,30 @@ object LoaderMGF {
     }
   }
 
+  val reRTTitleWiff = """.*Elution: ([0-9\.]+) min.*""".r
+
+  /**
+   * try to read retention time from RTINSECONDS, RTINSECONDS[0] fields or parsed out from TITLE line
+   * @param args
+   * @return
+   */
+  def args2RT(args: Map[String, String]): Try[RetentionTime] = Try {
+    val rt = args.get("RTINSECONDS")
+      .orElse(args.get("RTINSECONDS[0]"))
+      .orElse(
+        args.get("TITLE") match {
+          case Some(reRTTitleWiff(rt)) => Some((rt.toDouble*60).toString)
+          case _ => {
+            Logger.warn(s"cannot parse retention time from $args")
+            throw new UnsupportedOperationException(s"cannot parse retention time from $args")
+          }
+        }
+      ).get
+
+    RetentionTime(rt.toDouble)
+  }
+
+
   /**
    * convert an MGF BEING/END IONS block into the precursor peak
    * @param text MGF block
@@ -82,7 +107,7 @@ object LoaderMGF {
       (moz, intens) <- textLine2MozIntensity(args.get("PEPMASS"))
     } yield {
       val z = args("CHARGE").replace("+", "").toInt
-      val rt = args.getOrElse("RTINSECONDS", args("RTINSECONDS[0]")).toDouble
+      val rt = args2RT(args).getOrElse(RetentionTime(-1))
       val title = args.getOrElse("TITLE", "")
 
       val scanNumber = args.getOrElse("SCANNUMBER",
@@ -94,7 +119,7 @@ object LoaderMGF {
 
       RefSpectrum(
         scanNumber = ScanNumber(scanNumber.toInt),
-        precursor = ExpPeakPrecursor(moz, intens, RetentionTime(rt), Charge(z)),
+        precursor = ExpPeakPrecursor(moz, intens, rt, Charge(z)),
         title = title,
         idRun = idRun
       )
@@ -107,7 +132,7 @@ object LoaderMGF {
    * @param text MGF block
    * @return
    */
-  def text2MSnSpectrum(text: String, idRun:Option[IdRun]): Try[ExpMSnSpectrum] = {
+  def text2MSnSpectrum(text: String, idRun: Option[IdRun]): Try[ExpMSnSpectrum] = {
     for {
       ref <- text2Precursor(text, idRun)
       peaks <- text2peaks(text)
@@ -128,7 +153,7 @@ object LoaderMGF {
     val actualIdRun = IdRun(idRun.getOrElse(new File(filename).getName.replace(".mgf", "")))
 
     val lPeaks: Seq[ExpMSnSpectrum] = new IonsIterator(filename)
-      .map(t=> text2MSnSpectrum(t, Some(actualIdRun)))
+      .map(t => text2MSnSpectrum(t, Some(actualIdRun)))
       .filter({
       case (Failure(e)) => println(e.getMessage)
         false

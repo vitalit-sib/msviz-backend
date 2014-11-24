@@ -73,7 +73,7 @@ class LoaderMGFSpecs extends Specification {
     }
   }
 
-  "text2Precursor" should{
+  "text2Precursor" should {
     "get it" in {
       val prec = LoaderMGF.text2Precursor(microblock, None).get
 
@@ -110,6 +110,36 @@ class LoaderMGFSpecs extends Specification {
       sp.ref.precursor.retentionTime must equalTo(RetentionTime(2999.76954))
       sp.ref.title must equalTo("20141008_BSA_25cm_column2.10823.10823.2")
       sp.ref.scanNumber must equalTo(ScanNumber(10823))
+    }
+  }
+
+  "loading wiff" should {
+    val run = LoaderMGF.load("test/resources/M_100.mgf")
+
+    "get idRun out of filename" in {
+      run.id must equalTo(IdRun("M_100"))
+    }
+    "count the msms" in {
+      run.msnSpectra.size must equalTo(123)
+    }
+    "check a guy" in {
+      /*
+        BEGIN IONS
+        CHARGE=2+
+        PEPMASS=407.717649
+        TITLE=File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 49.866 min, Period: 1, Cycle(s): 2030 (Experiment 4)
+        196.114300 2.518
+        287.136800 1.85
+        409.147600 3.974
+        476.238900 1.148
+      */
+      val sp = run.msnSpectra(3)
+      sp.ref.precursor.charge must equalTo(Charge(2))
+      sp.ref.precursor.moz must equalTo(Moz(407.717649))
+      sp.ref.precursor.intensity must equalTo(Intensity(0))
+      sp.ref.precursor.retentionTime must equalTo(RetentionTime(49.866 * 60))
+      sp.ref.title must equalTo("File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 49.866 min, Period: 1, Cycle(s): 2030 (Experiment 4)")
+      sp.ref.scanNumber must equalTo(ScanNumber(-1))
     }
   }
 }

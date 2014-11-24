@@ -7,16 +7,19 @@ import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
 import play.modules.reactivemongo.json.collection.JSONCollection
 import reactivemongo.api._
-import reactivemongo.core.commands.Count
+import reactivemongo.bson._
+import reactivemongo.core.commands.{RawCommand, Count}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Future
+import scala.util.{Failure, Success}
 
 /**
  * @author Alexandre Masselot
  */
 class ExpMongoDBService(val db: DefaultDB) {
   val msnSpectraCollectionName = "msnSpectra"
+
   def msnSpectraCollection: JSONCollection = db.collection[JSONCollection](msnSpectraCollectionName)
 
 
@@ -45,25 +48,26 @@ class ExpMongoDBService(val db: DefaultDB) {
    * remove all msnSpetra for a given run
    * @param id
    * @return
-   * TODO
    */
-  def delete(id: IdRun) = Future[Unit] {
-
-  }
-
+  def delete(id: IdRun):Future[Unit] = ???
   /**
    * get the list of the run ids
    * @return
-   * TODO
    */
-  def listMsRunIds: Future[Seq[IdRun]] = Future {
-    List(IdRun("bla-123"))
+  def listMsRunIds: Future[Seq[IdRun]] = {
+
+    val command = RawCommand(BSONDocument("distinct" -> msnSpectraCollectionName, "key" -> "ref.idRun"))
+    db.command(command)
+      .map({ doc =>
+      doc.getAs[List[String]]("values").get
+        .map { i => IdRun(i)}
+    })
   }
+
 
   /**
    * count the number of Spectra
    * @return
-   * TODO
    */
   def countMsnSpectra: Future[Int] = {
     db.command(Count(msnSpectraCollectionName))
@@ -71,11 +75,11 @@ class ExpMongoDBService(val db: DefaultDB) {
 
   /**
    * count the number of runs
-   * TODO
+   * TODO there is  a better way to do that directly in mongodb...
    * @return
    */
-  def countMsRuns: Future[Int] = Future {
-    23
+  def countMsRuns: Future[Int] = {
+    listMsRunIds.map(_.size)
   }
 
   /**
@@ -103,7 +107,6 @@ object ExpMongoDBService extends Controller with MongoController {
    * @return
    */
   def apply() = default
-
 
 
 }
