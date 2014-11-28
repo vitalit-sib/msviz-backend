@@ -3,11 +3,13 @@ package ch.isbsib.proteomics.mzviz.experimental.services
 import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, RefSpectrum}
 import ch.isbsib.proteomics.mzviz.experimental.{ScanNumber, IdRun, MSRun}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonFormats._
+import play.api.Logger
 import play.api.libs.iteratee.Enumerator
 import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
 import play.modules.reactivemongo.json.collection.JSONCollection
 import reactivemongo.api._
+import reactivemongo.api.indexes.{IndexType, Index}
 import reactivemongo.bson._
 import reactivemongo.core.commands.{GetLastError, RawCommand, Count}
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -24,11 +26,24 @@ class ExpMongoDBService(val db: DefaultDB) {
   def msnSpectraCollection: JSONCollection = db.collection[JSONCollection](msnSpectraCollectionName)
 
   /**
-   * TODO insert the indexes here, to begin with something...
+   * Ensure we have the correct indexes
    */
   def setupIndexes = {
-
+    Logger.info(s"building $msnSpectraCollectionName indexes")
+    msnSpectraCollection.indexesManager.ensure(
+      new Index(
+        Seq("ref.idRun" -> IndexType.Ascending, "ref.title" -> IndexType.Ascending),
+        name = Some("idRun_title"),
+        unique = true)
+    ).map {
+      b =>
+        if (b)
+          Logger.info(s"[runid_title] was created")
+        else
+          Logger.info(s"[runid_title] already exists")
+    }
   }
+
 
   setupIndexes
 
@@ -43,31 +58,27 @@ class ExpMongoDBService(val db: DefaultDB) {
   }
 
   /**
-   * remove all msnSpetra for a given run
-   * @param id
+   * remove all msnSpectra for a given run
+   * @param idRun the run id
    * @return
    */
-  def delete(id: IdRun): Future[Unit] = ???
-
-  //{
-  //    msnSpectraCollection.remove(BSONDocument("ref.idRun"->id))
-  //  }
+  def delete(idRun: IdRun): Future[Unit] = ???
 
 
   /**
    *
-   * @param id
+   * @param idRun the run id
    * @return
    */
-  def findAllSpectraHeaderByIdRun(id: IdRun): Future[Seq[RefSpectrum]] = ???
+  def findAllSpectraHeaderByIdRun(idRun: IdRun): Future[Seq[RefSpectrum]] = ???
 
   /**
-   *
-   * @param id
-   * @param scan
+   * retrieves  by run & spectra title (unique by index setup)
+   * @param idRun the run id
+   * @param title the spectrum title
    * @return
    */
-  def findSpectrumByRunIdAndSCanNumber(id: IdRun, scan: ScanNumber): Future[ExpMSnSpectrum] = ???
+  def findSpectrumByRunIdAndTitle(idRun: IdRun, title: String): Future[ExpMSnSpectrum] = ???
 
   /**
    * get the list of the run ids
@@ -77,9 +88,12 @@ class ExpMongoDBService(val db: DefaultDB) {
 
     val command = RawCommand(BSONDocument("distinct" -> msnSpectraCollectionName, "key" -> "ref.idRun"))
     db.command(command)
-      .map({ doc =>
-      doc.getAs[List[String]]("values").get
-        .map { i => IdRun(i)}
+      .map({
+      doc =>
+        doc.getAs[List[String]]("values").get
+          .map {
+          i => IdRun(i)
+        }
     })
   }
 
@@ -94,7 +108,6 @@ class ExpMongoDBService(val db: DefaultDB) {
 
   /**
    * count the number of runs
-   * TODO there is  a better way to do that directly in mongodb...
    * @return
    */
   def countMsRuns: Future[Int] = {
@@ -102,7 +115,7 @@ class ExpMongoDBService(val db: DefaultDB) {
   }
 
   /**
-   * a maps with variaous counts (number of spectra, run ...)
+   * a maps with various counts (number of spectra, run ...)
    * @return
    */
   def stats: Future[Map[String, Int]] = {

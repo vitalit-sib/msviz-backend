@@ -12,7 +12,7 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import scala.concurrent.Future
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
 // Reactive Mongo imports
 
@@ -30,7 +30,7 @@ object ExperimentalController extends Controller {
 
   def stats = Action.async {
 
-    ExpMongoDBService().stats.map {st =>
+    ExpMongoDBService().stats.map { st =>
       Ok(writesMap.writes(st))
     }
   }
@@ -56,17 +56,22 @@ object ExperimentalController extends Controller {
 
   def loadMSRun = Action.async(parse.multipartFormData) {
     request =>
-      localFile("mgf", request).map({
+      localFile("mgf", request)
+        .flatMap{
         case (uploadedFile, filename) =>
           val idRun = request.body.dataParts.get("run-id").map(_.head)
           val msRun = LoaderMGF.load(uploadedFile.getAbsolutePath, idRun)
           ExpMongoDBService().insert(msRun)
-          Ok
-      })
+      }
+        .map {n => Ok(Json.obj("inserted" -> n))
+      } .recover {
+        case e => BadRequest(e.getMessage)
+      }
+
   }
 
   def deleteMSRun(id: String) = Action.async {
-    ExpMongoDBService().delete(IdRun(id)).map { x=>
+    ExpMongoDBService().delete(IdRun(id)).map { x =>
       Ok("OK")
     }
 
