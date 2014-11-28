@@ -16,6 +16,11 @@ class FastaParserSpecs extends Specification {
       entries must have size (2)
     }
 
+
+    "check ac" in {
+      entries.map(_.ac) must equalTo(List("P04899","P07355"))
+    }
+
     "P07355 exists" in {
       mapEntries.get("P07355").isDefined must equalTo( true)
     }
