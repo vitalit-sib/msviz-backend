@@ -1,6 +1,7 @@
 package ch.isbsib.proteomics.mzviz.experimental.services
 
-import ch.isbsib.proteomics.mzviz.experimental.{IdRun, MSRun}
+import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, RefSpectrum}
+import ch.isbsib.proteomics.mzviz.experimental.{ScanNumber, IdRun, MSRun}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonFormats._
 import play.api.libs.iteratee.Enumerator
 import play.api.mvc.Controller
@@ -8,7 +9,7 @@ import play.modules.reactivemongo.MongoController
 import play.modules.reactivemongo.json.collection.JSONCollection
 import reactivemongo.api._
 import reactivemongo.bson._
-import reactivemongo.core.commands.{RawCommand, Count}
+import reactivemongo.core.commands.{GetLastError, RawCommand, Count}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Future
@@ -21,7 +22,6 @@ class ExpMongoDBService(val db: DefaultDB) {
   val msnSpectraCollectionName = "msnSpectra"
 
   def msnSpectraCollection: JSONCollection = db.collection[JSONCollection](msnSpectraCollectionName)
-
 
   /**
    * TODO insert the indexes here, to begin with something...
@@ -37,11 +37,9 @@ class ExpMongoDBService(val db: DefaultDB) {
    * @param run already parsed and ready
    * @return a Future of the same run (something else might be better)
    */
-  def insert(run: MSRun): Future[MSRun] = Future {
+  def insert(run: MSRun): Future[Int] = {
     val enumerator = Enumerator(run.msnSpectra: _*)
-
     msnSpectraCollection.bulkInsert(enumerator)
-    run
   }
 
   /**
@@ -49,7 +47,28 @@ class ExpMongoDBService(val db: DefaultDB) {
    * @param id
    * @return
    */
-  def delete(id: IdRun):Future[Unit] = ???
+  def delete(id: IdRun): Future[Unit] = ???
+
+  //{
+  //    msnSpectraCollection.remove(BSONDocument("ref.idRun"->id))
+  //  }
+
+
+  /**
+   *
+   * @param id
+   * @return
+   */
+  def findAllSpectraHeaderByIdRun(id: IdRun): Future[Seq[RefSpectrum]] = ???
+
+  /**
+   *
+   * @param id
+   * @param scan
+   * @return
+   */
+  def findSpectrumByRunIdAndSCanNumber(id: IdRun, scan: ScanNumber): Future[ExpMSnSpectrum] = ???
+
   /**
    * get the list of the run ids
    * @return

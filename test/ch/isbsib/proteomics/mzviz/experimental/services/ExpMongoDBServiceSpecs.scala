@@ -1,23 +1,24 @@
 package ch.isbsib.proteomics.mzviz.experimental.services
 
-import ch.isbsib.proteomics.mzviz.commons._
-import ch.isbsib.proteomics.mzviz.experimental._
+import ch.isbsib.proteomics.mzviz.experimental.IdRun
 import ch.isbsib.proteomics.mzviz.experimental.importer.LoaderMGF
-import org.scalatest.time.{Seconds, Span, Millis}
-import org.specs2.mutable.{BeforeAfter, Specification}
-import org.specs2.specification.After
-import play.api.Logger
-import reactivemongo.api.{DefaultDB, MongoDriver}
-import scala.concurrent._
 import org.scalatest.concurrent.ScalaFutures
-import ExecutionContext.Implicits.global
-import scala.util.Random
+import org.scalatest.time.{Millis, Seconds, Span}
+import org.specs2.execute.AsResult
+import org.specs2.mutable.{Around, Specification}
+import reactivemongo.api.MongoDriver
+import reactivemongo.core.commands.GetLastError
+
+import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.util.Random
 
 /**
  * @author Roman Mylonas
+ *
+ *         TODO change the write concern on the test database
  */
-/*
+
 class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
   implicit val defaultPatience =
     PatienceConfig(timeout = Span(2, Seconds), interval = Span(5, Millis))
@@ -32,16 +33,26 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
   }
 
   def dropDBService(service: ExpMongoDBService) = {
-    service.db.drop()
     println(s"dropped ${service.db.name}")
+    service.db.drop()
   }
 
-  trait tmpService extends After {
-    lazy val service = createDB("test")
+  trait tmpService extends Around {
+    val service = createDB("test")
 
-    def after = dropDBService(service)
+    override def around[T: AsResult](t: => T) = {
+      val r = try {
+        AsResult.effectively(t)
+      } catch {
+        case e: Throwable => {
+          //preform some logic here
+          throw e
+        }
+      }
+      dropDBService(service)
+      r
+    }
   }
-
 
   "empty service" should {
     "counts are 0" in new tmpService {
@@ -51,19 +62,23 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
   }
   "create 2 runs" should {
     "get them up " in new tmpService {
+      //      "solve the destory db firest" >> pending {
       service.countMsnSpectra.futureValue must equalTo(0)
       service.countMsRuns.futureValue must equalTo(0)
 
-      Await.result(service.insert(LoaderMGF.load("test/resources/M_100.mgf", Some("test-1"))), 1000000 microseconds)
+      val n = service.insert(LoaderMGF.load("test/resources/M_100.mgf", Some("test-1"))).futureValue
+
       service.countMsnSpectra.futureValue must equalTo(123)
       service.countMsRuns.futureValue must equalTo(1)
 
-      Await.result(service.insert(LoaderMGF.load("test/resources/M_100.mgf", Some("test-2"))), 1000000 microsecond)
+      service.insert(LoaderMGF.load("test/resources/M_100.mgf", Some("test-2"))).futureValue
+
       service.countMsnSpectra.futureValue must equalTo(246)
       service.countMsRuns.futureValue must equalTo(2)
       service.listMsRunIds.futureValue must equalTo(List(IdRun("test-1"), IdRun("test-2")))
     }
+    //    }
   }
 
 }
-*/
+
