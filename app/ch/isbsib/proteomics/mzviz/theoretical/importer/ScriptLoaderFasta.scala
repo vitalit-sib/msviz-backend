@@ -9,7 +9,7 @@ import java.io.{FileReader, FileNotFoundException, IOException}
  * Load Fasta file
  * @author Trinidad Martín
  */
-object LoaderFasta extends App {
+object ScriptLoaderFasta extends App {
 
   val filename = "test/resources/M_100small.fasta"
   var seq=""
