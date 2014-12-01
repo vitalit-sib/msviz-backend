@@ -51,7 +51,6 @@ object ExperimentalController extends Controller {
     ExpMongoDBService().listMsRunIds.map {
       ids => Ok(Json.obj("msRuns" -> ids.map(_.value)))
     }
-
   }
 
   def loadMSRun = Action.async(parse.multipartFormData) {
@@ -67,14 +66,11 @@ object ExperimentalController extends Controller {
       } .recover {
         case e => BadRequest(e.getMessage)
       }
-
   }
 
   def deleteMSRun(id: String) = Action.async {
     ExpMongoDBService().delete(IdRun(id)).map { x =>
       Ok("OK")
     }
-
-
   }
 }

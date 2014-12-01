@@ -5,6 +5,7 @@ import ch.isbsib.proteomics.mzviz.experimental.{ScanNumber, IdRun, MSRun}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonFormats._
 import play.api.Logger
 import play.api.libs.iteratee.Enumerator
+import play.api.libs.json.Json
 import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
 import play.modules.reactivemongo.json.collection.JSONCollection
@@ -78,7 +79,15 @@ class ExpMongoDBService(val db: DefaultDB) {
    * @param title the spectrum title
    * @return
    */
-  def findSpectrumByRunIdAndTitle(idRun: IdRun, title: String): Future[ExpMSnSpectrum] = ???
+  def findSpectrumByRunIdAndTitle(idRun: IdRun, title: String): Future[ExpMSnSpectrum] = {
+    val query = Json.obj("ref.title" -> title)
+    msnSpectraCollection.find(query).cursor[ExpMSnSpectrum].headOption map ({ f => f match {
+      case Some(sp: ExpMSnSpectrum) => sp
+      case None => throw new IllegalArgumentException(s"$idRun/$title")
+    }
+    })
+
+  }
 
   /**
    * get the list of the run ids
