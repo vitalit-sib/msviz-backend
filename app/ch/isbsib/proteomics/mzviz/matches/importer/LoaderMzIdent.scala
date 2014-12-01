@@ -7,6 +7,7 @@ import org.apache.commons.io.FilenameUtils
 import org.expasy.mzjava.proteomics.io.ms.ident.{MzIdentMlReader, PSMReaderCallback}
 import org.expasy.mzjava.proteomics.ms.ident.{PeptideProteinMatch, SpectrumIdentifier, PeptideMatch}
 import ch.isbsib.proteomics.mzviz.commons.SpectraId
+import scala.collection.JavaConverters._
 
 import scala.collection.mutable.ListBuffer
 
@@ -20,7 +21,7 @@ object LoaderMzIdent {
    * @param filename an .mzid file
    * @return
    */
-def parse(filename: String): Seq[PepSpectraMatch] = {
+  def parse(filename: String): Seq[PepSpectraMatch] = {
 
     // data from MzJava parser are stored in a list
     val searchResults = mzJavaParse(filename)
@@ -65,15 +66,11 @@ def parse(filename: String): Seq[PepSpectraMatch] = {
    */
   def convertProtMatches(mzJavaMatch: PeptideMatch): Seq[ProteinMatch] = {
 
-    val protMatches = ListBuffer[ProteinMatch]()
-    val it = mzJavaMatch.getProteinMatches.iterator()
-
-    while(it.hasNext){
-      val pMatch: PeptideProteinMatch = it.next()
-      protMatches.append(ProteinMatch(AC = pMatch.getAccession, previousAA = pMatch.getPreviousAA, nextAA = pMatch.getNextAA, startPos = -1, endPos = -1))
-    }
-
-    protMatches
+    (for {
+      pMatch: PeptideProteinMatch <- mzJavaMatch.getProteinMatches.iterator().asScala
+    } yield {
+      ProteinMatch(AC = pMatch.getAccession, previousAA = pMatch.getPreviousAA, nextAA = pMatch.getNextAA, startPos = -1, endPos = -1)
+    }) toSeq
   }
 
 
@@ -84,11 +81,14 @@ def parse(filename: String): Seq[PepSpectraMatch] = {
    */
   def convertPepMatch(mzJavaMatch: PeptideMatch): PepMatchInfo = {
 
+
     // create the score map
-    var scoreMap = Map[String, Double]()
-    for(key <- mzJavaMatch.getScoreMap.keys()){
-      scoreMap ++= Map(key.asInstanceOf[String] -> mzJavaMatch.getScoreMap.get(key))
-    }
+    val scoreMap:Map[String, Double] =
+      (for {k <- mzJavaMatch.getScoreMap.keys()}
+      yield {
+        val key = k.asInstanceOf[String]
+        (key -> mzJavaMatch.getScoreMap.get(key))
+      }) toMap
 
     // create and return a new PepMatchInfo
     PepMatchInfo(scoreMap = scoreMap,
@@ -123,9 +123,6 @@ def parse(filename: String): Seq[PepSpectraMatch] = {
 
     searchResults
   }
-
-
-
 
 
 }
