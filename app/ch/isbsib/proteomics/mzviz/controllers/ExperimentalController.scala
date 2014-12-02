@@ -4,6 +4,7 @@ import java.io.File
 
 import ch.isbsib.proteomics.mzviz.experimental.IdRun
 import ch.isbsib.proteomics.mzviz.experimental.importer.LoaderMGF
+import ch.isbsib.proteomics.mzviz.experimental.models.{RefSpectrum, ExpMSnSpectrum}
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonFormats._
 import play.api.libs.Files
@@ -56,16 +57,33 @@ object ExperimentalController extends Controller {
   def loadMSRun = Action.async(parse.multipartFormData) {
     request =>
       localFile("mgf", request)
-        .flatMap{
+        .flatMap {
         case (uploadedFile, filename) =>
           val idRun = request.body.dataParts.get("run-id").map(_.head)
           val msRun = LoaderMGF.load(uploadedFile.getAbsolutePath, idRun)
           ExpMongoDBService().insert(msRun)
       }
-        .map {n => Ok(Json.obj("inserted" -> n))
-      } .recover {
+        .map { n => Ok(Json.obj("inserted" -> n))
+      }.recover {
         case e => BadRequest(e.getMessage)
       }
+  }
+
+
+  def findExpSpectrum(idRun: String, title: String) = Action.async {
+    ExpMongoDBService().findSpectrumByRunIdAndTitle(IdRun(idRun), title)
+      .map { case sp: ExpMSnSpectrum => Ok(Json.toJson(sp))}
+      .recover {
+      case e => BadRequest(e.getMessage+e.getStackTrace.mkString("\n"))
+    }
+  }
+
+  def findAllRefSpectraByIdRun(idRun: String) = Action.async {
+    ExpMongoDBService().findAllRefSpectraByIdRun(IdRun(idRun))
+      .map { case sphList: List[JsObject] => Ok(Json.toJson(sphList))}
+      .recover {
+      case e => BadRequest(e.getMessage+e.getStackTrace.mkString("\n"))
+    }
   }
 
   def deleteMSRun(id: String) = Action.async {

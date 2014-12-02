@@ -5,14 +5,14 @@ import ch.isbsib.proteomics.mzviz.experimental.{ScanNumber, IdRun, MSRun}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonFormats._
 import play.api.Logger
 import play.api.libs.iteratee.Enumerator
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
 import play.modules.reactivemongo.json.collection.JSONCollection
 import reactivemongo.api._
 import reactivemongo.api.indexes.{IndexType, Index}
 import reactivemongo.bson._
-import reactivemongo.core.commands.{GetLastError, RawCommand, Count}
+import reactivemongo.core.commands.{LastError, GetLastError, RawCommand, Count}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Future
@@ -63,15 +63,24 @@ class ExpMongoDBService(val db: DefaultDB) {
    * @param idRun the run id
    * @return
    */
-  def delete(idRun: IdRun): Future[Unit] = ???
-
+  def delete(idRun: IdRun): Future[Unit] = {
+    val query = Json.obj("ref.idRun" -> idRun.value)
+    msnSpectraCollection.remove(query).map{
+      case e:LastError if e.inError=> throw MongoNotFoundException(e.errMsg.get)
+      case _ => true
+    }
+  }
 
   /**
    *
    * @param idRun the run id
    * @return
    */
-  def findAllSpectraHeaderByIdRun(idRun: IdRun): Future[Seq[RefSpectrum]] = ???
+  def findAllRefSpectraByIdRun(idRun: IdRun): Future[Seq[JsObject]] = {
+    val query = Json.obj("ref.idRun" -> idRun.value)
+    val projection =  Json.obj("ref" -> 1, "_id"->1)
+    msnSpectraCollection.find(query, projection).cursor[JsObject].collect[List]()
+  }
 
   /**
    * retrieves  by run & spectra title (unique by index setup)
@@ -80,10 +89,10 @@ class ExpMongoDBService(val db: DefaultDB) {
    * @return
    */
   def findSpectrumByRunIdAndTitle(idRun: IdRun, title: String): Future[ExpMSnSpectrum] = {
-    val query = Json.obj("ref.title" -> title)
+    val query = Json.obj("ref.idRun" -> idRun.value, "ref.title" -> title)
     msnSpectraCollection.find(query).cursor[ExpMSnSpectrum].headOption map ({ f => f match {
       case Some(sp: ExpMSnSpectrum) => sp
-      case None => throw new IllegalArgumentException(s"$idRun/$title")
+      case None => throw new MongoNotFoundException(s"${idRun.value}/$title")
     }
     })
 
@@ -94,7 +103,6 @@ class ExpMongoDBService(val db: DefaultDB) {
    * @return
    */
   def listMsRunIds: Future[Seq[IdRun]] = {
-
     val command = RawCommand(BSONDocument("distinct" -> msnSpectraCollectionName, "key" -> "ref.idRun"))
     db.command(command)
       .map({
@@ -151,3 +159,5 @@ object ExpMongoDBService extends Controller with MongoController {
 
 
 }
+
+case class MongoNotFoundException(message:String) extends Exception(message)

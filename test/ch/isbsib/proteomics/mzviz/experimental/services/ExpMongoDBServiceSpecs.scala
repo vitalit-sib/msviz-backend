@@ -48,6 +48,20 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
     }
   }
 
+  "delete" should {
+    "get 2 , remove 1 " in new TempMongoDBServiceForSpecs {
+      service.insert(LoaderMGF.load("test/resources/M_100.mgf", Some("test-1"))).futureValue
+      service.insert(LoaderMGF.load("test/resources/M_100.mgf", Some("test-2"))).futureValue
+      service.countMsRuns.futureValue must equalTo(2)
+      service.listMsRunIds.futureValue must equalTo(List(IdRun("test-1"), IdRun("test-2")))
+
+      service.delete(IdRun("test-1")).futureValue
+
+      service.countMsRuns.futureValue must equalTo(1)
+      service.listMsRunIds.futureValue must equalTo(List(IdRun("test-2")))
+
+    }
+  }
   "findSpectrumByRunIdAndTitle" should {
     "find one" in new TempMongoDBServiceForSpecs {
       val n = service.insert(LoaderMGF.load("test/resources/M_100.mgf", Some("test-1"))).futureValue
