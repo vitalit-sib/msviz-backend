@@ -3,7 +3,7 @@ A mass spectrometry visualization platform, developed by the PAF & Vital-IT, Swi
 
 ## Development
 
-You must have Java installed (tested with 7, should work with 6)
+You must have Java installed (tested with 7)
 
  1. `git clone` the project locally
  2. `cd msviz-backend`
