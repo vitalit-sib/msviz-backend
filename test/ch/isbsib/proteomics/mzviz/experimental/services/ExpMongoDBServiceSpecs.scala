@@ -15,7 +15,7 @@ import org.specs2.mutable.Specification
 
 class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
   implicit val defaultPatience =
-    PatienceConfig(timeout = Span(2, Seconds), interval = Span(5, Millis))
+    PatienceConfig(timeout = Span(2, Seconds), interval = Span(500, Millis))
 
   /**
    * extends the temp mngodatabase and add a exp service above it
