@@ -32,19 +32,29 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
   }
   "create 2 runs" should {
     "get them up " in new TempMongoDBService {
+      println ("get them up ")
       service.countMsnSpectra.futureValue must equalTo(0)
+      println ("get them up 1")
       service.countMsRuns.futureValue must equalTo(0)
+      println ("get them up 2")
 
       val n = service.insert(LoaderMGF.load("test/resources/M_100.mgf", Some("test-1"))).futureValue
+      println ("get them up 3")
 
       service.countMsnSpectra.futureValue must equalTo(123)
+      println ("get them up 4")
       service.countMsRuns.futureValue must equalTo(1)
+      println ("get them up 5")
 
       service.insert(LoaderMGF.load("test/resources/M_100.mgf", Some("test-2"))).futureValue
+      println ("get them up 6")
 
       service.countMsnSpectra.futureValue must equalTo(246)
+      println ("get them up 7")
       service.countMsRuns.futureValue must equalTo(2)
+      println ("get them up 8")
       service.listMsRunIds.futureValue must equalTo(List(IdRun("test-1"), IdRun("test-2")))
+      println ("get them up 9")
     }
   }
 
