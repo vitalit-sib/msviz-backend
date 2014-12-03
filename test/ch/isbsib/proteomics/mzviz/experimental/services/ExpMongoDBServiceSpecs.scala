@@ -22,16 +22,18 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
   implicit val defaultPatience =
     PatienceConfig(timeout = Span(2, Seconds), interval = Span(5, Millis))
 
-
+  trait TempMongoDBService extends TempMongoDBForSpecs{
+    val service = new ExpMongoDBService(db)
+  }
 
   "empty service" should {
-    "counts are 0" in new TempMongoDBServiceForSpecs {
+    "counts are 0" in new TempMongoDBService {
       service.countMsnSpectra.futureValue must equalTo(0)
       service.countMsRuns.futureValue must equalTo(0)
     }
   }
   "create 2 runs" should {
-    "get them up " in new TempMongoDBServiceForSpecs {
+    "get them up " in new TempMongoDBService {
       service.countMsnSpectra.futureValue must equalTo(0)
       service.countMsRuns.futureValue must equalTo(0)
 
@@ -49,7 +51,7 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
   }
 
   "delete" should {
-    "get 2 , remove 1 " in new TempMongoDBServiceForSpecs {
+    "get 2 , remove 1 " in new TempMongoDBService {
       service.insert(LoaderMGF.load("test/resources/M_100.mgf", Some("test-1"))).futureValue
       service.insert(LoaderMGF.load("test/resources/M_100.mgf", Some("test-2"))).futureValue
       service.countMsRuns.futureValue must equalTo(2)
@@ -63,7 +65,7 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
     }
   }
   "findSpectrumByRunIdAndTitle" should {
-    "find one" in new TempMongoDBServiceForSpecs {
+    "find one" in new TempMongoDBService {
       val n = service.insert(LoaderMGF.load("test/resources/M_100.mgf", Some("test-1"))).futureValue
 
       val sp = service.findSpectrumByRunIdAndTitle(IdRun("test-1"), "File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 56.254 min, Period: 1, Cycle(s): 2083 (Experiment 4)").futureValue
