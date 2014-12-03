@@ -6,7 +6,7 @@ version := "1.0-SNAPSHOT"
 
 lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
-scalaVersion := "2.11.1"
+scalaVersion := "2.11.4"
 
 resolvers ++= Seq(
   "expasy" at "http://mzjava.expasy.org/maven",
@@ -21,3 +21,5 @@ libraryDependencies ++= Seq(
   "org.expasy.mzjava" % "mzjava-proteomics" %"1.0.0",
   "org.reactivemongo" %% "play2-reactivemongo" % "0.10.5.0.akka23"
 )
+
+parallelExecution in Test := false

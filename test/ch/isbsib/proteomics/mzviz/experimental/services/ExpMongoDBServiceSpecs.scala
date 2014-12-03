@@ -6,22 +6,20 @@ import ch.isbsib.proteomics.mzviz.experimental.importer.LoaderMGF
 import ch.isbsib.proteomics.mzviz.experimental.models.ExpPeakMSn
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
-import org.specs2.execute.AsResult
-import org.specs2.mutable.{Around, Specification}
-import reactivemongo.api.MongoDriver
-
-import scala.util.Random
+import org.specs2.mutable.Specification
 
 /**
  * @author Roman Mylonas
  *
- *         TODO change the write concern on the test database
  */
 
 class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
   implicit val defaultPatience =
     PatienceConfig(timeout = Span(2, Seconds), interval = Span(5, Millis))
 
+  /**
+   * extends the temp mngodatabase and add a exp service above it
+   */
   trait TempMongoDBService extends TempMongoDBForSpecs{
     val service = new ExpMongoDBService(db)
   }
@@ -57,8 +55,9 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
       service.countMsRuns.futureValue must equalTo(2)
       service.listMsRunIds.futureValue must equalTo(List(IdRun("test-1"), IdRun("test-2")))
 
+      Thread.sleep(200)
       service.delete(IdRun("test-1")).futureValue
-
+      Thread.sleep(200)
       service.countMsRuns.futureValue must equalTo(1)
       service.listMsRunIds.futureValue must equalTo(List(IdRun("test-2")))
 

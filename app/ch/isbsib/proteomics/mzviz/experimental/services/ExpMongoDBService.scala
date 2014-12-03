@@ -39,9 +39,9 @@ class ExpMongoDBService(val db: DefaultDB) {
     ).map {
       b =>
         if (b)
-          Logger.info(s"[runid_title] was created")
+          Logger.info(s"index [runid_title] was created")
         else
-          Logger.info(s"[runid_title] already exists")
+          Logger.info(s"index [runid_title] already exists")
     }
   }
 
@@ -63,7 +63,7 @@ class ExpMongoDBService(val db: DefaultDB) {
    * @param idRun the run id
    * @return
    */
-  def delete(idRun: IdRun): Future[Unit] = {
+  def delete(idRun: IdRun): Future[Boolean] = {
     val query = Json.obj("ref.idRun" -> idRun.value)
     msnSpectraCollection.remove(query).map{
       case e:LastError if e.inError=> throw MongoNotFoundException(e.errMsg.get)

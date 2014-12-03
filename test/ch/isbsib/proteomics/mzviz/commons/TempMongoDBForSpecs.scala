@@ -12,7 +12,7 @@ import scala.util.Random
 /**
  * Created by tmartinc on 28/11/14.
  */
-class TempMongoDBForSpecs extends Around {
+trait TempMongoDBForSpecs extends Around {
   val db:DefaultDB = createDB("scalatest")
 
   def createDB(dbNamePefix: String, host: String = "localhost:27017") = {
@@ -20,21 +20,22 @@ class TempMongoDBForSpecs extends Around {
     val connection = driver.connection(List(host))
 
     val dbName = s"$dbNamePefix-${new Random().nextLong}"
-    Logger.info(s"creating a mongodb named $dbName")
+    println(s"creating a mongodb named $dbName")
     connection.db(dbName)
   }
 
   def dropDB = {
-    Logger.info(s"dropped ${db.name}")
+    println(s"dropping ${db.name}")
     db.drop()
   }
 
-  override def around[T: AsResult](t: => T) = {
+   def around[T: AsResult](t: => T) = {
     val r = try {
       AsResult.effectively(t)
     } catch {
       case e: Throwable => {
         //preform some logic here
+        dropDB
         throw e
       }
     }
