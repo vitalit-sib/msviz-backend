@@ -1,5 +1,6 @@
 package ch.isbsib.proteomics.mzviz.experimental.services
 
+import ch.isbsib.proteomics.mzviz.commons.services.{MongoDBService, MongoNotFoundException}
 import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, RefSpectrum}
 import ch.isbsib.proteomics.mzviz.experimental.{ScanNumber, IdRun, MSRun}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonFormats._
@@ -21,32 +22,14 @@ import scala.util.{Failure, Success}
 /**
  * @author Alexandre Masselot
  */
-class ExpMongoDBService(val db: DefaultDB) {
-  val msnSpectraCollectionName = "msnSpectra"
+class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
+  val collectionName = "msnSpectra"
 
-  def msnSpectraCollection: JSONCollection = db.collection[JSONCollection](msnSpectraCollectionName)
+  def indexes = List(new Index(
+    Seq("ref.idRun" -> IndexType.Ascending, "ref.title" -> IndexType.Ascending),
+    name = Some("idRun_title"),
+    unique = true))
 
-  /**
-   * Ensure we have the correct indexes
-   */
-  def setupIndexes = {
-    Logger.info(s"building $msnSpectraCollectionName indexes")
-    msnSpectraCollection.indexesManager.ensure(
-      new Index(
-        Seq("ref.idRun" -> IndexType.Ascending, "ref.title" -> IndexType.Ascending),
-        name = Some("idRun_title"),
-        unique = true)
-    ).map {
-      b =>
-        if (b)
-          Logger.info(s"index [runid_title] was created")
-        else
-          Logger.info(s"index [runid_title] already exists")
-    }
-  }
-
-
-  setupIndexes
 
   /**
    * insert an ms run into the database.
@@ -55,7 +38,7 @@ class ExpMongoDBService(val db: DefaultDB) {
    */
   def insert(run: MSRun): Future[Int] = {
     val enumerator = Enumerator(run.msnSpectra: _*)
-    msnSpectraCollection.bulkInsert(enumerator)
+    collection.bulkInsert(enumerator)
   }
 
   /**
@@ -65,8 +48,8 @@ class ExpMongoDBService(val db: DefaultDB) {
    */
   def delete(idRun: IdRun): Future[Boolean] = {
     val query = Json.obj("ref.idRun" -> idRun.value)
-    msnSpectraCollection.remove(query).map{
-      case e:LastError if e.inError=> throw MongoNotFoundException(e.errMsg.get)
+    collection.remove(query).map {
+      case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
       case _ => true
     }
   }
@@ -78,8 +61,8 @@ class ExpMongoDBService(val db: DefaultDB) {
    */
   def findAllRefSpectraByIdRun(idRun: IdRun): Future[Seq[JsObject]] = {
     val query = Json.obj("ref.idRun" -> idRun.value)
-    val projection =  Json.obj("ref" -> 1, "_id"->1)
-    msnSpectraCollection.find(query, projection).cursor[JsObject].collect[List]()
+    val projection = Json.obj("ref" -> 1, "_id" -> 1)
+    collection.find(query, projection).cursor[JsObject].collect[List]()
   }
 
   /**
@@ -90,12 +73,10 @@ class ExpMongoDBService(val db: DefaultDB) {
    */
   def findSpectrumByRunIdAndTitle(idRun: IdRun, title: String): Future[ExpMSnSpectrum] = {
     val query = Json.obj("ref.idRun" -> idRun.value, "ref.title" -> title)
-    msnSpectraCollection.find(query).cursor[ExpMSnSpectrum].headOption map ({ f => f match {
+    collection.find(query).cursor[ExpMSnSpectrum].headOption map {
       case Some(sp: ExpMSnSpectrum) => sp
       case None => throw new MongoNotFoundException(s"${idRun.value}/$title")
     }
-    })
-
   }
 
   /**
@@ -103,7 +84,7 @@ class ExpMongoDBService(val db: DefaultDB) {
    * @return
    */
   def listMsRunIds: Future[Seq[IdRun]] = {
-    val command = RawCommand(BSONDocument("distinct" -> msnSpectraCollectionName, "key" -> "ref.idRun"))
+    val command = RawCommand(BSONDocument("distinct" -> collectionName, "key" -> "ref.idRun"))
     db.command(command)
       .map({
       doc =>
@@ -120,7 +101,7 @@ class ExpMongoDBService(val db: DefaultDB) {
    * @return
    */
   def countMsnSpectra: Future[Int] = {
-    db.command(Count(msnSpectraCollectionName))
+    db.command(Count(collectionName))
   }
 
   /**
@@ -160,4 +141,4 @@ object ExpMongoDBService extends Controller with MongoController {
 
 }
 
-case class MongoNotFoundException(message:String) extends Exception(message)
+
