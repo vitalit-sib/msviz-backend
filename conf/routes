@@ -3,7 +3,9 @@
 # ~~~~
 
 # Home page
-GET         /exp                   ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.stats
-GET         /exp/msrun/list        ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.listMSRunIds
-POST        /exp/msrun             ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.loadMSRun
-DELETE      /exp/msrun/:id         ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.deleteMSRun(id)
+GET           /exp                               ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.stats
+GET           /exp/msrun/list                    ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.listMSRunIds
+POST          /exp/msrun                         ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.loadMSRun
+DELETE        /exp/msrun/:idRun                  ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.deleteMSRun(idRun)
+GET           /exp/spectrum/:idRun/:title        ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.findExpSpectrum(idRun, title)
+GET           /exp/ref-spectra/:idRun             ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.findAllRefSpectraByIdRun(idRun)
