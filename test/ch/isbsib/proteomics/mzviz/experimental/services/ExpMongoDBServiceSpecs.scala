@@ -30,26 +30,26 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
       service.countMsRuns.futureValue must equalTo(0)
     }
   }
-  "create 2 runs" should {
-    "get them up " in new TempMongoDBService {
-      println ("get them up ")
-      service.countMsnSpectra.futureValue must equalTo(0)
-      println ("get them up 1")
-      service.countMsRuns.futureValue must equalTo(0)
-      println ("get them up 2")
-
-      service.insert(LoaderMGF.load("test/resources/M_100.mgf", Some("test-1"))).futureValue
-      service.insert(LoaderMGF.load("test/resources/M_100.mgf", Some("test-2"))).futureValue
-      println ("get them up 6")
-
-      service.countMsnSpectra.futureValue must equalTo(246)
-      println ("get them up 7")
-      service.countMsRuns.futureValue must equalTo(2)
-      println ("get them up 8")
-      service.listMsRunIds.futureValue must equalTo(List(IdRun("test-1"), IdRun("test-2")))
-      println ("get them up 9")
-    }
-  }
+//  "create 2 runs" should {
+//    "get them up " in new TempMongoDBService {
+//      println ("get them up ")
+//      service.countMsnSpectra.futureValue must equalTo(0)
+//      println ("get them up 1")
+//      service.countMsRuns.futureValue must equalTo(0)
+//      println ("get them up 2")
+//
+//      service.insert(LoaderMGF.load("test/resources/M_100.mgf", Some("test-1"))).futureValue
+//      service.insert(LoaderMGF.load("test/resources/M_100.mgf", Some("test-2"))).futureValue
+//      println ("get them up 6")
+//
+//      service.countMsnSpectra.futureValue must equalTo(246)
+//      println ("get them up 7")
+//      service.countMsRuns.futureValue must equalTo(2)
+//      println ("get them up 8")
+//      service.listMsRunIds.futureValue must equalTo(List(IdRun("test-1"), IdRun("test-2")))
+//      println ("get them up 9")
+//    }
+//  }
 
   "delete" should {
     "get 2 , remove 1 " in new TempMongoDBService {
