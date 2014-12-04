@@ -4,6 +4,7 @@ import ch.isbsib.proteomics.mzviz.commons.services.MongoDBService
 import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, RefSpectrum}
 import ch.isbsib.proteomics.mzviz.experimental.{ScanNumber, IdRun, MSRun}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonFormats._
+import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
 import play.api.Logger
 import play.api.libs.iteratee.Enumerator
@@ -47,14 +48,14 @@ class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @param source the datasource
    * @return
    */
-  def deleteAllBySource(source: String): Future[Boolean] = ???
+  def deleteAllBySource(source: SequenceSource): Future[Boolean] = ???
 
   /**
    * retieves all entris for a given source
    * @param source the data source
    * @return
    */
-  def findAllEntriesBySource(source: String): Future[Seq[FastaEntry]] = ???
+  def findAllEntriesBySource(source: SequenceSource): Future[Seq[FastaEntry]] = ???
 
   /**
    *
@@ -62,7 +63,7 @@ class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @param source data source
    * @return
    */
-  def findEntryByAccessionCodeAndSource(accessionCode: String, source: String): Future[FastaEntry] = ???
+  def findEntryByAccessionCodeAndSource(accessionCode: AccessionCode, source: SequenceSource): Future[FastaEntry] = ???
 
   /**
    * GEt the list of data sources

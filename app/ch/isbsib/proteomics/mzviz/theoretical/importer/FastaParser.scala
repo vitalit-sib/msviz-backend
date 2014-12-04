@@ -2,6 +2,7 @@ package ch.isbsib.proteomics.mzviz.theoretical.importer
 
 import java.io.File
 
+import ch.isbsib.proteomics.mzviz.theoretical.AccessionCode
 import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
 
 import scala.util.matching.Regex
@@ -23,7 +24,7 @@ class FastaParser(file: File) {
     val reHeader(ac) = headline
     val seq = seqLines.replaceAll( """\s+""", "")
 
-    FastaEntry(ac, seq)
+    FastaEntry(AccessionCode(ac), seq)
   }
 
 
