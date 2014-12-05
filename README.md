@@ -39,6 +39,10 @@ Load a fasta file
 
     curl -X POST --form mgf=@test/resources/F001644.mgf --run-id=mascot-test http://localhost:9000/exp/msrun
 
+####list all sources
+
+    curl http://localhost:9000/sequence/list-sources
+
 #### deleting a run
 All the data related to a run can be deleted by the url
 
