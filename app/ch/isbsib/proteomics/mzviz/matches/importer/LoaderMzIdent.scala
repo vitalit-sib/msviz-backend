@@ -2,11 +2,12 @@ package ch.isbsib.proteomics.mzviz.matches.importer
 
 import java.io.{FileInputStream, InputStream}
 
+import ch.isbsib.proteomics.mzviz.matches.ProteinAC
 import ch.isbsib.proteomics.mzviz.matches.models.{Peptide, ProteinMatch, PepSpectraMatch, PepMatchInfo}
 import org.apache.commons.io.FilenameUtils
 import org.expasy.mzjava.proteomics.io.ms.ident.{MzIdentMlReader, PSMReaderCallback}
 import org.expasy.mzjava.proteomics.ms.ident.{PeptideProteinMatch, SpectrumIdentifier, PeptideMatch}
-import ch.isbsib.proteomics.mzviz.commons.SpectraId
+import ch.isbsib.proteomics.mzviz.commons.{SpectraId, SpectraSource}
 import scala.collection.JavaConverters._
 
 import scala.collection.mutable.ListBuffer
@@ -30,7 +31,12 @@ object LoaderMzIdent {
     val spectraFileName = parseSpectraFilename(filename)
 
     // convert the resulting list into our proper object
-    searchResults.map(t => PepSpectraMatch(spId = SpectraId(t._1.getSpectrum, spectraFileName), pep = convertPeptide(t._2), matchInfo = convertPepMatch(t._2), proteinList = convertProtMatches(t._2))).toSeq
+    searchResults.map(t => PepSpectraMatch(spId = SpectraId(t._1.getSpectrum),
+      spSource = SpectraSource(spectraFileName),
+      pep = convertPeptide(t._2),
+      matchInfo = convertPepMatch(t._2),
+      proteinList = convertProtMatches(t._2))
+    ).toSeq
 
   }
 
@@ -69,7 +75,7 @@ object LoaderMzIdent {
     (for {
       pMatch: PeptideProteinMatch <- mzJavaMatch.getProteinMatches.iterator().asScala
     } yield {
-      ProteinMatch(AC = pMatch.getAccession, previousAA = pMatch.getPreviousAA, nextAA = pMatch.getNextAA, startPos = -1, endPos = -1)
+      ProteinMatch(AC = ProteinAC(pMatch.getAccession), previousAA = pMatch.getPreviousAA, nextAA = pMatch.getNextAA, startPos = pMatch.getStart, endPos = pMatch.getEnd)
     }) toSeq
   }
 
@@ -80,7 +86,6 @@ object LoaderMzIdent {
    * @return
    */
   def convertPepMatch(mzJavaMatch: PeptideMatch): PepMatchInfo = {
-
 
     // create the score map
     val scoreMap:Map[String, Double] =

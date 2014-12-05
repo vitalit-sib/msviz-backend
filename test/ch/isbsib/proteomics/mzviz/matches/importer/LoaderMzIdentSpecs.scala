@@ -1,8 +1,9 @@
 package ch.isbsib.proteomics.mzviz.matches.importer
 
+import ch.isbsib.proteomics.mzviz.matches.ProteinAC
 import ch.isbsib.proteomics.mzviz.matches.models.PepSpectraMatch
 import org.specs2.mutable.Specification
-import ch.isbsib.proteomics.mzviz.commons.SpectraId
+import ch.isbsib.proteomics.mzviz.commons.{SpectraSource, SpectraId}
 
 /**
  *  @author Alexandre Masselot & Roman Mylonas
@@ -37,7 +38,8 @@ class LoaderMzIdentSpecs extends Specification {
       }
 
       "check first spectrum identifier" in {
-        psm(0).spId must equalTo(SpectraId("File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 50.227 min, Period: 1, Cycle(s): 2033 (Experiment 4)", "rafts1_123spectra"))
+        psm(0).spId must equalTo(SpectraId("File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 50.227 min, Period: 1, Cycle(s): 2033 (Experiment 4)"))
+        psm(0).spSource must equalTo(SpectraSource("rafts1_123spectra"))
       }
 
       "check protein size" in {
@@ -45,7 +47,7 @@ class LoaderMzIdentSpecs extends Specification {
       }
 
       "check first protein size" in {
-        psm(0).proteinList(0).AC must equalTo("CD109_HUMAN")
+        psm(0).proteinList(0).AC must equalTo(ProteinAC("CD109_HUMAN"))
       }
 
     }

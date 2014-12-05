@@ -17,5 +17,7 @@ package object commons {
 
   case class RetentionTime(value:Double) extends AnyVal
 
-  case class SpectraId(id:String, file:String)
+  case class SpectraId(value:String) extends AnyVal
+
+  case class SpectraSource(value:String) extends AnyVal
 }

@@ -3,9 +3,13 @@
 # ~~~~
 
 # Home page
+GET           /api-docs/exp                      controllers.ApiHelpController.getResource(path = "/exp")
 GET           /exp                               ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.stats
 GET           /exp/msrun/list                    ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.listMSRunIds
 POST          /exp/msrun                         ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.loadMSRun
 DELETE        /exp/msrun/:idRun                  ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.deleteMSRun(idRun)
 GET           /exp/spectrum/:idRun/:title        ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.findExpSpectrum(idRun, title)
-GET           /exp/ref-spectra/:idRun             ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.findAllRefSpectraByIdRun(idRun)
+GET           /exp/ref-spectra/:idRun            ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.findAllRefSpectraByIdRun(idRun)
+
+GET           /docs/*file                        controllers.Assets.at(path="/public/docs", file)
+GET           /api-docs                          controllers.ApiHelpController.getResources

@@ -1,6 +1,8 @@
 package ch.isbsib.proteomics.mzviz.matches.models
 
+import ch.isbsib.proteomics.mzviz.matches.ProteinAC
+
 /**
- * Created by Roman Mylonas on 28/11/14.
+ * Created by Roman Mylonas
  */
-case class ProteinMatch (AC: String, previousAA: String, nextAA: String, startPos: Int, endPos: Int)
+case class ProteinMatch (AC: ProteinAC, previousAA: String, nextAA: String, startPos: Int, endPos: Int)

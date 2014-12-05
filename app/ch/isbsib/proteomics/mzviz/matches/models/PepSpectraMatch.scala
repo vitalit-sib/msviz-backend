@@ -1,9 +1,9 @@
 package ch.isbsib.proteomics.mzviz.matches.models
 
-import ch.isbsib.proteomics.mzviz.commons.SpectraId
+import ch.isbsib.proteomics.mzviz.commons.{SpectraId, SpectraSource}
 
 /**
- * Created by Roman Mylonas on 21/11/14.
+ * Created by Roman Mylonas
  */
 
-case class PepSpectraMatch (spId: SpectraId, pep: Peptide, matchInfo: PepMatchInfo, proteinList: Seq[ProteinMatch])
+case class PepSpectraMatch (spId: SpectraId, spSource: SpectraSource, pep: Peptide, matchInfo: PepMatchInfo, proteinList: Seq[ProteinMatch])
