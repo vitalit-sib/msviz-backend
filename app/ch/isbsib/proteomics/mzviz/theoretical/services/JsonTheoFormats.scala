@@ -1,10 +1,7 @@
 package ch.isbsib.proteomics.mzviz.theoretical.services
 
-import ch.isbsib.proteomics.mzviz.commons._
-import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, RefSpectrum, ExpPeakMSn, ExpPeakPrecursor}
-import ch.isbsib.proteomics.mzviz.experimental.{IdRun, ScanNumber}
-import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
+import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
 import play.api.libs.json._
 
 /**
@@ -14,17 +11,26 @@ import play.api.libs.json._
 object JsonTheoFormats {
 
   import play.api.libs.json.Json
-  import play.api.data._
-  import play.api.data.Forms._
+
+  implicit val formatAccessionCode = new Format[AccessionCode] {
+    override def reads(json: JsValue): JsResult[AccessionCode] = JsSuccess(AccessionCode(json.as[String]))
+
+    def writes(o: AccessionCode) = JsString(o.value)
+  }
+
+  implicit val formatSequenceSource = new Format[SequenceSource] {
+    override def reads(json: JsValue): JsResult[SequenceSource] = JsSuccess(SequenceSource(json.as[String]))
+
+    def writes(o: SequenceSource) = JsString(o.value)
+  }
+
+  implicit val jsonSequenceSource = new Writes[SequenceSource] {
+    override def writes(o: SequenceSource): JsValue = {
+      JsString(o.value)
+    }
+  }
 
 
-//  implicit val formatAccessionCode = new Format[AccessionCode] {
-//    override def reads(json: JsValue): JsResult[AccessionCode] = JsSuccess(AccessionCode(json.as[String]))
-//
-//    def writes(o: AccessionCode) = JsString(o.value)
-//  }
-implicit val formatAC = Json.format[AccessionCode]
-  implicit val formatSequenceSource = Json.format[SequenceSource]
   implicit val formatFastaEntry = Json.format[FastaEntry]
 
 }

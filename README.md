@@ -28,11 +28,18 @@ To check that everything is running ok, you can then connect with a mongo-shell 
 The configuration on where to hit the mongodb server is described in the conf/application.conf file.
 
 ## Load data
-### loading an mgf file as a run
+### Sequences
+Load a fasta file
+
+    curl -X POST --form source=M_100 --form fasta=@test/resources/M_100.fasta  http://localhost:9000/sequence/fasta
+
+
+### Experimental data
+#### loading an mgf file as a run
 
     curl -X POST --form mgf=@test/resources/F001644.mgf --run-id=mascot-test http://localhost:9000/exp/msrun
 
-### deleting a run
+#### deleting a run
 All the data related to a run can be deleted by the url
 
     curl -X DELETE http://localhost:9000/exp/msrun/mascot-test

@@ -1,42 +1,29 @@
 package ch.isbsib.proteomics.mzviz.controllers
 
-import java.io.File
-import javax.ws.rs.PathParam
-
-import ch.isbsib.proteomics.mzviz.experimental.IdRun
-import ch.isbsib.proteomics.mzviz.experimental.importer.LoaderMGF
-import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, RefSpectrum}
-import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
-import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
+import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
+import JsonCommonsFormats._
 import ch.isbsib.proteomics.mzviz.theoretical.SequenceSource
 import ch.isbsib.proteomics.mzviz.theoretical.importer.FastaParser
 import ch.isbsib.proteomics.mzviz.theoretical.services.SequenceMongoDBService
 import com.wordnik.swagger.annotations._
-import play.api.libs.Files
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json._
-import play.api.mvc.{Action, Controller, MultipartFormData, Request}
+import play.api.mvc.Action
 
-import scala.concurrent.Future
-
-// Reactive Mongo imports
-
-// Reactive Mongo plugin, including the JSON-specialized collection
 
 /**
+ *
+ * handles sequence REST API
  * @author Alexandre Masselot
  */
 @Api(value = "/sequence", description = "sequence access etc.")
 object SequenceController extends CommonController {
 
   def stats = Action.async {
-
     SequenceMongoDBService().stats.map { st =>
-      Ok(writesMap.writes(st))
+      Ok(jsonWritesMap.writes(st))
     }
   }
-
-
 
   @ApiOperation(nickname = "listSources",
     value = "the list of sequence sources",
@@ -44,8 +31,11 @@ object SequenceController extends CommonController {
     response = classOf[List[String]],
     httpMethod = "GET")
   def listSources = Action.async {
-    SequenceMongoDBService().listSources.map {
-      srcs => Ok(Json.obj("sources" -> srcs))
+    SequenceMongoDBService().listSources
+      .map {
+      srcs => Ok(Json.toJson(srcs))
+    }.recover {
+      case e => BadRequest(Json.toJson(e))
     }
   }
 
@@ -60,7 +50,7 @@ object SequenceController extends CommonController {
   ))
   def loadFasta = Action.async(parse.multipartFormData) {
     request =>
-      localFile("mgf", request)
+      localFile("fasta", request)
         .flatMap {
         case (uploadedFile, filename) =>
           val src = request.body.dataParts.get("source").map(_.head).get
@@ -69,7 +59,7 @@ object SequenceController extends CommonController {
       }
         .map { n => Ok(Json.obj("inserted" -> n))
       }.recover {
-        case e => BadRequest(e.getMessage)
+        case e => BadRequest(Json.toJson(e))
       }
   }
 }

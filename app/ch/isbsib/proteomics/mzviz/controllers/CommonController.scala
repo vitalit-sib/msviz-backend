@@ -26,7 +26,7 @@ import scala.concurrent.Future
 trait CommonController extends Controller {
 
 
-   def localFile(paramName: String, request: Request[MultipartFormData[Files.TemporaryFile]]): Future[Tuple2[File, String]] = {
+  def localFile(paramName: String, request: Request[MultipartFormData[Files.TemporaryFile]]): Future[Tuple2[File, String]] = {
     Future {
       val reqFile = request.body.file(paramName).get
       val filename = reqFile.filename

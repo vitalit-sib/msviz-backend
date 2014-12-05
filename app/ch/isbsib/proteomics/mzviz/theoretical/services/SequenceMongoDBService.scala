@@ -1,6 +1,7 @@
 package ch.isbsib.proteomics.mzviz.theoretical.services
 
 import ch.isbsib.proteomics.mzviz.commons.services.MongoDBService
+import ch.isbsib.proteomics.mzviz.experimental.IdRun
 import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
 import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
 import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
@@ -9,7 +10,8 @@ import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
 import reactivemongo.api._
 import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.core.commands.Count
+import reactivemongo.bson.BSONDocument
+import reactivemongo.core.commands.{RawCommand, Count}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -61,7 +63,17 @@ class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
    * GEt the list of data sources
    * @return
    */
-  def listSources: Future[Seq[String]] = ???
+  def listSources: Future[Seq[SequenceSource]] = {
+    val command = RawCommand(BSONDocument("distinct" -> collectionName, "key" -> "source"))
+    db.command(command)
+      .map({
+      doc =>
+        doc.getAs[List[String]]("values").get
+          .map {
+          i => SequenceSource(i)
+        }
+    })
+  }
 
   /**
    * count the number of Entries

@@ -3,6 +3,7 @@ package ch.isbsib.proteomics.mzviz.controllers
 import java.io.File
 import javax.ws.rs.PathParam
 
+import JsonCommonsFormats._
 import ch.isbsib.proteomics.mzviz.experimental.IdRun
 import ch.isbsib.proteomics.mzviz.experimental.importer.LoaderMGF
 import ch.isbsib.proteomics.mzviz.experimental.models.{RefSpectrum, ExpMSnSpectrum}
@@ -35,7 +36,7 @@ object ExperimentalController extends CommonController {
   def stats = Action.async {
 
     ExpMongoDBService().stats.map { st =>
-      Ok(writesMap.writes(st))
+      Ok(jsonWritesMap.writes(st))
     }
   }
 

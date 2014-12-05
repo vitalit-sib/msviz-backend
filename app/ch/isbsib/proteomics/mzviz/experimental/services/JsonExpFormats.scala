@@ -69,12 +69,6 @@ object JsonExpFormats {
   }
 
 
-  implicit val writesMap = new Writes[Map[String, Int]] {
-    override def writes(o: Map[String, Int]): JsValue = {
-      o.foldLeft(Json.obj())({ (acc, p) => acc ++ Json.obj(p._1 -> p._2)})
-    }
-  }
-
 
   // Generates Writes and Reads for Feed and User thanks to Json Macros
   implicit val formatExpPeakPrecursor = Json.format[ExpPeakPrecursor]
