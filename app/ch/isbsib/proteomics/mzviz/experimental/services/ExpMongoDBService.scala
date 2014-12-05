@@ -3,7 +3,7 @@ package ch.isbsib.proteomics.mzviz.experimental.services
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoDBService, MongoNotFoundException}
 import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, RefSpectrum}
 import ch.isbsib.proteomics.mzviz.experimental.{ScanNumber, IdRun, MSRun}
-import ch.isbsib.proteomics.mzviz.experimental.services.JsonFormats._
+import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import play.api.Logger
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json.{JsObject, Json}

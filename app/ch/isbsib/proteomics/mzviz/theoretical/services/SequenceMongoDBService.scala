@@ -1,25 +1,18 @@
 package ch.isbsib.proteomics.mzviz.theoretical.services
 
 import ch.isbsib.proteomics.mzviz.commons.services.MongoDBService
-import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, RefSpectrum}
-import ch.isbsib.proteomics.mzviz.experimental.{ScanNumber, IdRun, MSRun}
-import ch.isbsib.proteomics.mzviz.experimental.services.JsonFormats._
-import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
-import play.api.Logger
+import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
+import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
 import play.api.libs.iteratee.Enumerator
-import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
-import play.modules.reactivemongo.json.collection.JSONCollection
 import reactivemongo.api._
-import reactivemongo.api.indexes.{IndexType, Index}
-import reactivemongo.bson._
-import reactivemongo.core.commands.{LastError, GetLastError, RawCommand, Count}
-import scala.concurrent.ExecutionContext.Implicits.global
+import reactivemongo.api.indexes.{Index, IndexType}
+import reactivemongo.core.commands.Count
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
 
 /**
  * @author Alexandre Masselot
@@ -27,7 +20,7 @@ import scala.util.{Failure, Success}
 class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
   val collectionName = "sequences"
 
-  val indexes = List(new Index(
+  def indexes = List(new Index(
     Seq("accessionCode" -> IndexType.Ascending, "source" -> IndexType.Ascending),
     name = Some("ac_source"),
     unique = true))
@@ -38,9 +31,8 @@ class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @return a Future of the number of entries loaded
    */
   def insert(entries: Seq[FastaEntry]): Future[Int] = {
-    //    val enumerator = Enumerator(run.msnSpectra: _*)
-    //    msnSpectraCollection.bulkInsert(enumerator)
-    ???
+    val enumerator = Enumerator(entries: _*)
+    collection.bulkInsert(enumerator)
   }
 
   /**

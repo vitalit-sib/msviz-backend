@@ -4,6 +4,7 @@ import java.io.File
 
 import ch.isbsib.proteomics.mzviz.theoretical.AccessionCode
 import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
+import ch.isbsib.proteomics.mzviz.theoretical.services.SequenceMongoDBService
 
 import scala.util.matching.Regex
 
@@ -25,6 +26,7 @@ class FastaParser(file: File) {
     val seq = seqLines.replaceAll( """\s+""", "")
 
     FastaEntry(AccessionCode(ac), seq)
+    //val=SequenceMongoDBService()
   }
 
 

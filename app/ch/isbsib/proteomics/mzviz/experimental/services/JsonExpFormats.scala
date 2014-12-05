@@ -3,6 +3,7 @@ package ch.isbsib.proteomics.mzviz.experimental.services
 import ch.isbsib.proteomics.mzviz.commons._
 import ch.isbsib.proteomics.mzviz.experimental._
 import ch.isbsib.proteomics.mzviz.experimental.models._
+import ch.isbsib.proteomics.mzviz.theoretical.AccessionCode
 import play.api.libs.json._
 import play.api.libs.json.Reads._
 import play.api.libs.functional.syntax._
@@ -11,7 +12,7 @@ import reactivemongo.bson.{BSONDocument, BSONDocumentReader}
 /**
  * @author Alexandre Masselot
  */
-object JsonFormats {
+object JsonExpFormats {
 
   import play.api.libs.json.Json
   import play.api.data._
@@ -66,6 +67,7 @@ object JsonFormats {
 
     def writes(o: IdRun) = JsString(o.value)
   }
+
 
   implicit val writesMap = new Writes[Map[String, Int]] {
     override def writes(o: Map[String, Int]): JsValue = {
