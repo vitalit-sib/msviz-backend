@@ -3,7 +3,7 @@ package ch.isbsib.proteomics.mzviz.theoretical.services
 import ch.isbsib.proteomics.mzviz.commons._
 import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, RefSpectrum, ExpPeakMSn, ExpPeakPrecursor}
 import ch.isbsib.proteomics.mzviz.experimental.{IdRun, ScanNumber}
-import ch.isbsib.proteomics.mzviz.theoretical.AccessionCode
+import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
 import play.api.libs.json._
 
@@ -23,7 +23,8 @@ object JsonTheoFormats {
 //
 //    def writes(o: AccessionCode) = JsString(o.value)
 //  }
-  implicit val formatAC = Json.format[AccessionCode]
+implicit val formatAC = Json.format[AccessionCode]
+  implicit val formatSequenceSource = Json.format[SequenceSource]
   implicit val formatFastaEntry = Json.format[FastaEntry]
 
 }

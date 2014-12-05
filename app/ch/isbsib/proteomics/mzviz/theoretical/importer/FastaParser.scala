@@ -2,7 +2,7 @@ package ch.isbsib.proteomics.mzviz.theoretical.importer
 
 import java.io.File
 
-import ch.isbsib.proteomics.mzviz.theoretical.AccessionCode
+import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
 import ch.isbsib.proteomics.mzviz.theoretical.services.SequenceMongoDBService
 
@@ -13,7 +13,7 @@ import scala.util.matching.Regex
  *
  * @author Trinidad Martín
  */
-class FastaParser(file: File) {
+class FastaParser(file: File, source:Option[SequenceSource]) {
   val reHeader = """>?..\|(.*?)\|.*""".r
 
   def parseOneProtBlock(protLines: String): FastaEntry = {
@@ -25,7 +25,7 @@ class FastaParser(file: File) {
     val reHeader(ac) = headline
     val seq = seqLines.replaceAll( """\s+""", "")
 
-    FastaEntry(AccessionCode(ac), seq)
+    FastaEntry(AccessionCode(ac), seq, source)
     //val=SequenceMongoDBService()
   }
 
@@ -46,5 +46,6 @@ class FastaParser(file: File) {
  * companion object
  */
 object FastaParser {
-  def apply(filename: String) = new FastaParser(new File(filename))
+  def apply(filename: String, source:SequenceSource) = new FastaParser(new File(filename), Some(source))
+  def apply(filename: String) = new FastaParser(new File(filename), None)
 }
