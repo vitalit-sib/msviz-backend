@@ -11,5 +11,9 @@ DELETE        /exp/msrun/:idRun                  ch.isbsib.proteomics.mzviz.cont
 GET           /exp/spectrum/:idRun/:title        ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.findExpSpectrum(idRun, title)
 GET           /exp/ref-spectra/:idRun            ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.findAllRefSpectraByIdRun(idRun)
 
+GET           /api-docs/sequence                 controllers.ApiHelpController.getResource(path = "/sequence")
+GET           /sequence/listSources              ch.isbsib.proteomics.mzviz.controllers.SequenceController.listSources
+POST          /sequence/fasta                    ch.isbsib.proteomics.mzviz.controllers.SequenceController.loadFasta
+
 GET           /docs/*file                        controllers.Assets.at(path="/public/docs", file)
 GET           /api-docs                          controllers.ApiHelpController.getResources

@@ -29,25 +29,13 @@ import play.modules.reactivemongo.json.collection.JSONCollection
 /**
  * @author Alexandre Masselot
  */
-@Api(value = "/exp", description = "hg sequence access")
-object ExperimentalController extends Controller {
+@Api(value = "/exp", description = "experimental data access")
+object ExperimentalController extends CommonController {
 
   def stats = Action.async {
 
     ExpMongoDBService().stats.map { st =>
       Ok(writesMap.writes(st))
-    }
-  }
-
-  private def localFile(paramName: String, request: Request[MultipartFormData[Files.TemporaryFile]]): Future[Tuple2[File, String]] = {
-    Future {
-      val reqFile = request.body.file(paramName).get
-      val filename = reqFile.filename
-      val fTmp = File.createTempFile(new File(filename).getName + "-", ".local")
-      fTmp.delete()
-      fTmp.deleteOnExit()
-      reqFile.ref.moveTo(fTmp)
-      (fTmp, filename)
     }
   }
 
