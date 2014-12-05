@@ -56,14 +56,14 @@ object SequenceController extends CommonController {
     httpMethod = "POST")
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name = "fasta", value = "fasta file", required = true, dataType = "file", paramType = "body"),
-    new ApiImplicitParam(name = "source", value = "a string id with source/version", required = true, dataType = "string", paramType = "body"),
+    new ApiImplicitParam(name = "source", value = "a string id with source/version", required = true, dataType = "string", paramType = "body")
   ))
   def loadFasta = Action.async(parse.multipartFormData) {
     request =>
       localFile("mgf", request)
         .flatMap {
         case (uploadedFile, filename) =>
-          val src = request.body.dataParts.get("source").map(_.head)
+          val src = request.body.dataParts.get("source").map(_.head).get
           val entries = FastaParser(uploadedFile.getAbsolutePath, SequenceSource(src)).parse
           SequenceMongoDBService().insert(entries)
       }
