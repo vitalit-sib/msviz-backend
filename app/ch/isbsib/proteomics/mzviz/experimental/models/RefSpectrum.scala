@@ -5,6 +5,6 @@ import ch.isbsib.proteomics.mzviz.commons._
 
 
 /**
- * @author Roman Mylonas on 07/11/14.
+ * @author Roman Mylonas
  */
 case  class RefSpectrum(scanNumber:ScanNumber, precursor:ExpPeakPrecursor, title:String, idRun:Option[IdRun])
