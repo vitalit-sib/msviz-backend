@@ -20,7 +20,8 @@ import scala.concurrent.Future
 /**
  * Commons functionalities for our controllers
  *
- * @author Alexandre Masselot
+ * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
+ * copyright 2014-2015, Swiss Institute of Bioinformatics
  */
 @Api(value = "/exp", description = "experimental data access")
 trait CommonController extends Controller {

@@ -20,7 +20,8 @@ import scala.concurrent.Future
 
 
 /**
- * Created by Roman Mylonas
+ * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
+ * copyright 2014-2015, Swiss Institute of Bioinformatics
  */
 class MatchMongoDBService (val db: DefaultDB) extends MongoDBService {
   val collectionName = "psm"

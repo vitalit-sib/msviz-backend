@@ -6,7 +6,8 @@ import play.api.libs.json._
 
 /**
  * Created by tmartinc on 05/12/14.
- * @author Trinidad Martin
+ * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
+ * copyright 2014-2015, Swiss Institute of Bioinformatics
  */
 object JsonTheoFormats {
 

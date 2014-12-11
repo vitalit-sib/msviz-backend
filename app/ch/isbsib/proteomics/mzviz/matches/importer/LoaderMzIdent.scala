@@ -13,7 +13,8 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 
 /**
- * @author Roman Mylonas & Alexandre Masselot
+ * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
+ * copyright 2014-2015, Swiss Institute of Bioinformatics
  */
 object LoaderMzIdent {
 

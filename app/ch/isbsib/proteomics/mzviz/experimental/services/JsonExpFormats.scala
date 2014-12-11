@@ -10,7 +10,8 @@ import play.api.libs.functional.syntax._
 import reactivemongo.bson.{BSONDocument, BSONDocumentReader}
 
 /**
- * @author Alexandre Masselot
+ * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
+ * copyright 2014-2015, Swiss Institute of Bioinformatics
  */
 object JsonExpFormats {
 

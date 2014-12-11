@@ -17,7 +17,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 /**
- * @author Alexandre Masselot
+ * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
+ * copyright 2014-2015, Swiss Institute of Bioinformatics
  */
 class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
   val collectionName = "sequences"

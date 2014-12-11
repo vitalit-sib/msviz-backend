@@ -20,7 +20,8 @@ import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
 /**
- * @author Alexandre Masselot
+ * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
+ * copyright 2014-2015, Swiss Institute of Bioinformatics
  */
 class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
   val collectionName = "msnSpectra"

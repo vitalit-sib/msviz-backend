@@ -11,7 +11,8 @@ import scala.util.matching.Regex
 /**
  * opens a file and get a list of fasta entries
  *
- * @author Trinidad Martín
+ * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
+ * copyright 2014-2015, Swiss Institute of Bioinformatics
  */
 class FastaParser(file: File, source:Option[SequenceSource]) {
   val reHeader = """>?..\|(.*?)\|.*""".r

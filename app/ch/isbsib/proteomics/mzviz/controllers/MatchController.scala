@@ -16,7 +16,8 @@ import play.api.libs.json._
 import play.api.mvc.Action
 
 /**
- * @author Alexandre Masselot
+ * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
+ * copyright 2014-2015, Swiss Institute of Bioinformatics
  */
 @Api(value = "/matches", description = "PSM, SSM etc.")
 object MatchController extends CommonController {

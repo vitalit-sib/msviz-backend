@@ -6,7 +6,8 @@ import ch.isbsib.proteomics.mzviz.matches.models.{Peptide, PepMatchInfo, Protein
 import play.api.libs.json._
 
 /**
- * Created by Roman Mylonas
+ * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
+ * copyright 2014-2015, Swiss Institute of Bioinformatics
  */
 
 object JsonMatchFormats {

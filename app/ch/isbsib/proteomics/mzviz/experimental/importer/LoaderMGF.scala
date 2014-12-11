@@ -13,7 +13,8 @@ import scala.util.{Failure, Success, Try}
 
 /**
  * Load an MGF file into an MSRun
- * @author Alexandre Masselot
+ * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
+ * copyright 2014-2015, Swiss Institute of Bioinformatics
  */
 object LoaderMGF {
   val reEqual = """(\w.*?)=(.*)""".r

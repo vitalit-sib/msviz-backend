@@ -1,7 +1,8 @@
 package ch.isbsib.proteomics.mzviz.matches.models
 
 /**
- * Created by Roman Mylonas on 21/11/14.
+ * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
+ * copyright 2014-2015, Swiss Institute of Bioinformatics
  */
 
 case class PepMatchInfo(

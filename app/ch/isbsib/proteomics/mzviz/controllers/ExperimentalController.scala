@@ -18,17 +18,14 @@ import play.api.libs.json._
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
-// Reactive Mongo imports
-
 import reactivemongo.api._
-
-// Reactive Mongo plugin, including the JSON-specialized collection
 
 import play.modules.reactivemongo.MongoController
 import play.modules.reactivemongo.json.collection.JSONCollection
 
 /**
- * @author Alexandre Masselot
+ * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
+ * copyright 2014-2015, Swiss Institute of Bioinformatics
  */
 @Api(value = "/exp", description = "experimental data access")
 object ExperimentalController extends CommonController {

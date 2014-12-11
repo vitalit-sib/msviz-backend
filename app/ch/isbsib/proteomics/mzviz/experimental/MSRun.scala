@@ -3,6 +3,7 @@ package ch.isbsib.proteomics.mzviz.experimental
 import ch.isbsib.proteomics.mzviz.experimental.models.ExpMSnSpectrum
 
 /**
- * @author Alexandre Masselot
+ * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
+ * copyright 2014-2015, Swiss Institute of Bioinformatics
  */
 class MSRun(val id:IdRun, val msnSpectra:Seq[ExpMSnSpectrum])

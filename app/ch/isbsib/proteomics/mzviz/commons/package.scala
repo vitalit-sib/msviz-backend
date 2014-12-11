@@ -2,7 +2,8 @@ package ch.isbsib.proteomics.mzviz
 
 /**
  * value classes to be fancy
- * @author Alexandre Masselot
+ * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
+ * copyright 2014-2015, Swiss Institute of Bioinformatics
  */
 package object commons {
   case class Moz(value:Double) extends AnyVal
