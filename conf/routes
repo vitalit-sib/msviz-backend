@@ -15,5 +15,8 @@ GET           /api-docs/sequence                 controllers.ApiHelpController.g
 GET           /sequence/list-sources             ch.isbsib.proteomics.mzviz.controllers.SequenceController.listSources
 POST          /sequence/fasta                    ch.isbsib.proteomics.mzviz.controllers.SequenceController.loadFasta
 
+GET           /api-docs/match                    controllers.ApiHelpController.getResource(path = "/match")
+POST          /match/psms                        ch.isbsib.proteomics.mzviz.controllers.MatchController.loadPsms
+
 GET           /docs/*file                        controllers.Assets.at(path="/public/docs", file)
 GET           /api-docs                          controllers.ApiHelpController.getResources

@@ -25,10 +25,10 @@ import scala.concurrent.Future
 class MatchMongoDBService (val db: DefaultDB) extends MongoDBService {
   val collectionName = "psm"
 
-  def indexes = List(new Index(
+  setIndexes(List(new Index(
     Seq("spId" -> IndexType.Ascending, "spSource" -> IndexType.Ascending),
     name = Some("id_source"),
-    unique = true))
+    unique = true)))
 
   /**
    * insert a list of Match entries

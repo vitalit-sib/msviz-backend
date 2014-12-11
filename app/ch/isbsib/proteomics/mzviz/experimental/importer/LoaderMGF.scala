@@ -71,7 +71,8 @@ object LoaderMGF {
     }
   }
 
-  val reRTTitleWiff = """.*Elution: ([0-9\.]+) min.*""".r
+  val reRTTitleWiff = """.*Elution:\s+([0-9\.]+)\s+min.*""".r
+  val reRTTitleWiffInterval = """.*Elution:\s+([0-9\.]+)\s+to\s+([0-9\.]+)\s+min.*""".r
 
   /**
    * try to read retention time from RTINSECONDS, RTINSECONDS[0] fields or parsed out from TITLE line
@@ -83,10 +84,13 @@ object LoaderMGF {
       .orElse(args.get("RTINSECONDS[0]"))
       .orElse(
         args.get("TITLE") match {
-          case Some(reRTTitleWiff(rt)) => Some((rt.toDouble*60).toString)
+          case Some(reRTTitleWiff(rt)) => Some((rt.toDouble * 60).toString)
+          case Some(reRTTitleWiffInterval(rtFrom, rtTo)) => Some((30*(rtFrom.toDouble +rtTo.toDouble)).toString)
+          case None => {
+            throw new UnsupportedOperationException(s"cannot parse retention time from $args, neither from RTINSECONDS nor TITLE")
+          }
           case _ => {
-            Logger.warn(s"cannot parse retention time from $args")
-            throw new UnsupportedOperationException(s"cannot parse retention time from $args")
+            throw new UnsupportedOperationException(s"""cannot parse retention time from TITLE: ${args.get("TITLE")}""")
           }
         }
       ).get

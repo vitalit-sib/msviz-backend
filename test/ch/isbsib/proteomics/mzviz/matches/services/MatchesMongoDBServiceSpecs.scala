@@ -30,17 +30,13 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "import and insert q psm list" should {
     "get them up " in new TempMongoDBService {
-      println ("get them up ")
       service.countEntries.futureValue must equalTo(0)
-      println ("get them up 2")
       service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid")).futureValue
       Thread.sleep(200)
       service.countEntries.futureValue must equalTo(62)
-      println ("get them up 3")
       service.insert(LoaderMzIdent.parse("test/resources/F001644.mzid")).futureValue
       Thread.sleep(200)
       service.countEntries.futureValue must equalTo(499)
-      println ("get them up 4")
       service.countSources.futureValue must equalTo(2)
     }
   }

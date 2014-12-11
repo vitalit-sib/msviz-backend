@@ -22,10 +22,12 @@ import scala.concurrent.Future
 class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
   val collectionName = "sequences"
 
-  def indexes = List(new Index(
-    Seq("accessionCode" -> IndexType.Ascending, "source" -> IndexType.Ascending),
-    name = Some("ac_source"),
-    unique = true))
+  setIndexes(List(
+    new Index(
+      Seq("accessionCode" -> IndexType.Ascending, "source" -> IndexType.Ascending),
+      name = Some("ac_source"),
+      unique = true)
+  ))
 
   /**
    * insert a list of Fasta entries

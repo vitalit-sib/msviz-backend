@@ -140,6 +140,17 @@ class LoaderMGFSpecs extends Specification {
       sp.ref.precursor.retentionTime must equalTo(RetentionTime(49.866 * 60))
       sp.ref.title must equalTo("File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 49.866 min, Period: 1, Cycle(s): 2030 (Experiment 4)")
       sp.ref.scanNumber must equalTo(ScanNumber(-1))
+
+    }
+    "args2RT in elution time point in TITLE" in {
+      val map: Map[String, String] =Map("TITLE"-> """File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 49.866 min, Period: 1, Cycle(s): 2030 (Experiment 4)""")
+      val rt = LoaderMGF.args2RT(map)
+      rt must equalTo(Success(RetentionTime(49.866 * 60)))
+    }
+    "args2RT in elution time interval in TITLE" in {
+      val map: Map[String, String] =Map("TITLE"-> """File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 49.454 to 49.574 min, Period: 1, Cycle(s): 2027-2028 (Experiment 3), 2027 (Experiment 4)""")
+      val rt = LoaderMGF.args2RT(map)
+      rt must equalTo(Success(RetentionTime(30*(49.454 + 49.574))))
     }
   }
 }

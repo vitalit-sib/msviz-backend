@@ -29,12 +29,10 @@ trait MongoDBService {
   def collection: JSONCollection = db.collection[JSONCollection](collectionName)
 
 
-  def indexes: List[Index]
-
   /**
    * Ensure we have the correct indexes
    */
-  def setupIndexes:Unit = {
+  def setIndexes(indexes: List[Index]):Unit = {
     Logger.info(s"building mongo indexes for $collectionName")
 
     for {
@@ -43,16 +41,18 @@ trait MongoDBService {
       collection.indexesManager.ensure(idx).map {
         b =>
           if (b)
-            Logger.info(s"index [${idx.name}] was created")
+            Logger.info(s"""index [${idx.name.getOrElse("?")}] was created""")
           else
-            Logger.info(s"index [${idx.name}] already exists")
+            Logger.info(s"""index [${idx.name.getOrElse("?")}] already exists""")
+      }
+      .recover {
+        case e=> Logger.error(s"cannot create index on $collectionName: ${e.getMessage}")
       }
 
     }
   }
 
 
-  setupIndexes
 }
 
 case class MongoNotFoundException(message:String) extends Exception(message)

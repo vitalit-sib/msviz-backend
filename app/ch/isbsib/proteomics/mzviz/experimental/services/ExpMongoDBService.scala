@@ -25,10 +25,10 @@ import scala.util.{Failure, Success}
 class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
   val collectionName = "msnSpectra"
 
-  def indexes = List(new Index(
+  setIndexes(List(new Index(
     Seq("ref.idRun" -> IndexType.Ascending, "ref.title" -> IndexType.Ascending),
     name = Some("idRun_title"),
-    unique = true))
+    unique = true)))
 
 
   /**
