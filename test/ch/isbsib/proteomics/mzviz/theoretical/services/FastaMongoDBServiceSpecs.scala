@@ -26,7 +26,7 @@ class FastaMongoDBServiceSpecs extends Specification with ScalaFutures {
     PatienceConfig(timeout = Span(15, Seconds), interval = Span(5000, Millis))
 
   /**
-   * extends the temp mngodatabase and add a exp service above it
+   * extends the temp mongodatabase and add a exp service above it
    */
   trait TempMongoDBService extends TempMongoDBForSpecs {
     val service = new SequenceMongoDBService(db)
@@ -48,6 +48,17 @@ class FastaMongoDBServiceSpecs extends Specification with ScalaFutures {
       val f2 = service.insert(FastaParser("test/resources/M_100small.fasta", SequenceSource("small-2")).parse)
       Future.sequence(List(f1, f2)).futureValue
       val sources = service.listSources.futureValue.sortBy(_.value) mustEqual (List(SequenceSource("small-1"), SequenceSource("small-2")))
+    }
+  }
+
+  "countSequences" should {
+    "get 2 sequences" in new TempMongoDBService {
+
+      val f1 = service.insert(FastaParser("test/resources/M_100small.fasta", SequenceSource("small-1")).parse)
+      val f2 = service.insert(FastaParser("test/resources/M_100small.fasta", SequenceSource("small-2")).parse)
+      val n: Int = service.countSequencesBySource(SequenceSource("small-1")).futureValue
+      n must equalTo(2)
+
     }
   }
 

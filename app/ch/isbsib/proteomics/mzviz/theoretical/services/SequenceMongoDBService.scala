@@ -6,11 +6,12 @@ import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
 import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
 import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
 import play.api.libs.iteratee.Enumerator
+import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
 import reactivemongo.api._
 import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.BSONDocument
+import reactivemongo.bson.{BSONString, BSONDocument}
 import reactivemongo.core.commands.{RawCommand, Count}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -92,6 +93,14 @@ class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
    */
   def countSources: Future[Int] = {
     listSources.map(_.size)
+  }
+  /**
+   * count the number of data sequence for a given source
+   * @return
+   */
+  def countSequencesBySource (source: SequenceSource): Future[Int] = {
+    //collection.find(source).cursor[Int].collect()
+    db.command(Count(collectionName, Some(BSONDocument("source" -> source.value))))
   }
 
   /**
