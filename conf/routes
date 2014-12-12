@@ -18,6 +18,7 @@ POST          /sequence/fasta                    ch.isbsib.proteomics.mzviz.cont
 GET           /api-docs/match                    controllers.ApiHelpController.getResource(path = "/match")
 POST          /match/psms                        ch.isbsib.proteomics.mzviz.controllers.MatchController.loadPsms
 GET           /match/psms-by-runid/:runId        ch.isbsib.proteomics.mzviz.controllers.MatchController.findAllPSMByRunId(runId)
+DELETE        /match/:runId                      ch.isbsib.proteomics.mzviz.controllers.MatchController.deleteAllBySource(runId)
 
 
 GET           /docs/*file                        controllers.Assets.at(path="/public/docs", file)

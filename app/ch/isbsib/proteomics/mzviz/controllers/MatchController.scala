@@ -78,13 +78,13 @@ object MatchController extends CommonController {
       }
     }
 
-  @ApiOperation(nickname = "deleteMSRun",
-    value = "delete a run and all experimental data associated with it",
+  @ApiOperation(nickname = "deleteAllBySource",
+    value = "delete PSMs for a given run-id",
     notes = """No double check is done. Use with caution""",
     response = classOf[String],
     httpMethod = "DELETE")
-  def deleteMSRun(idRun: String) = Action.async {
-    ExpMongoDBService().delete(IdRun(idRun)).map { x =>
+  def deleteAllBySource(idRun: String) = Action.async {
+    MatchMongoDBService().deleteAllBySource(SpectraSource(idRun)).map { x =>
       Ok("OK")
     }
   }
