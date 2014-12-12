@@ -2,13 +2,13 @@ package ch.isbsib.proteomics.mzviz.controllers
 
 import javax.ws.rs.PathParam
 
+import ch.isbsib.proteomics.mzviz.commons.SpectraSource
 import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
 import ch.isbsib.proteomics.mzviz.experimental.IdRun
-import ch.isbsib.proteomics.mzviz.experimental.importer.LoaderMGF
-import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, RefSpectrum}
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
-import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
+import ch.isbsib.proteomics.mzviz.matches.models.PepSpectraMatch
+import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
 import ch.isbsib.proteomics.mzviz.matches.services.MatchMongoDBService
 import com.wordnik.swagger.annotations._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -17,13 +17,12 @@ import play.api.mvc.Action
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
- * copyright 2014-2015, Swiss Institute of Bioinformatics
+ *         copyright 2014-2015, Swiss Institute of Bioinformatics
  */
 @Api(value = "/matches", description = "PSM, SSM etc.")
 object MatchController extends CommonController {
 
   def stats = Action.async {
-
     ExpMongoDBService().stats.map { st =>
       Ok(jsonWritesMap.writes(st))
     }
@@ -53,7 +52,7 @@ object MatchController extends CommonController {
       localFile("mzid", request)
         .flatMap {
         case (uploadedFile, filename) =>
-          val idMatch = request.body.dataParts.get("id").map(_.head)
+          //          val idSearch = request.body.dataParts.get("search-id").map(_.head)
           val psms = LoaderMzIdent.parse(uploadedFile.getAbsolutePath)
           MatchMongoDBService().insert(psms)
       }
@@ -63,29 +62,16 @@ object MatchController extends CommonController {
       }
   }
 
-  @ApiOperation(nickname = "findExpSpectrum",
-    value = "find a spectrum by run id and spectrum title",
-    notes = """the tuple should be unique by indexing""",
-    response = classOf[ExpMSnSpectrum],
+  @ApiOperation(nickname = "findAllPSMByRunId",
+    value = "find all PSMs by by runId",
+    notes = """PSMs list""",
+    response = classOf[List[PepSpectraMatch]],
     httpMethod = "GET")
-  def findExpSpectrum(@ApiParam(value = """run id""", defaultValue = "") @PathParam("idRun") idRun: String,
-                      @ApiParam(value = """spectrum title""", defaultValue = "") @PathParam("title") title: String) =
+  def findAllPSMByRunId(
+                         @ApiParam(value = """run id""", defaultValue = "") @PathParam("runId") runId: String
+                         ) =
     Action.async {
-      ExpMongoDBService().findSpectrumByRunIdAndTitle(IdRun(idRun), title)
-        .map { case sp: ExpMSnSpectrum => Ok(Json.toJson(sp))}
-        .recover {
-        case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
-      }
-    }
-
-  @ApiOperation(nickname = "findAllRefSpectraByIdRun",
-    value = "find all spectra for a given run id",
-    notes = """Returns only the reference information (precursor & co)""",
-    response = classOf[List[RefSpectrum]],
-    httpMethod = "GET")
-  def findAllRefSpectraByIdRun(@ApiParam(value = """run id""", defaultValue = "") @PathParam("idRun") idRun: String) =
-    Action.async {
-      ExpMongoDBService().findAllRefSpectraByIdRun(IdRun(idRun))
+      MatchMongoDBService().findAllPSMByRunId(SpectraSource(runId))
         .map { case sphList: List[JsObject] => Ok(Json.toJson(sphList))}
         .recover {
         case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))

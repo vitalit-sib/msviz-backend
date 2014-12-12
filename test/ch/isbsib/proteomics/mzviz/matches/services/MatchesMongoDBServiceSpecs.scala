@@ -71,4 +71,13 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
     }
   }
 
+  "findAllPSMByRunId" should {
+    "find all" in new TempMongoDBService {
+
+      service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid")).futureValue
+      val psmList = service.findAllPSMByRunId(SpectraSource("rafts1_123spectra")).futureValue
+      Thread.sleep(200)
+      psmList.size must equalTo(62)
+    }
+  }
 }

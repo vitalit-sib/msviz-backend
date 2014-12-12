@@ -7,9 +7,9 @@ GET           /api-docs/exp                      controllers.ApiHelpController.g
 GET           /exp                               ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.stats
 GET           /exp/msrun                         ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.listMSRunIds
 POST          /exp/msrun                         ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.loadMSRun
-DELETE        /exp/msrun/:idRun                  ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.deleteMSRun(idRun)
-GET           /exp/spectrum/:idRun/:title        ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.findExpSpectrum(idRun, title)
-GET           /exp/ref-spectra/:idRun            ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.findAllRefSpectraByIdRun(idRun)
+DELETE        /exp/msrun/:runId                  ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.deleteMSRun(runId)
+GET           /exp/spectrum/:runId/:title        ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.findExpSpectrum(runId, title)
+GET           /exp/ref-spectra/:runId            ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.findAllRefSpectraByIdRun(runId)
 
 GET           /api-docs/sequence                 controllers.ApiHelpController.getResource(path = "/sequence")
 GET           /sequence/list-sources             ch.isbsib.proteomics.mzviz.controllers.SequenceController.listSources
@@ -17,6 +17,8 @@ POST          /sequence/fasta                    ch.isbsib.proteomics.mzviz.cont
 
 GET           /api-docs/match                    controllers.ApiHelpController.getResource(path = "/match")
 POST          /match/psms                        ch.isbsib.proteomics.mzviz.controllers.MatchController.loadPsms
+GET           /match/psms-by-runid/:runId        ch.isbsib.proteomics.mzviz.controllers.MatchController.findAllPSMByRunId(runId)
+
 
 GET           /docs/*file                        controllers.Assets.at(path="/public/docs", file)
 GET           /api-docs                          controllers.ApiHelpController.getResources

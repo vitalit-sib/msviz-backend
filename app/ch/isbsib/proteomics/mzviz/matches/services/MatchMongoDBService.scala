@@ -29,7 +29,7 @@ class MatchMongoDBService (val db: DefaultDB) extends MongoDBService {
   setIndexes(List(new Index(
     Seq("spId" -> IndexType.Ascending, "spSource" -> IndexType.Ascending),
     name = Some("id_source"),
-    unique = true)))
+    unique = false)))
 
   /**
    * insert a list of Match entries
@@ -64,6 +64,17 @@ class MatchMongoDBService (val db: DefaultDB) extends MongoDBService {
     val projection = Json.obj("spId" -> 1, "_id" -> 1)
     collection.find(query, projection).cursor[JsObject].collect[List]()
   }
+
+  /**
+   * retrieves all entries for a given source
+   * @param source the data source
+   * @return
+   */
+  def findAllPSMByRunId(source: SpectraSource): Future[Seq[PepSpectraMatch]] = {
+    val query = Json.obj("spSource" -> source.value)
+    collection.find(query).cursor[PepSpectraMatch].collect[List]()
+  }
+
 
   /**
    *

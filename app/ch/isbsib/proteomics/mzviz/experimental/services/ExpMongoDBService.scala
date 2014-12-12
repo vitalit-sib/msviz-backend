@@ -56,7 +56,7 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
   }
 
   /**
-   *
+   * Returns just the spectra ref for a given run
    * @param idRun the run id
    * @return
    */
@@ -126,7 +126,6 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
 
     }
   }
-
 }
 
 
