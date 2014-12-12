@@ -19,7 +19,7 @@ import play.api.mvc.Action
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
  *         copyright 2014-2015, Swiss Institute of Bioinformatics
  */
-@Api(value = "/matches", description = "PSM, SSM etc.")
+@Api(value = "/match", description = "PSMs, SSMs, protain matches etc.")
 object MatchController extends CommonController {
 
   def stats = Action.async {
