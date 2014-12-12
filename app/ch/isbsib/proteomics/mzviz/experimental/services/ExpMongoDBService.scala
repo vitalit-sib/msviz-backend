@@ -2,7 +2,7 @@ package ch.isbsib.proteomics.mzviz.experimental.services
 
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoDBService, MongoNotFoundException}
 import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, RefSpectrum}
-import ch.isbsib.proteomics.mzviz.experimental.{ScanNumber, IdRun, MSRun}
+import ch.isbsib.proteomics.mzviz.experimental.{ScanNumber, RunId, MSRun}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import play.api.Logger
 import play.api.libs.iteratee.Enumerator
@@ -27,8 +27,8 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
   val collectionName = "msnSpectra"
 
   setIndexes(List(new Index(
-    Seq("ref.idRun" -> IndexType.Ascending, "ref.title" -> IndexType.Ascending),
-    name = Some("idRun_title"),
+    Seq("ref.runId" -> IndexType.Ascending, "ref.title" -> IndexType.Ascending),
+    name = Some("runId_title"),
     unique = true)))
 
 
@@ -44,11 +44,11 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
 
   /**
    * remove all msnSpectra for a given run
-   * @param idRun the run id
+   * @param runId the run id
    * @return
    */
-  def delete(idRun: IdRun): Future[Boolean] = {
-    val query = Json.obj("ref.idRun" -> idRun.value)
+  def delete(runId: RunId): Future[Boolean] = {
+    val query = Json.obj("ref.runId" -> runId.value)
     collection.remove(query).map {
       case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
       case _ => true
@@ -57,26 +57,26 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
 
   /**
    * Returns just the spectra ref for a given run
-   * @param idRun the run id
+   * @param runId the run id
    * @return
    */
-  def findAllRefSpectraByIdRun(idRun: IdRun): Future[Seq[JsObject]] = {
-    val query = Json.obj("ref.idRun" -> idRun.value)
+  def findAllRefSpectraByrunId(runId: RunId): Future[Seq[JsObject]] = {
+    val query = Json.obj("ref.runId" -> runId.value)
     val projection = Json.obj("ref" -> 1, "_id" -> 1)
     collection.find(query, projection).cursor[JsObject].collect[List]()
   }
 
   /**
    * retrieves  by run & spectra title (unique by index setup)
-   * @param idRun the run id
+   * @param runId the run id
    * @param title the spectrum title
    * @return
    */
-  def findSpectrumByRunIdAndTitle(idRun: IdRun, title: String): Future[ExpMSnSpectrum] = {
-    val query = Json.obj("ref.idRun" -> idRun.value, "ref.title" -> title)
+  def findSpectrumByRunIdAndTitle(runId: RunId, title: String): Future[ExpMSnSpectrum] = {
+    val query = Json.obj("ref.runId" -> runId.value, "ref.title" -> title)
     collection.find(query).cursor[ExpMSnSpectrum].headOption map {
       case Some(sp: ExpMSnSpectrum) => sp
-      case None => throw new MongoNotFoundException(s"${idRun.value}/$title")
+      case None => throw new MongoNotFoundException(s"${runId.value}/$title")
     }
   }
 
@@ -84,14 +84,14 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
    * get the list of the run ids
    * @return
    */
-  def listMsRunIds: Future[Seq[IdRun]] = {
-    val command = RawCommand(BSONDocument("distinct" -> collectionName, "key" -> "ref.idRun"))
+  def listMsRunIds: Future[Seq[RunId]] = {
+    val command = RawCommand(BSONDocument("distinct" -> collectionName, "key" -> "ref.runId"))
     db.command(command)
       .map({
       doc =>
         doc.getAs[List[String]]("values").get
           .map {
-          i => IdRun(i)
+          i => RunId(i)
         }
     })
   }

@@ -4,7 +4,7 @@ import javax.ws.rs.PathParam
 
 import ch.isbsib.proteomics.mzviz.commons.SpectraSource
 import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
-import ch.isbsib.proteomics.mzviz.experimental.IdRun
+import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
 import ch.isbsib.proteomics.mzviz.matches.models.PepSpectraMatch
@@ -83,8 +83,8 @@ object MatchController extends CommonController {
     notes = """No double check is done. Use with caution""",
     response = classOf[String],
     httpMethod = "DELETE")
-  def deleteAllBySource(idRun: String) = Action.async {
-    MatchMongoDBService().deleteAllBySource(SpectraSource(idRun)).map { x =>
+  def deleteAllBySource(runId: String) = Action.async {
+    MatchMongoDBService().deleteAllBySource(SpectraSource(runId)).map { x =>
       Ok("OK")
     }
   }

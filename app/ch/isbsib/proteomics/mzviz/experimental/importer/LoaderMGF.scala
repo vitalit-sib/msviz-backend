@@ -105,7 +105,7 @@ object LoaderMGF {
    * @param text MGF block
    * @return
    */
-  def text2Precursor(text: String, idRun: Option[IdRun]): Try[RefSpectrum] = {
+  def text2Precursor(text: String, runId: Option[RunId]): Try[RefSpectrum] = {
     val reTitleScan = """.*\.(\d+)\.\d$""".r
     val args = text2map(text)
     for {
@@ -126,7 +126,7 @@ object LoaderMGF {
         scanNumber = ScanNumber(scanNumber.toInt),
         precursor = ExpPeakPrecursor(moz, intens, rt, Charge(z)),
         title = title,
-        idRun = idRun
+        runId = runId
       )
     }
   }
@@ -137,9 +137,9 @@ object LoaderMGF {
    * @param text MGF block
    * @return
    */
-  def text2MSnSpectrum(text: String, idRun: Option[IdRun]): Try[ExpMSnSpectrum] = {
+  def text2MSnSpectrum(text: String, runId: Option[RunId]): Try[ExpMSnSpectrum] = {
     for {
-      ref <- text2Precursor(text, idRun)
+      ref <- text2Precursor(text, runId)
       peaks <- text2peaks(text)
     } yield {
       ExpMSnSpectrum(ref = ref, peaks)
@@ -151,14 +151,14 @@ object LoaderMGF {
    * Loads an MGF file. peak order is taken out from the MGF file order as this makes sense in our examples
    *
    * @param filename .mgf file
-   * @param idRun default is idRun is taken out from file basename
+   * @param runId default is runId is taken out from file basename
    * @return
    */
-  def load(filename: String, idRun: Option[String] = None): MSRun = {
-    val actualIdRun = IdRun(idRun.getOrElse(new File(filename).getName.replace(".mgf", "")))
+  def load(filename: String, runId: Option[String] = None): MSRun = {
+    val actualrunId = RunId(runId.getOrElse(new File(filename).getName.replace(".mgf", "")))
 
     val lPeaks: Seq[ExpMSnSpectrum] = new IonsIterator(filename)
-      .map(t => text2MSnSpectrum(t, Some(actualIdRun)))
+      .map(t => text2MSnSpectrum(t, Some(actualrunId)))
       .filter({
       case (Failure(e)) => println(e.getMessage)
         false
@@ -166,7 +166,7 @@ object LoaderMGF {
     })
       .map(_.get)
       .toSeq
-    new MSRun(actualIdRun, lPeaks)
+    new MSRun(actualrunId, lPeaks)
   }
 
   /**

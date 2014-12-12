@@ -3,7 +3,7 @@ package ch.isbsib.proteomics.mzviz.controllers
 import java.io.File
 import javax.ws.rs.PathParam
 
-import ch.isbsib.proteomics.mzviz.experimental.IdRun
+import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.experimental.importer.LoaderMGF
 import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, RefSpectrum}
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService

@@ -86,8 +86,8 @@ class LoaderMGFSpecs extends Specification {
 
   "load" should {
     val run = LoaderMGF.load("test/resources/F001644.mgf")
-    "get idRun out of filename" in {
-      run.id must equalTo(IdRun("F001644"))
+    "get runId out of filename" in {
+      run.id must equalTo(RunId("F001644"))
     }
     "count the msms" in {
       run.msnSpectra.size must equalTo(1822)
@@ -116,8 +116,8 @@ class LoaderMGFSpecs extends Specification {
   "loading wiff" should {
     val run = LoaderMGF.load("test/resources/M_100.mgf")
 
-    "get idRun out of filename" in {
-      run.id must equalTo(IdRun("M_100"))
+    "get runId out of filename" in {
+      run.id must equalTo(RunId("M_100"))
     }
     "count the msms" in {
       run.msnSpectra.size must equalTo(123)

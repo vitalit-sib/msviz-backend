@@ -1,7 +1,7 @@
 package ch.isbsib.proteomics.mzviz.commons.services
 
 import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, RefSpectrum}
-import ch.isbsib.proteomics.mzviz.experimental.{ScanNumber, IdRun, MSRun}
+import ch.isbsib.proteomics.mzviz.experimental.{ScanNumber, RunId, MSRun}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
 import play.api.Logger

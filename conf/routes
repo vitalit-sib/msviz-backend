@@ -9,7 +9,7 @@ GET           /exp/msrun                         ch.isbsib.proteomics.mzviz.cont
 POST          /exp/msrun                         ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.loadMSRun
 DELETE        /exp/msrun/:runId                  ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.deleteMSRun(runId)
 GET           /exp/spectrum/:runId/:title        ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.findExpSpectrum(runId, title)
-GET           /exp/ref-spectra/:runId            ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.findAllRefSpectraByIdRun(runId)
+GET           /exp/ref-spectra/:runId            ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.findAllRefSpectraByRunId(runId)
 
 GET           /api-docs/sequence                 controllers.ApiHelpController.getResource(path = "/sequence")
 GET           /sequence/list-sources             ch.isbsib.proteomics.mzviz.controllers.SequenceController.listSources

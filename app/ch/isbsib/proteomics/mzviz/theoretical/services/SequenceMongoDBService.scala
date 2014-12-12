@@ -1,7 +1,7 @@
 package ch.isbsib.proteomics.mzviz.theoretical.services
 
 import ch.isbsib.proteomics.mzviz.commons.services.MongoDBService
-import ch.isbsib.proteomics.mzviz.experimental.IdRun
+import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
 import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
 import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}

@@ -4,7 +4,7 @@ import java.io.File
 import javax.ws.rs.PathParam
 
 import JsonCommonsFormats._
-import ch.isbsib.proteomics.mzviz.experimental.IdRun
+import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.experimental.importer.LoaderMGF
 import ch.isbsib.proteomics.mzviz.experimental.models.{RefSpectrum, ExpMSnSpectrum}
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
@@ -61,8 +61,8 @@ object ExperimentalController extends CommonController {
       localFile("mgf", request)
         .flatMap {
         case (uploadedFile, filename) =>
-          val idRun = request.body.dataParts.get("run-id").map(_.head)
-          val msRun = LoaderMGF.load(uploadedFile.getAbsolutePath, idRun)
+          val runId = request.body.dataParts.get("run-id").map(_.head)
+          val msRun = LoaderMGF.load(uploadedFile.getAbsolutePath, runId)
           ExpMongoDBService().insert(msRun)
       }
         .map { n => Ok(Json.obj("inserted" -> n))
@@ -76,24 +76,24 @@ object ExperimentalController extends CommonController {
     notes = """the tuple should be unique by indexing""",
     response = classOf[ExpMSnSpectrum],
     httpMethod = "GET")
-  def findExpSpectrum(@ApiParam(value = """run id""", defaultValue = "") @PathParam("idRun") idRun: String,
+  def findExpSpectrum(@ApiParam(value = """run id""", defaultValue = "") @PathParam("runId") runId: String,
                       @ApiParam(value = """spectrum title""", defaultValue = "") @PathParam("title") title: String) =
     Action.async {
-      ExpMongoDBService().findSpectrumByRunIdAndTitle(IdRun(idRun), title)
+      ExpMongoDBService().findSpectrumByRunIdAndTitle(RunId(runId), title)
         .map { case sp: ExpMSnSpectrum => Ok(Json.toJson(sp))}
         .recover {
         case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
       }
     }
 
-  @ApiOperation(nickname = "findAllRefSpectraByIdRun",
+  @ApiOperation(nickname = "findAllRefSpectraByrunId",
     value = "find all spectra for a given run id",
     notes = """Returns only the reference information (precursor & co)""",
     response = classOf[List[RefSpectrum]],
     httpMethod = "GET")
-  def findAllRefSpectraByIdRun(@ApiParam(value = """run id""", defaultValue = "") @PathParam("idRun") idRun: String) =
+  def findAllRefSpectraByRunId(@ApiParam(value = """run id""", defaultValue = "") @PathParam("runId") runId: String) =
     Action.async {
-      ExpMongoDBService().findAllRefSpectraByIdRun(IdRun(idRun))
+      ExpMongoDBService().findAllRefSpectraByrunId(RunId(runId))
         .map { case sphList: List[JsObject] => Ok(Json.toJson(sphList))}
         .recover {
         case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
@@ -105,8 +105,8 @@ object ExperimentalController extends CommonController {
     notes = """No double check is done. Use with caution""",
     response = classOf[String],
     httpMethod = "DELETE")
-  def deleteMSRun(idRun: String) = Action.async {
-    ExpMongoDBService().delete(IdRun(idRun)).map { x =>
+  def deleteMSRun(runId: String) = Action.async {
+    ExpMongoDBService().delete(RunId(runId)).map { x =>
       Ok("OK")
     }
   }

@@ -1,7 +1,7 @@
 package ch.isbsib.proteomics.mzviz.experimental.services
 
 import ch.isbsib.proteomics.mzviz.commons._
-import ch.isbsib.proteomics.mzviz.experimental.IdRun
+import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.experimental.importer.LoaderMGF
 import ch.isbsib.proteomics.mzviz.experimental.models.ExpPeakMSn
 import org.scalatest.concurrent.ScalaFutures
@@ -40,7 +40,7 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
 
       service.countMsnSpectra.futureValue must equalTo(246)
       service.countMsRuns.futureValue must equalTo(2)
-      service.listMsRunIds.futureValue must equalTo(List(IdRun("test-1"), IdRun("test-2")))
+      service.listMsRunIds.futureValue must equalTo(List(RunId("test-1"), RunId("test-2")))
     }
   }
 
@@ -49,13 +49,13 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
       service.insert(LoaderMGF.load("test/resources/M_100.mgf", Some("test-1"))).futureValue
       service.insert(LoaderMGF.load("test/resources/M_100.mgf", Some("test-2"))).futureValue
       service.countMsRuns.futureValue must equalTo(2)
-      service.listMsRunIds.futureValue must equalTo(List(IdRun("test-1"), IdRun("test-2")))
+      service.listMsRunIds.futureValue must equalTo(List(RunId("test-1"), RunId("test-2")))
 
       Thread.sleep(200)
-      service.delete(IdRun("test-1")).futureValue
+      service.delete(RunId("test-1")).futureValue
       Thread.sleep(200)
       service.countMsRuns.futureValue must equalTo(1)
-      service.listMsRunIds.futureValue must equalTo(List(IdRun("test-2")))
+      service.listMsRunIds.futureValue must equalTo(List(RunId("test-2")))
 
     }
   }
@@ -63,8 +63,8 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
     "find one" in new TempMongoDBService {
       val n = service.insert(LoaderMGF.load("test/resources/M_100.mgf", Some("test-1"))).futureValue
 
-      val sp = service.findSpectrumByRunIdAndTitle(IdRun("test-1"), "File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 56.254 min, Period: 1, Cycle(s): 2083 (Experiment 4)").futureValue
-      sp.ref.idRun must equalTo(Some(IdRun("test-1")))
+      val sp = service.findSpectrumByRunIdAndTitle(RunId("test-1"), "File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 56.254 min, Period: 1, Cycle(s): 2083 (Experiment 4)").futureValue
+      sp.ref.runId must equalTo(Some(RunId("test-1")))
       sp.ref.title must equalTo("File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 56.254 min, Period: 1, Cycle(s): 2083 (Experiment 4)")
 
       sp.peaks must have size(190)

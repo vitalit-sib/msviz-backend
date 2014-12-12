@@ -63,10 +63,10 @@ object JsonExpFormats {
     def writes(o: ScanNumber) = JsNumber(o.value)
   }
 
-  implicit val formatIdRun = new Format[IdRun] {
-    override def reads(json: JsValue): JsResult[IdRun] = JsSuccess(IdRun(json.as[String]))
+  implicit val formatRunId = new Format[RunId] {
+    override def reads(json: JsValue): JsResult[RunId] = JsSuccess(RunId(json.as[String]))
 
-    def writes(o: IdRun) = JsString(o.value)
+    def writes(o: RunId) = JsString(o.value)
   }
 
 
