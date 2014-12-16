@@ -4,6 +4,7 @@ import java.io.{FileInputStream, InputStream}
 
 import ch.isbsib.proteomics.mzviz.matches.ProteinAC
 import ch.isbsib.proteomics.mzviz.matches.models.{Peptide, ProteinMatch, PepSpectraMatch, PepMatchInfo}
+import ch.isbsib.proteomics.mzviz.theoretical.{numDatabaseSequences, SequenceSource}
 import org.apache.commons.io.FilenameUtils
 import org.expasy.mzjava.proteomics.io.ms.ident.{MzIdentMlReader, PSMReaderCallback}
 import org.expasy.mzjava.proteomics.ms.ident.{PeptideProteinMatch, SpectrumIdentifier, PeptideMatch}
@@ -51,6 +52,24 @@ object LoaderMzIdent {
     val mzIdentML = scala.xml.XML.loadFile(filename)
     val spectraDataLocation = mzIdentML \\ "SpectraData" \ "@location"
     FilenameUtils.getBaseName(spectraDataLocation.text)
+  }
+
+  /**
+   * parse the database  from the MzIdenML file. We do this seperately, since the MzJava parser doesn't take care of this information.
+   * TODO: adapt MzJava MzIdentMlParser, so that it parses searchDb information
+   * @param filename MzIdentML path
+   * @return a list of Tuples containing the SequenceSource and the number of entries
+   */
+  def parseSearchDbSourceInfo(filename: String): Seq[Tuple2[SequenceSource, numDatabaseSequences]] = {
+    val mzIdentML = scala.xml.XML.loadFile(filename)
+
+    (mzIdentML \\ "SearchDatabase").map { db =>
+      Tuple2( SequenceSource((db \ "@version").text), numDatabaseSequences((db \ "@numDatabaseSequences").text.toInt) )
+    }
+
+//    val nrSeqs =  \ "@numDatabaseSequences"
+//    val dbVersion = mzIdentML \\ "SearchDatabase" \ "@version"
+//    Tuple2(SequenceSource(dbVersion.text), numDatabaseSequences(nrSeqs.text.toInt))
   }
 
 
