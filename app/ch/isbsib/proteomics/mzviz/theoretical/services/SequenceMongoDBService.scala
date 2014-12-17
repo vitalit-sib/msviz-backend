@@ -1,7 +1,8 @@
 package ch.isbsib.proteomics.mzviz.theoretical.services
 
-import ch.isbsib.proteomics.mzviz.commons.services.MongoDBService
+import ch.isbsib.proteomics.mzviz.commons.services.{MongoNotFoundException, MongoDBService}
 import ch.isbsib.proteomics.mzviz.experimental.RunId
+import ch.isbsib.proteomics.mzviz.experimental.models.ExpMSnSpectrum
 import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
 import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
 import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
@@ -12,7 +13,7 @@ import play.modules.reactivemongo.MongoController
 import reactivemongo.api._
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.{BSONString, BSONDocument}
-import reactivemongo.core.commands.{RawCommand, Count}
+import reactivemongo.core.commands.{LastError, Remove, RawCommand, Count}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -46,14 +47,23 @@ class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @param source the datasource
    * @return
    */
-  def deleteAllBySource(source: SequenceSource): Future[Boolean] = ???
+  def deleteAllBySource(source: SequenceSource): Future[Boolean] = {
+    val query = Json.obj("source" -> source.value)
+    collection.remove(query).map {
+      case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
+      case _ => true
+    }
+  }
 
   /**
-   * retieves all entris for a given source
+   * retieves all entries for a given source
    * @param source the data source
    * @return
    */
-  def findAllEntriesBySource(source: SequenceSource): Future[Seq[FastaEntry]] = ???
+  def findAllEntriesBySource(source: SequenceSource): Future[Seq[FastaEntry]] = {
+    val query = Json.obj("source" -> source.value)
+    collection.find(query).cursor[FastaEntry].collect[List]()
+  }
 
   /**
    *
@@ -61,7 +71,13 @@ class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @param source data source
    * @return
    */
-  def findEntryByAccessionCodeAndSource(accessionCode: AccessionCode, source: SequenceSource): Future[FastaEntry] = ???
+  def findEntryByAccessionCodeAndSource(accessionCode: AccessionCode, source: SequenceSource): Future[FastaEntry] = {
+    val query = Json.obj("source" -> source.value,"ac" -> accessionCode)
+    collection.find(query).cursor[FastaEntry].headOption map {
+      case Some(fe: FastaEntry) => fe
+      case None => throw new MongoNotFoundException(s"${source.value}/$accessionCode")
+    }
+  }
 
   /**
    * GEt the list of data sources
@@ -99,7 +115,6 @@ class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @return
    */
   def countSequencesBySource (source: SequenceSource): Future[Int] = {
-    //collection.find(source).cursor[Int].collect()
     db.command(Count(collectionName, Some(BSONDocument("source" -> source.value))))
   }
 
