@@ -45,7 +45,7 @@ object MatchController extends CommonController {
     notes = """from the parameter search-id at load time""",
     response = classOf[List[String]],
     httpMethod = "GET")
-  def listMSRunIds = Action.async {
+  def listSearchIds = Action.async {
     MatchMongoDBService().listSearchIds.map {
       ids => Ok(Json.obj("searchIds" -> ids.map(_.value)))
     }
