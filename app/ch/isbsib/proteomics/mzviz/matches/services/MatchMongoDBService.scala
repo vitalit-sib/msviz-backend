@@ -2,6 +2,7 @@ package ch.isbsib.proteomics.mzviz.matches.services
 
 import ch.isbsib.proteomics.mzviz.commons.SpectraSource
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoNotFoundException, MongoDBService}
+import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models.{ProteinMatch, PepSpectraMatch}
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
 import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
@@ -86,13 +87,42 @@ class MatchMongoDBService (val db: DefaultDB) extends MongoDBService {
 
 
   /**
+   * retrieves a list of SearchId's
+   *
+   * @return list of SearchId
+   */
+
+  def listSearchIds: Future[Seq[SearchId]] = {
+    val command = RawCommand(BSONDocument("distinct" -> collectionName, "key" -> "searchId"))
+    db.command(command)
+      .map({
+      doc =>
+        doc.getAs[List[String]]("values").get
+          .map {
+          i => SearchId(i)
+        }
+    })
+  }
+
+
+  /**
+   * retrieves a list of ProteinMatches from one source
+   *
+   * @param searchId search identifier
+   * @return list of ProteinMatches
+   */
+
+  def listProteinMatchesBySearchId(searchId: SearchId): Future[Seq[ProteinMatch]] = ???
+
+
+  /**
    * retrieves a list of ProteinMatches from one source
    *
    * @param source data source
    * @return list of ProteinMatches
    */
 
-  def listProteinMatches(source: SequenceSource): Future[Seq[ProteinMatch]] = ???
+  def listProteinMatchesBySeqSource(source: SequenceSource): Future[Seq[ProteinMatch]] = ???
 
 
   /**

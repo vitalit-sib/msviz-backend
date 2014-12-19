@@ -81,4 +81,19 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
       psmList.size must equalTo(62)
     }
   }
+
+
+  "listSearchIds" should {
+    "list all" in new TempMongoDBService {
+      service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("M_100"))).futureValue
+      service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("yoyo"))).futureValue
+      Thread.sleep(200)
+      val searchIds = service.listSearchIds.futureValue
+
+      searchIds.size must equalTo(2)
+      searchIds(0) mustEqual(SearchId("M_100"))
+      searchIds(1) mustEqual(SearchId("yoyo"))
+    }
+  }
+
 }

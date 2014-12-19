@@ -40,6 +40,17 @@ object MatchController extends CommonController {
     }
   }
 
+  @ApiOperation(nickname = "listSearchIds",
+    value = "the list of search ids",
+    notes = """from the parameter search-id at load time""",
+    response = classOf[List[String]],
+    httpMethod = "GET")
+  def listMSRunIds = Action.async {
+    MatchMongoDBService().listSearchIds.map {
+      ids => Ok(Json.obj("searchIds" -> ids.map(_.value)))
+    }
+  }
+
   @ApiOperation(nickname = "loadMzId",
     value = "Loads an mzid run",
     notes = """ """,
