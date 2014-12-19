@@ -48,7 +48,7 @@ class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @return
    */
   def deleteAllBySource(source: SequenceSource): Future[Boolean] = {
-    val query = Json.obj("source" -> source.value)
+    val query = Json.obj("proteinRef.source" -> source.value)
     collection.remove(query).map {
       case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
       case _ => true
@@ -61,7 +61,7 @@ class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @return
    */
   def findAllEntriesBySource(source: SequenceSource): Future[Seq[FastaEntry]] = {
-    val query = Json.obj("source" -> source.value)
+    val query = Json.obj("proteinRef.source" -> source.value)
     collection.find(query).cursor[FastaEntry].collect[List]()
   }
 
@@ -72,7 +72,7 @@ class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @return
    */
   def findEntryByAccessionCodeAndSource(accessionCode: AccessionCode, source: SequenceSource): Future[FastaEntry] = {
-    val query = Json.obj("source" -> source.value,"ac" -> accessionCode)
+    val query = Json.obj("proteinRef.source" -> source.value,"proteinRef.ac" -> accessionCode)
     collection.find(query).cursor[FastaEntry].headOption map {
       case Some(fe: FastaEntry) => fe
       case None => throw new MongoNotFoundException(s"${source.value}/$accessionCode")
@@ -84,7 +84,7 @@ class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @return
    */
   def listSources: Future[Seq[SequenceSource]] = {
-    val command = RawCommand(BSONDocument("distinct" -> collectionName, "key" -> "source"))
+    val command = RawCommand(BSONDocument("distinct" -> collectionName, "key" -> "proteinRef.source"))
     db.command(command)
       .map({
       doc =>
@@ -115,7 +115,7 @@ class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @return
    */
   def countSequencesBySource (source: SequenceSource): Future[Int] = {
-    db.command(Count(collectionName, Some(BSONDocument("source" -> source.value))))
+    db.command(Count(collectionName, Some(BSONDocument("proteinRef.source" -> source.value))))
   }
 
   /**
