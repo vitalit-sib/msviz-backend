@@ -27,7 +27,7 @@ class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
 
   setIndexes(List(
     new Index(
-      Seq("accessionCode" -> IndexType.Ascending, "source" -> IndexType.Ascending),
+      Seq("ac" -> IndexType.Ascending, "source" -> IndexType.Ascending),
       name = Some("ac_source"),
       unique = true)
   ))
@@ -37,8 +37,8 @@ class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @param entries to be inserted
    * @return a Future of the number of entries loaded
    */
-  def insert(entries: Seq[FastaEntry]): Future[Int] = {
-    val enumerator = Enumerator(entries: _*)
+  def insert(entries: Iterator[FastaEntry]): Future[Int] = {
+    val enumerator = Enumerator.enumerate(entries)
     collection.bulkInsert(enumerator)
   }
 

@@ -1,6 +1,7 @@
 package ch.isbsib.proteomics.mzviz.theoretical.importer
 
 import java.io.File
+import java.util.Scanner
 
 import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
@@ -12,9 +13,9 @@ import scala.util.matching.Regex
  * opens a file and get a list of fasta entries
  *
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
- * copyright 2014-2015, Swiss Institute of Bioinformatics
+ *         copyright 2014-2015, Swiss Institute of Bioinformatics
  */
-class FastaParser(file: File, source:Option[SequenceSource]) {
+class FastaParser(file: File, source: Option[SequenceSource]) {
   val reHeader = """>?..\|(.*?)\|.*""".r
 
   def parseOneProtBlock(protLines: String): FastaEntry = {
@@ -31,13 +32,22 @@ class FastaParser(file: File, source:Option[SequenceSource]) {
   }
 
 
-  def parse: Seq[FastaEntry] = {
-    //Get the whole text
-    val lines = scala.io.Source.fromFile(file).mkString
+  /**
+   * parse the given source and produces and iterator of FastaEntry
+   * @return
+   */
+  def parse: Iterator[FastaEntry] = {
 
-    lines
-      .split( """\n>""")
-      .map(parseOneProtBlock)
+    val scanner = new Scanner(file).useDelimiter( """\n>""");
+
+    //we build an iterator over the file
+    val it: Iterator[String] = new Iterator[String] {
+      override def hasNext: Boolean = scanner.hasNext
+
+      override def next(): String = scanner.next()
+    }
+
+    it.map(parseOneProtBlock)
 
   }
 }
@@ -47,6 +57,7 @@ class FastaParser(file: File, source:Option[SequenceSource]) {
  * companion object
  */
 object FastaParser {
-  def apply(filename: String, source:SequenceSource) = new FastaParser(new File(filename), Some(source))
+  def apply(filename: String, source: SequenceSource) = new FastaParser(new File(filename), Some(source))
+
   def apply(filename: String) = new FastaParser(new File(filename), None)
 }
