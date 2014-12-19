@@ -28,7 +28,7 @@ class FastaParser(file: File, source: SequenceSource) {
     val reHeader(ac) = headline
     val seq = seqLines.replaceAll( """\s+""", "")
 
-    FastaEntry(ProteinRef(AccessionCode(ac), source), seq)
+    FastaEntry(ProteinRef(AccessionCode(ac), Some(source)), seq)
     //val=SequenceMongoDBService()
   }
 
