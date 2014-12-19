@@ -1,8 +1,8 @@
 package ch.isbsib.proteomics.mzviz.matches.importer
 
-import ch.isbsib.proteomics.mzviz.matches.ProteinAC
-import ch.isbsib.proteomics.mzviz.matches.models.PepSpectraMatch
-import ch.isbsib.proteomics.mzviz.theoretical.{numDatabaseSequences, SequenceSource}
+import ch.isbsib.proteomics.mzviz.matches.SearchId
+import ch.isbsib.proteomics.mzviz.matches.models.{ProteinRef, PepSpectraMatch}
+import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, numDatabaseSequences, SequenceSource}
 import org.specs2.mutable.Specification
 import ch.isbsib.proteomics.mzviz.commons.{SpectraSource, SpectraId}
 
@@ -41,7 +41,7 @@ class LoaderMzIdentSpecs extends Specification {
   }
 
     "parse M_100" should {
-      val psm: Seq[PepSpectraMatch] = LoaderMzIdent.parse("test/resources/M_100.mzid")
+      val psm: Seq[PepSpectraMatch] = LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("M_100"))
 
       "check size" in {
         psm.size must equalTo(62)
@@ -75,7 +75,7 @@ class LoaderMzIdentSpecs extends Specification {
       }
 
       "check first protein content" in {
-        psm(0).proteinList(0).AC must equalTo(ProteinAC("CD109_HUMAN"))
+        psm(0).proteinList(0).proteinRef must equalTo(ProteinRef(AC = AccessionCode("CD109_HUMAN"), source = SequenceSource("TODO")))
         psm(0).proteinList(0).startPos must equalTo(1013)
         psm(0).proteinList(0).endPos must equalTo(1018)
         psm(0).proteinList(0).previousAA must equalTo("R")

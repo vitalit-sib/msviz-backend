@@ -6,6 +6,7 @@ import ch.isbsib.proteomics.mzviz.commons.SpectraSource
 import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
 import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
+import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
 import ch.isbsib.proteomics.mzviz.matches.models.PepSpectraMatch
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
@@ -45,15 +46,16 @@ object MatchController extends CommonController {
     response = classOf[String],
     httpMethod = "POST")
   @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "mzid", value = "mzid file", required = true, dataType = "file", paramType = "body")
+    new ApiImplicitParam(name = "mzid", value = "mzid file", required = true, dataType = "file", paramType = "body"),
+    new ApiImplicitParam(name = "searchId", value = "a string id with search identifier", required = true, dataType = "string", paramType = "body")
   ))
   def loadPsms = Action.async(parse.multipartFormData) {
     request =>
       localFile("mzid", request)
         .flatMap {
         case (uploadedFile, filename) =>
-          //          val idSearch = request.body.dataParts.get("search-id").map(_.head)
-          val psms = LoaderMzIdent.parse(uploadedFile.getAbsolutePath)
+          val searchId = request.body.dataParts.get("searchId").map(_.head).get
+          val psms = LoaderMzIdent.parse(uploadedFile.getAbsolutePath, SearchId(searchId))
           MatchMongoDBService().insert(psms)
       }
         .map { n => Ok(Json.obj("inserted" -> n))
