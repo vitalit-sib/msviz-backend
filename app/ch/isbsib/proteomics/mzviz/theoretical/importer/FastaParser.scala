@@ -16,7 +16,7 @@ import scala.util.matching.Regex
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
  *         copyright 2014-2015, Swiss Institute of Bioinformatics
  */
-class FastaParser(file: File, source: Option[SequenceSource]) {
+class FastaParser(file: File, source: SequenceSource) {
   val reHeader = """>?..\|(.*?)\|.*""".r
 
   def parseOneProtBlock(protLines: String): FastaEntry = {
@@ -28,10 +28,9 @@ class FastaParser(file: File, source: Option[SequenceSource]) {
     val reHeader(ac) = headline
     val seq = seqLines.replaceAll( """\s+""", "")
 
-    FastaEntry(ProteinRef(AccessionCode(ac),source.get), seq)
+    FastaEntry(ProteinRef(AccessionCode(ac), source), seq)
     //val=SequenceMongoDBService()
   }
-
 
   /**
    * parse the given source and produces and iterator of FastaEntry
@@ -58,7 +57,6 @@ class FastaParser(file: File, source: Option[SequenceSource]) {
  * companion object
  */
 object FastaParser {
-  def apply(filename: String, source: SequenceSource) = new FastaParser(new File(filename), Some(source))
+  def apply(filename: String, source: SequenceSource) = new FastaParser(new File(filename), source)
 
-  def apply(filename: String) = new FastaParser(new File(filename), None)
 }
