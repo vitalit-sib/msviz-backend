@@ -1,5 +1,6 @@
 package ch.isbsib.proteomics.mzviz.theoretical.services
 
+import ch.isbsib.proteomics.mzviz.matches.models.ProteinRef
 import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
 import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
 import play.api.libs.json._
@@ -25,13 +26,30 @@ object JsonTheoFormats {
     def writes(o: SequenceSource) = JsString(o.value)
   }
 
+  implicit val formatProteinRef = new Format[ProteinRef] {
+    override def reads(json: JsValue): JsResult[ProteinRef] = JsSuccess(ProteinRef(AccessionCode(json.as[String]),SequenceSource(json.as[String])))
+
+    def writes(o: ProteinRef) : JsValue = {
+      JsString(o.AC.value)
+      JsString(o.source.value)
+    }
+  }
+
   implicit val jsonSequenceSource = new Writes[SequenceSource] {
     override def writes(o: SequenceSource): JsValue = {
       JsString(o.value)
     }
   }
 
+  implicit val jsonProteinRef = new Writes[ProteinRef] {
+    override def writes(o: ProteinRef): JsValue = {
+      JsString(o.AC.value)
+      JsString(o.source.value)
+    }
+  }
+
 
   implicit val formatFastaEntry = Json.format[FastaEntry]
+
 
 }
