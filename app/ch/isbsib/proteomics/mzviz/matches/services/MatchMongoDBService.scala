@@ -2,7 +2,7 @@ package ch.isbsib.proteomics.mzviz.matches.services
 
 import ch.isbsib.proteomics.mzviz.commons.SpectraSource
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoNotFoundException, MongoDBService}
-import ch.isbsib.proteomics.mzviz.matches.models.PepSpectraMatch
+import ch.isbsib.proteomics.mzviz.matches.models.{ProteinMatch, PepSpectraMatch}
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
 import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
 import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
@@ -83,6 +83,17 @@ class MatchMongoDBService (val db: DefaultDB) extends MongoDBService {
    * @return
    */
   def findEntriesByProteinMatch(accessionCode: AccessionCode, source: SequenceSource): Future[Seq[PepSpectraMatch]] = ???
+
+
+  /**
+   * retrieves a list of ProteinMatches from one source
+   *
+   * @param source data source
+   * @return list of ProteinMatches
+   */
+
+  def listProteinMatches(source: SequenceSource): Future[Seq[ProteinMatch]] = ???
+
 
   /**
    * Get the list of data sources

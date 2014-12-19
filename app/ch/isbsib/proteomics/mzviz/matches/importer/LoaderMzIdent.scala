@@ -25,7 +25,6 @@ object LoaderMzIdent {
    * @return
    */
   def parse(filename: String): Seq[PepSpectraMatch] = {
-
     // data from MzJava parser are stored in a list
     val searchResults = mzJavaParse(filename)
 
@@ -66,10 +65,6 @@ object LoaderMzIdent {
     (mzIdentML \\ "SearchDatabase").map { db =>
       Tuple2( SequenceSource((db \ "@version").text), numDatabaseSequences((db \ "@numDatabaseSequences").text.toInt) )
     }
-
-//    val nrSeqs =  \ "@numDatabaseSequences"
-//    val dbVersion = mzIdentML \\ "SearchDatabase" \ "@version"
-//    Tuple2(SequenceSource(dbVersion.text), numDatabaseSequences(nrSeqs.text.toInt))
   }
 
 
@@ -79,7 +74,6 @@ object LoaderMzIdent {
    * @return
    */
   def convertPeptide(mzJavaMatch: PeptideMatch): Peptide = {
-
     val pep = mzJavaMatch.toPeptide
     Peptide(sequence = pep.toSymbolString, molMass = pep.getMolecularMass, dbSequenceRef = "?")
   }
@@ -91,7 +85,6 @@ object LoaderMzIdent {
    * @return
    */
   def convertProtMatches(mzJavaMatch: PeptideMatch): Seq[ProteinMatch] = {
-
     (for {
       pMatch: PeptideProteinMatch <- mzJavaMatch.getProteinMatches.iterator().asScala
     } yield {
@@ -106,7 +99,6 @@ object LoaderMzIdent {
    * @return
    */
   def convertPepMatch(mzJavaMatch: PeptideMatch): PepMatchInfo = {
-
     // create the score map
     val scoreMap:Map[String, Double] =
       (for {k <- mzJavaMatch.getScoreMap.keys()}
