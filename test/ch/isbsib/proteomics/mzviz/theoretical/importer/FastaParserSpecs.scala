@@ -21,7 +21,7 @@ class FastaParserSpecs extends Specification with ScalaFutures {
 
 
   "parse" should {
-    val entries = FastaParser("test/resources/M_100small.fasta").parse
+    val entries = FastaParser("test/resources/M_100small.fasta").parse.toList
 
     val mapEntries: Map[AccessionCode, FastaEntry] = entries.map(e => (e.ac, e)).toMap
 
