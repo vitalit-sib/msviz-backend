@@ -37,7 +37,7 @@ object JsonTheoFormats {
   implicit val jsonProteinRef = new Writes[ProteinRef] {
     override def writes(o: ProteinRef): JsValue = {
       JsString(o.AC.value)
-      JsString(o.source.value)
+      JsString(o.source.get.value)
     }
   }
 

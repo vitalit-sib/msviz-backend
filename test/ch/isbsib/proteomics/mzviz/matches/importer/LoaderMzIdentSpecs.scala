@@ -75,7 +75,7 @@ class LoaderMzIdentSpecs extends Specification {
       }
 
       "check first protein content" in {
-        psm(0).proteinList(0).proteinRef must equalTo(ProteinRef(AC = AccessionCode("CD109_HUMAN"), source = SequenceSource("TODO")))
+        psm(0).proteinList(0).proteinRef must equalTo(ProteinRef(AC = AccessionCode("CD109_HUMAN"), source = Some(SequenceSource("TODO"))))
         psm(0).proteinList(0).startPos must equalTo(1013)
         psm(0).proteinList(0).endPos must equalTo(1018)
         psm(0).proteinList(0).previousAA must equalTo("R")
