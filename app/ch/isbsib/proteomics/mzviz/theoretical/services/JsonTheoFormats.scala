@@ -26,14 +26,7 @@ object JsonTheoFormats {
     def writes(o: SequenceSource) = JsString(o.value)
   }
 
-  implicit val formatProteinRef = new Format[ProteinRef] {
-    override def reads(json: JsValue): JsResult[ProteinRef] = JsSuccess(ProteinRef(AccessionCode(json.as[String]),SequenceSource(json.as[String])))
-
-    def writes(o: ProteinRef) : JsValue = {
-      JsString(o.AC.value)
-      JsString(o.source.value)
-    }
-  }
+  implicit val formatProteinRef = Json.format[ProteinRef]
 
   implicit val jsonSequenceSource = new Writes[SequenceSource] {
     override def writes(o: SequenceSource): JsValue = {
@@ -47,7 +40,6 @@ object JsonTheoFormats {
       JsString(o.source.value)
     }
   }
-
 
   implicit val formatFastaEntry = Json.format[FastaEntry]
 

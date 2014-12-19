@@ -6,3 +6,4 @@ Visit the [wiki page](../../wiki) to have more details.
 
 ## Authors
 Roman Mylonas (roman.mylonas@isb-sib.ch), Trinidad Martin (trinidad.martin@isb-ib.ch) and  Alexandre Masselot (alexandre.masselot@isb-sib.ch)
+pwd
