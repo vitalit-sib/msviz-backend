@@ -1,5 +1,6 @@
 package ch.isbsib.proteomics.mzviz.controllers
 
+import ch.isbsib.proteomics.mzviz.matches.models.ProteinRef
 import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
 import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
 import play.api.libs.json.{JsValue, Writes}
@@ -31,6 +32,7 @@ object JsonCommonsFormats {
 //  }
 implicit val formatAC = Json.format[AccessionCode]
   implicit val formatSequenceSource = Json.format[SequenceSource]
+  implicit val formatProteinRef = Json.format[ProteinRef]
   implicit val formatFastaEntry = Json.format[FastaEntry]
 
 }
