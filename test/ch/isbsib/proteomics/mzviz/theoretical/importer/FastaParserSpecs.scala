@@ -23,7 +23,7 @@ class FastaParserSpecs extends Specification with ScalaFutures {
   "parse" should {
     val entries = FastaParser("test/resources/M_100small.fasta").parse.toList
 
-    val mapEntries: Map[AccessionCode, FastaEntry] = entries.map(e => (e.ac, e)).toMap
+    val mapEntries: Map[AccessionCode, FastaEntry] = entries.map(e => (e.proteinRef.AC, e)).toMap
 
     "check the correct number of entries" in {
       entries must have size (2)
@@ -31,7 +31,7 @@ class FastaParserSpecs extends Specification with ScalaFutures {
 
 
     "check ac" in {
-      entries.map(_.ac) must equalTo(mutable.ArraySeq(AccessionCode("P04899"), AccessionCode("P07355")))
+      entries.map(_.proteinRef.AC) must equalTo(mutable.ArraySeq(AccessionCode("P04899"), AccessionCode("P07355")))
     }
 
     "P07355 exists" in {
@@ -42,21 +42,21 @@ class FastaParserSpecs extends Specification with ScalaFutures {
       mapEntries(AccessionCode("P07355")).sequence must equalTo("MSTVHEILCKLSLEGDHSTPPSAYGSVKAYTNFDAERDALNIETAIKTKGVDEVTIVNILTNRSNAQRQDIAFAYQRRTKKELASALKSALSGHLETVILGLLKTPAQYDASELKASMKGLGTDEDSLIEIICSRTNQELQEINRVYKEMYKTDLEKDIISDTSGDFRKLMVALAKGRRAEDGSVIDYELIDQDARDLYDAGVKRKGTDVPKWISIMTERSVPHLQKVFDRYKSYSPYDMLESIRKEVKGDLENAFLNLVQCIQNKPLYFADRLYDSMKGKGTRDKVLIRIMVSRSEVDMLKIRSEFKRKYGKSLYYYIQQDTKGDYQKALLYLCGGDD")
     }
     "source is None" in {
-      mapEntries(AccessionCode("P07355")).source must equalTo(None)
+      mapEntries(AccessionCode("P07355")).proteinRef.source must equalTo(None)
     }
   }
 
   "parse with a source" should {
     val entries = FastaParser("test/resources/M_100small.fasta", SequenceSource("manon")).parse
 
-    val mapEntries: Map[AccessionCode, FastaEntry] = entries.map(e => (e.ac, e)).toMap
+    val mapEntries: Map[AccessionCode, FastaEntry] = entries.map(e => (e.proteinRef.AC, e)).toMap
 
 
     "sequence space must have been removed" in {
       mapEntries(AccessionCode("P07355")).sequence must equalTo("MSTVHEILCKLSLEGDHSTPPSAYGSVKAYTNFDAERDALNIETAIKTKGVDEVTIVNILTNRSNAQRQDIAFAYQRRTKKELASALKSALSGHLETVILGLLKTPAQYDASELKASMKGLGTDEDSLIEIICSRTNQELQEINRVYKEMYKTDLEKDIISDTSGDFRKLMVALAKGRRAEDGSVIDYELIDQDARDLYDAGVKRKGTDVPKWISIMTERSVPHLQKVFDRYKSYSPYDMLESIRKEVKGDLENAFLNLVQCIQNKPLYFADRLYDSMKGKGTRDKVLIRIMVSRSEVDMLKIRSEFKRKYGKSLYYYIQQDTKGDYQKALLYLCGGDD")
     }
     "source is Manon" in {
-      mapEntries(AccessionCode("P07355")).source must equalTo(Some(SequenceSource("manon")))
+      mapEntries(AccessionCode("P07355")).proteinRef.source must equalTo(Some(SequenceSource("manon")))
     }
   }
 

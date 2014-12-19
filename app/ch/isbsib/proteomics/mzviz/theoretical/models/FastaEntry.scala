@@ -1,5 +1,6 @@
 package ch.isbsib.proteomics.mzviz.theoretical.models
 
+import ch.isbsib.proteomics.mzviz.matches.models.ProteinRef
 import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 
 /**
@@ -9,7 +10,7 @@ import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
  * copyright 2014-2015, Swiss Institute of Bioinformatics
  */
-case class FastaEntry ( ac: AccessionCode,  sequence: String,  source: Option[SequenceSource]=None) {
-  override def toString = s">${ac.value}\n$sequence"
+case class FastaEntry ( proteinRef: ProteinRef,  sequence:String) {
+  override def toString = s">${proteinRef.AC.value}\n$sequence"
 
 }
