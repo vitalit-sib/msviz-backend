@@ -26,7 +26,7 @@ trait TempMongoDBForSpecs extends Around {
 
   def dropDB = {
     println(s"dropping ${db.name}")
-    //db.drop()
+    db.drop()
   }
 
    def around[T: AsResult](t: => T) = {
