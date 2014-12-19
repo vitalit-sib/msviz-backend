@@ -3,6 +3,7 @@ package ch.isbsib.proteomics.mzviz.theoretical.importer
 import java.io.File
 import java.util.Scanner
 
+import ch.isbsib.proteomics.mzviz.matches.models.ProteinRef
 import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
 import ch.isbsib.proteomics.mzviz.theoretical.services.SequenceMongoDBService
@@ -27,7 +28,7 @@ class FastaParser(file: File, source: Option[SequenceSource]) {
     val reHeader(ac) = headline
     val seq = seqLines.replaceAll( """\s+""", "")
 
-    FastaEntry(AccessionCode(ac), seq, source)
+    FastaEntry(ProteinRef(AccessionCode(ac.toString),SequenceSource(source.toString)), seq)
     //val=SequenceMongoDBService()
   }
 
