@@ -88,7 +88,7 @@ object LoaderMzIdent {
     (for {
       pMatch: PeptideProteinMatch <- mzJavaMatch.getProteinMatches.iterator().asScala
     } yield {
-      ProteinMatch(proteinRef = ProteinRef(AC = AccessionCode(pMatch.getAccession), source = SequenceSource("TODO")), previousAA = pMatch.getPreviousAA, nextAA = pMatch.getNextAA, startPos = pMatch.getStart, endPos = pMatch.getEnd)
+      ProteinMatch(proteinRef = ProteinRef(AC = AccessionCode(pMatch.getAccession), source = Some(SequenceSource("TODO"))), previousAA = pMatch.getPreviousAA, nextAA = pMatch.getNextAA, startPos = pMatch.getStart, endPos = pMatch.getEnd)
     }) toSeq
   }
 

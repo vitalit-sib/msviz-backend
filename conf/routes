@@ -19,7 +19,7 @@ GET           /api-docs/match                    controllers.ApiHelpController.g
 POST          /match/psms                        ch.isbsib.proteomics.mzviz.controllers.MatchController.loadPsms
 GET           /match/psms-by-runid/:runId        ch.isbsib.proteomics.mzviz.controllers.MatchController.findAllPSMByRunId(runId)
 DELETE        /match/:runId                      ch.isbsib.proteomics.mzviz.controllers.MatchController.deleteAllBySource(runId)
-
+GET           /match/searchId                    ch.isbsib.proteomics.mzviz.controllers.MatchController.listSearchIds
 
 GET           /docs/*file                        controllers.Assets.at(path="/public/docs", file)
 GET           /api-docs                          controllers.ApiHelpController.getResources
