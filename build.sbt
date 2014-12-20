@@ -23,5 +23,4 @@ libraryDependencies ++= Seq(
   "com.wordnik" %% "swagger-play2" % "1.3.10"
 )
 
-
 //parallelExecution in Test := false
