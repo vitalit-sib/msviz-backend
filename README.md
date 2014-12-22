@@ -10,6 +10,6 @@ Roman Mylonas (roman.mylonas@isb-sib.ch), Trinidad Martin (trinidad.martin@isb-i
 
 ## Licensing
 
-MSViz and its source code are  available under GPL for non-commercial use, including academic research and teaching applications.
+MSViz and its source code are  available under LGPLv3 for non-commercial use, including academic research and teaching applications.
 MSViz is also available for commercial licensing. For information on commercial licenses, please contact us.
 All proceeds from commercial licensing are reinvested in further development, support and distribution.
