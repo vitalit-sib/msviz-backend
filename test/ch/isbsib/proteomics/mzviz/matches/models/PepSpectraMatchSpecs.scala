@@ -1,6 +1,7 @@
 package ch.isbsib.proteomics.mzviz.matches.models
 
 import ch.isbsib.proteomics.mzviz.commons._
+import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.matches.{SearchId}
 import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 import org.specs2.mutable.Specification
@@ -33,9 +34,9 @@ class PepSpectraMatchSpecs extends Specification {
     }
 
     "create simple PepSpectraMatch" in {
-      val pepSpMatch = PepSpectraMatch(searchId = SearchId("a search result"), spId = SpectraId("sp_01"), spSource = SpectraSource("blabla.mgf"), pep = pep, matchInfo = matching, proteinList = protMatch)
+      val pepSpMatch = PepSpectraMatch(searchId = SearchId("a search result"), spId = SpectraId("sp_01"), runId = RunId("blabla.mgf"), pep = pep, matchInfo = matching, proteinList = protMatch)
       pepSpMatch.spId must equalTo(SpectraId("sp_01"))
-      pepSpMatch.spSource must equalTo(SpectraSource("blabla.mgf"))
+      pepSpMatch.runId must equalTo(RunId("blabla.mgf"))
       pepSpMatch.matchInfo.massDiff must equalTo(Some(0.01))
       pepSpMatch.searchId must equalTo(SearchId("a search result"))
     }

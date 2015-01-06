@@ -10,5 +10,5 @@ package object theoretical {
   //the fasta source + version
   case class SequenceSource(value:String) extends AnyVal
   // fasta number of sequences from source
-  case class numDatabaseSequences(value: Int) extends AnyVal
+  case class NumDatabaseSequences(value: Int) extends AnyVal
 }

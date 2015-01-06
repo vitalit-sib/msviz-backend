@@ -1,6 +1,7 @@
 package ch.isbsib.proteomics.mzviz.matches.services
 
-import ch.isbsib.proteomics.mzviz.commons.{SpectraSource, SpectraId}
+import ch.isbsib.proteomics.mzviz.commons.SpectraId
+import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models._
 import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
@@ -24,10 +25,10 @@ object JsonMatchFormats {
     def writes(o: SpectraId) = JsString(o.value)
   }
 
-  implicit val formatSpectraSource = new Format[SpectraSource] {
-    override def reads(json: JsValue): JsResult[SpectraSource] = JsSuccess(SpectraSource(json.as[String]))
+  implicit val formatRunId = new Format[RunId] {
+    override def reads(json: JsValue): JsResult[RunId] = JsSuccess(RunId(json.as[String]))
 
-    def writes(o: SpectraSource) = JsString(o.value)
+    def writes(o: RunId) = JsString(o.value)
   }
 
   implicit val formatAccessionCode = new Format[AccessionCode] {

@@ -1,6 +1,7 @@
 package ch.isbsib.proteomics.mzviz.matches.models
 
-import ch.isbsib.proteomics.mzviz.commons.{SpectraId, SpectraSource}
+import ch.isbsib.proteomics.mzviz.commons.SpectraId
+import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 
 /**
@@ -8,4 +9,4 @@ import ch.isbsib.proteomics.mzviz.matches.SearchId
  * copyright 2014-2015, Swiss Institute of Bioinformatics
  */
 
-case class PepSpectraMatch (searchId: SearchId, spId: SpectraId, spSource: SpectraSource, pep: Peptide, matchInfo: PepMatchInfo, proteinList: Seq[ProteinMatch])
+case class PepSpectraMatch (searchId: SearchId, runId: RunId, spId: SpectraId, pep: Peptide, matchInfo: PepMatchInfo, proteinList: Seq[ProteinMatch])

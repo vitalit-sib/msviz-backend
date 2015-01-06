@@ -1,6 +1,7 @@
 package ch.isbsib.proteomics.mzviz.matches.services
 
 import ch.isbsib.proteomics.mzviz.commons._
+import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
 import org.scalatest.concurrent.ScalaFutures
@@ -25,43 +26,42 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
   "empty service" should {
     "counts are 0" in new TempMongoDBService {
       service.countEntries.futureValue must equalTo(0)
-      service.countSources.futureValue must equalTo(0)
+      service.countRunIds.futureValue must equalTo(0)
     }
   }
 
   "import and insert q psm list" should {
     "get them up " in new TempMongoDBService {
       service.countEntries.futureValue must equalTo(0)
-      service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("M_100"))).futureValue
+      service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("M_100"), RunId("M_100.mgf"))).futureValue
       Thread.sleep(200)
       service.countEntries.futureValue must equalTo(62)
-      service.insert(LoaderMzIdent.parse("test/resources/F001644.mzid", SearchId("F001644"))).futureValue
+      service.insert(LoaderMzIdent.parse("test/resources/F001644.mzid", SearchId("F001644"), RunId("F001644.mgf"))).futureValue
       Thread.sleep(200)
       service.countEntries.futureValue must equalTo(499)
-      service.countSources.futureValue must equalTo(2)
+      service.countRunIds.futureValue must equalTo(2)
     }
   }
 
   "delete" should {
     "get 2 , remove 1 " in new TempMongoDBService {
-      service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("M_100"))).futureValue
+      service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("M_100"), RunId("M_100.mgf"))).futureValue
       Thread.sleep(200)
-      val psmList = service.findAllEntriesBySource(SpectraSource("rafts1_123spectra")).futureValue
+      val psmList = service.findAllEntriesByRunId(RunId("M_100.mgf")).futureValue
       psmList.size must equalTo(62)
-
-      service.deleteAllBySource(SpectraSource("rafts1_123spectra")).futureValue
+      service.deleteAllByRunId(RunId("M_100.mgf")).futureValue
       Thread.sleep(200)
       service.countEntries.futureValue must equalTo(0)
-      service.countSources.futureValue must equalTo(0)
+      service.countRunIds.futureValue must equalTo(0)
 
     }
   }
-  "findAllEntriesBySource" should {
+  "findAllEntriesByRunId" should {
     "find all" in new TempMongoDBService {
 
       println("insert and check size")
-      service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("M_100"))).futureValue
-      val psmList = service.findAllEntriesBySource(SpectraSource("rafts1_123spectra")).futureValue
+      service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("M_100"), RunId("M_100.mgf"))).futureValue
+      val psmList = service.findAllEntriesByRunId(RunId("M_100.mgf")).futureValue
       Thread.sleep(200)
       psmList.size must equalTo(62)
 
@@ -75,8 +75,8 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
   "findAllPSMByRunId" should {
     "find all" in new TempMongoDBService {
 
-      service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("M_100"))).futureValue
-      val psmList = service.findAllPSMByRunId(SpectraSource("rafts1_123spectra")).futureValue
+      service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("M_100"), RunId("M_100.mgf"))).futureValue
+      val psmList = service.findAllPSMByRunId(RunId("M_100.mgf")).futureValue
       Thread.sleep(200)
       psmList.size must equalTo(62)
     }
@@ -85,8 +85,8 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "listSearchIds" should {
     "list all" in new TempMongoDBService {
-      service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("M_100"))).futureValue
-      service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("yoyo"))).futureValue
+      service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("M_100"), RunId("M_100.mgf"))).futureValue
+      service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("yoyo"), RunId("M_100.mgf"))).futureValue
       Thread.sleep(200)
       val searchIds = service.listSearchIds.futureValue
 

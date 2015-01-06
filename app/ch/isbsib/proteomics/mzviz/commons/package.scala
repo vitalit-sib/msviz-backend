@@ -20,6 +20,4 @@ package object commons {
 
   case class SpectraId(value:String) extends AnyVal
 
-  case class SpectraSource(value:String) extends AnyVal
-
 }
