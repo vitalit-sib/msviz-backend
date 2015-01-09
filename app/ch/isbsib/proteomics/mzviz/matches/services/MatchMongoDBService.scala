@@ -1,17 +1,16 @@
 package ch.isbsib.proteomics.mzviz.matches.services
 
-import ch.isbsib.proteomics.mzviz.commons.SpectraSource
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoNotFoundException, MongoDBService}
+import ch.isbsib.proteomics.mzviz.experimental.RunId
+import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models.{ProteinMatch, PepSpectraMatch}
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
-import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
 import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
 import reactivemongo.api.DefaultDB
-import reactivemongo.api._
 import reactivemongo.api.indexes.{IndexType, Index}
 import reactivemongo.bson.BSONDocument
 import reactivemongo.core.commands.{LastError, RawCommand, Count}
@@ -27,7 +26,7 @@ class MatchMongoDBService (val db: DefaultDB) extends MongoDBService {
   val collectionName = "psm"
 
   setIndexes(List(new Index(
-    Seq("spId" -> IndexType.Ascending, "spSource" -> IndexType.Ascending),
+    Seq("spId" -> IndexType.Ascending, "runId" -> IndexType.Ascending),
     name = Some("id_source"),
     unique = false)))
 
@@ -46,8 +45,8 @@ class MatchMongoDBService (val db: DefaultDB) extends MongoDBService {
    * @param source the spectra source
    * @return
    */
-  def deleteAllBySource(source: SpectraSource): Future[Boolean] = {
-    val query = Json.obj("spSource" -> source.value)
+  def deleteAllByRunId(source: RunId): Future[Boolean] = {
+    val query = Json.obj("runId" -> source.value)
     collection.remove(query).map {
       case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
       case _ => true
@@ -59,8 +58,8 @@ class MatchMongoDBService (val db: DefaultDB) extends MongoDBService {
    * @param source the data source
    * @return
    */
-  def findAllEntriesBySource(source: SpectraSource): Future[Seq[JsObject]] = {
-    val query = Json.obj("spSource" -> source.value)
+  def findAllEntriesByRunId(source: RunId): Future[Seq[JsObject]] = {
+    val query = Json.obj("runId" -> source.value)
     val projection = Json.obj("spId" -> 1, "_id" -> 1)
     collection.find(query, projection).cursor[JsObject].collect[List]()
   }
@@ -70,8 +69,8 @@ class MatchMongoDBService (val db: DefaultDB) extends MongoDBService {
    * @param source the data source
    * @return
    */
-  def findAllPSMByRunId(source: SpectraSource): Future[Seq[PepSpectraMatch]] = {
-    val query = Json.obj("spSource" -> source.value)
+  def findAllPSMByRunId(source: RunId): Future[Seq[PepSpectraMatch]] = {
+    val query = Json.obj("runId" -> source.value)
     collection.find(query).cursor[PepSpectraMatch].collect[List]()
   }
 
@@ -86,27 +85,56 @@ class MatchMongoDBService (val db: DefaultDB) extends MongoDBService {
 
 
   /**
+   * retrieves a list of SearchId's
+   *
+   * @return list of SearchId
+   */
+
+  def listSearchIds: Future[Seq[SearchId]] = {
+    val command = RawCommand(BSONDocument("distinct" -> collectionName, "key" -> "searchId"))
+    db.command(command)
+      .map({
+      doc =>
+        doc.getAs[List[String]]("values").get
+          .map {
+          i => SearchId(i)
+        }
+    })
+  }
+
+
+  /**
+   * retrieves a list of ProteinMatches from one source
+   *
+   * @param searchId search identifier
+   * @return list of ProteinMatches
+   */
+
+  def listProteinMatchesBySearchId(searchId: SearchId): Future[Seq[ProteinMatch]] = ???
+
+
+  /**
    * retrieves a list of ProteinMatches from one source
    *
    * @param source data source
    * @return list of ProteinMatches
    */
 
-  def listProteinMatches(source: SequenceSource): Future[Seq[ProteinMatch]] = ???
+  def listProteinMatchesBySeqSource(source: SequenceSource): Future[Seq[ProteinMatch]] = ???
 
 
   /**
    * Get the list of data sources
    * @return
    */
-  def listSources: Future[Seq[SpectraSource]] = {
-    val command = RawCommand(BSONDocument("distinct" -> collectionName, "key" -> "spSource"))
+  def listRunIds: Future[Seq[RunId]] = {
+    val command = RawCommand(BSONDocument("distinct" -> collectionName, "key" -> "runId"))
     db.command(command)
       .map({
       doc =>
         doc.getAs[List[String]]("values").get
           .map {
-          i => SpectraSource(i)
+          i => RunId(i)
         }
     })
   }
@@ -123,8 +151,8 @@ class MatchMongoDBService (val db: DefaultDB) extends MongoDBService {
    * count the number of data sources
    * @return
    */
-  def countSources: Future[Int] = {
-    listSources.map(_.size)
+  def countRunIds: Future[Int] = {
+    listRunIds.map(_.size)
   }
 
   /**
@@ -133,7 +161,7 @@ class MatchMongoDBService (val db: DefaultDB) extends MongoDBService {
    */
   def stats: Future[Map[String, Int]] = {
     for {
-      nSources <- countSources
+      nSources <- countRunIds
       nEntries <- countEntries
     } yield {
       Map("sources" -> nSources, "entries" -> nEntries)

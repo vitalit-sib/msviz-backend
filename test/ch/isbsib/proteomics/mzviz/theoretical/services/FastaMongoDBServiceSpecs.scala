@@ -1,6 +1,6 @@
 package ch.isbsib.proteomics.mzviz.theoretical.services
 
-import ch.isbsib.proteomics.mzviz.commons.{SpectraSource, TempMongoDBForSpecs}
+import ch.isbsib.proteomics.mzviz.commons.TempMongoDBForSpecs
 import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.experimental.importer.LoaderMGF
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService

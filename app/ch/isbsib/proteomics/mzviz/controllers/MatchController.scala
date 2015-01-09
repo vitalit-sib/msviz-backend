@@ -1,11 +1,10 @@
 package ch.isbsib.proteomics.mzviz.controllers
 
 import javax.ws.rs.PathParam
-
-import ch.isbsib.proteomics.mzviz.commons.SpectraSource
 import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
 import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
+import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
 import ch.isbsib.proteomics.mzviz.matches.models.PepSpectraMatch
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
@@ -39,21 +38,35 @@ object MatchController extends CommonController {
     }
   }
 
+  @ApiOperation(nickname = "listSearchIds",
+    value = "the list of search ids",
+    notes = """from the parameter search-id at load time""",
+    response = classOf[List[String]],
+    httpMethod = "GET")
+  def listSearchIds = Action.async {
+    MatchMongoDBService().listSearchIds.map {
+      ids => Ok(Json.obj("searchIds" -> ids.map(_.value)))
+    }
+  }
+
   @ApiOperation(nickname = "loadMzId",
     value = "Loads an mzid run",
     notes = """ """,
     response = classOf[String],
     httpMethod = "POST")
   @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "mzid", value = "mzid file", required = true, dataType = "file", paramType = "body")
+    new ApiImplicitParam(name = "mzid", value = "mzid file", required = true, dataType = "file", paramType = "body"),
+    new ApiImplicitParam(name = "searchId", value = "a string id with search identifier", required = true, dataType = "string", paramType = "body"),
+    new ApiImplicitParam(name = "runId", value = "a string id with run identifier", required = true, dataType = "string", paramType = "body")
   ))
   def loadPsms = Action.async(parse.multipartFormData) {
     request =>
       localFile("mzid", request)
         .flatMap {
         case (uploadedFile, filename) =>
-          //          val idSearch = request.body.dataParts.get("search-id").map(_.head)
-          val psms = LoaderMzIdent.parse(uploadedFile.getAbsolutePath)
+          val searchId = request.body.dataParts.get("searchId").map(_.head).get
+          val runId = request.body.dataParts.get("runId").map(_.head).get
+          val psms = LoaderMzIdent.parse(uploadedFile.getAbsolutePath, SearchId(searchId), RunId(runId))
           MatchMongoDBService().insert(psms)
       }
         .map { n => Ok(Json.obj("inserted" -> n))
@@ -71,20 +84,20 @@ object MatchController extends CommonController {
                          @ApiParam(value = """run id""", defaultValue = "") @PathParam("runId") runId: String
                          ) =
     Action.async {
-      MatchMongoDBService().findAllPSMByRunId(SpectraSource(runId))
+      MatchMongoDBService().findAllPSMByRunId(RunId(runId))
         .map { case sphList: List[JsObject] => Ok(Json.toJson(sphList))}
         .recover {
         case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
       }
     }
 
-  @ApiOperation(nickname = "deleteAllBySource",
+  @ApiOperation(nickname = "deleteAllByRunId",
     value = "delete PSMs for a given run-id",
     notes = """No double check is done. Use with caution""",
     response = classOf[String],
     httpMethod = "DELETE")
   def deleteAllBySource(runId: String) = Action.async {
-    MatchMongoDBService().deleteAllBySource(SpectraSource(runId)).map { x =>
+    MatchMongoDBService().deleteAllByRunId(RunId(runId)).map { x =>
       Ok("OK")
     }
   }

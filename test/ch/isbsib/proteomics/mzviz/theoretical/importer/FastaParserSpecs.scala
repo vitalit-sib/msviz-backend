@@ -4,6 +4,7 @@ import ch.isbsib.proteomics.mzviz.commons.TempMongoDBForSpecs
 import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
 import ch.isbsib.proteomics.mzviz.theoretical.services.SequenceMongoDBService
+import com.google.common.io.CharSource.CharSequenceCharSource
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.specs2.mutable.Specification
@@ -21,7 +22,7 @@ class FastaParserSpecs extends Specification with ScalaFutures {
 
 
   "parse" should {
-    val entries = FastaParser("test/resources/M_100small.fasta").parse.toList
+    val entries = FastaParser("test/resources/M_100small.fasta", SequenceSource("pipo")).parse.toList
 
     val mapEntries: Map[AccessionCode, FastaEntry] = entries.map(e => (e.proteinRef.AC, e)).toMap
 
@@ -42,7 +43,7 @@ class FastaParserSpecs extends Specification with ScalaFutures {
       mapEntries(AccessionCode("P07355")).sequence must equalTo("MSTVHEILCKLSLEGDHSTPPSAYGSVKAYTNFDAERDALNIETAIKTKGVDEVTIVNILTNRSNAQRQDIAFAYQRRTKKELASALKSALSGHLETVILGLLKTPAQYDASELKASMKGLGTDEDSLIEIICSRTNQELQEINRVYKEMYKTDLEKDIISDTSGDFRKLMVALAKGRRAEDGSVIDYELIDQDARDLYDAGVKRKGTDVPKWISIMTERSVPHLQKVFDRYKSYSPYDMLESIRKEVKGDLENAFLNLVQCIQNKPLYFADRLYDSMKGKGTRDKVLIRIMVSRSEVDMLKIRSEFKRKYGKSLYYYIQQDTKGDYQKALLYLCGGDD")
     }
     "source is None" in {
-      mapEntries(AccessionCode("P07355")).proteinRef.source must equalTo(None)
+      mapEntries(AccessionCode("P07355")).proteinRef.source must equalTo(Some(SequenceSource("pipo")))
     }
   }
 

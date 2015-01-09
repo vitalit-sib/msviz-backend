@@ -1,9 +1,7 @@
 package ch.isbsib.proteomics.mzviz.commons
 
-import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import org.specs2.execute.AsResult
 import org.specs2.mutable.Around
-import play.api.Logger
 import reactivemongo.api.{DefaultDB, MongoDriver}
 
 import scala.concurrent.ExecutionContext.Implicits.global

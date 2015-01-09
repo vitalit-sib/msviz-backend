@@ -2,13 +2,14 @@ package ch.isbsib.proteomics.mzviz.matches.importer
 
 import java.io.{FileInputStream, InputStream}
 
-import ch.isbsib.proteomics.mzviz.matches.ProteinAC
-import ch.isbsib.proteomics.mzviz.matches.models.{Peptide, ProteinMatch, PepSpectraMatch, PepMatchInfo}
-import ch.isbsib.proteomics.mzviz.theoretical.{numDatabaseSequences, SequenceSource}
+import ch.isbsib.proteomics.mzviz.experimental.RunId
+import ch.isbsib.proteomics.mzviz.matches.SearchId
+import ch.isbsib.proteomics.mzviz.matches.models._
+import ch.isbsib.proteomics.mzviz.theoretical.{NumDatabaseSequences, AccessionCode, SequenceSource}
 import org.apache.commons.io.FilenameUtils
 import org.expasy.mzjava.proteomics.io.ms.ident.{MzIdentMlReader, PSMReaderCallback}
 import org.expasy.mzjava.proteomics.ms.ident.{PeptideProteinMatch, SpectrumIdentifier, PeptideMatch}
-import ch.isbsib.proteomics.mzviz.commons.{SpectraId, SpectraSource}
+import ch.isbsib.proteomics.mzviz.commons.{SpectraId}
 import scala.collection.JavaConverters._
 
 import scala.collection.mutable.ListBuffer
@@ -24,16 +25,16 @@ object LoaderMzIdent {
    * @param filename an .mzid file
    * @return
    */
-  def parse(filename: String): Seq[PepSpectraMatch] = {
+  def parse(filename: String, searchId: SearchId, runId: RunId): Seq[PepSpectraMatch] = {
     // data from MzJava parser are stored in a list
     val searchResults = mzJavaParse(filename)
 
     // this information should ideally be parsed by the MzJava parser
-    val spectraFileName = parseSpectraFilename(filename)
+    // val spectraFileName = parseSpectraFilename(filename)
 
     // convert the resulting list into our proper object
-    searchResults.map(t => PepSpectraMatch(spId = SpectraId(t._1.getSpectrum),
-      spSource = SpectraSource(spectraFileName),
+    searchResults.map(t => PepSpectraMatch(searchId = searchId, spId = SpectraId(t._1.getSpectrum),
+      runId = runId,
       pep = convertPeptide(t._2),
       matchInfo = convertPepMatch(t._2),
       proteinList = convertProtMatches(t._2))
@@ -59,11 +60,11 @@ object LoaderMzIdent {
    * @param filename MzIdentML path
    * @return a list of Tuples containing the SequenceSource and the number of entries
    */
-  def parseSearchDbSourceInfo(filename: String): Seq[Tuple2[SequenceSource, numDatabaseSequences]] = {
+  def parseSearchDbSourceInfo(filename: String): Seq[Tuple2[SequenceSource, NumDatabaseSequences]] = {
     val mzIdentML = scala.xml.XML.loadFile(filename)
 
     (mzIdentML \\ "SearchDatabase").map { db =>
-      Tuple2( SequenceSource((db \ "@version").text), numDatabaseSequences((db \ "@numDatabaseSequences").text.toInt) )
+      Tuple2( SequenceSource((db \ "@version").text), NumDatabaseSequences((db \ "@numDatabaseSequences").text.toInt) )
     }
   }
 
@@ -75,7 +76,7 @@ object LoaderMzIdent {
    */
   def convertPeptide(mzJavaMatch: PeptideMatch): Peptide = {
     val pep = mzJavaMatch.toPeptide
-    Peptide(sequence = pep.toSymbolString, molMass = pep.getMolecularMass, dbSequenceRef = "?")
+    Peptide(sequence = pep.toSymbolString, molMass = pep.getMolecularMass, dbSequenceRef = "TODO")
   }
 
 
@@ -88,7 +89,7 @@ object LoaderMzIdent {
     (for {
       pMatch: PeptideProteinMatch <- mzJavaMatch.getProteinMatches.iterator().asScala
     } yield {
-      ProteinMatch(AC = ProteinAC(pMatch.getAccession), previousAA = pMatch.getPreviousAA, nextAA = pMatch.getNextAA, startPos = pMatch.getStart, endPos = pMatch.getEnd)
+      ProteinMatch(proteinRef = ProteinRef(AC = AccessionCode(pMatch.getAccession), source = Some(SequenceSource("TODO"))), previousAA = pMatch.getPreviousAA, nextAA = pMatch.getNextAA, startPos = pMatch.getStart, endPos = pMatch.getEnd)
     }) toSeq
   }
 
