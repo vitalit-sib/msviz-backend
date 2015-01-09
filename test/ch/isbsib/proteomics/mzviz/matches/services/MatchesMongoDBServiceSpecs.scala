@@ -4,6 +4,7 @@ import ch.isbsib.proteomics.mzviz.commons._
 import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
+import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.specs2.mutable.Specification
@@ -86,13 +87,24 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
   "listSearchIds" should {
     "list all" in new TempMongoDBService {
       service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("M_100"), RunId("M_100.mgf"))).futureValue
-      service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("yoyo"), RunId("M_100.mgf"))).futureValue
-      Thread.sleep(200)
+      service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("M_100_2"), RunId("M_100.mgf"))).futureValue
       val searchIds = service.listSearchIds.futureValue
-
+      Thread.sleep(200)
       searchIds.size must equalTo(2)
       searchIds(0) mustEqual(SearchId("M_100"))
-      searchIds(1) mustEqual(SearchId("yoyo"))
+      searchIds(1) mustEqual(SearchId("M_100_2"))
+    }
+  }
+
+  "listProteinRefsBySearchId" should {
+    "list all" in new TempMongoDBService {
+
+      service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("M_100"), RunId("M_100.mgf"))).futureValue
+      val protRefList = service.listProteinRefsBySearchId(SearchId("M_100")).futureValue
+      Thread.sleep(200)
+      protRefList.size must equalTo(27)
+      protRefList(0).AC mustEqual(AccessionCode("CD109_HUMAN"))
+      protRefList(0).source mustEqual(Some(SequenceSource("TODO")))
     }
   }
 

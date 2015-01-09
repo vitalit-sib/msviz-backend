@@ -3,7 +3,7 @@ package ch.isbsib.proteomics.mzviz.matches.services
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoNotFoundException, MongoDBService}
 import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
-import ch.isbsib.proteomics.mzviz.matches.models.{ProteinMatch, PepSpectraMatch}
+import ch.isbsib.proteomics.mzviz.matches.models.{ProteinRef, ProteinMatch, PepSpectraMatch}
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
 import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
 import play.api.libs.iteratee.Enumerator
@@ -12,17 +12,17 @@ import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
-import reactivemongo.bson.BSONDocument
-import reactivemongo.core.commands.{LastError, RawCommand, Count}
+import reactivemongo.bson.{BSONDocument, BSONArray}
+import reactivemongo.core.commands._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
- * copyright 2014-2015, Swiss Institute of Bioinformatics
+ *         copyright 2014-2015, Swiss Institute of Bioinformatics
  */
-class MatchMongoDBService (val db: DefaultDB) extends MongoDBService {
+class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
   val collectionName = "psm"
 
   setIndexes(List(new Index(
@@ -104,13 +104,33 @@ class MatchMongoDBService (val db: DefaultDB) extends MongoDBService {
 
 
   /**
-   * retrieves a list of ProteinMatches from one source
+   * retrieves a list of Proteins from one source
    *
    * @param searchId search identifier
-   * @return list of ProteinMatches
+   * @return list of Proteins
    */
 
-  def listProteinMatchesBySearchId(searchId: SearchId): Future[Seq[ProteinMatch]] = ???
+  def listProteinRefsBySearchId(searchId: SearchId): Future[Seq[ProteinRef]] = {
+    val command = RawCommand(BSONDocument(
+      "aggregate" -> collectionName,
+      "pipeline" -> BSONArray(
+        BSONDocument("$match" -> BSONDocument("searchId" -> searchId.value)),
+        BSONDocument("$project" -> BSONDocument("proteinList.proteinRef.AC" -> 1, "proteinList.proteinRef.source" -> 1, "searchId" -> 1, "_id" -> 0)),
+        BSONDocument("$unwind" -> "$proteinList"),
+        BSONDocument("$project" -> BSONDocument("AC" -> "$proteinList.proteinRef.AC", "source" -> "$proteinList.proteinRef.source"))
+      )
+    ))
+
+    db.command(command).map({
+      doc =>
+        doc.getAs[List[BSONDocument]]("result").get.map({
+          elDoc: BSONDocument =>
+            ProteinRef(AccessionCode(elDoc.getAs[String]("AC").get),
+              Some(SequenceSource(elDoc.getAs[String]("source").get)))
+        }).distinct
+    })
+
+  }
 
 
   /**
