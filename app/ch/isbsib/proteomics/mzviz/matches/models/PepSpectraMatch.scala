@@ -9,4 +9,9 @@ import ch.isbsib.proteomics.mzviz.matches.SearchId
  * copyright 2014-2015, Swiss Institute of Bioinformatics
  */
 
-case class PepSpectraMatch (searchId: SearchId, runId: RunId, spId: SpectraId, pep: Peptide, matchInfo: PepMatchInfo, proteinList: Seq[ProteinMatch])
+case class PepSpectraMatch (searchId: SearchId,
+                            runId: RunId,
+                            spId: SpectraId,
+                            pep: Peptide,
+                            matchInfo: PepMatchInfo,
+                            proteinList: Seq[ProteinMatch])

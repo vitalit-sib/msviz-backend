@@ -50,10 +50,10 @@ object JsonTheoFormats {
   }
 
   implicit val jsonProteinRef = new Writes[ProteinRef] {
-    override def writes(o: ProteinRef): JsValue = {
-      JsString(o.AC.value)
-      JsString(o.source.get.value)
-    }
+    override def writes(o: ProteinRef): JsValue = Json.obj(
+      "AC" -> o.AC,
+      "source" -> o.source.get
+    )
   }
 
   implicit val formatFastaEntry = Json.format[FastaEntry]

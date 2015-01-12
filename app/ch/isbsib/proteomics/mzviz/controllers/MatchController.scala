@@ -6,7 +6,8 @@ import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
-import ch.isbsib.proteomics.mzviz.matches.models.PepSpectraMatch
+import ch.isbsib.proteomics.mzviz.matches.models.{ProteinRef, PepSpectraMatch}
+import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
 import ch.isbsib.proteomics.mzviz.matches.services.MatchMongoDBService
 import com.wordnik.swagger.annotations._
@@ -90,6 +91,24 @@ object MatchController extends CommonController {
         case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
       }
     }
+
+  @ApiOperation(nickname = "findProteinsBySearchId",
+    value = "find all protein for a given searchId",
+    notes = """ProteinRef list""",
+    response = classOf[List[ProteinRef]],
+    httpMethod = "GET")
+  def findAllProteinRefsBySearchId(
+                         @ApiParam(value = """searchId""", defaultValue = "M_100") @PathParam("searchId") searchId: String
+                         ) = Action.async {
+    for{
+      protRefs <- MatchMongoDBService().listProteinRefsBySearchId(SearchId(searchId))
+    }yield {
+      Ok(Json.toJson(protRefs))
+    }
+
+  }
+
+
 
   @ApiOperation(nickname = "deleteAllByRunId",
     value = "delete PSMs for a given run-id",

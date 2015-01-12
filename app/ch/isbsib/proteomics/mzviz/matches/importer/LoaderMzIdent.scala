@@ -9,7 +9,7 @@ import ch.isbsib.proteomics.mzviz.theoretical.{NumDatabaseSequences, AccessionCo
 import org.apache.commons.io.FilenameUtils
 import org.expasy.mzjava.proteomics.io.ms.ident.{MzIdentMlReader, PSMReaderCallback}
 import org.expasy.mzjava.proteomics.ms.ident.{PeptideProteinMatch, SpectrumIdentifier, PeptideMatch}
-import ch.isbsib.proteomics.mzviz.commons.{SpectraId}
+import ch.isbsib.proteomics.mzviz.commons.SpectraId
 import scala.collection.JavaConverters._
 
 import scala.collection.mutable.ListBuffer
@@ -33,12 +33,17 @@ object LoaderMzIdent {
     // val spectraFileName = parseSpectraFilename(filename)
 
     // convert the resulting list into our proper object
-    searchResults.map(t => PepSpectraMatch(searchId = searchId, spId = SpectraId(t._1.getSpectrum),
-      runId = runId,
-      pep = convertPeptide(t._2),
-      matchInfo = convertPepMatch(t._2),
-      proteinList = convertProtMatches(t._2))
-    ).toSeq
+    searchResults.map({ t =>
+      val psm = PepSpectraMatch(
+        searchId = searchId,
+        spId = SpectraId(t._1.getSpectrum),
+        runId = runId,
+        pep = convertPeptide(t._2),
+        matchInfo = convertPepMatch(t._2),
+        proteinList = convertProtMatches(t._2))
+      println(psm)
+      psm
+    }).toSeq
 
   }
 
@@ -90,7 +95,7 @@ object LoaderMzIdent {
       pMatch: PeptideProteinMatch <- mzJavaMatch.getProteinMatches.iterator().asScala
     } yield {
       ProteinMatch(proteinRef = ProteinRef(AC = AccessionCode(pMatch.getAccession), source = Some(SequenceSource("TODO"))), previousAA = pMatch.getPreviousAA, nextAA = pMatch.getNextAA, startPos = pMatch.getStart, endPos = pMatch.getEnd)
-    }) toSeq
+    }).toSeq
   }
 
 
@@ -105,8 +110,8 @@ object LoaderMzIdent {
       (for {k <- mzJavaMatch.getScoreMap.keys()}
       yield {
         val key = k.asInstanceOf[String]
-        (key -> mzJavaMatch.getScoreMap.get(key))
-      }) toMap
+        key -> mzJavaMatch.getScoreMap.get(key)
+      }).toMap
 
     // create and return a new PepMatchInfo
     PepMatchInfo(scoreMap = scoreMap,
