@@ -28,7 +28,7 @@ class FastaParser(file: File, source: SequenceSource) {
     val reHeader(ac) = headline
     val seq = seqLines.replaceAll( """\s+""", "")
 
-    FastaEntry(ProteinRef(AccessionCode(ac), Some(source)), seq)
+    FastaEntry(ProteinRef(AccessionCode(ac), Some(source)), seq, seq.size)
     //val=SequenceMongoDBService()
   }
 
@@ -38,7 +38,7 @@ class FastaParser(file: File, source: SequenceSource) {
    */
   def parse: Iterator[FastaEntry] = {
 
-    val scanner = new Scanner(file).useDelimiter( """\n>""");
+    val scanner = new Scanner(file).useDelimiter( """\n>""")
 
     //we build an iterator over the file
     val it: Iterator[String] = new Iterator[String] {

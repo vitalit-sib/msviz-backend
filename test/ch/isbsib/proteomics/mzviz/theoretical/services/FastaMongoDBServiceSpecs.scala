@@ -19,7 +19,8 @@ import scala.collection.mutable
 import scala.concurrent.Future
 
 /**
- * Created by tmartinc on 05/12/14.
+ * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
+ *         copyright 2014-2015, Swiss Institute of Bioinformatics
  */
 
 
@@ -37,7 +38,7 @@ class FastaMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "insert" should {
     "insert  2" in new TempMongoDBService {
-      val entries = FastaParser("test/resources/M_100small.fasta",SequenceSource("small-1")).parse;
+      val entries = FastaParser("test/resources/M_100small.fasta",SequenceSource("small-1")).parse
       val n: Int = service.insert(entries).futureValue
       n must equalTo(2)
     }
@@ -49,7 +50,7 @@ class FastaMongoDBServiceSpecs extends Specification with ScalaFutures {
       val f1 = service.insert(FastaParser("test/resources/M_100small.fasta", SequenceSource("small-1")).parse)
       val f2 = service.insert(FastaParser("test/resources/M_100small.fasta", SequenceSource("small-2")).parse)
       Future.sequence(List(f1, f2)).futureValue
-      val sources = service.listSources.futureValue.sortBy(_.value) mustEqual (List(SequenceSource("small-1"), SequenceSource("small-2")))
+      val sources = service.listSources.futureValue.sortBy(_.value) mustEqual List(SequenceSource("small-1"), SequenceSource("small-2"))
     }
   }
 
@@ -102,5 +103,12 @@ class FastaMongoDBServiceSpecs extends Specification with ScalaFutures {
     }
   }
 
+
+  "stats" should{
+    "get nb" in new TempMongoDBService {
+      val stats= service.stats
+      1 must equalTo(2)
+    }
+  }
 
 }

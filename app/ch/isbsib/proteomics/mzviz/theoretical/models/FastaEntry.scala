@@ -10,7 +10,8 @@ import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
  * copyright 2014-2015, Swiss Institute of Bioinformatics
  */
-case class FastaEntry ( proteinRef: ProteinRef,  sequence:String) {
+case class FastaEntry ( proteinRef: ProteinRef,  sequence:String, length:Int) {
+  assert(length==sequence.size)
   override def toString = s">${proteinRef.AC.value}\n$sequence"
 
 }

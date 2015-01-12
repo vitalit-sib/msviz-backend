@@ -22,7 +22,7 @@ object SequenceController extends CommonController {
 
   def stats = Action.async {
     SequenceMongoDBService().stats.map { st =>
-      Ok(jsonWritesMap.writes(st))
+      Ok(Json.toJson(st))
     }
   }
 

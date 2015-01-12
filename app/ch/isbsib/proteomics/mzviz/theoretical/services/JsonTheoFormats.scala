@@ -1,14 +1,14 @@
 package ch.isbsib.proteomics.mzviz.theoretical.services
 
 import ch.isbsib.proteomics.mzviz.matches.models.ProteinRef
-import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
+import ch.isbsib.proteomics.mzviz.theoretical.models.{SequenceSourceStats, FastaEntry}
 import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
 import play.api.libs.json._
 
 /**
  * Created by tmartinc on 05/12/14.
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
- * copyright 2014-2015, Swiss Institute of Bioinformatics
+ *         copyright 2014-2015, Swiss Institute of Bioinformatics
  */
 object JsonTheoFormats {
 
@@ -31,6 +31,21 @@ object JsonTheoFormats {
   implicit val jsonSequenceSource = new Writes[SequenceSource] {
     override def writes(o: SequenceSource): JsValue = {
       JsString(o.value)
+    }
+  }
+
+  implicit val jsonSequenceSourceStats = new Writes[SequenceSourceStats] {
+    override def writes(o: SequenceSourceStats): JsValue = Json.obj(
+      "source" -> o.source,
+      "nbEntries" -> o.nbEntries,
+      "nbResidues" -> o.nbResidues
+    )
+  }
+
+
+  implicit val jsonSequenceSourceStatsMap = new Writes[Map[SequenceSource, SequenceSourceStats]] {
+    override def writes(o: Map[SequenceSource, SequenceSourceStats]): JsValue = {
+      o.foldLeft(Json.obj())({ (acc, p) => acc ++ Json.obj(p._1.value.toString -> Json.toJson(p._2))})
     }
   }
 

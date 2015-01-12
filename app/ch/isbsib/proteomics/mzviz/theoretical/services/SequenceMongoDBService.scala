@@ -3,7 +3,8 @@ package ch.isbsib.proteomics.mzviz.theoretical.services
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoNotFoundException, MongoDBService}
 import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.experimental.models.ExpMSnSpectrum
-import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
+import ch.isbsib.proteomics.mzviz.matches.models.ProteinRef
+import ch.isbsib.proteomics.mzviz.theoretical.models.{SequenceSourceStats, FastaEntry}
 import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
 import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
 import play.api.libs.iteratee.Enumerator
@@ -12,7 +13,7 @@ import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
 import reactivemongo.api._
 import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.{BSONString, BSONDocument}
+import reactivemongo.bson.{BSONArray, BSONString, BSONDocument}
 import reactivemongo.core.commands.{LastError, Remove, RawCommand, Count}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -20,15 +21,15 @@ import scala.concurrent.Future
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
- * copyright 2014-2015, Swiss Institute of Bioinformatics
+ *         copyright 2014-2015, Swiss Institute of Bioinformatics
  */
 class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
   val collectionName = "sequences"
 
   setIndexes(List(
     new Index(
-      Seq("ac" -> IndexType.Ascending, "source" -> IndexType.Ascending),
-      name = Some("ac_source"),
+      Seq("proteinRef.AC" -> IndexType.Ascending, "proteinRef.source" -> IndexType.Ascending),
+      name = Some("AC_source"),
       unique = true)
   ))
 
@@ -110,26 +111,60 @@ class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
   def countSources: Future[Int] = {
     listSources.map(_.size)
   }
+
   /**
    * count the number of data sequence for a given source
    * @return
    */
-  def countSequencesBySource (source: SequenceSource): Future[Int] = {
+  def countSequencesBySource(source: SequenceSource): Future[Int] = {
     db.command(Count(collectionName, Some(BSONDocument("proteinRef.source" -> source.value))))
   }
 
+  //  /**
+  //   * a maps with various counts
+  //   * @return
+  //   */
+  //  def stats: Future[Map[String, Int]] = {
+  //    for {
+  //      nSources <- countSources
+  //      nEntries <- countEntries
+  //    } yield {
+  //      Map("sources" -> nSources, "entries" -> nEntries)
+  //
+  //    }
+  //  }
+
   /**
-   * a maps with various counts
+   * reports sequenceSource to basic stats
+   * from mongo
+   * db.sequences.aggregate([{$group:{_id:"$proteinRef.source", nbEntries:{$sum : 1}, nbResidues:{$sum:"$length"}}}, {$project:{_id:0, source:"$_id", nbEntries:"$nbEntries", nbResidues:"$nbResidues"}}])
    * @return
    */
-  def stats: Future[Map[String, Int]] = {
-    for {
-      nSources <- countSources
-      nEntries <- countEntries
-    } yield {
-      Map("sources" -> nSources, "entries" -> nEntries)
+  def stats: Future[Map[SequenceSource, SequenceSourceStats]] = {
+    val command = RawCommand(BSONDocument(
+      "aggregate" -> collectionName,
+      "pipeline" -> BSONArray(
+        BSONDocument("$group" -> BSONDocument(
+          "_id" -> "$proteinRef.source",
+          "nbEntries" -> BSONDocument("$sum" -> 1),
+          "nbResidues" -> BSONDocument("$sum" -> "$length"))),
+        BSONDocument("$project" -> BSONDocument(
+          "_id" -> false,
+          "source" -> "$_id",
+          "nbEntries" -> "$nbEntries",
+          "nbResidues" -> "$nbResidues"))
+      )
+    ))
 
-    }
+    val elStats = db.command(command).map({
+      doc =>
+        doc.getAs[List[BSONDocument]]("result").get.map({elDoc=>
+          SequenceSourceStats(SequenceSource(elDoc.getAs[String]("source").get),
+            elDoc.getAs[Int]("nbEntries").get,
+            elDoc.getAs[Double]("nbResidues").get.toInt)
+        })
+    })
+    elStats.map(_.map(s => (s.source, s)).toMap)
   }
 
 }
