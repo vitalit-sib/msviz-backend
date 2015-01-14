@@ -64,7 +64,7 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
       val n = service.insert(LoaderMGF.load("test/resources/M_100.mgf", Some("test-1"))).futureValue
 
       val sp = service.findSpectrumByRunIdAndTitle(RunId("test-1"), "File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 56.254 min, Period: 1, Cycle(s): 2083 (Experiment 4)").futureValue
-      sp.ref.runId must equalTo(Some(RunId("test-1")))
+      sp.ref.spectrumId.runId must equalTo(RunId("test-1"))
       sp.ref.title must equalTo("File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 56.254 min, Period: 1, Cycle(s): 2083 (Experiment 4)")
 
       sp.peaks must have size(190)

@@ -1,7 +1,7 @@
 package ch.isbsib.proteomics.mzviz.matches.services
 
 import ch.isbsib.proteomics.mzviz.commons._
-import ch.isbsib.proteomics.mzviz.experimental.RunId
+import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
 import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
@@ -20,7 +20,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
   /**
    * extends the temp mngodatabase and add a exp service above it
    */
-  trait TempMongoDBService extends TempMongoDBForSpecs{
+  trait TempMongoDBService extends TempMongoDBForSpecs {
     val service = new MatchMongoDBService(db)
   }
 
@@ -48,9 +48,9 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
     "get 2 , remove 1 " in new TempMongoDBService {
       service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("M_100"), RunId("M_100.mgf"))).futureValue
       Thread.sleep(200)
-      val psmList = service.findAllEntriesByRunId(RunId("M_100.mgf")).futureValue
+      val psmList = service.findAllPSMBySearchId(SearchId("M_100")).futureValue
       psmList.size must equalTo(62)
-      service.deleteAllByRunId(RunId("M_100.mgf")).futureValue
+      service.deleteAllBySearchId(SearchId("M_100")).futureValue
       Thread.sleep(200)
       service.countEntries.futureValue must equalTo(0)
       service.countRunIds.futureValue must equalTo(0)
@@ -62,14 +62,13 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
 
       println("insert and check size")
       service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("M_100"), RunId("M_100.mgf"))).futureValue
-      val psmList = service.findAllEntriesByRunId(RunId("M_100.mgf")).futureValue
+      val idList = service.findAllSpectrumIdBySearchId(SearchId("M_100")).futureValue
       Thread.sleep(200)
-      psmList.size must equalTo(62)
+      idList.size must equalTo(62)
 
       println("check JSON content")
-      (psmList(0) \ "spId").as[String] must equalTo("File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 50.227 min, Period: 1, Cycle(s): 2033 (Experiment 4)")
-
-
+      idList(0).id must equalTo(SpectrumUniqueId("File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 50.227 min, Period: 1, Cycle(s): 2033 (Experiment 4)"))
+      idList(0).runId must equalTo(RunId("M_100.mgf"))
     }
   }
 
@@ -77,7 +76,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
     "find all" in new TempMongoDBService {
 
       service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("M_100"), RunId("M_100.mgf"))).futureValue
-      val psmList = service.findAllPSMByRunId(RunId("M_100.mgf")).futureValue
+      val psmList = service.findAllPSMBySearchId(SearchId("M_100")).futureValue
       Thread.sleep(200)
       psmList.size must equalTo(62)
     }
@@ -91,8 +90,8 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
       val searchIds = service.listSearchIds.futureValue
       Thread.sleep(200)
       searchIds.size must equalTo(2)
-      searchIds(0) mustEqual(SearchId("M_100"))
-      searchIds(1) mustEqual(SearchId("M_100_2"))
+      searchIds(0) mustEqual (SearchId("M_100"))
+      searchIds(1) mustEqual (SearchId("M_100_2"))
     }
   }
 
@@ -103,8 +102,8 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
       val protRefList = service.listProteinRefsBySearchId(SearchId("M_100")).futureValue
       Thread.sleep(200)
       protRefList.size must equalTo(27)
-      protRefList(0).AC mustEqual(AccessionCode("CD109_HUMAN"))
-      protRefList(0).source mustEqual(Some(SequenceSource("TODO")))
+      protRefList(0).AC mustEqual (AccessionCode("CD109_HUMAN"))
+      protRefList(0).source mustEqual (Some(SequenceSource("TODO")))
     }
   }
 

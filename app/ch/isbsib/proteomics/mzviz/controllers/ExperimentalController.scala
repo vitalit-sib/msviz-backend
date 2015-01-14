@@ -6,7 +6,7 @@ import javax.ws.rs.PathParam
 import JsonCommonsFormats._
 import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.experimental.importer.LoaderMGF
-import ch.isbsib.proteomics.mzviz.experimental.models.{RefSpectrum, ExpMSnSpectrum}
+import ch.isbsib.proteomics.mzviz.experimental.models.{SpectrumRef, ExpMSnSpectrum}
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import com.wordnik.swagger.annotations._
@@ -89,7 +89,7 @@ object ExperimentalController extends CommonController {
   @ApiOperation(nickname = "findAllRefSpectraByrunId",
     value = "find all spectra for a given run id",
     notes = """Returns only the reference information (precursor & co)""",
-    response = classOf[List[RefSpectrum]],
+    response = classOf[List[SpectrumRef]],
     httpMethod = "GET")
   def findAllRefSpectraByRunId(@ApiParam(value = """run id""", defaultValue = "") @PathParam("runId") runId: String) =
     Action.async {

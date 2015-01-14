@@ -1,7 +1,7 @@
 package ch.isbsib.proteomics.mzviz.experimental.services
 
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoDBService, MongoNotFoundException}
-import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, RefSpectrum}
+import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, SpectrumRef}
 import ch.isbsib.proteomics.mzviz.experimental.{ScanNumber, RunId, MSRun}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import play.api.Logger
@@ -27,8 +27,8 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
   val collectionName = "msnSpectra"
 
   setIndexes(List(new Index(
-    Seq("ref.runId" -> IndexType.Ascending, "ref.title" -> IndexType.Ascending),
-    name = Some("runId_title"),
+    Seq("ref.spectrumId" -> IndexType.Ascending),// "ref.title" -> IndexType.Ascending),
+    name = Some("spectrumId"),
     unique = true)))
 
 
@@ -48,7 +48,7 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @return
    */
   def delete(runId: RunId): Future[Boolean] = {
-    val query = Json.obj("ref.runId" -> runId.value)
+    val query = Json.obj("ref.spectrumId.runId" -> runId.value)
     collection.remove(query).map {
       case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
       case _ => true
@@ -61,7 +61,7 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @return
    */
   def findAllRefSpectraByrunId(runId: RunId): Future[Seq[JsObject]] = {
-    val query = Json.obj("ref.runId" -> runId.value)
+    val query = Json.obj("ref.spectrumId.runId" -> runId.value)
     val projection = Json.obj("ref" -> 1, "_id" -> 1)
     collection.find(query, projection).cursor[JsObject].collect[List]()
   }
@@ -73,7 +73,7 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @return
    */
   def findSpectrumByRunIdAndTitle(runId: RunId, title: String): Future[ExpMSnSpectrum] = {
-    val query = Json.obj("ref.runId" -> runId.value, "ref.title" -> title)
+    val query = Json.obj("ref.spectrumId.runId" -> runId.value, "ref.title" -> title)
     collection.find(query).cursor[ExpMSnSpectrum].headOption map {
       case Some(sp: ExpMSnSpectrum) => sp
       case None => throw new MongoNotFoundException(s"${runId.value}/$title")
@@ -85,7 +85,7 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @return
    */
   def listMsRunIds: Future[Seq[RunId]] = {
-    val command = RawCommand(BSONDocument("distinct" -> collectionName, "key" -> "ref.runId"))
+    val command = RawCommand(BSONDocument("distinct" -> collectionName, "key" -> "ref.spectrumId.runId"))
     db.command(command)
       .map({
       doc =>

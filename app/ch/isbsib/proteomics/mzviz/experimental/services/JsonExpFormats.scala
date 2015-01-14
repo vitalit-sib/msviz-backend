@@ -68,18 +68,23 @@ object JsonExpFormats {
 
     def writes(o: RunId) = JsString(o.value)
   }
+  implicit val formatSpectrumUniqueId = new Format[SpectrumUniqueId] {
+    override def reads(json: JsValue): JsResult[SpectrumUniqueId] = JsSuccess(SpectrumUniqueId(json.as[String]))
+
+    def writes(o: SpectrumUniqueId) = JsString(o.value)
+  }
 
 
 
   // Generates Writes and Reads for Feed and User thanks to Json Macros
   implicit val formatExpPeakPrecursor = Json.format[ExpPeakPrecursor]
   implicit val formatExpPeakMSn = Json.format[ExpPeakMSn]
-  implicit val formatRefSpectrum = Json.format[RefSpectrum]
-
+  implicit val formatSpectrumId = Json.format[SpectrumId]
+  implicit val formatSpectrumRef = Json.format[SpectrumRef]
 
   implicit val formatExpMSnSpectrum = new Format[ExpMSnSpectrum] {
     override def reads(json: JsValue): JsResult[ExpMSnSpectrum] = {
-      val ref = (JsPath \ "ref").read[RefSpectrum].reads(json).get
+      val ref = (JsPath \ "ref").read[SpectrumRef].reads(json).get
       val msLevel = MSLevel(json.validate[Int]((JsPath \ "peaks" \ "msLevel").read[Int]).get)
 
       //re-assemble the peaks

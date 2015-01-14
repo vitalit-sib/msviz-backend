@@ -1,11 +1,11 @@
 package ch.isbsib.proteomics.mzviz.matches.importer
 
-import ch.isbsib.proteomics.mzviz.experimental.RunId
+import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
+import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models.{ProteinRef, PepSpectraMatch}
 import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, NumDatabaseSequences, SequenceSource}
 import org.specs2.mutable.Specification
-import ch.isbsib.proteomics.mzviz.commons.SpectraId
 
 /**
  *  @author Alexandre Masselot & Roman Mylonas
@@ -67,8 +67,11 @@ class LoaderMzIdentSpecs extends Specification {
       }
 
       "check first spectrum identifier" in {
-        psm(0).spId must equalTo(SpectraId("File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 50.227 min, Period: 1, Cycle(s): 2033 (Experiment 4)"))
-        psm(0).runId must equalTo(RunId("M_100.mgf"))
+        psm(0).spectrumId must equalTo(
+          SpectrumId(SpectrumUniqueId("File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 50.227 min, Period: 1, Cycle(s): 2033 (Experiment 4)"),
+            RunId("M_100.mgf"))
+        )
+        psm(0).spectrumId.runId must equalTo(RunId("M_100.mgf"))
       }
 
       "check protein size" in {

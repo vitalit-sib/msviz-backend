@@ -2,16 +2,16 @@ package ch.isbsib.proteomics.mzviz.matches.importer
 
 import java.io.{FileInputStream, InputStream}
 
-import ch.isbsib.proteomics.mzviz.experimental.RunId
+import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
+import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models._
-import ch.isbsib.proteomics.mzviz.theoretical.{NumDatabaseSequences, AccessionCode, SequenceSource}
+import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, NumDatabaseSequences, SequenceSource}
 import org.apache.commons.io.FilenameUtils
 import org.expasy.mzjava.proteomics.io.ms.ident.{MzIdentMlReader, PSMReaderCallback}
-import org.expasy.mzjava.proteomics.ms.ident.{PeptideProteinMatch, SpectrumIdentifier, PeptideMatch}
-import ch.isbsib.proteomics.mzviz.commons.SpectraId
-import scala.collection.JavaConverters._
+import org.expasy.mzjava.proteomics.ms.ident.{PeptideMatch, PeptideProteinMatch, SpectrumIdentifier}
 
+import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 
 /**
@@ -34,15 +34,14 @@ object LoaderMzIdent {
 
     // convert the resulting list into our proper object
     searchResults.map({ t =>
-      val psm = PepSpectraMatch(
+      PepSpectraMatch(
         searchId = searchId,
-        spId = SpectraId(t._1.getSpectrum),
-        runId = runId,
+        spectrumId = SpectrumId(
+          SpectrumUniqueId(t._1.getSpectrum),
+        runId = runId),
         pep = convertPeptide(t._2),
         matchInfo = convertPepMatch(t._2),
         proteinList = convertProtMatches(t._2))
-      println(psm)
-      psm
     }).toSeq
 
   }

@@ -7,6 +7,8 @@ import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
 import ch.isbsib.proteomics.mzviz.matches.models.{ProteinRef, PepSpectraMatch}
+import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
+import ch.isbsib.proteomics.mzviz.theoretical.models.SequenceSourceStats
 import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
 import ch.isbsib.proteomics.mzviz.matches.services.MatchMongoDBService
@@ -14,6 +16,7 @@ import com.wordnik.swagger.annotations._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json._
 import play.api.mvc.Action
+import reactivemongo.bson.BSONDocument
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
@@ -77,16 +80,16 @@ object MatchController extends CommonController {
   }
 
   @ApiOperation(nickname = "findAllPSMByRunId",
-    value = "find all PSMs by by runId",
-    notes = """PSMs list""",
+    value = "find all PSMs by searchId",
+      notes = """PSMs list""",
     response = classOf[List[PepSpectraMatch]],
     httpMethod = "GET")
-  def findAllPSMByRunId(
-                         @ApiParam(value = """run id""", defaultValue = "") @PathParam("runId") runId: String
+  def findAllPSMBySearchId(
+                         @ApiParam(value = """searchId""", defaultValue = "") @PathParam("searchId") searchId: String
                          ) =
     Action.async {
-      MatchMongoDBService().findAllPSMByRunId(RunId(runId))
-        .map { case sphList: List[JsObject] => Ok(Json.toJson(sphList))}
+      MatchMongoDBService().findAllPSMBySearchId(SearchId(searchId))
+        .map { case sphList => Ok(Json.toJson(sphList))}
         .recover {
         case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
       }
@@ -98,25 +101,42 @@ object MatchController extends CommonController {
     response = classOf[List[ProteinRef]],
     httpMethod = "GET")
   def findAllProteinRefsBySearchId(
-                         @ApiParam(value = """searchId""", defaultValue = "M_100") @PathParam("searchId") searchId: String
-                         ) = Action.async {
-    for{
+                                    @ApiParam(value = """searchId""", defaultValue = "M_100") @PathParam("searchId") searchId: String
+                                    ) = Action.async {
+    for {
       protRefs <- MatchMongoDBService().listProteinRefsBySearchId(SearchId(searchId))
-    }yield {
+    } yield {
       Ok(Json.toJson(protRefs))
     }
 
   }
 
+  @ApiOperation(nickname = "findPSMByProtein",
+    value = "find all PSMs object for a given protein",
+    notes = """PSMs like list (there is no list of the protein, but just a pointer to the one asked""",
+    response = classOf[List[JsObject]],
+    httpMethod = "GET")
+  def findPSMByProtein(
+                        @ApiParam(value = """searchId""", defaultValue = "") @PathParam("searchId") searchId: String,
+                        @ApiParam(value = """sequenceSource""", defaultValue = "") @PathParam("sequenceSource") sequenceSource: String,
+                        @ApiParam(value = """accessionCode""", defaultValue = "") @PathParam("accessionCode") accessionCode: String
+                        ) =
+    Action.async {
+      MatchMongoDBService().findPSMByProtein(SearchId(searchId), SequenceSource(sequenceSource), AccessionCode(accessionCode))
+        .map { case psms=> Ok(psms)} //Ok(sphList)}
+        .recover {
+        case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
+      }
+    }
 
 
   @ApiOperation(nickname = "deleteAllByRunId",
-    value = "delete PSMs for a given run-id",
+    value = "delete PSMs for a given searchId",
     notes = """No double check is done. Use with caution""",
     response = classOf[String],
     httpMethod = "DELETE")
-  def deleteAllBySource(runId: String) = Action.async {
-    MatchMongoDBService().deleteAllByRunId(RunId(runId)).map { x =>
+  def deleteAllBySearchId(searchId: String) = Action.async {
+    MatchMongoDBService().deleteAllBySearchId(SearchId(searchId)).map { x =>
       Ok("OK")
     }
   }

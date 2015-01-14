@@ -7,4 +7,4 @@ package ch.isbsib.proteomics.mzviz.experimental.models
  * @param peaks
  */
 
-case class ExpMSnSpectrum (ref:RefSpectrum, peaks:Seq[ExpPeakMSn])
+case class ExpMSnSpectrum (ref:SpectrumRef, peaks:Seq[ExpPeakMSn])
