@@ -50,11 +50,12 @@ object ExperimentalController extends CommonController {
 
   @ApiOperation(nickname = "loadMSRun",
     value = "Loads an MGF peak list as a run",
-    notes = """ run-id will be important to link with the mzid""",
+    notes = """ runId will be important to link with the mzid""",
     response = classOf[String],
     httpMethod = "POST")
   @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "mgf", value = "mgf peak list", required = true, dataType = "file", paramType = "body")
+    new ApiImplicitParam(name = "mgf", value = "mgf peak list", required = true, dataType = "file", paramType = "body"),
+    new ApiImplicitParam(name = "runId", value = "a string id with run identifier", required = true, dataType = "string", paramType = "body")
   ))
   def loadMSRun = Action.async(parse.multipartFormData) {
     request =>

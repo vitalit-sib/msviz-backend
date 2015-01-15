@@ -115,8 +115,7 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
         BSONDocument("$project" ->
           BSONDocument(
             "proteinPosition" -> "$proteinList",
-            "runId" -> 1,
-            "spId" -> 1,
+            "spectrumId" -> 1,
             "pep" -> 1,
             "matchInfo" -> 1,
             "searchId" -> 1,
