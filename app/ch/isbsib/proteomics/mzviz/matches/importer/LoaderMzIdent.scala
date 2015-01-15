@@ -142,7 +142,6 @@ object LoaderMzIdent {
     val reader: MzIdentMlReader = new MzIdentMlReader()
 
     reader.parse(fr, insertIdResultCB)
-
     searchResults
   }
 

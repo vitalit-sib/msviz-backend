@@ -60,9 +60,9 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @param runId the run id
    * @return
    */
-  def findAllRefSpectraByrunId(runId: RunId): Future[Seq[JsObject]] = {
+  def findAllSpectraRefByrunId(runId: RunId): Future[Seq[JsObject]] = {
     val query = Json.obj("ref.spectrumId.runId" -> runId.value)
-    val projection = Json.obj("ref" -> 1, "_id" -> 1)
+    val projection = Json.obj("ref" -> 1, "_id" -> 0)
     collection.find(query, projection).cursor[JsObject].collect[List]()
   }
 

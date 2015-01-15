@@ -62,7 +62,7 @@ object ExperimentalController extends CommonController {
       localFile("mgf", request)
         .flatMap {
         case (uploadedFile, filename) =>
-          val runId = request.body.dataParts.get("run-id").map(_.head)
+          val runId = request.body.dataParts.get("runId").map(_.head)
           val msRun = LoaderMGF.load(uploadedFile.getAbsolutePath, runId)
           ExpMongoDBService().insert(msRun)
       }
@@ -87,14 +87,14 @@ object ExperimentalController extends CommonController {
       }
     }
 
-  @ApiOperation(nickname = "findAllRefSpectraByrunId",
+  @ApiOperation(nickname = "findAllSpectraRefByRunId",
     value = "find all spectra for a given run id",
     notes = """Returns only the reference information (precursor & co)""",
     response = classOf[List[SpectrumRef]],
     httpMethod = "GET")
-  def findAllRefSpectraByRunId(@ApiParam(value = """run id""", defaultValue = "") @PathParam("runId") runId: String) =
+  def findAllSpectraRefByRunId(@ApiParam(value = """run id""", defaultValue = "") @PathParam("runId") runId: String) =
     Action.async {
-      ExpMongoDBService().findAllRefSpectraByrunId(RunId(runId))
+      ExpMongoDBService().findAllSpectraRefByrunId(RunId(runId))
         .map { case sphList: List[JsObject] => Ok(Json.toJson(sphList))}
         .recover {
         case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))

@@ -1,26 +1,25 @@
 package ch.isbsib.proteomics.mzviz.matches.services
 
-import ch.isbsib.proteomics.mzviz.commons.services.{MongoNotFoundException, MongoDBService}
+import ch.isbsib.proteomics.mzviz.commons.services.{MongoDBService, MongoNotFoundException}
 import ch.isbsib.proteomics.mzviz.experimental.RunId
-import ch.isbsib.proteomics.mzviz.experimental.models.{SpectrumId, SpectrumRef}
-import ch.isbsib.proteomics.mzviz.matches.SearchId
-import ch.isbsib.proteomics.mzviz.matches.models.{ProteinRef, ProteinMatch, PepSpectraMatch}
+import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
+import ch.isbsib.proteomics.mzviz.matches.SearchId
+import ch.isbsib.proteomics.mzviz.matches.models.{PepSpectraMatch, ProteinRef}
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
 import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json.{JsArray, JsObject, Json}
 import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
-import play.modules.reactivemongo.json.BSONFormats
-import play.modules.reactivemongo.json.collection.JSONCollection
+import play.modules.reactivemongo.json.BSONFormats._
 import reactivemongo.api.DefaultDB
-import reactivemongo.api.indexes.{IndexType, Index}
-import reactivemongo.bson.{BSONDocument, BSONArray}
+import reactivemongo.api.indexes.{Index, IndexType}
+import reactivemongo.bson.{BSONArray, BSONDocument}
 import reactivemongo.core.commands._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import play.modules.reactivemongo.json.BSONFormats._
 
 
 /**
@@ -30,10 +29,12 @@ import play.modules.reactivemongo.json.BSONFormats._
 class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
   val collectionName = "psm"
 
-  setIndexes(List(new Index(
-    Seq("spId" -> IndexType.Ascending, "runId" -> IndexType.Ascending),
-    name = Some("id_source"),
-    unique = false)))
+  setIndexes(List(
+    new Index(
+      Seq("searchId" -> IndexType.Ascending),
+      name = Some("searchId_source"),
+      unique = false)
+  ))
 
   /**
    * insert a list of Match entries
@@ -69,7 +70,7 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
     collection.find(query, projection)
       .cursor[JsObject]
       .collect[List]()
-      .map(l=>l.map(x=>(x \ "spectrumId").as[SpectrumId]))
+      .map(l => l.map(x => (x \ "spectrumId").as[SpectrumId]))
   }
 
   /**
@@ -122,10 +123,10 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
             "_id" -> 0))
       )
     ))
-        db.command(command).map({
-          doc =>
-            JsArray(doc.getAs[List[BSONDocument]]("result").get.map(o => toJSON(o).asInstanceOf[JsObject]))//=>Json.toJson(o))
-        })
+    db.command(command).map({
+      doc =>
+        JsArray(doc.getAs[List[BSONDocument]]("result").get.map(o => toJSON(o).asInstanceOf[JsObject])) //=>Json.toJson(o))
+    })
   }
 
 
@@ -145,6 +146,14 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
           i => SearchId(i)
         }
     })
+  }
+
+  /**
+   * check if a results has already been loaded for the given searchId
+   * @param searchId search key
+   */
+  def isSearchIdExist(searchId: SearchId): Future[Boolean] = {
+    ???
   }
 
 
@@ -174,7 +183,6 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
               Some(SequenceSource(elDoc.getAs[String]("source").get)))
         }).distinct
     })
-
   }
 
   /**
@@ -219,18 +227,15 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
       nEntries <- countEntries
     } yield {
       Map("sources" -> nSources, "entries" -> nEntries)
-
     }
   }
-
 }
-
 
 object MatchMongoDBService extends Controller with MongoController {
   val default = new MatchMongoDBService(db)
 
   /**
-   * get the default database
+   * get the default db/collection
    * @return
    */
   def apply() = default

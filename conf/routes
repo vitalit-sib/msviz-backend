@@ -9,7 +9,7 @@ GET           /exp/msrun                                                  ch.isb
 POST          /exp/msrun                                                  ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.loadMSRun
 DELETE        /exp/msrun/:runId                                           ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.deleteMSRun(runId)
 GET           /exp/spectrum/:runId/:title                                 ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.findExpSpectrum(runId, title)
-GET           /exp/ref-spectra/:runId                                     ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.findAllRefSpectraByRunId(runId)
+GET           /exp/spectra-ref/:runId                                     ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.findAllSpectraRefByRunId(runId)
 
 GET           /api-docs/sequence                                          controllers.ApiHelpController.getResource(path = "/sequence")
 GET           /sequence/list-sources                                      ch.isbsib.proteomics.mzviz.controllers.SequenceController.listSources
@@ -21,7 +21,7 @@ POST          /match/psms                                                 ch.isb
 GET           /match/psms/:searchId                                       ch.isbsib.proteomics.mzviz.controllers.MatchController.findAllPSMBySearchId(searchId)
 DELETE        /match/psms/:searchId                                       ch.isbsib.proteomics.mzviz.controllers.MatchController.deleteAllBySearchId(searchId)
 GET           /match/searchId                                             ch.isbsib.proteomics.mzviz.controllers.MatchController.listSearchIds
-GET           /match/:searchId/proteins                                   ch.isbsib.proteomics.mzviz.controllers.MatchController.findAllProteinRefsBySearchId(searchId)
+GET           /match/proteins/:searchId                                   ch.isbsib.proteomics.mzviz.controllers.MatchController.findAllProteinRefsBySearchId(searchId)
 GET           /match/psms/:searchId/:sequenceSource/:accessionCode        ch.isbsib.proteomics.mzviz.controllers.MatchController.findPSMByProtein(searchId, sequenceSource, accessionCode)
 
 GET           /docs/*file                                                 controllers.Assets.at(path="/public/docs", file)

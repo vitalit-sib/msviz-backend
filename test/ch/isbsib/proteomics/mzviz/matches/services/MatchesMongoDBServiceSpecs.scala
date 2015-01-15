@@ -90,8 +90,8 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
       val searchIds = service.listSearchIds.futureValue
       Thread.sleep(200)
       searchIds.size must equalTo(2)
-      searchIds(0) mustEqual (SearchId("M_100"))
-      searchIds(1) mustEqual (SearchId("M_100_2"))
+      searchIds(0) mustEqual SearchId("M_100")
+      searchIds(1) mustEqual SearchId("M_100_2")
     }
   }
 
@@ -102,9 +102,17 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
       val protRefList = service.listProteinRefsBySearchId(SearchId("M_100")).futureValue
       Thread.sleep(200)
       protRefList.size must equalTo(27)
-      protRefList(0).AC mustEqual (AccessionCode("CD109_HUMAN"))
-      protRefList(0).source mustEqual (Some(SequenceSource("TODO")))
+      protRefList(0).AC mustEqual AccessionCode("CD109_HUMAN")
+      protRefList(0).source mustEqual Some(SequenceSource("TODO"))
     }
   }
 
+
+  "isSearchIdExist" should {
+    "check val" in new TempMongoDBService {
+      service.isSearchIdExist(SearchId("M_1000")).futureValue must equalTo(false)
+      service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("M_100"), RunId("M_100.mgf"))).futureValue
+      service.isSearchIdExist(SearchId("M_1000")).futureValue must equalTo(true)
+    }
+  }
 }
