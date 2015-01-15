@@ -1,6 +1,7 @@
 package ch.isbsib.proteomics.mzviz.matches.services
 
 import ch.isbsib.proteomics.mzviz.commons._
+import ch.isbsib.proteomics.mzviz.commons.services.MongoDuplicateKeyException
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
@@ -8,6 +9,9 @@ import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.specs2.mutable.Specification
+
+import scala.concurrent.Await
+import scala.concurrent.duration._
 
 
 /**
@@ -110,9 +114,20 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "isSearchIdExist" should {
     "check val" in new TempMongoDBService {
-      service.isSearchIdExist(SearchId("M_1000")).futureValue must equalTo(false)
+      service.isSearchIdExist(SearchId("M_100")).futureValue must equalTo(false)
       service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("M_100"), RunId("M_100.mgf"))).futureValue
-      service.isSearchIdExist(SearchId("M_1000")).futureValue must equalTo(true)
+      Thread.sleep(200)
+      service.isSearchIdExist(SearchId("M_100")).futureValue must equalTo(true)
+    }
+
+    "inserting with duplicate SearchId must throw error" in new TempMongoDBService {
+      {
+        service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("M_100"), RunId("M_100.mgf"))).futureValue
+        Thread.sleep(200)
+//        Await.ready(service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("M_100"), RunId("M_100.mgf"))), 300 milli)
+        service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("M_100"), RunId("M_100.mgf"))).futureValue
+      } must throwA[Exception]
     }
   }
+
 }

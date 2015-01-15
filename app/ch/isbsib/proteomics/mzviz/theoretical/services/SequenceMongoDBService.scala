@@ -25,6 +25,8 @@ import scala.concurrent.Future
  */
 class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
   val collectionName = "sequences"
+  val mainKeyName="proteinRef.source"
+
 
   setIndexes(List(
     new Index(

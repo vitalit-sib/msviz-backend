@@ -1,6 +1,6 @@
 package ch.isbsib.proteomics.mzviz.matches.services
 
-import ch.isbsib.proteomics.mzviz.commons.services.{MongoDBService, MongoNotFoundException}
+import ch.isbsib.proteomics.mzviz.commons.services.{MongoDuplicateKeyException, MongoDBService, MongoNotFoundException}
 import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
@@ -28,6 +28,7 @@ import scala.concurrent.Future
  */
 class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
   val collectionName = "psm"
+  val mainKeyName = "searchId"
 
   setIndexes(List(
     new Index(
@@ -42,8 +43,11 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @return a Future of the number of entries loaded
    */
   def insert(matches: Seq[PepSpectraMatch]): Future[Int] = {
-    val enumerator = Enumerator(matches: _*)
-    collection.bulkInsert(enumerator)
+    val searchIds = matches.map(_.searchId.value).toSet
+    for {
+      c <- checkIfAnyKeyExist(searchIds)
+      n <- collection.bulkInsert(Enumerator(matches: _*))
+    } yield n
   }
 
   /**
@@ -153,7 +157,11 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @param searchId search key
    */
   def isSearchIdExist(searchId: SearchId): Future[Boolean] = {
-    ???
+    val query = Json.obj("searchId" -> searchId.value)
+    collection.find(query)
+      .cursor[JsObject]
+      .headOption
+      .map(_.isDefined)
   }
 
 
