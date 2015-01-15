@@ -78,7 +78,7 @@ trait MongoDBService {
   def checkIfAnyKeyExist(keys: Set[String]): Future[Unit] = {
     Future.sequence(keys.map(isMainKeyExist))
       .map({ listExist =>
-      if (listExist.count != 0) {
+      if (listExist.count(e=>e) != 0) {
         throw new MongoDuplicateKeyException(s"$mainKeyName already exit in $keys")
       }
       Future.successful[Any]()
