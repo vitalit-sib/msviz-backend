@@ -20,7 +20,7 @@ import reactivemongo.bson.BSONDocument
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
- *         copyright 2014-2015, Swiss Institute of Bioinformatics
+ *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 @Api(value = "/match", description = "PSMs, SSMs, protain matches etc.")
 object MatchController extends CommonController {
@@ -75,18 +75,18 @@ object MatchController extends CommonController {
       }
         .map { n => Ok(Json.obj("inserted" -> n))
       }.recover {
-        case e => BadRequest(e.getMessage)
+        case e => BadRequest(Json.prettyPrint(Json.obj("status" -> "ERROR", "message" -> e.getMessage)) + "\n")
       }
   }
 
   @ApiOperation(nickname = "findAllPSMByRunId",
     value = "find all PSMs by searchId",
-      notes = """PSMs list""",
+    notes = """PSMs list""",
     response = classOf[List[PepSpectraMatch]],
     httpMethod = "GET")
   def findAllPSMBySearchId(
-                         @ApiParam(value = """searchId""", defaultValue = "") @PathParam("searchId") searchId: String
-                         ) =
+                            @ApiParam(value = """searchId""", defaultValue = "") @PathParam("searchId") searchId: String
+                            ) =
     Action.async {
       MatchMongoDBService().findAllPSMBySearchId(SearchId(searchId))
         .map { case sphList => Ok(Json.toJson(sphList))}
@@ -123,7 +123,7 @@ object MatchController extends CommonController {
                         ) =
     Action.async {
       MatchMongoDBService().findPSMByProtein(SearchId(searchId), SequenceSource(sequenceSource), AccessionCode(accessionCode))
-        .map { case psms=> Ok(psms)} //Ok(sphList)}
+        .map { case psms => Ok(psms)} //Ok(sphList)}
         .recover {
         case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
       }

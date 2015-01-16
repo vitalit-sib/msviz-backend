@@ -3,12 +3,13 @@ package ch.isbsib.proteomics.mzviz.matches.models
 import ch.isbsib.proteomics.mzviz.commons._
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
-import ch.isbsib.proteomics.mzviz.matches.{SearchId}
+import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 import org.specs2.mutable.Specification
 
 /**
- * Created by Roman Mylonas on 25/11/14.
+ * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
+ * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 class PepSpectraMatchSpecs extends Specification {
   "pepSpectraMatch" should {
@@ -30,8 +31,8 @@ class PepSpectraMatchSpecs extends Specification {
 
     "create simple ProteinMatch" in {
       protMatch.size mustEqual 1
-      protMatch(0).proteinRef.AC mustEqual (AccessionCode("AC001"))
-      protMatch(0).proteinRef.source mustEqual (Some(SequenceSource("dbref")))
+      protMatch(0).proteinRef.AC mustEqual AccessionCode("AC001")
+      protMatch(0).proteinRef.source mustEqual Some(SequenceSource("dbref"))
     }
 
     "create simple PepSpectraMatch" in {

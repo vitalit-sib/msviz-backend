@@ -12,7 +12,8 @@ import org.specs2.mutable.Specification
 import scala.collection.mutable
 
 /**
- * Created by tmartinc on 05/12/14.
+ * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
+ * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 
 
@@ -27,7 +28,7 @@ class FastaParserSpecs extends Specification with ScalaFutures {
     val mapEntries: Map[AccessionCode, FastaEntry] = entries.map(e => (e.proteinRef.AC, e)).toMap
 
     "check the correct number of entries" in {
-      entries must have size (2)
+      entries must have size 2
     }
 
 

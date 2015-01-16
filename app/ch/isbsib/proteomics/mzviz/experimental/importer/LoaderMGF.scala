@@ -14,7 +14,7 @@ import scala.util.{Failure, Success, Try}
 /**
  * Load an MGF file into an MSRun
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
- * copyright 2014-2015, Swiss Institute of Bioinformatics
+ * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 object LoaderMGF {
   val reEqual = """(\w.*?)=(.*)""".r
@@ -29,7 +29,7 @@ object LoaderMGF {
     val lRet: Seq[Tuple2[String, String]] =
       text.split("\n").toSeq
         .filter(l => reEqual.findFirstIn(l).isDefined)
-        .map(l => l match {
+        .map({
         case reEqual(k, v) => (k, v.trim)
         case _ => throw new IllegalArgumentException(s"how can [$l] pass findFirst and not being matched")
       })
@@ -81,22 +81,20 @@ object LoaderMGF {
    * @return
    */
   def args2RT(args: Map[String, String]): Try[RetentionTime] = Try {
-    val rt = args.get("RTINSECONDS")
+    val ret = args.get("RTINSECONDS")
       .orElse(args.get("RTINSECONDS[0]"))
       .orElse(
         args.get("TITLE") match {
           case Some(reRTTitleWiff(rt)) => Some((rt.toDouble * 60).toString)
           case Some(reRTTitleWiffInterval(rtFrom, rtTo)) => Some((30*(rtFrom.toDouble +rtTo.toDouble)).toString)
-          case None => {
+          case None =>
             throw new UnsupportedOperationException(s"cannot parse retention time from $args, neither from RTINSECONDS nor TITLE")
-          }
-          case _ => {
+          case _ =>
             throw new UnsupportedOperationException(s"""cannot parse retention time from TITLE: ${args.get("TITLE")}""")
-          }
         }
       ).get
 
-    RetentionTime(rt.toDouble)
+    RetentionTime(ret.toDouble)
   }
 
 

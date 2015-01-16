@@ -8,10 +8,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Random
 
 /**
- * Created by tmartinc on 28/11/14.
+ * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
+ *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 trait TempMongoDBForSpecs extends Around {
-  val db:DefaultDB = createDB("scalatest")
+  val db: DefaultDB = createDB("scalatest")
 
   def createDB(dbNamePefix: String, host: String = "localhost:27017") = {
     val driver = new MongoDriver
@@ -27,15 +28,14 @@ trait TempMongoDBForSpecs extends Around {
     db.drop()
   }
 
-   def around[T: AsResult](t: => T) = {
+  def around[T: AsResult](t: => T) = {
     val r = try {
       AsResult.effectively(t)
     } catch {
-      case e: Throwable => {
+      case e: Throwable =>
         //preform some logic here
         dropDB
         throw e
-      }
     }
     dropDB
     r

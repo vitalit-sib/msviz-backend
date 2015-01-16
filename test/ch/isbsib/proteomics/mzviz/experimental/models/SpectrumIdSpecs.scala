@@ -5,7 +5,8 @@ import ch.isbsib.proteomics.mzviz.commons._
 import org.specs2.mutable.Specification
 
 /**
- * @author Roman Mylonas
+ * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
+ * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 class SpectrumIdSpecs extends Specification {
   "case" should {

@@ -8,7 +8,8 @@ import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, NumDatabaseSequenc
 import org.specs2.mutable.Specification
 
 /**
- *  @author Alexandre Masselot & Roman Mylonas
+ * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
+ * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 
 class LoaderMzIdentSpecs extends Specification {

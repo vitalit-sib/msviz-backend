@@ -25,7 +25,7 @@ import play.modules.reactivemongo.json.collection.JSONCollection
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
- * copyright 2014-2015, Swiss Institute of Bioinformatics
+ * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 @Api(value = "/exp", description = "experimental data access")
 object ExperimentalController extends CommonController {

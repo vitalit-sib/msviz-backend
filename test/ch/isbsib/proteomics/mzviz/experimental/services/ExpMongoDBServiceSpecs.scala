@@ -9,8 +9,8 @@ import org.scalatest.time.{Millis, Seconds, Span}
 import org.specs2.mutable.Specification
 
 /**
- * @author Roman Mylonas
- *
+ * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
+ * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 
 class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
@@ -67,7 +67,7 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
       sp.ref.spectrumId.runId must equalTo(RunId("test-1"))
       sp.ref.title must equalTo("File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 56.254 min, Period: 1, Cycle(s): 2083 (Experiment 4)")
 
-      sp.peaks must have size(190)
+      sp.peaks must have size 190
 
       val p2 = sp.peaks(2)
       p2 must equalTo(ExpPeakMSn(Moz(307.916800), Intensity(0.1253), IntensityRank(2), MSLevel(2)))

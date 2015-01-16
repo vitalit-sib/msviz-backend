@@ -5,7 +5,7 @@ import ch.isbsib.proteomics.mzviz.commons._
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
- * copyright 2014-2015, Swiss Institute of Bioinformatics
+ * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 sealed trait ExpPeak {
   val moz: Moz

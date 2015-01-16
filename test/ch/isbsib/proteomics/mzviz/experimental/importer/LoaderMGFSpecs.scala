@@ -8,7 +8,8 @@ import ch.isbsib.proteomics.mzviz.experimental._
 import scala.util.Success
 
 /**
- * @author Alexandre Masselot
+ * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
+ * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 class LoaderMGFSpecs extends Specification {
   "textLine2MozIntensity" should {
