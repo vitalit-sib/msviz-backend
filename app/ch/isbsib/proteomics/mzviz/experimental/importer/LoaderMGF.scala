@@ -31,7 +31,7 @@ object LoaderMGF {
         .filter(l => reEqual.findFirstIn(l).isDefined)
         .map({
         case reEqual(k, v) => (k, v.trim)
-        case _ => throw new IllegalArgumentException(s"how can [$l] pass findFirst and not being matched")
+        case _ => throw new IllegalArgumentException(s"how can a line pass findFirst and not being matched")
       })
     Map(lRet: _*)
   }
@@ -77,7 +77,7 @@ object LoaderMGF {
 
   /**
    * try to read retention time from RTINSECONDS, RTINSECONDS[0] fields or parsed out from TITLE line
-   * @param args
+   * @param args the *=* map
    * @return
    */
   def args2RT(args: Map[String, String]): Try[RetentionTime] = Try {
