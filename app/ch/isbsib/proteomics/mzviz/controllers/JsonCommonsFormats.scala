@@ -7,7 +7,7 @@ import play.api.libs.json.{JsValue, Writes}
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
- * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
+ *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 object JsonCommonsFormats {
 
@@ -15,7 +15,9 @@ object JsonCommonsFormats {
 
   implicit val jsonWritesThrowable = new Writes[Throwable] {
     override def writes(o: Throwable): JsValue = {
-      Json.obj("message" -> o.getMessage, "stackTrace" -> o.getStackTrace.toList.map(_.toString))
+      Json.obj("message" -> o.getMessage,
+      "exception" -> o.getClass.getSimpleName,
+        "stackTrace" -> o.getStackTrace.toList.map(_.toString))
     }
   }
 
@@ -26,13 +28,13 @@ object JsonCommonsFormats {
   }
 
   //  implicit val formatAccessionCode = new Format[AccessionCode] {
-//    override def reads(json: JsValue): JsResult[AccessionCode] = JsSuccess(AccessionCode(json.as[String]))
-//
-//    def writes(o: AccessionCode) = JsString(o.value)
-//  }
-implicit val formatAC = Json.format[AccessionCode]
-  implicit val formatSequenceSource = Json.format[SequenceSource]
-  implicit val formatProteinRef = Json.format[ProteinRef]
-  implicit val formatFastaEntry = Json.format[FastaEntry]
+  //    override def reads(json: JsValue): JsResult[AccessionCode] = JsSuccess(AccessionCode(json.as[String]))
+  //
+  //    def writes(o: AccessionCode) = JsString(o.value)
+  //  }
+//  implicit val formatAC = Json.format[AccessionCode]
+//  implicit val formatSequenceSource = Json.format[SequenceSource]
+//  implicit val formatProteinRef = Json.format[ProteinRef]
+//  implicit val formatFastaEntry = Json.format[FastaEntry]
 
 }

@@ -56,7 +56,6 @@ object JsonTheoFormats {
     )
   }
 
-  implicit val formatFastaEntry = Json.format[FastaEntry]
-
+  implicit val formatFastaEntry:Format[FastaEntry] = Json.format[FastaEntry]
 
 }

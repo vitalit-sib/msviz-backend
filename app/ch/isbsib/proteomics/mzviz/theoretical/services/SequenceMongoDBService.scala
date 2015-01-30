@@ -78,7 +78,7 @@ class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
     val query = Json.obj("proteinRef.AC" -> accessionCode.value, "proteinRef.source" -> source.value)
     collection.find(query).cursor[FastaEntry].headOption map {
       case Some(fe: FastaEntry) => fe
-      case None => throw new MongoNotFoundException(s"${source.value}/$accessionCode")
+      case None => throw new MongoNotFoundException(s"$source/$accessionCode")
     }
   }
 

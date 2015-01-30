@@ -44,7 +44,7 @@ object ExperimentalController extends CommonController {
     httpMethod = "GET")
   def listMSRunIds = Action.async {
     ExpMongoDBService().listMsRunIds.map {
-      ids => Ok(Json.obj("msRuns" -> ids.map(_.value)))
+      ids => Ok(Json.toJson(ids.map(_.value)))
     }
   }
 

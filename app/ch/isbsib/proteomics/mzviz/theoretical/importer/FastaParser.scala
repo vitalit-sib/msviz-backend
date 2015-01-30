@@ -59,4 +59,6 @@ class FastaParser(file: File, source: SequenceSource) {
 object FastaParser {
   def apply(filename: String, source: SequenceSource) = new FastaParser(new File(filename), source)
 
+  def apply(file: File, source: SequenceSource) = new FastaParser(file, source)
+
 }

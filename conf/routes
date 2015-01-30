@@ -5,16 +5,19 @@
 # Home page
 GET           /api-docs/exp                                               controllers.ApiHelpController.getResource(path = "/exp")
 GET           /exp                                                        ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.stats
-GET           /exp/msrun                                                  ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.listMSRunIds
+GET           /exp/msrun/list-runids                                      ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.listMSRunIds
 POST          /exp/msrun                                                  ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.loadMSRun
 DELETE        /exp/msrun/:runId                                           ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.deleteMSRun(runId)
 GET           /exp/spectrum/:runId/:title                                 ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.findExpSpectrum(runId, title)
 GET           /exp/spectra-ref/:runId                                     ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.findAllSpectraRefByRunId(runId)
 
+GET           /api-docs/sequences                                          controllers.ApiHelpController.getResource(path = "/sequence")
+GET           /sequences/list-sources                                     ch.isbsib.proteomics.mzviz.controllers.SequenceController.listSources
+POST          /sequences/:sourceId/fasta                                  ch.isbsib.proteomics.mzviz.controllers.SequenceController.loadFasta(sourceId)
+GET           /sequences/stats                                            ch.isbsib.proteomics.mzviz.controllers.SequenceController.stats
+
 GET           /api-docs/sequence                                          controllers.ApiHelpController.getResource(path = "/sequence")
-GET           /sequence/list-sources                                      ch.isbsib.proteomics.mzviz.controllers.SequenceController.listSources
-POST          /sequence/fasta                                             ch.isbsib.proteomics.mzviz.controllers.SequenceController.loadFasta
-GET           /sequence/stats                                             ch.isbsib.proteomics.mzviz.controllers.SequenceController.stats
+GET           /sequence/:sourceId/:accessionCode                          ch.isbsib.proteomics.mzviz.controllers.OneSequenceController.get(sourceId, accessionCode)
 
 GET           /api-docs/match                                             controllers.ApiHelpController.getResource(path = "/match")
 POST          /match/psms                                                 ch.isbsib.proteomics.mzviz.controllers.MatchController.loadPsms

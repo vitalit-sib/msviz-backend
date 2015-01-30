@@ -62,4 +62,11 @@ class FastaParserSpecs extends Specification with ScalaFutures {
     }
   }
 
+  "parse trembl" should{
+    val entries = FastaParser("test/resources/tr.fasta", SequenceSource("tr")).parse
+
+    "size" in {
+      entries must have size 2
+    }
+  }
 }
