@@ -8,7 +8,6 @@ import scala.xml.XML
  *
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
  * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
- * TODO: import file Unimod.xml from Mascot server  "http://mascot.vital-it.ch/mascot/cgi/get_params.pl?Show=MS_UNIMODXML"
  */
 class UnimodParser {
   //val filename="test/resources/unimod.xml"
