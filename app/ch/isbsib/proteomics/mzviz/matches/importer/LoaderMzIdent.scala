@@ -32,6 +32,9 @@ object LoaderMzIdent {
     // this information should ideally be parsed by the MzJava parser
     // val spectraFileName = parseSpectraFilename(filename)
 
+    // get the info about the SearchDatabases
+    val searchDbSourceInfo = parseSearchDbSourceInfo(filename)
+
     // convert the resulting list into our proper object
     searchResults.map({ t =>
       PepSpectraMatch(
@@ -41,7 +44,7 @@ object LoaderMzIdent {
         runId = runId),
         pep = convertPeptide(t._2),
         matchInfo = convertPepMatch(t._2),
-        proteinList = convertProtMatches(t._2))
+        proteinList = convertProtMatches(t._2, searchDbSourceInfo))
     }).toSeq
 
   }
@@ -64,12 +67,12 @@ object LoaderMzIdent {
    * @param filename MzIdentML path
    * @return a list of Tuples containing the SequenceSource and the number of entries
    */
-  def parseSearchDbSourceInfo(filename: String): Seq[Tuple2[SequenceSource, NumDatabaseSequences]] = {
+  def parseSearchDbSourceInfo(filename: String): Map[String, Tuple2[SequenceSource, NumDatabaseSequences]] = {
     val mzIdentML = scala.xml.XML.loadFile(filename)
 
     (mzIdentML \\ "SearchDatabase").map { db =>
-      Tuple2( SequenceSource((db \ "@version").text), NumDatabaseSequences((db \ "@numDatabaseSequences").text.toInt) )
-    }
+      ((db \ "@id").text -> Tuple2( SequenceSource((db \ "@version").text), NumDatabaseSequences((db \ "@numDatabaseSequences").text.toInt) ))
+    }.toMap
   }
 
 
@@ -89,11 +92,12 @@ object LoaderMzIdent {
    * @param mzJavaMatch a PeptideMatch obtained from the MzJava mzIdentML parser
    * @return
    */
-  def convertProtMatches(mzJavaMatch: PeptideMatch): Seq[ProteinMatch] = {
+  def convertProtMatches(mzJavaMatch: PeptideMatch, searchDbSourceInfo: Map[String, Tuple2[SequenceSource, NumDatabaseSequences]]): Seq[ProteinMatch] = {
     (for {
       pMatch: PeptideProteinMatch <- mzJavaMatch.getProteinMatches.iterator().asScala
     } yield {
-      ProteinMatch(proteinRef = ProteinRef(AC = AccessionCode(pMatch.getAccession), source = Some(SequenceSource("TODO"))), previousAA = pMatch.getPreviousAA, nextAA = pMatch.getNextAA, startPos = pMatch.getStart, endPos = pMatch.getEnd)
+      val searchDb = searchDbSourceInfo(pMatch.getSearchDatabase.get())._1
+      ProteinMatch(proteinRef = ProteinRef(AC = AccessionCode(pMatch.getAccession), source = Some(searchDb)), previousAA = pMatch.getPreviousAA.get(), nextAA = pMatch.getNextAA.get(), startPos = pMatch.getStart, endPos = pMatch.getEnd)
     }).toSeq
   }
 
