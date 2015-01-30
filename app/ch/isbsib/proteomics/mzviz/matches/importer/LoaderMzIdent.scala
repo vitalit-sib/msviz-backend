@@ -69,13 +69,10 @@ object LoaderMzIdent {
    */
   def parseSearchDbSourceInfo(filename: String): Map[String, Tuple2[SequenceSource, NumDatabaseSequences]] = {
     val mzIdentML = scala.xml.XML.loadFile(filename)
-    var resMap =  Map[String, Tuple2[SequenceSource, NumDatabaseSequences]]()
 
     (mzIdentML \\ "SearchDatabase").map { db =>
-      resMap += ((db \ "@id").text -> Tuple2( SequenceSource((db \ "@version").text), NumDatabaseSequences((db \ "@numDatabaseSequences").text.toInt) ))
-    }
-
-    resMap
+      ((db \ "@id").text -> Tuple2( SequenceSource((db \ "@version").text), NumDatabaseSequences((db \ "@numDatabaseSequences").text.toInt) ))
+    }.toMap
   }
 
 
