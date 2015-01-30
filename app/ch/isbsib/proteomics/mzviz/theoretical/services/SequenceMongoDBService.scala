@@ -122,20 +122,6 @@ class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
     db.command(Count(collectionName, Some(BSONDocument("proteinRef.source" -> source.value))))
   }
 
-  //  /**
-  //   * a maps with various counts
-  //   * @return
-  //   */
-  //  def stats: Future[Map[String, Int]] = {
-  //    for {
-  //      nSources <- countSources
-  //      nEntries <- countEntries
-  //    } yield {
-  //      Map("sources" -> nSources, "entries" -> nEntries)
-  //
-  //    }
-  //  }
-
   /**
    * reports sequenceSource to basic stats
    * from mongo
