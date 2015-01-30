@@ -108,7 +108,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
       Thread.sleep(200)
       protRefList.size must equalTo(27)
       protRefList(0).AC mustEqual AccessionCode("CD109_HUMAN")
-      protRefList(0).source mustEqual Some(SequenceSource("TODO"))
+      protRefList(0).source mustEqual Some(SequenceSource("SwissProt_2014_08.fasta"))
     }
   }
 

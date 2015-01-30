@@ -30,14 +30,14 @@ class LoaderMzIdentSpecs extends Specification {
     "parseSearchDbSourceInfo from M_100" in {
       val dbInfo = LoaderMzIdent.parseSearchDbSourceInfo("test/resources/M_100.mzid")
       dbInfo.size must equalTo(1)
-      dbInfo(0) must equalTo(Tuple2(SequenceSource("SwissProt_2014_08.fasta"), NumDatabaseSequences(546238)))
+      dbInfo("SDB_SwissProt_ID") must equalTo(Tuple2(SequenceSource("SwissProt_2014_08.fasta"), NumDatabaseSequences(546238)))
     }
 
     "parseSearchDbSourceInfo from F001644" in {
       val dbInfo = LoaderMzIdent.parseSearchDbSourceInfo("test/resources/F001644.mzid")
       dbInfo.size must equalTo(2)
-      dbInfo(0) must equalTo(Tuple2(SequenceSource("contaminants_PAF_20130207_1455.fasta"), NumDatabaseSequences(854)))
-      dbInfo(1) must equalTo(Tuple2(SequenceSource("custom_20141007_1128.fasta"), NumDatabaseSequences(854)))
+      dbInfo("SDB_contaminants_PAF") must equalTo(Tuple2(SequenceSource("contaminants_PAF_20130207_1455.fasta"), NumDatabaseSequences(854)))
+      dbInfo("SDB_custom") must equalTo(Tuple2(SequenceSource("custom_20141007_1128.fasta"), NumDatabaseSequences(854)))
     }
 
   }
@@ -80,7 +80,7 @@ class LoaderMzIdentSpecs extends Specification {
       }
 
       "check first protein content" in {
-        psm(0).proteinList(0).proteinRef must equalTo(ProteinRef(AC = AccessionCode("CD109_HUMAN"), source = Some(SequenceSource("TODO"))))
+        psm(0).proteinList(0).proteinRef must equalTo(ProteinRef(AC = AccessionCode("CD109_HUMAN"), source = Some(SequenceSource("SwissProt_2014_08.fasta"))))
         psm(0).proteinList(0).startPos must equalTo(1013)
         psm(0).proteinList(0).endPos must equalTo(1018)
         psm(0).proteinList(0).previousAA must equalTo("R")
