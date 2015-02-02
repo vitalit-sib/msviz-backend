@@ -17,7 +17,14 @@ import scala.util.matching.Regex
  * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 class FastaParser(file: File, source: SequenceSource) {
-  val reHeader = """>?..\|(.*?)\|.*""".r
+  val reHeaderAC1 = """>?..\|(.*?)\|.*""".r
+  val reHeaderAC2 = """>?..\|(.*?)\|.*""".r
+
+  def parseACFromHeader(header:String):AccessionCode = header match {
+    case reHeaderAC1(ac) => AccessionCode(ac)
+    case reHeaderAC2(ac) => AccessionCode(ac)
+    case _=> throw new FastaParsingException(s"cannot parse AC from header: $header")
+  }
 
   def parseOneProtBlock(protLines: String): FastaEntry = {
     val firstNewLineIndex = protLines.indexOf("\n")
@@ -25,7 +32,7 @@ class FastaParser(file: File, source: SequenceSource) {
     val seqLines = protLines.substring(firstNewLineIndex + 1)
 
     //gett accession code and cleanup sequence
-    val reHeader(ac) = headline
+    val ac = parseACFromHeader(headline)
     val seq = seqLines.replaceAll( """\s+""", "")
 
     FastaEntry(ProteinRef(AccessionCode(ac), Some(source)), seq, seq.size)
