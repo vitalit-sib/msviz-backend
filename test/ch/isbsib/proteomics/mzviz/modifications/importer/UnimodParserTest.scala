@@ -15,7 +15,7 @@ class UnimodParserTest extends Specification with ScalaFutures {
 
   "numberOfEntries" should {
     "return 1000"
-      val n = UnimodParser("test/resources/unimod.xml").getSize
+      val n = UnimodParser("http://mascot.vital-it.ch/mascot/cgi/get_params.pl?Show=MS_UNIMODXML").getSize
       n must equalTo(1000)
 
   }
