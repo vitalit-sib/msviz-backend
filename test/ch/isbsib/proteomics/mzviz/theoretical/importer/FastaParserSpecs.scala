@@ -1,10 +1,7 @@
 package ch.isbsib.proteomics.mzviz.theoretical.importer
 
-import ch.isbsib.proteomics.mzviz.commons.TempMongoDBForSpecs
-import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
-import ch.isbsib.proteomics.mzviz.theoretical.services.SequenceMongoDBService
-import com.google.common.io.CharSource.CharSequenceCharSource
+import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.specs2.mutable.Specification

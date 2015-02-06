@@ -1,6 +1,5 @@
 package ch.isbsib.proteomics.mzviz.modifications.importer
 
-
 import scala.xml.XML
 
 /**
@@ -33,9 +32,9 @@ class UnimodParser (file:String) {
    * return value for a given key
    * @return
    */
-  //def getValues(key:String){
-  //  dictionary.get(key)
-  //}
+  def getValues(key:String){
+    dictionary.get(key)
+  }
 
 }
 
