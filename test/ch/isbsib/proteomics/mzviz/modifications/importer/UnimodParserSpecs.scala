@@ -13,16 +13,16 @@ class UnimodParserSpecs extends Specification with ScalaFutures {
 
 
   "unimod" should {
-    val filename="http://mascot.vital-it.ch/mascot/cgi/get_params.pl?Show=MS_UNIMODXML"
+    val filename=("test/resources/unimod.xml")
     val n = UnimodParser(filename).getSize
-    val value=List("42.01565", "42.036")
+    val value=Some(List(Tuple2("42.010565", "42.0367")))
 
     "numberOfEntries" in {
       n must equalTo(1000)
     }
 
     "Acetylation should return 42.010565, 42.036" in {
-       UnimodParser(filename).getValues("Acetylation") must equalTo(value)
+     UnimodParser(filename).getValues("Acetylation") must equalTo(value)
     }
 
 

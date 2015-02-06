@@ -1,5 +1,6 @@
 package ch.isbsib.proteomics.mzviz.modifications.importer
 
+import scala.collection.immutable.Seq
 import scala.xml.XML
 
 /**
@@ -19,7 +20,6 @@ class UnimodParser (file:String) {
 
   val dictionary=(key zip tuple).toMap
 
-
   /**
    * return number of entries
    * @return
@@ -32,7 +32,7 @@ class UnimodParser (file:String) {
    * return value for a given key
    * @return
    */
-  def getValues(key:String){
+  def getValues(key:String):Option[Seq[(String, String)]] = {
     dictionary.get(key)
   }
 
