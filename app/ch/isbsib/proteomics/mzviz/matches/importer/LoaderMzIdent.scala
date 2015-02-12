@@ -84,7 +84,7 @@ object LoaderMzIdent {
    */
   def convertPeptide(mzJavaMatch: PeptideMatch): Peptide = {
     val pep = mzJavaMatch.toPeptide
-    Peptide(sequence = pep.toSymbolString, molMass = pep.getMolecularMass, dbSequenceRef = "TODO")
+    Peptide(sequence = pep.toSymbolString, molMass = pep.getMolecularMass)
   }
 
 

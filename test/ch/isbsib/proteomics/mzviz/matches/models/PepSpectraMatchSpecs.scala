@@ -16,7 +16,7 @@ class PepSpectraMatchSpecs extends Specification {
 
     // vals used in following tests
     val matching = PepMatchInfo(scoreMap = Map("p-value" -> 0.001), numMissedCleavages = Option(1), massDiff = Option(0.01), rank = 1, totalNumIons = Option(1), isRejected = None)
-    val pep = Peptide(sequence = "AKKKAA", molMass = 123.23, dbSequenceRef = "dbref_01")
+    val pep = Peptide(sequence = "AKKKAA", molMass = 123.23)
     val protRef = ProteinRef(AC = AccessionCode("AC001"), source = Some(SequenceSource("dbref")))
     val protMatch = Seq(ProteinMatch(proteinRef = protRef, previousAA = Some("A"), nextAA = Some("K"), startPos = 1, endPos = 10, Some(false)))
 
