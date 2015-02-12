@@ -87,6 +87,12 @@ class LoaderMzIdentSpecs extends Specification {
         psm(0).proteinList(0).nextAA must equalTo("G")
       }
 
+      "check false decoy hit" in {
+        psm(0).proteinList(0).isDecoy must equalTo(Some(false))
+        psm.last.proteinList.last.isDecoy must equalTo(Some(true))
+      }
+
+
     }
 
 }

@@ -446,7 +446,7 @@
     <PeptideEvidence id="PE_115_1_VIME_HUMAN_0_425_439" start="425" end="439" pre="R" post="R" peptide_ref="peptide_115_1" isDecoy="false" dBSequence_ref="DBSeq_1_VIME_HUMAN" />
     <PeptideEvidence id="PE_117_1_VIME_HUMAN_0_365_378" start="365" end="378" pre="R" post="H" peptide_ref="peptide_117_1" isDecoy="false" dBSequence_ref="DBSeq_1_VIME_HUMAN" />
     <PeptideEvidence id="PE_119_1_ACTB_HUMAN_0_96_113" start="96" end="113" pre="R" post="A" peptide_ref="peptide_119_1" isDecoy="false" dBSequence_ref="DBSeq_1_ACTB_HUMAN" />
-    <PeptideEvidence id="PE_120_1_AMPN_HUMAN_0_778_793" start="778" end="793" pre="K" post="S" peptide_ref="peptide_120_1" isDecoy="false" dBSequence_ref="DBSeq_1_AMPN_HUMAN" />
+    <PeptideEvidence id="PE_120_1_AMPN_HUMAN_0_778_793" start="778" end="793" pre="K" post="S" peptide_ref="peptide_120_1" isDecoy="true" dBSequence_ref="DBSeq_1_AMPN_HUMAN" />
   </SequenceCollection>
   <AnalysisCollection>
     <SpectrumIdentification id="SI" spectrumIdentificationProtocol_ref="SIP"  spectrumIdentificationList_ref="SIL_1" activityDate="2014-11-12T09:15:48">

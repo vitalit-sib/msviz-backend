@@ -34,7 +34,7 @@ object LoaderMzIdent {
 
     // get the info about the SearchDatabases
     val searchDbSourceInfo = parseSearchDbSourceInfo(filename)
-
+    
     // convert the resulting list into our proper object
     searchResults.map({ t =>
       PepSpectraMatch(
@@ -96,8 +96,23 @@ object LoaderMzIdent {
     (for {
       pMatch: PeptideProteinMatch <- mzJavaMatch.getProteinMatches.iterator().asScala
     } yield {
+
+      // match MzJava HitType to our own
+      val isDecoy = mzJavaMatch.getProteinMatches.get(0).getHitType match {
+        case PeptideProteinMatch.HitType.DECOY => Some(true)
+        case PeptideProteinMatch.HitType.TARGET => Some(false)
+        case _ => None
+      }
+
       val searchDb = searchDbSourceInfo(pMatch.getSearchDatabase.get())._1
-      ProteinMatch(proteinRef = ProteinRef(AC = AccessionCode(pMatch.getAccession), source = Some(searchDb)), previousAA = pMatch.getPreviousAA.get(), nextAA = pMatch.getNextAA.get(), startPos = pMatch.getStart, endPos = pMatch.getEnd)
+      ProteinMatch(proteinRef = ProteinRef(AC = AccessionCode(pMatch.getAccession),
+        source = Some(searchDb)),
+        previousAA = pMatch.getPreviousAA.get(),
+        nextAA = pMatch.getNextAA.get(),
+        startPos = pMatch.getStart,
+        endPos = pMatch.getEnd,
+        isDecoy = isDecoy
+      )
     }).toSeq
   }
 
@@ -124,7 +139,6 @@ object LoaderMzIdent {
       totalNumIons = Option(mzJavaMatch.getTotalNumIons),
       // modifications
       // precursor neutral mass
-      // isDecoy = Option(mzJavaMatch)
       isRejected = Option(mzJavaMatch.isRejected))
 
   }
