@@ -8,8 +8,8 @@ package ch.isbsib.proteomics.mzviz.matches.models
 
 
 case class ProteinMatch (proteinRef: ProteinRef,
-                         previousAA: String,
-                         nextAA: String,
+                         previousAA: Option[String],
+                         nextAA: Option[String],
                          startPos: Int,
                          endPos: Int,
                          isDecoy: Option[Boolean])
