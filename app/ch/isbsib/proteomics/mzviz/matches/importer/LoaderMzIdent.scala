@@ -7,6 +7,7 @@ import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models._
 import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, NumDatabaseSequences, SequenceSource}
+import com.google.common.base.Optional
 import org.apache.commons.io.FilenameUtils
 import org.expasy.mzjava.proteomics.io.ms.ident.{MzIdentMlReader, PSMReaderCallback}
 import org.expasy.mzjava.proteomics.ms.ident.{PeptideMatch, PeptideProteinMatch, SpectrumIdentifier}
@@ -34,7 +35,7 @@ object LoaderMzIdent {
 
     // get the info about the SearchDatabases
     val searchDbSourceInfo = parseSearchDbSourceInfo(filename)
-
+    
     // convert the resulting list into our proper object
     searchResults.map({ t =>
       PepSpectraMatch(
@@ -83,7 +84,7 @@ object LoaderMzIdent {
    */
   def convertPeptide(mzJavaMatch: PeptideMatch): Peptide = {
     val pep = mzJavaMatch.toPeptide
-    Peptide(sequence = pep.toSymbolString, molMass = pep.getMolecularMass, dbSequenceRef = "TODO")
+    Peptide(sequence = pep.toSymbolString, molMass = pep.getMolecularMass)
   }
 
 
@@ -96,11 +97,25 @@ object LoaderMzIdent {
     (for {
       pMatch: PeptideProteinMatch <- mzJavaMatch.getProteinMatches.iterator().asScala
     } yield {
+
+      // match MzJava HitType to our own
+      val isDecoy = mzJavaMatch.getProteinMatches.get(0).getHitType match {
+        case PeptideProteinMatch.HitType.DECOY => Some(true)
+        case PeptideProteinMatch.HitType.TARGET => Some(false)
+        case _ => None
+      }
+
       val searchDb = searchDbSourceInfo(pMatch.getSearchDatabase.get())._1
-      ProteinMatch(proteinRef = ProteinRef(AC = AccessionCode(pMatch.getAccession), source = Some(searchDb)), previousAA = pMatch.getPreviousAA.get(), nextAA = pMatch.getNextAA.get(), startPos = pMatch.getStart, endPos = pMatch.getEnd)
+      ProteinMatch(proteinRef = ProteinRef(AC = AccessionCode(pMatch.getAccession),
+        source = Some(searchDb)),
+        previousAA = convertGoogleOption(pMatch.getPreviousAA),
+        nextAA = convertGoogleOption(pMatch.getNextAA),
+        startPos = pMatch.getStart,
+        endPos = pMatch.getEnd,
+        isDecoy = isDecoy
+      )
     }).toSeq
   }
-
 
   /**
    * convert a MzJava PeptideMatch into our PepMatchInfo object
@@ -124,7 +139,6 @@ object LoaderMzIdent {
       totalNumIons = Option(mzJavaMatch.getTotalNumIons),
       // modifications
       // precursor neutral mass
-      // isDecoy = Option(mzJavaMatch)
       isRejected = Option(mzJavaMatch.isRejected))
 
   }
@@ -149,5 +163,13 @@ object LoaderMzIdent {
     searchResults
   }
 
+
+  implicit def convertGoogleOption[T](option: Optional[T]): Option[T] = {
+    def convert(option: Optional[T]) = option.isPresent() match {
+      case true => Some(option.get())
+      case false => None
+    }
+    convert(option)
+  }
 
 }

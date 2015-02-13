@@ -55,5 +55,4 @@ object JsonMatchFormats {
   implicit val formatPepMatchInfo = Json.format[PepMatchInfo]
   implicit val formatPepSpectraMatch = Json.format[PepSpectraMatch]
 
-
 }

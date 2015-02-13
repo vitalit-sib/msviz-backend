@@ -5,6 +5,7 @@ package ch.isbsib.proteomics.mzviz.matches.models
  * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 
+
 case class PepMatchInfo(
                          scoreMap: Map[String, Double],
                          numMissedCleavages: Option[Int],
@@ -13,5 +14,4 @@ case class PepMatchInfo(
                          rank: Int,
                          totalNumIons: Option[Int],
                          isRejected: Option[Boolean]
-                         // isDecoy: Boolean
                          )

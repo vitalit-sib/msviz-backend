@@ -83,8 +83,13 @@ class LoaderMzIdentSpecs extends Specification {
         psm(0).proteinList(0).proteinRef must equalTo(ProteinRef(AC = AccessionCode("CD109_HUMAN"), source = Some(SequenceSource("SwissProt_2014_08.fasta"))))
         psm(0).proteinList(0).startPos must equalTo(1013)
         psm(0).proteinList(0).endPos must equalTo(1018)
-        psm(0).proteinList(0).previousAA must equalTo("R")
-        psm(0).proteinList(0).nextAA must equalTo("G")
+        psm(0).proteinList(0).previousAA must equalTo(Some("R"))
+        psm(0).proteinList(0).nextAA must equalTo(Some("G"))
+      }
+
+      "check false decoy hit" in {
+        psm(0).proteinList(0).isDecoy must equalTo(Some(false))
+        psm.last.proteinList.last.isDecoy must equalTo(Some(true))
       }
 
     }
