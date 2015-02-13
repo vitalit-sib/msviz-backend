@@ -1,7 +1,7 @@
 package ch.isbsib.proteomics.mzviz.theoretical.importer
 
 import ch.isbsib.proteomics.mzviz.commons.TempMongoDBForSpecs
-import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
+import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
 import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
 import ch.isbsib.proteomics.mzviz.theoretical.services.SequenceMongoDBService
 import com.google.common.io.CharSource.CharSequenceCharSource
@@ -21,6 +21,16 @@ class FastaParserSpecs extends Specification with ScalaFutures {
   implicit val defaultPatience =
     PatienceConfig(timeout = Span(15, Seconds), interval = Span(5000, Millis))
 
+
+  "FastaExtractorACFromHeader.parse()" should {
+    ">tr|NC_999_2_1" in {
+      FastaExtractorACFromHeader.parse(">tr|NC_999_2_1") must equalTo(AccessionCode("NC_999_2_1"))
+    }
+    ">sp|P04899|GNAI2_HUMAN Guanine nucleotide-binding protein G(i) subunit alpha-2 OS=Homo sapiens GN=GNAI2 PE=1 SV=3" in {
+      FastaExtractorACFromHeader.parse(">sp|P04899|GNAI2_HUMAN Guanine nucleotide-binding protein G(i) subunit alpha-2 OS=Homo sapiens GN=GNAI2 PE=1 SV=3") must equalTo(AccessionCode("P04899"))
+    }
+
+  }
 
   "parse" should {
     val entries = FastaParser("test/resources/M_100small.fasta", SequenceSource("pipo")).parse.toList

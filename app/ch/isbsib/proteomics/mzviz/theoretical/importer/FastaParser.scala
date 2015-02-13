@@ -14,17 +14,10 @@ import scala.util.matching.Regex
  * opens a file and get a list of fasta entries
  *
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
- * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
+ *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 class FastaParser(file: File, source: SequenceSource) {
-  val reHeaderAC1 = """>?..\|(.*?)\|.*""".r
-  val reHeaderAC2 = """>?..\|(.*?)\|.*""".r
 
-  def parseACFromHeader(header:String):AccessionCode = header match {
-    case reHeaderAC1(ac) => AccessionCode(ac)
-    case reHeaderAC2(ac) => AccessionCode(ac)
-    case _=> throw new FastaParsingException(s"cannot parse AC from header: $header")
-  }
 
   def parseOneProtBlock(protLines: String): FastaEntry = {
     val firstNewLineIndex = protLines.indexOf("\n")
@@ -32,10 +25,10 @@ class FastaParser(file: File, source: SequenceSource) {
     val seqLines = protLines.substring(firstNewLineIndex + 1)
 
     //gett accession code and cleanup sequence
-    val ac = parseACFromHeader(headline)
+    val ac = FastaExtractorACFromHeader.parse(headline)
     val seq = seqLines.replaceAll( """\s+""", "")
 
-    FastaEntry(ProteinRef(AccessionCode(ac), Some(source)), seq, seq.size)
+    FastaEntry(ProteinRef(ac, Some(source)), seq, seq.size)
     //val=SequenceMongoDBService()
   }
 
@@ -64,8 +57,21 @@ class FastaParser(file: File, source: SequenceSource) {
  * companion object
  */
 object FastaParser {
+
   def apply(filename: String, source: SequenceSource) = new FastaParser(new File(filename), source)
 
   def apply(file: File, source: SequenceSource) = new FastaParser(file, source)
 
+}
+
+object FastaExtractorACFromHeader {
+  val reHeaderAC1 = """>?..\|(.+?)\|.*""".r
+  val reHeaderAC2 = """>?..\|(\w+).*""".r
+
+
+  def parse(header: String): AccessionCode = header match {
+    case reHeaderAC1(ac) => AccessionCode(ac)
+    case reHeaderAC2(ac) => AccessionCode(ac)
+    case _ => throw new FastaParsingException(s"cannot parse AC from header: $header")
+  }
 }
