@@ -65,13 +65,18 @@ object FastaParser {
 }
 
 object FastaExtractorACFromHeader {
-  val reHeaderAC1 = """>?..\|(.+?)\|.*""".r
-  val reHeaderAC2 = """>?..\|(\w+).*""".r
+  val reList = List(
+    """..\|(.+?)\|.*""",
+    """..\|([\w\-]+).*""",
+    """([\w\-:]+).*"""
+  )
+    .map(s => ("^>?" + s).r)
 
 
-  def parse(header: String): AccessionCode = header match {
-    case reHeaderAC1(ac) => AccessionCode(ac)
-    case reHeaderAC2(ac) => AccessionCode(ac)
-    case _ => throw new FastaParsingException(s"cannot parse AC from header: $header")
+  def parse(header: String): AccessionCode = reList.find(_.findFirstMatchIn(header).isDefined) match {
+    case Some(re) =>
+      val re(ac) = header
+      AccessionCode(ac)
+    case None => throw new FastaParsingException(s"cannot parse AC from header: $header")
   }
 }

@@ -13,7 +13,7 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json._
 import play.api.mvc.Action
 import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
-
+import scala.io.Source
 
 /**
  *
@@ -44,6 +44,23 @@ object SequenceController extends CommonController {
     }
   }
 
+  @ApiOperation(nickname = "deleteSource",
+    value = "delete all entries from a given source",
+    notes = """use at your own risk""",
+    response = classOf[String],
+    httpMethod = "DELETE")
+  def deleteSource(@ApiParam(value = """sourceId""", defaultValue = "") @PathParam("sourceId") sourceId: String) =
+    Action.async {
+      SequenceMongoDBService().deleteAllBySource(SequenceSource(sourceId))
+        .map {
+        _ => Ok(Json.prettyPrint(
+          Json.obj(
+            "deleted" -> sourceId
+          )))
+      }.recover {
+        case e => BadRequest(Json.toJson(e))
+      }
+    }
 
   @ApiOperation(nickname = "loadFasta",
     value = "Loads a fasta file",
@@ -56,6 +73,7 @@ object SequenceController extends CommonController {
   def loadFasta(@ApiParam(value = """sourceId""", defaultValue = "uniprot_sprot_20231224") @PathParam("sourceId") sourceId: String) =
     Action.async(parse.temporaryFile) {
       request =>
+        println(Source.fromFile(request.body.file).mkString)
         val entries = FastaParser(request.body.file, SequenceSource(sourceId)).parse
         SequenceMongoDBService().insert(entries).map { n => Ok(Json.obj("inserted" -> n))
         }.recover {

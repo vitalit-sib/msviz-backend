@@ -29,7 +29,15 @@ class FastaParserSpecs extends Specification with ScalaFutures {
     ">sp|P04899|GNAI2_HUMAN Guanine nucleotide-binding protein G(i) subunit alpha-2 OS=Homo sapiens GN=GNAI2 PE=1 SV=3" in {
       FastaExtractorACFromHeader.parse(">sp|P04899|GNAI2_HUMAN Guanine nucleotide-binding protein G(i) subunit alpha-2 OS=Homo sapiens GN=GNAI2 PE=1 SV=3") must equalTo(AccessionCode("P04899"))
     }
-
+    ">P01044-1 SWISS-PROT:P01044-1" in {
+      FastaExtractorACFromHeader.parse(">P01044-1 SWISS-PROT:P01044-1") must equalTo(AccessionCode("P01044-1"))
+    }
+    ">ENSEMBL:ENSBTAP00000024466 (Bos taurus) 44 kDa protein" in {
+      FastaExtractorACFromHeader.parse(">ENSEMBL:ENSBTAP00000024466 (Bos taurus) 44 kDa protein") must equalTo(AccessionCode("ENSEMBL:ENSBTAP00000024466"))
+    }
+    ">P21578 SWISS-PROT:P21578|LUXY_VIBFI Yellow fluorescent protein (YFP)- Vibrio fischeri." in {
+      FastaExtractorACFromHeader.parse("P21578 SWISS-PROT:P21578|LUXY_VIBFI Yellow fluorescent protein (YFP)- Vibrio fischeri.") must equalTo(AccessionCode("P21578"))
+    }
   }
 
   "parse" should {
