@@ -6,6 +6,7 @@ import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models._
 import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 import play.api.libs.json._
+import ch.isbsib.proteomics.mzviz.modifications.services.JsonModificationFormats._
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
@@ -15,8 +16,6 @@ import play.api.libs.json._
 object JsonMatchFormats {
 
   import play.api.libs.json.Json
-  import play.api.data._
-  import play.api.data.Forms._
 
 
   implicit val formatSpectraId = new Format[SpectrumId] {
@@ -24,12 +23,6 @@ object JsonMatchFormats {
 
     def writes(o: SpectrumId) = Json.obj("id"->o.id.value, "runId"->o.runId.value)
   }
-
-//  implicit val formatRunId = new Format[RunId] {
-//    override def reads(json: JsValue): JsResult[RunId] = JsSuccess(RunId(json.as[String]))
-//
-//    def writes(o: RunId) = JsString(o.value)
-//  }
 
   implicit val formatAccessionCode = new Format[AccessionCode] {
     override def reads(json: JsValue): JsResult[AccessionCode] = JsSuccess(AccessionCode(json.as[String]))

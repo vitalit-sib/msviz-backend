@@ -18,5 +18,4 @@ package object commons {
 
   case class RetentionTime(value:Double) extends AnyVal
 
-
 }

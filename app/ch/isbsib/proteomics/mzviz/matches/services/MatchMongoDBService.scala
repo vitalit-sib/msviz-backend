@@ -1,9 +1,10 @@
 package ch.isbsib.proteomics.mzviz.matches.services
 
-import ch.isbsib.proteomics.mzviz.commons.services.{MongoDuplicateKeyException, MongoDBService, MongoNotFoundException}
+import ch.isbsib.proteomics.mzviz.commons.services.{MongoDBService, MongoNotFoundException}
 import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
+import ch.isbsib.proteomics.mzviz.modifications.services.JsonModificationFormats._
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models.{PepSpectraMatch, ProteinRef}
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
