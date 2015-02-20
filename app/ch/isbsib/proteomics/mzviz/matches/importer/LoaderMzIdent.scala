@@ -1,6 +1,6 @@
 package ch.isbsib.proteomics.mzviz.matches.importer
 
-import java.io.{FileInputStream, InputStream}
+import java.io.{File, FileInputStream, InputStream}
 
 import ch.isbsib.proteomics.mzviz.commons.helpers.OptionConverter
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
@@ -26,15 +26,15 @@ object LoaderMzIdent {
 
   /**
    * parse a .mzid file and return a full run.
-   * @param filename an .mzid file
+   * @param file an .mzid file
    * @return
    */
-  def parse(filename: String, searchId: SearchId, runId: RunId): Seq[PepSpectraMatch] = {
+  def parse(file: File, searchId: SearchId, runId: RunId): Seq[PepSpectraMatch] = {
     // data from MzJava parser are stored in a list
-    val searchResults = mzJavaParse(filename)
+    val searchResults = mzJavaParse(file)
 
     // get the info about the SearchDatabases
-    val searchDbSourceInfo = parseSearchDbSourceInfo(filename)
+    val searchDbSourceInfo = parseSearchDbSourceInfo(file)
     
     // convert the resulting list into our proper object
     searchResults.map({ t =>
@@ -65,11 +65,11 @@ object LoaderMzIdent {
   /**
    * parse the database  from the MzIdenML file. We do this seperately, since the MzJava parser doesn't take care of this information.
    * TODO: adapt MzJava MzIdentMlParser, so that it parses searchDb information
-   * @param filename MzIdentML path
+   * @param file MzIdentML file
    * @return a list of Tuples containing the SequenceSource and the number of entries
    */
-  def parseSearchDbSourceInfo(filename: String): Map[String, Tuple2[SequenceSource, NumDatabaseSequences]] = {
-    val mzIdentML = scala.xml.XML.loadFile(filename)
+  def parseSearchDbSourceInfo(file: File): Map[String, Tuple2[SequenceSource, NumDatabaseSequences]] = {
+    val mzIdentML = scala.xml.XML.loadFile(file)
 
     (mzIdentML \\ "SearchDatabase").map { db =>
       ((db \ "@id").text -> Tuple2( SequenceSource((db \ "@version").text), NumDatabaseSequences((db \ "@numDatabaseSequences").text.toInt) ))
@@ -188,17 +188,17 @@ object LoaderMzIdent {
 
     /**
    * parse .mzid file using MzIdentMlReader from MzJava
-   * @param filename an .mzid file
+   * @param file an .mzid file
    * @return
    */
-  def mzJavaParse(filename: String): ListBuffer[Tuple2[SpectrumIdentifier, PeptideMatch]] = {
+  def mzJavaParse(file: File): ListBuffer[Tuple2[SpectrumIdentifier, PeptideMatch]] = {
     val searchResults = ListBuffer[Tuple2[SpectrumIdentifier, PeptideMatch]]()
 
     val insertIdResultCB: PSMReaderCallback = new PSMReaderCallback {
       def resultRead(identifier: SpectrumIdentifier, peptideMatch: PeptideMatch) = searchResults.append(Tuple2(identifier, peptideMatch))
     }
 
-    val fr: InputStream = new FileInputStream(filename)
+    val fr: InputStream = new FileInputStream(file)
     val reader: MzIdentMlReader = new MzIdentMlReader()
 
     reader.parse(fr, insertIdResultCB)

@@ -25,7 +25,7 @@ import play.modules.reactivemongo.json.collection.JSONCollection
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
- * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
+ *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 @Api(value = "/exp", description = "experimental data access")
 object ExperimentalController extends CommonController {
@@ -54,18 +54,13 @@ object ExperimentalController extends CommonController {
     response = classOf[String],
     httpMethod = "POST")
   @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "mgf", value = "mgf peak list", required = true, dataType = "file", paramType = "body"),
-    new ApiImplicitParam(name = "runId", value = "a string id with run identifier", required = true, dataType = "string", paramType = "body")
+    new ApiImplicitParam(name = "body", value = "mgf peak list", required = true, dataType = "text/plain", paramType = "body")
   ))
-  def loadMSRun = Action.async(parse.multipartFormData) {
+  def loadMSRun(@ApiParam(name = "runId", value = "a string id with run identifier", required = true)  @PathParam("runId") runId: String) = Action.async(parse.temporaryFile) {
     request =>
-      localFile("mgf", request)
-        .flatMap {
-        case (uploadedFile, filename) =>
-          val runId = request.body.dataParts.get("runId").map(_.head)
-          val msRun = LoaderMGF.load(uploadedFile.getAbsolutePath, runId)
-          ExpMongoDBService().insert(msRun)
-      }
+
+      val msRun = LoaderMGF.load(request.body.file, RunId(runId))
+      ExpMongoDBService().insert(msRun)
         .map { n => Ok(Json.obj("inserted" -> n))
       }.recover {
         case e => BadRequest(e.getMessage)
