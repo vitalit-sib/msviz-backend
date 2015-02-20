@@ -1,5 +1,7 @@
 package ch.isbsib.proteomics.mzviz.experimental.importer
 
+import java.io.File
+
 import ch.isbsib.proteomics.mzviz.commons._
 import ch.isbsib.proteomics.mzviz.experimental.models.ExpPeakMSn
 import org.specs2.mutable.Specification
@@ -86,9 +88,9 @@ class LoaderMGFSpecs extends Specification {
   }
 
   "load" should {
-    val run = LoaderMGF.load("test/resources/F001644.mgf")
+    val run = LoaderMGF.load(new File("test/resources/F001644.mgf"), RunId("pipo"))
     "get runId out of filename" in {
-      run.id must equalTo(RunId("F001644"))
+      run.id must equalTo(RunId("pipo"))
     }
     "count the msms" in {
       run.msnSpectra.size must equalTo(1822)
@@ -115,10 +117,10 @@ class LoaderMGFSpecs extends Specification {
   }
 
   "loading wiff" should {
-    val run = LoaderMGF.load("test/resources/M_100.mgf")
+    val run = LoaderMGF.load(new File("test/resources/M_100.mgf"), RunId("pipo"))
 
     "get runId out of filename" in {
-      run.id must equalTo(RunId("M_100"))
+      run.id must equalTo(RunId("pipo"))
     }
     "count the msms" in {
       run.msnSpectra.size must equalTo(123)

@@ -6,7 +6,7 @@
 GET           /api-docs/exp                                               controllers.ApiHelpController.getResource(path = "/exp")
 GET           /exp                                                        ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.stats
 GET           /exp/msrun/list-runids                                      ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.listMSRunIds
-POST          /exp/msrun                                                  ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.loadMSRun
+POST          /exp/msrun/:runId                                           ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.loadMSRun(runId)
 DELETE        /exp/msrun/:runId                                           ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.deleteMSRun(runId)
 GET           /exp/spectrum/:runId/:title                                 ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.findExpSpectrum(runId, title)
 GET           /exp/spectra-ref/:runId                                     ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.findAllSpectraRefByRunId(runId)
@@ -21,7 +21,7 @@ GET           /api-docs/sequence                                          contro
 GET           /sequence/:sourceId/:accessionCode                          ch.isbsib.proteomics.mzviz.controllers.OneSequenceController.get(sourceId, accessionCode)
 
 GET           /api-docs/match                                             controllers.ApiHelpController.getResource(path = "/match")
-POST          /match/psms                                                 ch.isbsib.proteomics.mzviz.controllers.MatchController.loadPsms
+POST          /match/psms/:searchId                                       ch.isbsib.proteomics.mzviz.controllers.MatchController.loadPsms(searchId:String, runId:Option[String])
 GET           /match/psms/:searchId                                       ch.isbsib.proteomics.mzviz.controllers.MatchController.findAllPSMBySearchId(searchId)
 DELETE        /match/psms/:searchId                                       ch.isbsib.proteomics.mzviz.controllers.MatchController.deleteAllBySearchId(searchId)
 GET           /match/searchId                                             ch.isbsib.proteomics.mzviz.controllers.MatchController.listSearchIds

@@ -73,7 +73,6 @@ object SequenceController extends CommonController {
   def loadFasta(@ApiParam(value = """sourceId""", defaultValue = "uniprot_sprot_20231224") @PathParam("sourceId") sourceId: String) =
     Action.async(parse.temporaryFile) {
       request =>
-        println(Source.fromFile(request.body.file).mkString)
         val entries = FastaParser(request.body.file, SequenceSource(sourceId)).parse
         SequenceMongoDBService().insert(entries).map { n => Ok(Json.obj("inserted" -> n))
         }.recover {

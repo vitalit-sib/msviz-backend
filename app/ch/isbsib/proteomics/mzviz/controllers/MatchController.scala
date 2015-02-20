@@ -59,25 +59,25 @@ object MatchController extends CommonController {
     response = classOf[String],
     httpMethod = "POST")
   @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "mzid", value = "mzid file", required = true, dataType = "file", paramType = "body"),
-    new ApiImplicitParam(name = "searchId", value = "a string id with search identifier", required = true, dataType = "string", paramType = "body"),
-    new ApiImplicitParam(name = "runId", value = "a string id with run identifier", required = true, dataType = "string", paramType = "body")
+    new ApiImplicitParam(name = "mzid", value = "mzid file", required = true, dataType = "file", paramType = "body")
   ))
-  def loadPsms = Action.async(parse.multipartFormData) {
-    request =>
-      localFile("mzid", request)
-        .flatMap {
-        case (uploadedFile, filename) =>
-          val searchId = request.body.dataParts.get("searchId").map(_.head).get
-          val runId = request.body.dataParts.get("runId").map(_.head).get
-          val psms = LoaderMzIdent.parse(uploadedFile.getAbsolutePath, SearchId(searchId), RunId(runId))
-          MatchMongoDBService().insert(psms)
-      }
-        .map { n => Ok(Json.obj("inserted" -> n))
-      }.recover {
-        case e => BadRequest(Json.prettyPrint(Json.obj("status" -> "ERROR", "message" -> e.getMessage)) + "\n")
-      }
-  }
+  def loadPsms(@ApiParam(name = "searchId", value = "a string id with search identifier") searchId: String,
+               @ApiParam(name = "runId", value = "a string id with run identifier (if not present, the searchId will be taken)", required = false) runId: Option[String]) =
+    Action.async(parse.temporaryFile) {
+      request =>
+        val rid = runId match {
+          case Some(r:String) => RunId(r)
+          case None => RunId(searchId)
+        }
+
+        val psms = LoaderMzIdent.parse(request.body.file, SearchId(searchId), rid)
+        MatchMongoDBService().insert(psms)
+
+          .map { n => Ok(Json.obj("inserted" -> n))
+        }.recover {
+          case e => BadRequest(Json.prettyPrint(Json.obj("status" -> "ERROR", "message" -> e.getMessage)) + "\n")
+        }
+    }
 
   @ApiOperation(nickname = "findAllPSMByRunId",
     value = "find all PSMs by searchId",

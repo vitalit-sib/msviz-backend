@@ -149,14 +149,22 @@ object LoaderMGF {
    * Loads an MGF file. peak order is taken out from the MGF file order as this makes sense in our examples
    *
    * @param filename .mgf file
-   * @param runId default is runId is taken out from file basename
+   * @param runId a runId
    * @return
    */
-  def load(filename: String, runId: Option[String] = None): MSRun = {
-    val actualrunId = RunId(runId.getOrElse(new File(filename).getName.replace(".mgf", "")))
+  def load(filename: String, runId:RunId): MSRun = load(new File(filename), runId)
 
-    val lPeaks: Seq[ExpMSnSpectrum] = new IonsIterator(filename)
-      .map(t => text2MSnSpectrum(t, actualrunId))
+  /**
+   * Loads an MGF file. peak order is taken out from the MGF file order as this makes sense in our examples
+   *
+   * @param file .mgf file
+   * @param runId the runId under which to register the run
+   * @return
+   */
+  def load(file: File, runId: RunId): MSRun = {
+
+    val lPeaks: Seq[ExpMSnSpectrum] = new IonsIterator(file)
+      .map(t => text2MSnSpectrum(t, runId))
       .filter({
       case (Failure(e)) => println(e.getMessage)
         false
@@ -164,15 +172,15 @@ object LoaderMGF {
     })
       .map(_.get)
       .toSeq
-    new MSRun(actualrunId, lPeaks)
+    new MSRun(runId, lPeaks)
   }
 
   /**
    * produces an iterator over BEGIN/END IONS
-   * @param filename mgf file to read from
+   * @param file mgf file to read from
    */
-  class IonsIterator(filename: String) extends Iterator[String] {
-    val itLines = Source.fromFile(filename).getLines()
+  class IonsIterator(file: File) extends Iterator[String] {
+    val itLines = Source.fromFile(file).getLines()
 
     /**
     Gets the next chunk, if any

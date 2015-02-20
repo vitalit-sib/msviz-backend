@@ -1,5 +1,7 @@
 package ch.isbsib.proteomics.mzviz.matches.importer
 
+import java.io.File
+
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
@@ -28,13 +30,13 @@ class LoaderMzIdentSpecs extends Specification {
   "parseSearchDbSourceInfo" should {
 
     "parseSearchDbSourceInfo from M_100" in {
-      val dbInfo = LoaderMzIdent.parseSearchDbSourceInfo("test/resources/M_100.mzid")
+      val dbInfo = LoaderMzIdent.parseSearchDbSourceInfo(new File("test/resources/M_100.mzid"))
       dbInfo.size must equalTo(1)
       dbInfo("SDB_SwissProt_ID") must equalTo(Tuple2(SequenceSource("SwissProt_2014_08.fasta"), NumDatabaseSequences(546238)))
     }
 
     "parseSearchDbSourceInfo from F001644" in {
-      val dbInfo = LoaderMzIdent.parseSearchDbSourceInfo("test/resources/F001644.mzid")
+      val dbInfo = LoaderMzIdent.parseSearchDbSourceInfo(new File("test/resources/F001644.mzid"))
       dbInfo.size must equalTo(2)
       dbInfo("SDB_contaminants_PAF") must equalTo(Tuple2(SequenceSource("contaminants_PAF_20130207_1455.fasta"), NumDatabaseSequences(854)))
       dbInfo("SDB_custom") must equalTo(Tuple2(SequenceSource("custom_20141007_1128.fasta"), NumDatabaseSequences(854)))
@@ -43,7 +45,7 @@ class LoaderMzIdentSpecs extends Specification {
   }
 
     "parse M_100" should {
-      val psm: Seq[PepSpectraMatch] = LoaderMzIdent.parse(filename= "test/resources/M_100.mzid", SearchId("M_100"), RunId("M_100.mgf"))
+      val psm: Seq[PepSpectraMatch] = LoaderMzIdent.parse(new File("test/resources/M_100.mzid"), SearchId("M_100"), RunId("M_100.mgf"))
 
       "check size" in {
         psm.size must equalTo(62)
