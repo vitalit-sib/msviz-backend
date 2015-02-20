@@ -121,7 +121,7 @@ class LoaderMzIdentSpecs extends Specification {
     }
 
     "parse F001644" should {
-      val psm: Seq[PepSpectraMatch] = LoaderMzIdent.parse(filename = "test/resources/F001644.mzid", SearchId("F001644"), RunId("F001644.mgf"))
+      val psm: Seq[PepSpectraMatch] = LoaderMzIdent.parse(new File("test/resources/F001644.mzid"), SearchId("F001644"), RunId("F001644.mgf"))
 
       "check size" in {
         psm.size must equalTo(437)
