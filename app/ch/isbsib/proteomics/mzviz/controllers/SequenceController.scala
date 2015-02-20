@@ -68,7 +68,7 @@ object SequenceController extends CommonController {
     response = classOf[String],
     httpMethod = "POST")
   @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "fasta", value = "fasta file", required = true, dataType = "file", paramType = "body")
+    new ApiImplicitParam(name = "body", value = "fasta file", required = true, dataType = "text/plain", paramType = "body")
   ))
   def loadFasta(@ApiParam(value = """sourceId""", defaultValue = "uniprot_sprot_20231224") @PathParam("sourceId") sourceId: String) =
     Action.async(parse.temporaryFile) {

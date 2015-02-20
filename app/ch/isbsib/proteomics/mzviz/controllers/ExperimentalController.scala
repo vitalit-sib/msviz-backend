@@ -54,9 +54,9 @@ object ExperimentalController extends CommonController {
     response = classOf[String],
     httpMethod = "POST")
   @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "mgf", value = "mgf peak list", required = true, dataType = "file", paramType = "body")
+    new ApiImplicitParam(name = "body", value = "mgf peak list", required = true, dataType = "text/plain", paramType = "body")
   ))
-  def loadMSRun(@ApiParam(name = "runId", value = "a string id with run identifier", required = true) runId: String) = Action.async(parse.temporaryFile) {
+  def loadMSRun(@ApiParam(name = "runId", value = "a string id with run identifier", required = true)  @PathParam("runId") runId: String) = Action.async(parse.temporaryFile) {
     request =>
 
       val msRun = LoaderMGF.load(request.body.file, RunId(runId))

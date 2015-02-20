@@ -59,10 +59,11 @@ object MatchController extends CommonController {
     response = classOf[String],
     httpMethod = "POST")
   @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "mzid", value = "mzid file", required = true, dataType = "file", paramType = "body")
+    new ApiImplicitParam(name="body", value = "mzid file", required = true, dataType = "application/xml", paramType = "body")
   ))
-  def loadPsms(@ApiParam(name = "searchId", value = "a string id with search identifier") searchId: String,
-               @ApiParam(name = "runId", value = "a string id with run identifier (if not present, the searchId will be taken)", required = false) runId: Option[String]) =
+  def loadPsms(@ApiParam(name = "searchId", value = "a string id with search identifier") @PathParam("searchId") searchId: String,
+               //@ApiParam(name = "runId", value = "a string id with run identifier (if not present, the searchId will be taken)", required = false)
+               runId: Option[String]) =
     Action.async(parse.temporaryFile) {
       request =>
         val rid = runId match {
