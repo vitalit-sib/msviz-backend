@@ -10,7 +10,6 @@ case class PepMatchInfo(
                          scoreMap: Map[String, Double],
                          numMissedCleavages: Option[Int],
                          massDiff: Option[Double],
-                         // modifications: Modifications,
                          rank: Int,
                          totalNumIons: Option[Int],
                          isRejected: Option[Boolean]

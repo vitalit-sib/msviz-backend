@@ -43,5 +43,4 @@ class UnimodParser (file:String) {
  */
 object UnimodParser {
   def apply(filename: String) = new UnimodParser(filename)
-
 }
