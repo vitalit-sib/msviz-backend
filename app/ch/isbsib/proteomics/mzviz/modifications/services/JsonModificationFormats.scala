@@ -1,7 +1,7 @@
 package ch.isbsib.proteomics.mzviz.modifications.services
 
-import ch.isbsib.proteomics.mzviz.modifications.{ModifSource, ModifAC}
-import ch.isbsib.proteomics.mzviz.modifications.models.{Modification, PositionedModif, ModificationRef}
+import ch.isbsib.proteomics.mzviz.modifications.{ModifName, ModifSource}
+import ch.isbsib.proteomics.mzviz.modifications.models.{Modification, PositionedModifRef, ModificationRef}
 import play.api.libs.json._
 
 /**
@@ -12,10 +12,10 @@ object JsonModificationFormats {
 
   import play.api.libs.json.Json
 
-  implicit val formatModifAC = new Format[ModifAC] {
-    override def reads(json: JsValue): JsResult[ModifAC] = JsSuccess(ModifAC(json.as[String]))
+  implicit val formatModifAC = new Format[ModifName] {
+    override def reads(json: JsValue): JsResult[ModifName] = JsSuccess(ModifName(json.as[String]))
 
-    def writes(o: ModifAC) = JsString(o.value)
+    def writes(o: ModifName) = JsString(o.value)
   }
 
   implicit val formatModifSource = new Format[ModifSource] {
@@ -26,6 +26,6 @@ object JsonModificationFormats {
 
   implicit val formatModificationRef = Json.format[ModificationRef]
   implicit val formatModification = Json.format[Modification]
-  implicit val formatPositionedModif = Json.format[PositionedModif]
+  implicit val formatPositionedModif = Json.format[PositionedModifRef]
 
 }

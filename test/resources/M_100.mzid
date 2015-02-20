@@ -269,6 +269,12 @@
       <Modification location="8" residues="C" monoisotopicMassDelta="57.021464">
         <cvParam accession="UNIMOD:4" name="Carbamidomethyl" cvRef="UNIMOD" />
       </Modification>
+      <Modification location="10" monoisotopicMassDelta="123.008530">
+	<cvParam accession="UNIMOD:394" name="GPIanchor" cvRef="UNIMOD" />
+      </Modification>
+      <Modification location="8" residues="C" monoisotopicMassDelta="11.070128">
+ 	<cvParam accession="UNIMOD:940" name="Cys->ethylaminoAla" cvRef="UNIMOD" />
+      </Modification>
     </Peptide>
     <Peptide id="peptide_59_1">
       <PeptideSequence>LNVGAPDVTLR</PeptideSequence>

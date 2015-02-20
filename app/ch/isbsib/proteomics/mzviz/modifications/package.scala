@@ -6,7 +6,7 @@ package ch.isbsib.proteomics.mzviz
  */
 package object modifications {
 
-  case class ModifAC(value:String) extends AnyVal
+  case class ModifName(value:String) extends AnyVal
   case class ModifSource(value:String) extends AnyVal
 
 }
