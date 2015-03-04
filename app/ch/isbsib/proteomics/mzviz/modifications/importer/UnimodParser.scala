@@ -21,14 +21,14 @@ class UnimodParser (file:String) {
      * return list of modifications
      * @return
      */
-    def obtainModifications: Seq[(String,String)]={
+    def obtainModifications: Seq[(String,Double)]={
 
       val l = for {m <- mod}
       yield
       {
         val modificationName= (m\ "@full_name").text
         val mono_mass=(m \ "delta"  \\ "@mono_mass").text
-        ( modificationName, mono_mass)
+        ( modificationName, mono_mass.toDouble)
       }
       l
     }
@@ -47,8 +47,17 @@ class UnimodParser (file:String) {
    * @return
    */
 
-  def getValue (key:String):Option[String]= {
+  def getValue (key:String):Option[Double]= {
     dictionary.get(key)
+  }
+
+  /**
+   * return dictionary
+   * @return
+   */
+
+  def getDictionary = {
+    dictionary
   }
 }
 
