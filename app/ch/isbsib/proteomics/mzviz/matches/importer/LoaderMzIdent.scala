@@ -7,13 +7,15 @@ import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models._
-import ch.isbsib.proteomics.mzviz.modifications.{ModifName, ModifSource}
-import ch.isbsib.proteomics.mzviz.modifications.models.{ModificationRef, PositionedModifRef}
+import ch.isbsib.proteomics.mzviz.modifications.{ModifName}
+import ch.isbsib.proteomics.mzviz.modifications.models.{PositionedModifRef}
 import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, NumDatabaseSequences, SequenceSource}
 import org.apache.commons.io.FilenameUtils
 import org.expasy.mzjava.proteomics.io.ms.ident.{MzIdentMlReader, PSMReaderCallback}
 import org.expasy.mzjava.proteomics.mol.modification.ModAttachment
+import org.expasy.mzjava.proteomics.mol.modification.unimod.UnimodManager
 import org.expasy.mzjava.proteomics.ms.ident.{ModificationMatch, PeptideMatch, PeptideProteinMatch, SpectrumIdentifier}
+import play.Play
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
@@ -30,6 +32,11 @@ object LoaderMzIdent {
    * @return
    */
   def parse(file: File, searchId: SearchId, runId: RunId): Seq[PepSpectraMatch] = {
+    // set the unimodXmlPath for MzJavaunimodXmlPath
+    //val s = Play.application().configuration().getString("unimod.xml")
+    //println("unimod location: " + s)
+    //UnimodManager.setUnimodPath(s)
+
     // data from MzJava parser are stored in a list
     val searchResults = mzJavaParse(file)
 
@@ -84,7 +91,7 @@ object LoaderMzIdent {
    */
   def convertPeptide(mzJavaMatch: PeptideMatch): Peptide = {
     val pep = mzJavaMatch.toPeptide()
-    Peptide(sequence = pep.toSymbolString, molMass = pep.getMolecularMass, modificationRefs = convertModificationList(mzJavaMatch))
+    Peptide(sequence = pep.toSymbolString, molMass = pep.getMolecularMass, modificationNames = convertModificationList(mzJavaMatch))
   }
 
 
@@ -146,7 +153,7 @@ object LoaderMzIdent {
    * @param pep an .mzid file
    * @return
    */
-  def convertModificationList(pep: PeptideMatch): Vector[Seq[ModificationRef]] = {
+  def convertModificationList(pep: PeptideMatch): Vector[Seq[ModifName]] = {
 
     // get all modifications from MzJava
     val modifsAll = pep.getModifications(ModAttachment.all)
@@ -155,8 +162,8 @@ object LoaderMzIdent {
     val modifs:Seq[PositionedModifRef] = modifsAll.asScala.flatMap(convertMzModif(_))
 
     // create a vector with a list of modifs for each position (+2 because we add N and C-term modifications)
-    modifs.foldLeft(Vector.fill[Seq[ModificationRef]](pep.toSymbolString.length + 2)(Nil))({
-      (acc: Vector[Seq[ModificationRef]], posMods) => acc.updated(posMods.pos, acc(posMods.pos):+posMods.modifRef)
+    modifs.foldLeft(Vector.fill[Seq[ModifName]](pep.toSymbolString.length + 2)(Nil))({
+      (acc: Vector[Seq[ModifName]], posMods) => acc.updated(posMods.pos, acc(posMods.pos):+posMods.modifName)
     })
 
   }
@@ -178,7 +185,7 @@ object LoaderMzIdent {
     // get the postioned modifications
     val candidates:Seq[PositionedModifRef] = (0 to modif.getCandidateCount-1).toList.map({ i =>
       // @TODO source should be parsed from MzIdentML (adaptations in MzJava needed). Currently the source is UNIMOD obtained from Mascot server
-      PositionedModifRef(modifRef = ModificationRef(name = ModifName(modif.getModificationCandidate(i).getLabel), modifSource = ModifSource("UNIMOD")), pos = pos)
+      PositionedModifRef(modifName = ModifName(modif.getModificationCandidate(i).getLabel), pos = pos)
     })
 
     candidates

@@ -1,6 +1,6 @@
 package ch.isbsib.proteomics.mzviz.matches.models
 
-import ch.isbsib.proteomics.mzviz.modifications.models.{ModificationRef}
+import ch.isbsib.proteomics.mzviz.modifications.ModifName
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
@@ -9,5 +9,5 @@ import ch.isbsib.proteomics.mzviz.modifications.models.{ModificationRef}
 case class Peptide(
                     sequence: String,
                     molMass: Double,
-                    modificationRefs: Vector[Seq[ModificationRef]]
+                    modificationNames: Vector[Seq[ModifName]]
                     )

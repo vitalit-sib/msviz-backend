@@ -96,25 +96,25 @@ class LoaderMzIdentSpecs extends Specification {
       }
 
       "check modifications in pep 29" in {
-        psm(29).pep.modificationRefs.size must equalTo(psm(29).pep.sequence.length + 2)
-        psm(29).pep.modificationRefs(8).size must equalTo(1)
-        psm(29).pep.modificationRefs(8)(0).name must equalTo(ModifName("Carbamidomethyl"))
-        psm(29).pep.modificationRefs(0) must equalTo(Nil)
+        psm(29).pep.modificationNames.size must equalTo(psm(29).pep.sequence.length + 2)
+        psm(29).pep.modificationNames(8).size must equalTo(1)
+        psm(29).pep.modificationNames(8)(0) must equalTo(ModifName("Carbamidomethyl"))
+        psm(29).pep.modificationNames(0) must equalTo(Nil)
 
       }
 
       "check modifications in pep 29" in {
-        psm(30).pep.modificationRefs.size must equalTo(psm(30).pep.sequence.length + 2)
+        psm(30).pep.modificationNames.size must equalTo(psm(30).pep.sequence.length + 2)
 
-        psm(30).pep.modificationRefs(0).size must equalTo(1)
-        psm(30).pep.modificationRefs(0)(0).name must equalTo(ModifName("Acetyl"))
+        psm(30).pep.modificationNames(0).size must equalTo(1)
+        psm(30).pep.modificationNames(0)(0) must equalTo(ModifName("Acetyl"))
 
-        psm(30).pep.modificationRefs(8).size must equalTo(2)
-        psm(30).pep.modificationRefs(8)(0).name must (equalTo(ModifName("Cys->ethylaminoAla")) or equalTo(ModifName("Carbamidomethyl")))
-        psm(30).pep.modificationRefs(8)(0).name must (equalTo(ModifName("Cys->ethylaminoAla")) or equalTo(ModifName("Carbamidomethyl")))
+        psm(30).pep.modificationNames(8).size must equalTo(2)
+        psm(30).pep.modificationNames(8)(0) must (equalTo(ModifName("Cys->ethylaminoAla")) or equalTo(ModifName("Carbamidomethyl")))
+        psm(30).pep.modificationNames(8)(0) must (equalTo(ModifName("Cys->ethylaminoAla")) or equalTo(ModifName("Carbamidomethyl")))
 
-        psm(30).pep.modificationRefs(10).size must equalTo(1)
-        psm(30).pep.modificationRefs(10)(0).name must equalTo(ModifName("GPIanchor"))
+        psm(30).pep.modificationNames(10).size must equalTo(1)
+        psm(30).pep.modificationNames(10)(0) must equalTo(ModifName("GPIanchor"))
 
       }
 
