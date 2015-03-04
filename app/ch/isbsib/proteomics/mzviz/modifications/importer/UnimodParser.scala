@@ -12,19 +12,33 @@ import scala.xml.XML
 class UnimodParser (file:String) {
   //val filename="http://mascot.vital-it.ch/mascot/cgi/get_params.pl?Show=MS_UNIMODXML"
   val unimodfile = XML.load(file)
+  val mod=(unimodfile \\ "mod")
+  val modificationList=obtainModifications
+  val dictionary=modificationList.toMap
 
-  val key=(unimodfile \\ "mod").map { mod => (mod \ "@full_name").text}
-  val tuple=(unimodfile \\ "mod").map { mod =>
-    (mod \\ "delta").map { delta => Tuple2((delta \ "@mono_mass").text, (delta \ "@avge_mass").text)}
-  }
 
-  val dictionary=(key zip tuple).toMap
+    /**
+     * return list of modifications
+     * @return
+     */
+    def obtainModifications: Seq[(String,String)]={
+
+      val l = for {m <- mod}
+      yield
+      {
+        val modificationName= (m\ "@full_name").text
+        val mono_mass=(m \ "delta"  \\ "@mono_mass").text
+        ( modificationName, mono_mass)
+      }
+      l
+    }
 
   /**
-   * return number of entries
+   * return size of the dictionary
    * @return
    */
-  def getSize:Int ={
+
+  def getDictionarySize: Int= {
     dictionary.size
   }
 
@@ -32,10 +46,10 @@ class UnimodParser (file:String) {
    * return value for a given key
    * @return
    */
-  def getValues(key:String):Option[Seq[(String, String)]] = {
+
+  def getValue (key:String):Option[String]= {
     dictionary.get(key)
   }
-
 }
 
 /**
