@@ -6,6 +6,7 @@ import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models.{ProteinRef, PepSpectraMatch}
+import ch.isbsib.proteomics.mzviz.modifications.ModifName
 import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, NumDatabaseSequences, SequenceSource}
 import org.specs2.mutable.Specification
 
@@ -93,6 +94,40 @@ class LoaderMzIdentSpecs extends Specification {
         psm(0).proteinList(0).isDecoy must equalTo(Some(false))
         psm.last.proteinList.last.isDecoy must equalTo(Some(true))
       }
+
+      "check modifications in pep 29" in {
+        psm(29).pep.modificationNames.size must equalTo(psm(29).pep.sequence.length + 2)
+        psm(29).pep.modificationNames(8).size must equalTo(1)
+        psm(29).pep.modificationNames(8)(0) must equalTo(ModifName("Carbamidomethyl"))
+        psm(29).pep.modificationNames(0) must equalTo(Nil)
+
+      }
+
+      "check modifications in pep 29" in {
+        psm(30).pep.modificationNames.size must equalTo(psm(30).pep.sequence.length + 2)
+
+        psm(30).pep.modificationNames(0).size must equalTo(1)
+        psm(30).pep.modificationNames(0)(0) must equalTo(ModifName("Acetyl"))
+
+        psm(30).pep.modificationNames(8).size must equalTo(2)
+        psm(30).pep.modificationNames(8)(0) must (equalTo(ModifName("Cys->ethylaminoAla")) or equalTo(ModifName("Carbamidomethyl")))
+        psm(30).pep.modificationNames(8)(0) must (equalTo(ModifName("Cys->ethylaminoAla")) or equalTo(ModifName("Carbamidomethyl")))
+
+        psm(30).pep.modificationNames(10).size must equalTo(1)
+        psm(30).pep.modificationNames(10)(0) must equalTo(ModifName("GPIanchor"))
+
+      }
+
+    }
+
+    "parse F001644" should {
+      val psm: Seq[PepSpectraMatch] = LoaderMzIdent.parse(new File("test/resources/F001644.mzid"), SearchId("F001644"), RunId("F001644.mgf"))
+
+      "check size" in {
+        psm.size must equalTo(437)
+      }
+
+
 
     }
 

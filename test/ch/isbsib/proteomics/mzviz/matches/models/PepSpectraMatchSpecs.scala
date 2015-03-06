@@ -4,8 +4,7 @@ import ch.isbsib.proteomics.mzviz.commons._
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.matches.SearchId
-import ch.isbsib.proteomics.mzviz.modifications.{ModifSource, ModifAC}
-import ch.isbsib.proteomics.mzviz.modifications.models.{ModificationRef, Modification}
+import ch.isbsib.proteomics.mzviz.modifications.{ModifName}
 import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 import org.specs2.mutable.Specification
 
@@ -19,9 +18,9 @@ class PepSpectraMatchSpecs extends Specification {
     // vals used in following tests
     val matching = PepMatchInfo(scoreMap = Map("p-value" -> 0.001), numMissedCleavages = Option(1), massDiff = Option(0.01), rank = 1, totalNumIons = Option(1), isRejected = None)
     val sequence = "AKKKAA"
-    val oneModif = Modification(modifRef = ModificationRef(ModifAC("21"), ModifSource("UNIMOD")), name="Phospho", monoDeltaMass=79.966330)
-    val modifications = Seq(Nil, Seq(oneModif), Nil, Nil, Nil, Nil)
-    val pep = Peptide(sequence = sequence, molMass = 123.23, modifications = modifications)
+    val oneModifRef = ModifName("Phospho")
+    val modificationRefs = Vector(Nil, Seq(oneModifRef), Nil, Nil, Nil, Nil)
+    val pep = Peptide(sequence = sequence, molMass = 123.23, modificationNames = modificationRefs)
     val protRef = ProteinRef(AC = AccessionCode("AC001"), source = Some(SequenceSource("dbref")))
     val protMatch = Seq(ProteinMatch(proteinRef = protRef, previousAA = Some("A"), nextAA = Some("K"), startPos = 1, endPos = 10, Some(false)))
 

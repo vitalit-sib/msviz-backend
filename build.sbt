@@ -10,8 +10,8 @@ scalaVersion := "2.11.4"
 
 resolvers ++= Seq(
   "expasy" at "http://mzjava.expasy.org/maven",
-  "csvjdbc" at "http://csvjdbc.sourceforge.net/maven2",
-  "ivy2 cache" at "file:// /Users/amasselo/.ivy2/cache"
+  "csvjdbc" at "http://csvjdbc.sourceforge.net/maven2"
+//  "ivy2 cache" at "file:// /Users/amasselo/.ivy2/cache"
   )
 
 libraryDependencies ++= Seq(
@@ -21,7 +21,8 @@ libraryDependencies ++= Seq(
   "org.expasy.mzjava" % "mzjava-core" %"1.0.1-SNAPSHOT",
   "org.expasy.mzjava" % "mzjava-proteomics" %"1.0.1-SNAPSHOT",
   "org.reactivemongo" %% "play2-reactivemongo" % "0.10.5.0.akka23",
-  "com.wordnik" %% "swagger-play2" % "1.3.10"
+  "com.wordnik" %% "swagger-play2" % "1.3.10",
+  "org.scalamock" %% "scalamock-specs2-support" % "3.2"
 )
 
 
