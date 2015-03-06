@@ -59,12 +59,15 @@ object ExperimentalController extends CommonController {
   def loadMSRun(@ApiParam(name = "runId", value = "a string id with run identifier", required = true)  @PathParam("runId") runId: String) = Action.async(parse.temporaryFile) {
     request =>
 
-      val msRun = LoaderMGF.load(request.body.file, RunId(runId))
-      ExpMongoDBService().insert(msRun)
-        .map { n => Ok(Json.obj("inserted" -> n))
-      }.recover {
-        case e => BadRequest(e.getMessage)
+     LoaderMGF.load(request.body.file, RunId(runId))match{
+        case Success(msRun)=> ExpMongoDBService().insert(msRun)
+          .map { n => Ok(Json.obj("inserted" -> n))
+        }.recover {
+          case e => BadRequest(e.getMessage)
+        }
+        case Failure(e) => Future{BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))}
       }
+
   }
 
   @ApiOperation(nickname = "findExpSpectrum",

@@ -14,7 +14,7 @@ import scala.util.{Failure, Success, Try}
 /**
  * Load an MGF file into an MSRun
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
- * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
+ *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 object LoaderMGF {
   val reEqual = """(\w.*?)=(.*)""".r
@@ -31,7 +31,7 @@ object LoaderMGF {
         .filter(l => reEqual.findFirstIn(l).isDefined)
         .map({
         case reEqual(k, v) => (k, v.trim)
-        case _ => throw new IllegalArgumentException(s"how can a line pass findFirst and not being matched")
+        case l => throw new MGFParsingException(s"how can a line pass findFirst and not being matched:\n$l")
       })
     Map(lRet: _*)
   }
@@ -45,7 +45,7 @@ object LoaderMGF {
    */
   def textLine2MozIntensity(l: Option[String]): Try[Tuple2[Moz, Intensity]] = {
     l match {
-      case None => Failure(new IllegalArgumentException(s"peak cannot be extract from None string"))
+      case None => Failure(new MGFParsingException(s"peak cannot be extracted from None string"))
       case Some(rePeak(m, null)) => Success(Tuple2(Moz(m.toDouble), Intensity(0)))
       case Some(rePeak(m, i)) => Success(Tuple2(Moz(m.toDouble), Intensity(i.toDouble)))
       case _ => Failure(new IllegalArgumentException(s"peak cannot be extract from [$l]"))
@@ -66,7 +66,7 @@ object LoaderMGF {
       case (l, iRank) => val t = textLine2MozIntensity(Some(l))
         t.map({ case (m, i) => ExpPeakMSn(m, i, IntensityRank(iRank), MSLevel(2))})
     })
-    lTry.find(x=> x.isFailure) match {
+    lTry.find(x => x.isFailure) match {
       case None => Success(lTry.map(_.get))
       case Some(Failure(e)) => Failure(e)
     }
@@ -86,11 +86,11 @@ object LoaderMGF {
       .orElse(
         args.get("TITLE") match {
           case Some(reRTTitleWiff(rt)) => Some((rt.toDouble * 60).toString)
-          case Some(reRTTitleWiffInterval(rtFrom, rtTo)) => Some((30*(rtFrom.toDouble +rtTo.toDouble)).toString)
+          case Some(reRTTitleWiffInterval(rtFrom, rtTo)) => Some((30 * (rtFrom.toDouble + rtTo.toDouble)).toString)
           case None =>
             throw new UnsupportedOperationException(s"cannot parse retention time from $args, neither from RTINSECONDS nor TITLE")
           case _ =>
-            throw new UnsupportedOperationException(s"""cannot parse retention time from TITLE: ${args.get("TITLE")}""")
+            throw new UnsupportedOperationException( s"""cannot parse retention time from TITLE: ${args.get("TITLE")}""")
         }
       ).get
 
@@ -124,7 +124,7 @@ object LoaderMGF {
         scanNumber = ScanNumber(scanNumber.toInt),
         precursor = ExpPeakPrecursor(moz, intens, rt, Charge(z)),
         title = title,
-        SpectrumId(id=SpectrumUniqueId(title),runId = runId)
+        SpectrumId(id = SpectrumUniqueId(title), runId = runId)
       )
     }
   }
@@ -152,7 +152,7 @@ object LoaderMGF {
    * @param runId a runId
    * @return
    */
-  def load(filename: String, runId:RunId): MSRun = load(new File(filename), runId)
+  def load(filename: String, runId: RunId): Try[MSRun] = load(new File(filename), runId)
 
   /**
    * Loads an MGF file. peak order is taken out from the MGF file order as this makes sense in our examples
@@ -161,19 +161,18 @@ object LoaderMGF {
    * @param runId the runId under which to register the run
    * @return
    */
-  def load(file: File, runId: RunId): MSRun = {
-
+  def load(file: File, runId: RunId): Try[MSRun] = Try {
     val lPeaks: Seq[ExpMSnSpectrum] = new IonsIterator(file)
       .map(t => text2MSnSpectrum(t, runId))
       .filter({
-      case (Failure(e)) => println(e.getMessage)
-        false
+      case (Failure(e)) => throw e
       case (Success(t)) => true
     })
       .map(_.get)
       .toSeq
     new MSRun(runId, lPeaks)
   }
+
 
   /**
    * produces an iterator over BEGIN/END IONS
@@ -189,11 +188,11 @@ object LoaderMGF {
       if (!itLines.hasNext) {
         None
       } else {
-        val s = itLines.takeWhile(!_.toUpperCase.startsWith("END IONS")).toList :+ "END IONS"
+        val s = itLines.takeWhile(!_.toUpperCase.startsWith("END IONS")).toList
         if (s.filterNot(_.trim == "").size == 0)
           None
         else {
-          Some(s.mkString("\n"))
+          Some(s.mkString("\n"+"END IONS\n"))
         }
       }
     }

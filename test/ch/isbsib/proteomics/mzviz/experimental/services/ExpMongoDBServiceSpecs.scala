@@ -37,8 +37,8 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
       service.countMsnSpectra.futureValue must equalTo(0)
       service.countMsRuns.futureValue must equalTo(0)
 
-      service.insert(LoaderMGF.load(new File("test/resources/M_100.mgf"), RunId("test-1"))).futureValue
-      service.insert(LoaderMGF.load(new File("test/resources/M_100.mgf"), RunId("test-2"))).futureValue
+      service.insert(LoaderMGF.load(new File("test/resources/M_100.mgf"), RunId("test-1")).get).futureValue
+      service.insert(LoaderMGF.load(new File("test/resources/M_100.mgf"), RunId("test-2")).get).futureValue
 
       service.countMsnSpectra.futureValue must equalTo(246)
       service.countMsRuns.futureValue must equalTo(2)
@@ -48,8 +48,8 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "delete" should {
     "get 2 , remove 1 " in new TempMongoDBService {
-      service.insert(LoaderMGF.load(new File("test/resources/M_100.mgf"), RunId("test-1"))).futureValue
-      service.insert(LoaderMGF.load(new File("test/resources/M_100.mgf"), RunId("test-2"))).futureValue
+      service.insert(LoaderMGF.load(new File("test/resources/M_100.mgf"), RunId("test-1")).get).futureValue
+      service.insert(LoaderMGF.load(new File("test/resources/M_100.mgf"), RunId("test-2")).get).futureValue
       service.countMsRuns.futureValue must equalTo(2)
       service.listMsRunIds.futureValue must equalTo(List(RunId("test-1"), RunId("test-2")))
 
@@ -63,7 +63,7 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
   }
   "findSpectrumByRunIdAndTitle" should {
     "find one" in new TempMongoDBService {
-      val n = service.insert(LoaderMGF.load(new File("test/resources/M_100.mgf"), RunId("test-1"))).futureValue
+      val n = service.insert(LoaderMGF.load(new File("test/resources/M_100.mgf"), RunId("test-1")).get).futureValue
 
       val sp = service.findSpectrumByRunIdAndTitle(RunId("test-1"), "File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 56.254 min, Period: 1, Cycle(s): 2083 (Experiment 4)").futureValue
       sp.ref.spectrumId.runId must equalTo(RunId("test-1"))
