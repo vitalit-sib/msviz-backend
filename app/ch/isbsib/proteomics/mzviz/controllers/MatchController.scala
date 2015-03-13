@@ -11,12 +11,15 @@ import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
 import ch.isbsib.proteomics.mzviz.theoretical.models.SequenceSourceStats
 import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
+import ch.isbsib.proteomics.mzviz.controllers.TsvFormats
 import ch.isbsib.proteomics.mzviz.matches.services.MatchMongoDBService
 import com.wordnik.swagger.annotations._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json._
 import play.api.mvc.Action
 import reactivemongo.bson.BSONDocument
+
+import scala.concurrent.Future
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
@@ -59,7 +62,7 @@ object MatchController extends CommonController {
     response = classOf[String],
     httpMethod = "POST")
   @ApiImplicitParams(Array(
-    new ApiImplicitParam(name="body", value = "mzid file", required = true, dataType = "application/xml", paramType = "body")
+    new ApiImplicitParam(name = "body", value = "mzid file", required = true, dataType = "application/xml", paramType = "body")
   ))
   def loadPsms(@ApiParam(name = "searchId", value = "a string id with search identifier") @PathParam("searchId") searchId: String,
                //@ApiParam(name = "runId", value = "a string id with run identifier (if not present, the searchId will be taken)", required = false)
@@ -67,7 +70,7 @@ object MatchController extends CommonController {
     Action.async(parse.temporaryFile) {
       request =>
         val rid = runId match {
-          case Some(r:String) => RunId(r)
+          case Some(r: String) => RunId(r)
           case None => RunId(searchId)
         }
 
@@ -88,10 +91,15 @@ object MatchController extends CommonController {
   def findAllPSMBySearchId(
                             @ApiParam(value = """searchId""", defaultValue = "") @PathParam("searchId") searchId: String
                             ) =
-    Action.async {
+    Action.async { implicit request =>
       MatchMongoDBService().findAllPSMBySearchId(SearchId(searchId))
-        .map { case sphList => Ok(Json.toJson(sphList))}
-        .recover {
+        .map { case sphList =>
+        render {
+          case acceptsTsv => Ok(TsvFormats.toTsv(sphList))
+          case _ => Ok(Json.toJson(sphList))
+        }
+      }
+     .recover {
         case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
       }
     }
@@ -124,21 +132,24 @@ object MatchController extends CommonController {
                         ) =
     Action.async {
       MatchMongoDBService().findPSMByProtein(SearchId(searchId), SequenceSource(sequenceSource), AccessionCode(accessionCode))
-        .map { case psms => Ok(psms)} //Ok(sphList)}
+        .map {
+        case psms => Ok(psms)
+      } //Ok(sphList)}
         .recover {
         case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
       }
     }
 
-
   @ApiOperation(nickname = "deleteAllByRunId",
-    value = "delete PSMs for a given searchId",
+    value = "delete PSMs for a given list of searchIds (or one), seperated by comma",
     notes = """No double check is done. Use with caution""",
     response = classOf[String],
     httpMethod = "DELETE")
-  def deleteAllBySearchId(searchId: String) = Action.async {
-    MatchMongoDBService().deleteAllBySearchId(SearchId(searchId)).map { x =>
-      Ok("OK")
+  def deleteAllBySearchId(@ApiParam(value = """searchIds""", defaultValue = "") @PathParam("searchIds") searchIds: String) = Action.async {
+    val s = searchIds.split(",").toList.map(SearchId.apply)
+    MatchMongoDBService().deleteAllBySearchId(s).map {
+      x =>
+        Ok("OK")
     }
   }
 }

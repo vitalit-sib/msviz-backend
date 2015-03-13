@@ -12,7 +12,7 @@ import com.wordnik.swagger.annotations._
 import play.api.libs.Files
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json._
-import play.api.mvc.{Action, Controller, MultipartFormData, Request}
+import play.api.mvc._
 
 import scala.concurrent.Future
 
@@ -25,7 +25,7 @@ import scala.concurrent.Future
  */
 @Api(value = "/exp", description = "experimental data access")
 trait CommonController extends Controller {
-
+  val acceptsTsv = Accepting("application/tsv")
 
   def localFile(paramName: String, request: Request[MultipartFormData[Files.TemporaryFile]]): Future[Tuple2[File, String]] = {
     Future {

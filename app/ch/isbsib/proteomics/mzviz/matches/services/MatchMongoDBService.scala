@@ -63,7 +63,18 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
       case _ => true
     }
   }
-
+  /**
+   * remove all entries from the mongodb
+   * @param searchIds mutliple search ids
+   * @return
+   */
+  def deleteAllBySearchId(searchIds: List[SearchId]): Future[Boolean] = {
+    val query = Json.obj("searchId" -> Json.obj("$in" -> searchIds))
+    collection.remove(query).map {
+      case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
+      case _ => true
+    }
+  }
   /**
    * retrieves all entries for a given source
    * @param searchId the search id
