@@ -162,17 +162,25 @@ object LoaderMGF {
    * @return
    */
   def load(file: File, runId: RunId): Try[MSRun] = Try {
-    val lPeaks: Seq[ExpMSnSpectrum] = new IonsIterator(file)
-      .map(t => text2MSnSpectrum(t, runId))
-      .filter({
-      case (Failure(e)) => throw e
-      case (Success(t)) => true
-    })
-      .map(_.get)
+    val lPeaks: Seq[ExpMSnSpectrum] = expMSnSpectrumIterator(file, runIdx§)
       .toSeq
     new MSRun(runId, lPeaks)
   }
 
+  /**
+   * Instead of loading a full run, just starts an ExpMsSpectrum Iterator
+   * @param file
+   * @param runId
+   * @return
+   */
+  def expMSnSpectrumIterator(file: File, runId: RunId): Iterator[ExpMSnSpectrum] ={
+    new IonsIterator(file)
+      .map(t => text2MSnSpectrum(t, runId))
+      .filter({
+      case (Failure(e)) => throw e
+      case (Success(t)) => true
+    }).map(_.get)
+  }
 
   /**
    * produces an iterator over BEGIN/END IONS
