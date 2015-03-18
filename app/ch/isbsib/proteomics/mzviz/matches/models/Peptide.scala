@@ -8,6 +8,6 @@ import ch.isbsib.proteomics.mzviz.modifications.ModifName
  */
 case class Peptide(
                     sequence: String,
-                    molMass: Double,
+                    molMass: Option[Double],
                     modificationNames: Vector[Seq[ModifName]]
                     )

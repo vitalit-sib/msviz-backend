@@ -15,7 +15,7 @@ import org.expasy.mzjava.proteomics.io.ms.ident.{MzIdentMlReader, PSMReaderCallb
 import org.expasy.mzjava.proteomics.mol.modification.ModAttachment
 import org.expasy.mzjava.proteomics.mol.modification.unimod.UnimodManager
 import org.expasy.mzjava.proteomics.ms.ident.{ModificationMatch, PeptideMatch, PeptideProteinMatch, SpectrumIdentifier}
-import play.Play
+import play.{Logger, Play}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
@@ -91,7 +91,16 @@ object LoaderMzIdent {
    */
   def convertPeptide(mzJavaMatch: PeptideMatch): Peptide = {
     val pep = mzJavaMatch.toPeptide()
-    Peptide(sequence = pep.toSymbolString, molMass = pep.getMolecularMass, modificationNames = convertModificationList(mzJavaMatch))
+
+    // since MzJava can throw an Exception on that, we'll wrap it around a try catch
+    var mMass:Option[Double] = None
+    try{
+      mMass = Option(pep.getMolecularMass)
+    }catch{
+      case e: Exception => Logger.warn(e.getMessage)
+    }
+
+    Peptide(sequence = pep.toSymbolString, molMass = mMass, modificationNames = convertModificationList(mzJavaMatch))
   }
 
 

@@ -55,7 +55,7 @@ class LoaderMzIdentSpecs extends Specification {
       "check first peptide" in {
         psm(0).pep.sequence must equalTo("TYTWLK")
         //psm(0).pep.dbSequenceRef must equalTo("hiho")
-        psm(0).pep.molMass must equalTo(810.427590116)
+        psm(0).pep.molMass must equalTo(Some(810.427590116))
       }
 
       "check first peptide score" in {
@@ -127,8 +127,16 @@ class LoaderMzIdentSpecs extends Specification {
         psm.size must equalTo(437)
       }
 
-
-
     }
+
+  "parse M_100_with_X" should {
+    val psm: Seq[PepSpectraMatch] = LoaderMzIdent.parse(new File("test/resources/M_100_with_X.mzid"), SearchId("with_X"), RunId("M_100.mgf"))
+
+    "check first peptide" in {
+      psm(0).pep.sequence must equalTo("TYTXLK")
+      psm(0).pep.molMass must equalTo(None)
+    }
+
+  }
 
 }

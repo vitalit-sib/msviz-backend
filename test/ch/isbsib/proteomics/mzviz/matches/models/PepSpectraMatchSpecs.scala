@@ -20,12 +20,12 @@ class PepSpectraMatchSpecs extends Specification {
     val sequence = "AKKKAA"
     val oneModifRef = ModifName("Phospho")
     val modificationRefs = Vector(Nil, Seq(oneModifRef), Nil, Nil, Nil, Nil)
-    val pep = Peptide(sequence = sequence, molMass = 123.23, modificationNames = modificationRefs)
+    val pep = Peptide(sequence = sequence, molMass = Some(123.23), modificationNames = modificationRefs)
     val protRef = ProteinRef(AC = AccessionCode("AC001"), source = Some(SequenceSource("dbref")))
     val protMatch = Seq(ProteinMatch(proteinRef = protRef, previousAA = Some("A"), nextAA = Some("K"), startPos = 1, endPos = 10, Some(false)))
 
     "create simple Peptide" in {
-      pep.molMass must equalTo(123.23)
+      pep.molMass must equalTo(Some(123.23))
     }
 
     "create simple PepMatchInfo" in {
