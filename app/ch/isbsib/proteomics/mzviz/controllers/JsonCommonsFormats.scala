@@ -17,7 +17,7 @@ object JsonCommonsFormats {
     override def writes(o: Throwable): JsValue = {
       Json.obj("message" -> o.getMessage,
       "exception" -> o.getClass.getSimpleName,
-        "stackTrace" -> o.getStackTrace.toList.map(_.toString))
+      "stackTrace" -> o.getStackTrace.toList.map(_.toString))
     }
   }
 
