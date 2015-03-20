@@ -162,7 +162,7 @@ object LoaderMGF {
    * @return
    */
   def load(file: File, runId: RunId): Try[MSRun] = Try {
-    val lPeaks: Seq[ExpMSnSpectrum] = expMSnSpectrumIterator(file, runIdx)
+    val lPeaks: Seq[ExpMSnSpectrum] = expMSnSpectrumIterator(file, runId)
       .toSeq
     new MSRun(runId, lPeaks)
   }
