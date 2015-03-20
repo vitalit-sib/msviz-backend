@@ -21,16 +21,25 @@ import scala.util.{Failure, Success}
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
- * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
+ *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
   val collectionName = "msnSpectra"
-  val mainKeyName="ref.spectrumId.runId"
+  val mainKeyName = "ref.spectrumId.runId"
 
-  setIndexes(List(new Index(
-    Seq("ref.spectrumId" -> IndexType.Ascending),// "ref.title" -> IndexType.Ascending),
-    name = Some("spectrumId"),
-    unique = true)))
+  setIndexes(List(
+
+
+    new Index(
+      Seq("ref.spectrumId.runId" -> IndexType.Ascending), // "ref.title" -> IndexType.Ascending),
+      name = Some("runId")),
+    new Index(
+      Seq("ref.spectrumId.runId" -> IndexType.Ascending, "ref.spectrumId.id" -> IndexType.Ascending), // "ref.title" -> IndexType.Ascending),
+      name = Some("ref.spectrumId"),
+      unique = true)
+  ))
+
+  // "ref.title" -> IndexType.Ascending),
 
 
   /**
