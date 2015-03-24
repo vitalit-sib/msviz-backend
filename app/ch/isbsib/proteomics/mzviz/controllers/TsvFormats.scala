@@ -10,15 +10,33 @@ object TsvFormats {
   /**
    * putput a string with tsv separated psm
    * @param psms
+   * @param showFirstProtMatchInfo will display the first proteinmatch info (AC, position, flanking residue ...). to be combined with psm.extractAC
    * @return
    */
-  def toTsv(psms:Seq[PepSpectraMatch]):String = {
+  def toTsv(psms: Seq[PepSpectraMatch], showFirstProtMatchInfo: Boolean = false): String = {
 
     val sb = new StringBuilder
-    sb.append("searchId\tpeptideSequence\tAC\tmassDiff\trunId\tspectrumId\n")
 
+    val headerFields: List[String] = List[String]("searchId", "peptideSequence", "massDiff", "runId", "spectrumId") ++
+      (if (showFirstProtMatchInfo) {
+        List("prot.AC", "prot.startPos", "prot.endPos", "prot.previousAA", "prot.nextAA")
+      } else {
+        Nil
+      })
+
+    def extractVal: ((PepSpectraMatch) => List[Any]) = { psm: PepSpectraMatch =>
+      List(psm.searchId.value, psm.pep.sequence, psm.matchInfo.massDiff.getOrElse("NA"), psm.spectrumId.runId.value, psm.spectrumId.id.value) ++
+        (if (showFirstProtMatchInfo) {
+          val pm = psm.proteinList.head
+          List(pm.proteinRef.AC, pm.startPos, pm.endPos, pm.previousAA.getOrElse("."), pm.nextAA.getOrElse("."))
+        } else {
+          Nil
+        })
+    }
+
+    sb.append(headerFields.mkString("\t") + "\n")
     psms.foreach({ psm =>
-      sb.append(List(psm.searchId.value, psm.pep.sequence, psm.proteinList.map(_.proteinRef.AC.value).mkString(","), psm.matchInfo.massDiff.getOrElse("NA"), psm.spectrumId.runId.value, psm.spectrumId.id.value).mkString("\t")+"\n")
+      sb.append(extractVal(psm).mkString("\t") + "\n")
     })
     sb.toString()
   }

@@ -136,7 +136,7 @@ object MatchController extends CommonController {
         searchIds = searchIds.map(_.split(",").toList.map(s => SearchId(s)).toSet)
       )
         .map { case psms =>
-        Ok(TsvFormats.toTsv(psms))
+        Ok(TsvFormats.toTsv(psms.map(_.extractAC(AccessionCode(accessionCode))), showFirstProtMatchInfo = true))
       }
         .recover {
         case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
