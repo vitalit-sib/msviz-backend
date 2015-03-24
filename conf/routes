@@ -3,30 +3,30 @@
 # ~~~~
 
 # Home page
-GET           /api-docs/exp                                               controllers.ApiHelpController.getResource(path = "/exp")
-GET           /exp                                                        ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.stats
-GET           /exp/msruns                                                 ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.listMSRunIds
-POST          /exp/msrun/:runId                                           ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.loadMSRun(runId)
-DELETE        /exp/msrun/:runId                                           ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.deleteMSRun(runId)
-GET           /exp/spectrum/:runId/:title                                 ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.findExpSpectrum(runId, title)
-GET           /exp/spectra-ref/:runId                                     ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.findAllSpectraRefByRunId(runId)
+GET           /api-docs/exp                             controllers.ApiHelpController.getResource(path = "/exp")
+GET           /exp                                      ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.stats
+GET           /exp/msruns                               ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.listMSRunIds
+POST          /exp/msrun/:runId                         ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.loadMSRun(runId)
+DELETE        /exp/msrun/:runId                         ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.deleteMSRun(runId)
+GET           /exp/spectrum/:runId/:title               ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.findExpSpectrum(runId, title)
+GET           /exp/spectra-ref/:runId                   ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.findAllSpectraRefByRunId(runId)
 
-GET           /api-docs/sequences                                         controllers.ApiHelpController.getResource(path = "/sequences")
-GET           /sequences/list-sources                                     ch.isbsib.proteomics.mzviz.controllers.SequenceController.listSources
-POST          /sequences/:sourceId/fasta                                  ch.isbsib.proteomics.mzviz.controllers.SequenceController.loadFasta(sourceId)
-DELETE        /sequences/:sourceId                                        ch.isbsib.proteomics.mzviz.controllers.SequenceController.deleteSource(sourceId)
-GET           /sequences/stats                                            ch.isbsib.proteomics.mzviz.controllers.SequenceController.stats
+GET           /api-docs/sequences                       controllers.ApiHelpController.getResource(path = "/sequences")
+GET           /sequences/list-sources                   ch.isbsib.proteomics.mzviz.controllers.SequenceController.listSources
+POST          /sequences/:sourceId/fasta                ch.isbsib.proteomics.mzviz.controllers.SequenceController.loadFasta(sourceId)
+DELETE        /sequences/:sourceId                      ch.isbsib.proteomics.mzviz.controllers.SequenceController.deleteSource(sourceId)
+GET           /sequences/stats                          ch.isbsib.proteomics.mzviz.controllers.SequenceController.stats
 
-GET           /api-docs/sequence                                          controllers.ApiHelpController.getResource(path = "/sequence")
-GET           /sequence/:sourceId/:accessionCode                          ch.isbsib.proteomics.mzviz.controllers.OneSequenceController.get(sourceId, accessionCode)
+GET           /api-docs/sequence                        controllers.ApiHelpController.getResource(path = "/sequence")
+GET           /sequence/:sourceId/:accessionCode        ch.isbsib.proteomics.mzviz.controllers.OneSequenceController.get(sourceId, accessionCode)
 
-GET           /api-docs/match                                             controllers.ApiHelpController.getResource(path = "/match")
-POST          /match/psms/:searchId                                       ch.isbsib.proteomics.mzviz.controllers.MatchController.loadPsms(searchId:String, runId:Option[String])
-GET           /match/psms/:searchId                                       ch.isbsib.proteomics.mzviz.controllers.MatchController.findAllPSMBySearchId(searchId)
-DELETE        /match/psms/:searchIds                                      ch.isbsib.proteomics.mzviz.controllers.MatchController.deleteAllBySearchId(searchIds)
-GET           /match/searches                                             ch.isbsib.proteomics.mzviz.controllers.MatchController.listSearchIds
-GET           /match/proteins/:searchId                                   ch.isbsib.proteomics.mzviz.controllers.MatchController.findAllProteinRefsBySearchId(searchId)
-GET           /match/psms/:searchId/:sequenceSource/:accessionCode        ch.isbsib.proteomics.mzviz.controllers.MatchController.findPSMByProtein(searchId, sequenceSource, accessionCode)
+GET           /api-docs/match                           controllers.ApiHelpController.getResource(path = "/match")
+POST          /match/psms/:searchId                     ch.isbsib.proteomics.mzviz.controllers.MatchController.loadPsms(searchId:String, runId:Option[String])
+GET           /match/psms/:searchId                     ch.isbsib.proteomics.mzviz.controllers.MatchController.findAllPSMBySearchId(searchId)
+DELETE        /match/psms/:searchIds                    ch.isbsib.proteomics.mzviz.controllers.MatchController.deleteAllBySearchId(searchIds)
+GET           /match/searches                           ch.isbsib.proteomics.mzviz.controllers.MatchController.listSearchIds
+GET           /match/proteins/:searchId                 ch.isbsib.proteomics.mzviz.controllers.MatchController.findAllProteinRefsBySearchId(searchId)
+GET           /match/psms/by-ac/:accessionCode          ch.isbsib.proteomics.mzviz.controllers.MatchController.findPSMByProtein(accessionCode, searchIds:Option[String], sequenceSource:Option[String])
 
-GET           /docs/*file                                                 controllers.Assets.at(path="/public/docs", file)
-GET           /api-docs                                                   controllers.ApiHelpController.getResources
+GET           /docs/*file                               controllers.Assets.at(path="/public/docs", file)
+GET           /api-docs                                 controllers.ApiHelpController.getResources

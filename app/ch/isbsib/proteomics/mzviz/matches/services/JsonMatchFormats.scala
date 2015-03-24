@@ -6,6 +6,8 @@ import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models._
 import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 import play.api.libs.json._
+import play.api.libs.json.Reads._
+import play.api.libs.json.Json
 import ch.isbsib.proteomics.mzviz.modifications.services.JsonModificationFormats._
 
 /**
@@ -15,7 +17,6 @@ import ch.isbsib.proteomics.mzviz.modifications.services.JsonModificationFormats
 
 object JsonMatchFormats {
 
-  import play.api.libs.json.Json
 
 
   implicit val formatSpectraId = new Format[SpectrumId] {

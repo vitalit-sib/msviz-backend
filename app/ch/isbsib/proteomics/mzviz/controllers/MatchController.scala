@@ -11,7 +11,6 @@ import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
 import ch.isbsib.proteomics.mzviz.theoretical.models.SequenceSourceStats
 import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
-import ch.isbsib.proteomics.mzviz.controllers.TsvFormats
 import ch.isbsib.proteomics.mzviz.matches.services.MatchMongoDBService
 import com.wordnik.swagger.annotations._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -99,7 +98,7 @@ object MatchController extends CommonController {
           case _ => Ok(Json.toJson(sphList))
         }
       }
-     .recover {
+        .recover {
         case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
       }
     }
@@ -123,18 +122,22 @@ object MatchController extends CommonController {
   @ApiOperation(nickname = "findPSMByProtein",
     value = "find all PSMs object for a given protein",
     notes = """PSMs like list (there is no list of the protein, but just a pointer to the one asked""",
-    response = classOf[List[JsObject]],
+    response = classOf[List[PepSpectraMatch]],
     httpMethod = "GET")
   def findPSMByProtein(
-                        @ApiParam(value = """searchId""", defaultValue = "") @PathParam("searchId") searchId: String,
-                        @ApiParam(value = """sequenceSource""", defaultValue = "") @PathParam("sequenceSource") sequenceSource: String,
-                        @ApiParam(value = """accessionCode""", defaultValue = "") @PathParam("accessionCode") accessionCode: String
+                        @ApiParam(value = """accessionCode""", defaultValue = "") @PathParam("accessionCode") accessionCode: String,
+                        @ApiParam(value = """searchId""", defaultValue = "") @PathParam("searchId") searchIds: Option[String],
+                        @ApiParam(value = """sequenceSource""", defaultValue = "") @PathParam("sequenceSource") sequenceSource: Option[String]
                         ) =
     Action.async {
-      MatchMongoDBService().findPSMByProtein(SearchId(searchId), SequenceSource(sequenceSource), AccessionCode(accessionCode))
-        .map {
-        case psms => Ok(psms)
-      } //Ok(sphList)}
+      MatchMongoDBService().findPSMByProtein(
+        AccessionCode(accessionCode),
+        source = sequenceSource.map(s => SequenceSource(s)),
+        searchIds = searchIds.map(_.split(",").toList.map(s => SearchId(s)).toSet)
+      )
+        .map { case psms =>
+        Ok(TsvFormats.toTsv(psms))
+      }
         .recover {
         case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
       }

@@ -25,7 +25,7 @@ import scala.concurrent.Future
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
- * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
+ *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
   val collectionName = "psm"
@@ -35,6 +35,10 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
     new Index(
       Seq("searchId" -> IndexType.Ascending),
       name = Some("searchId_source"),
+      unique = false),
+    new Index(
+      Seq("proteinList.proteinRef.AC" -> IndexType.Ascending, "proteinList.proteinRef.source" -> IndexType.Ascending),
+      name = Some("proteinRef"),
       unique = false)
   ))
 
@@ -63,6 +67,7 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
       case _ => true
     }
   }
+
   /**
    * remove all entries from the mongodb
    * @param searchIds mutliple search ids
@@ -75,6 +80,7 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
       case _ => true
     }
   }
+
   /**
    * retrieves all entries for a given source
    * @param searchId the search id
@@ -108,42 +114,88 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
       {$match:{'proteinList.proteinRef.AC':'GNAO_HUMAN', 'proteinList.proteinRef.source':'TODO'}},
       {$project:{proteinPosition:'$proteinList', runId:1, spId:1, pep:1, matchInfo:1, _id:0}}
     ]).pretty()
-   * @param searchId search to filter on
+   * @param searchIds search to filter on
    * @param source data source
    * @param accessionCode entry AC
    * @return
    */
-  def findPSMByProtein(searchId: SearchId, source: SequenceSource, accessionCode: AccessionCode): Future[JsArray] = {
-    val command = RawCommand(BSONDocument(
-      "aggregate" -> collectionName,
-      "pipeline" -> BSONArray(
-        BSONDocument("$match" ->
-          BSONDocument(
-            "searchId" -> searchId.value,
-            "proteinList.proteinRef.source" -> source.value,
-            "proteinList.proteinRef.AC" -> accessionCode.value)
-        ),
-        BSONDocument("$unwind" -> "$proteinList"),
-        BSONDocument("$match" ->
-          BSONDocument(
-            "proteinList.proteinRef.source" -> source.value,
-            "proteinList.proteinRef.AC" -> accessionCode.value)
-        ),
-        BSONDocument("$project" ->
-          BSONDocument(
-            "proteinPosition" -> "$proteinList",
-            "spectrumId" -> 1,
-            "pep" -> 1,
-            "matchInfo" -> 1,
-            "searchId" -> 1,
-            "_id" -> 0))
-      )
-    ))
-    db.command(command).map({
-      doc =>
-        JsArray(doc.getAs[List[BSONDocument]]("result").get.map(o => toJSON(o).asInstanceOf[JsObject])) //=>Json.toJson(o))
-    })
+  def findPSMByProtein(accessionCode: AccessionCode, source: Option[SequenceSource] = None, searchIds: Option[Set[SearchId]] = None): Future[Seq[PepSpectraMatch]] = {
+
+
+    val query = Json.obj("proteinList.proteinRef.AC" -> accessionCode.value) ++
+      (source match {
+        case Some(SequenceSource(src)) => Json.obj("proteinList.proteinRef.source" -> src)
+        case _ => Json.obj()
+      }) ++
+      (searchIds match {
+        case Some(ssids) => Json.obj("searchId" -> Json.obj("$in" -> ssids.toList.map(_.value)))
+        case _ => Json.obj()
+      })
+
+    collection.find(query).cursor[PepSpectraMatch].collect[List]()
   }
+
+  //    val command = RawCommand(BSONDocument(
+  //      "aggregate" -> collectionName,
+  //      "pipeline" -> BSONArray(
+  //        BSONDocument("$match" ->
+  //          BSONDocument(
+  //            //            "searchId" -> searchIds.value,
+  //            //            "proteinList.proteinRef.source" -> source.value,
+  //            "proteinList.proteinRef.AC" -> accessionCode.value)
+  //        ),
+  //        BSONDocument("$unwind" -> "$proteinList"),
+  //        BSONDocument("$match" ->
+  //          BSONDocument(
+  //            //            "proteinList.proteinRef.source" -> source.value,
+  //            "proteinList.proteinRef.AC" -> accessionCode.value)
+  //        ),
+  //        BSONDocument("$project" ->
+  //          BSONDocument(
+  //            "proteinPosition" -> "$proteinList",
+  //            "spectrumId" -> 1,
+  //            "pep" -> 1,
+  //            "matchInfo" -> 1,
+  //            "searchId" -> 1,
+  //            "_id" -> 0))
+  //      )
+  //    ))
+  //    db.command(command).map({
+  //      doc =>
+  //        JsArray(doc.getAs[List[BSONDocument]]("result").get.map(o => toJSON(o).asInstanceOf[JsObject])) //=>Json.toJson(o))
+  //    })
+  //  }
+  //  def findPSMByProtein(accessionCode: AccessionCode, source: Option[SequenceSource]=None, searchIds: Option[Set[SearchId]]=None): Future[JsArray] = {
+  //    val command = RawCommand(BSONDocument(
+  //      "aggregate" -> collectionName,
+  //      "pipeline" -> BSONArray(
+  //        BSONDocument("$match" ->
+  //          BSONDocument(
+  ////            "searchId" -> searchIds.value,
+  ////            "proteinList.proteinRef.source" -> source.value,
+  //            "proteinList.proteinRef.AC" -> accessionCode.value)
+  //        ),
+  //        BSONDocument("$unwind" -> "$proteinList"),
+  //        BSONDocument("$match" ->
+  //          BSONDocument(
+  ////            "proteinList.proteinRef.source" -> source.value,
+  //            "proteinList.proteinRef.AC" -> accessionCode.value)
+  //        ),
+  //        BSONDocument("$project" ->
+  //          BSONDocument(
+  //            "proteinPosition" -> "$proteinList",
+  //            "spectrumId" -> 1,
+  //            "pep" -> 1,
+  //            "matchInfo" -> 1,
+  //            "searchId" -> 1,
+  //            "_id" -> 0))
+  //      )
+  //    ))
+  //    db.command(command).map({
+  //      doc =>
+  //        JsArray(doc.getAs[List[BSONDocument]]("result").get.map(o => toJSON(o).asInstanceOf[JsObject])) //=>Json.toJson(o))
+  //    })
+  //  }
 
 
   /**

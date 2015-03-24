@@ -15,11 +15,12 @@ object TsvFormats {
   def toTsv(psms:Seq[PepSpectraMatch]):String = {
 
     val sb = new StringBuilder
-    sb.append("searchId\tpeptideSequence\tmassDiff\trunId\tspectrumIt\n")
+    sb.append("searchId\tpeptideSequence\tAC\tmassDiff\trunId\tspectrumId\n")
 
     psms.foreach({ psm =>
-      sb.append(List(psm.searchId, psm.pep.sequence, psm.matchInfo.massDiff.getOrElse("NA"), psm.spectrumId.runId.value, psm.spectrumId.id.value).mkString("\t")+"\n")
+      sb.append(List(psm.searchId.value, psm.pep.sequence, psm.proteinList.map(_.proteinRef.AC.value).mkString(","), psm.matchInfo.massDiff.getOrElse("NA"), psm.spectrumId.runId.value, psm.spectrumId.id.value).mkString("\t")+"\n")
     })
     sb.toString()
   }
+
 }

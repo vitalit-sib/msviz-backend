@@ -115,6 +115,41 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
   }
 
 
+  "listProteinRefsBySearchId" should {
+    "list all" in new TempMongoDBService {
+
+      service.insert(LoaderMzIdent.parse(new File("test/resources/M_100.mzid"), SearchId("M_100"), RunId("M_100.mgf"))).futureValue
+      val protRefList = service.listProteinRefsBySearchId(SearchId("M_100")).futureValue
+      Thread.sleep(200)
+      protRefList.size must equalTo(27)
+      protRefList(0).AC mustEqual AccessionCode("CD109_HUMAN")
+      protRefList(0).source mustEqual Some(SequenceSource("SwissProt_2014_08.fasta"))
+    }
+
+  }
+
+  "findPSMByProtein" should {
+    "list all" in new TempMongoDBService {
+      service.insert(LoaderMzIdent.parse(new File("test/resources/M_100.mzid"), SearchId("M_100"), RunId("M_100.mgf"))).futureValue
+      service.insert(LoaderMzIdent.parse(new File("test/resources/M_100.mzid"), SearchId("M_100_1"), RunId("M_100.mgf"))).futureValue
+
+      val psms = service.findPSMByProtein(AccessionCode("CD109_HUMAN")).futureValue
+      println(psms.mkString("\n"))
+
+      psms.size must equalTo(4)
+    }
+    "list all" in new TempMongoDBService {
+      service.insert(LoaderMzIdent.parse(new File("test/resources/M_100.mzid"), SearchId("M_100"), RunId("M_100.mgf"))).futureValue
+      service.insert(LoaderMzIdent.parse(new File("test/resources/M_100.mzid"), SearchId("M_100_1"), RunId("M_100.mgf"))).futureValue
+
+      val psms = service.findPSMByProtein(AccessionCode("CD109_HUMAN"), searchIds=Some(Set(SearchId("M_100_1")))).futureValue
+      println(psms.mkString("\n"))
+
+      psms.size must equalTo(2)
+    }
+  }
+
+
   "isSearchIdExist" should {
     "check val" in new TempMongoDBService {
       service.isSearchIdExist(SearchId("M_100")).futureValue must equalTo(false)
