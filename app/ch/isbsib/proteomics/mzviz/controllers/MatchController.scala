@@ -13,12 +13,14 @@ import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
 import ch.isbsib.proteomics.mzviz.matches.services.MatchMongoDBService
 import com.wordnik.swagger.annotations._
+import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json._
 import play.api.mvc.Action
 import reactivemongo.bson.BSONDocument
 
 import scala.concurrent.Future
+import scala.util.{Failure, Success, Try}
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
@@ -72,13 +74,15 @@ object MatchController extends CommonController {
           case Some(r: String) => RunId(r)
           case None => RunId(searchId)
         }
-
-        val psms = LoaderMzIdent.parse(request.body.file, SearchId(searchId), rid)
-        MatchMongoDBService().insert(psms)
-
-          .map { n => Ok(Json.obj("inserted" -> n))
-        }.recover {
-          case e => BadRequest(Json.prettyPrint(Json.obj("status" -> "ERROR", "message" -> e.getMessage)) + "\n")
+        (for {
+          psms <- Future { LoaderMzIdent.parse(request.body.file, SearchId(searchId), rid)}
+          n <- MatchMongoDBService().insert(psms)
+        } yield {
+            Ok(Json.obj("inserted" -> n))
+          }).recover {
+          case e =>
+            Logger.error(e.getMessage, e)
+            BadRequest(Json.prettyPrint(Json.obj("status" -> "ERROR", "message" -> e.getMessage)) + "\n")
         }
     }
 
