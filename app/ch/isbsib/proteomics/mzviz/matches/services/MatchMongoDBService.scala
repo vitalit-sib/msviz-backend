@@ -232,7 +232,7 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
 
   /**
    * retrieves a list of Proteins from one source
-   *
+   * NB: the identifiers field is not populated by the match database (information is not available)
    * @param searchId search identifier
    * @return list of Proteins
    */
@@ -253,7 +253,7 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
         doc.getAs[List[BSONDocument]]("result").get.map({
           elDoc: BSONDocument =>
             ProteinRef(AccessionCode(elDoc.getAs[String]("AC").get),
-              elDoc.getAs[List[String]]("identifier").get.toSet.map(ProteinIdentifier.apply),
+              Set(),
               Some(SequenceSource(elDoc.getAs[String]("source").get)))
         }).distinct
     })
