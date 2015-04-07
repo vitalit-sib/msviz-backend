@@ -3,6 +3,8 @@
 # ~~~~
 
 # Home page
+GET           /                                                  ch.isbsib.proteomics.mzviz.controllers.UtilsController.hello
+
 GET           /api-docs/exp                                      controllers.ApiHelpController.getResource(path = "/exp")
 GET           /exp                                               ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.stats
 GET           /exp/msruns                                        ch.isbsib.proteomics.mzviz.controllers.ExperimentalController.listMSRunIds
