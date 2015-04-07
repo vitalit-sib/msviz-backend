@@ -6,7 +6,7 @@ import ch.isbsib.proteomics.mzviz.experimental.models.ExpMSnSpectrum
 import ch.isbsib.proteomics.mzviz.matches.models.ProteinRef
 import ch.isbsib.proteomics.mzviz.theoretical.models.{SequenceSourceStats, FastaEntry}
 import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
-import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
+import ch.isbsib.proteomics.mzviz.theoretical.{ProteinIdentifier, AccessionCode, SequenceSource}
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Controller
@@ -30,8 +30,8 @@ class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
 
   setIndexes(List(
     new Index(
-      Seq("proteinRef.AC" -> IndexType.Ascending, "proteinRef.source" -> IndexType.Ascending),
-      name = Some("AC_source"),
+      Seq("proteinRef.identifiers" -> IndexType.Ascending, "proteinRef.source" -> IndexType.Ascending),
+      name = Some("proteinRef"),
       unique = true)
   ))
 
@@ -79,6 +79,21 @@ class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
     collection.find(query).cursor[FastaEntry].headOption map {
       case Some(fe: FastaEntry) => fe
       case None => throw new MongoNotFoundException(s"$source/$accessionCode")
+    }
+  }
+
+  /**
+   *
+   * @param id any entry indetifier
+   * @param source data source
+   * @return
+   */
+  def findEntryByIdentifierAndSource(id: ProteinIdentifier, source: SequenceSource): Future[FastaEntry] = {
+    val query = Json.obj("proteinRef.identifiers" -> id.value, "proteinRef.source" -> source.value)
+    println(query)
+    collection.find(query).cursor[FastaEntry].headOption map {
+      case Some(fe: FastaEntry) => fe
+      case None => throw new MongoNotFoundException(s"$source/$id")
     }
   }
 

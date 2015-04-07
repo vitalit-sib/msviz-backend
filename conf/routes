@@ -20,7 +20,7 @@ DELETE        /sequences/:sourceId                               ch.isbsib.prote
 GET           /sequences/stats                                   ch.isbsib.proteomics.mzviz.controllers.SequenceController.stats
 
 GET           /api-docs/sequence                                 controllers.ApiHelpController.getResource(path = "/sequence")
-GET           /sequence/:sourceId/:accessionCode                 ch.isbsib.proteomics.mzviz.controllers.OneSequenceController.get(sourceId, accessionCode)
+GET           /sequence/:sourceId/:identifier                    ch.isbsib.proteomics.mzviz.controllers.OneSequenceController.get(sourceId, identifier)
 
 GET           /api-docs/match                                    controllers.ApiHelpController.getResource(path = "/match")
 POST          /match/psms/:searchId                              ch.isbsib.proteomics.mzviz.controllers.MatchController.loadPsms(searchId:String, runId:Option[String])

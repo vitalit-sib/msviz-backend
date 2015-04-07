@@ -5,7 +5,7 @@ import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.experimental.importer.LoaderMGF
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
-import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
+import ch.isbsib.proteomics.mzviz.theoretical.{ProteinIdentifier, SequenceSource, AccessionCode}
 import ch.isbsib.proteomics.mzviz.theoretical.importer.FastaParser
 import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
 import org.expasy.mzjava.proteomics.io.ms.ident.pepxml.v117.MsmsPipelineAnalysis.MsmsRunSummary.SearchSummary.SequenceSearchConstraint
@@ -98,6 +98,31 @@ class FastaMongoDBServiceSpecs extends Specification with ScalaFutures {
       val entry = service.findEntryByAccessionCodeAndSource(AccessionCode("P04899"),SequenceSource("small-1")).futureValue
       Thread.sleep(200)
       entry.proteinRef.AC must equalTo(AccessionCode("P04899"))
+      entry.proteinRef.identifiers must equalTo(Set(ProteinIdentifier("P04899"), ProteinIdentifier("GNAI2_HUMAN")))
+      entry.sequence must equalTo("MGCTVSAEDKAAAERSKMIDKNLREDGEKAAREVKLLLLGAGESGKSTIVKQMKIIHEDGYSEEECRQYRAVVYSNTIQSIMAIVKAMGNLQIDFADPSRADDARQLFALSCTAEEQGVLPDDLSGVIRRLWADHGVQACFGRSREYQLNDSAAYYLNDLERIAQSDYIPTQQDVLRTRVKTTGIVETHFTFKDLHFKMFDVGGQRSERKKWIHCFEGVTAIIFCVALSAYDLVLAEDEEMNRMHESMKLFDSICNNKWFTDTSIILFLNKKDLFEEKITHSPLTICFPEYTGANKYDEAASYIQSKFEDLNKRKDTKEIYTHFTCATDTKNVQFVFDAVTDVIIKNNLKDCGLF")
+
+    }
+  }
+  "findEntryByIdentifierAndSource (AC)" should {
+    "find one entry" in new TempMongoDBService {
+
+      val f1 = service.insert(FastaParser("test/resources/M_100small.fasta", SequenceSource("small-1")).parse).futureValue
+      val entry = service.findEntryByIdentifierAndSource(ProteinIdentifier("P04899"),SequenceSource("small-1")).futureValue
+      Thread.sleep(200)
+      entry.proteinRef.AC must equalTo(AccessionCode("P04899"))
+      entry.proteinRef.identifiers must equalTo(Set(ProteinIdentifier("P04899"), ProteinIdentifier("GNAI2_HUMAN")))
+      entry.sequence must equalTo("MGCTVSAEDKAAAERSKMIDKNLREDGEKAAREVKLLLLGAGESGKSTIVKQMKIIHEDGYSEEECRQYRAVVYSNTIQSIMAIVKAMGNLQIDFADPSRADDARQLFALSCTAEEQGVLPDDLSGVIRRLWADHGVQACFGRSREYQLNDSAAYYLNDLERIAQSDYIPTQQDVLRTRVKTTGIVETHFTFKDLHFKMFDVGGQRSERKKWIHCFEGVTAIIFCVALSAYDLVLAEDEEMNRMHESMKLFDSICNNKWFTDTSIILFLNKKDLFEEKITHSPLTICFPEYTGANKYDEAASYIQSKFEDLNKRKDTKEIYTHFTCATDTKNVQFVFDAVTDVIIKNNLKDCGLF")
+
+    }
+  }
+  "findEntryByIdentifierAndSource (AC)" should {
+    "find one entry" in new TempMongoDBService {
+
+      val f1 = service.insert(FastaParser("test/resources/M_100small.fasta", SequenceSource("small-1")).parse).futureValue
+      val entry = service.findEntryByIdentifierAndSource(ProteinIdentifier("GNAI2_HUMAN"),SequenceSource("small-1")).futureValue
+      Thread.sleep(200)
+      entry.proteinRef.AC must equalTo(AccessionCode("P04899"))
+      entry.proteinRef.identifiers must equalTo(Set(ProteinIdentifier("P04899"), ProteinIdentifier("GNAI2_HUMAN")))
       entry.sequence must equalTo("MGCTVSAEDKAAAERSKMIDKNLREDGEKAAREVKLLLLGAGESGKSTIVKQMKIIHEDGYSEEECRQYRAVVYSNTIQSIMAIVKAMGNLQIDFADPSRADDARQLFALSCTAEEQGVLPDDLSGVIRRLWADHGVQACFGRSREYQLNDSAAYYLNDLERIAQSDYIPTQQDVLRTRVKTTGIVETHFTFKDLHFKMFDVGGQRSERKKWIHCFEGVTAIIFCVALSAYDLVLAEDEEMNRMHESMKLFDSICNNKWFTDTSIILFLNKKDLFEEKITHSPLTICFPEYTGANKYDEAASYIQSKFEDLNKRKDTKEIYTHFTCATDTKNVQFVFDAVTDVIIKNNLKDCGLF")
 
     }
