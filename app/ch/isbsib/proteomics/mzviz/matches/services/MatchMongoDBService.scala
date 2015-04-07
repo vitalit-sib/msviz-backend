@@ -8,7 +8,7 @@ import ch.isbsib.proteomics.mzviz.modifications.services.JsonModificationFormats
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models.{PepSpectraMatch, ProteinRef}
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
-import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
+import ch.isbsib.proteomics.mzviz.theoretical.{ProteinIdentifier, AccessionCode, SequenceSource}
 import play.api.Logger
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json.{JsArray, JsObject, Json}
@@ -253,6 +253,7 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
         doc.getAs[List[BSONDocument]]("result").get.map({
           elDoc: BSONDocument =>
             ProteinRef(AccessionCode(elDoc.getAs[String]("AC").get),
+              elDoc.getAs[List[String]]("identifier").get.toSet.map(ProteinIdentifier.apply),
               Some(SequenceSource(elDoc.getAs[String]("source").get)))
         }).distinct
     })

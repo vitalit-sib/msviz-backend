@@ -6,8 +6,14 @@ package ch.isbsib.proteomics.mzviz
  */
 package object theoretical {
 
+
   //protein accession code
   case class AccessionCode(value: String) extends AnyVal {
+    override def toString = value
+  }
+
+  //protein Identifier (can be either AC, or ID)
+  case class ProteinIdentifier(value: String) extends AnyVal {
     override def toString = value
   }
 

@@ -4,7 +4,7 @@ import java.io.File
 import java.util.Scanner
 
 import ch.isbsib.proteomics.mzviz.matches.models.ProteinRef
-import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
+import ch.isbsib.proteomics.mzviz.theoretical.{ProteinIdentifier, SequenceSource, AccessionCode}
 import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
 import ch.isbsib.proteomics.mzviz.theoretical.services.SequenceMongoDBService
 
@@ -25,10 +25,11 @@ class FastaParser(file: File, source: SequenceSource) {
     val seqLines = protLines.substring(firstNewLineIndex + 1)
 
     //gett accession code and cleanup sequence
-    val ac = FastaExtractorACFromHeader.parse(headline)
+    val ac = FastaExtractorACFromHeader.parseAC(headline)
+    val ids = FastaExtractorACFromHeader.parseIdentifiers(headline) + ProteinIdentifier(ac.value)
     val seq = seqLines.replaceAll( """\s+""", "")
 
-    FastaEntry(ProteinRef(ac, Some(source)), seq, seq.size)
+    FastaEntry(ProteinRef(ac, ids, Some(source)), seq, seq.size)
     //val=SequenceMongoDBService()
   }
 
@@ -65,18 +66,29 @@ object FastaParser {
 }
 
 object FastaExtractorACFromHeader {
-  val reList = List(
+  val reACList = List(
     """..\|(.+?)\|.*""",
     """..\|([\w\-]+).*""",
     """([\w\-:]+).*"""
   )
     .map(s => ("^>?" + s).r)
 
+  val reIdentifiersList = List(
+    """..\|.+?\|(\S+)\s*.*"""
+  )
+    .map(s => ("^>?" + s).r)
 
-  def parse(header: String): AccessionCode = reList.find(_.findFirstMatchIn(header).isDefined) match {
+  def parseAC(header: String): AccessionCode = reACList.find(_.findFirstMatchIn(header).isDefined) match {
     case Some(re) =>
       val re(ac) = header
       AccessionCode(ac)
     case None => throw new FastaParsingException(s"cannot parse AC from header: $header")
+  }
+
+  def parseIdentifiers(header: String): Set[ProteinIdentifier] = reIdentifiersList.find(_.findFirstMatchIn(header).isDefined) match {
+    case Some(re) =>
+      val re(ids )= header
+      ids.split(",").toList.toSet.map( ProteinIdentifier.apply)
+    case None => Set()
   }
 }

@@ -8,7 +8,6 @@ import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
 import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 import ch.isbsib.proteomics.mzviz.theoretical.importer.FastaParser
 import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
-import ch.isbsib.proteomics.mzviz.theoretical.services.SequenceMongoDBService
 import org.expasy.mzjava.proteomics.io.ms.ident.pepxml.v117.MsmsPipelineAnalysis.MsmsRunSummary.SearchSummary.SequenceSearchConstraint
 import org.scalacheck.Prop.True
 import org.scalatest.concurrent.ScalaFutures

@@ -2,7 +2,7 @@ package ch.isbsib.proteomics.mzviz.theoretical.services
 
 import ch.isbsib.proteomics.mzviz.matches.models.ProteinRef
 import ch.isbsib.proteomics.mzviz.theoretical.models.{SequenceSourceStats, FastaEntry}
-import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
+import ch.isbsib.proteomics.mzviz.theoretical.{ProteinIdentifier, AccessionCode, SequenceSource}
 import play.api.libs.json._
 
 /**
@@ -13,6 +13,12 @@ import play.api.libs.json._
 object JsonTheoFormats {
 
   import play.api.libs.json.Json
+
+  implicit val formatProteinIdentifier = new Format[ProteinIdentifier] {
+    override def reads(json: JsValue): JsResult[ProteinIdentifier] = JsSuccess(ProteinIdentifier(json.as[String]))
+
+    def writes(o: ProteinIdentifier) = JsString(o.value)
+  }
 
   implicit val formatAccessionCode = new Format[AccessionCode] {
     override def reads(json: JsValue): JsResult[AccessionCode] = JsSuccess(AccessionCode(json.as[String]))

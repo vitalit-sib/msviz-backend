@@ -4,7 +4,7 @@ import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models._
-import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
+import ch.isbsib.proteomics.mzviz.theoretical.{ProteinIdentifier, SequenceSource, AccessionCode}
 import play.api.libs.json._
 import play.api.libs.json.Reads._
 import play.api.libs.json.Json
@@ -29,6 +29,11 @@ object JsonMatchFormats {
     override def reads(json: JsValue): JsResult[AccessionCode] = JsSuccess(AccessionCode(json.as[String]))
 
     def writes(o: AccessionCode) = JsString(o.value)
+  }
+  implicit val formatProteinIdentifier = new Format[ProteinIdentifier] {
+    override def reads(json: JsValue): JsResult[ProteinIdentifier] = JsSuccess(ProteinIdentifier(json.as[String]))
+
+    def writes(o: ProteinIdentifier) = JsString(o.value)
   }
 
   implicit val formatSequenceSource = new Format[SequenceSource] {

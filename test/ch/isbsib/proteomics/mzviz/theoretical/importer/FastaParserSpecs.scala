@@ -1,7 +1,7 @@
 package ch.isbsib.proteomics.mzviz.theoretical.importer
 
 import ch.isbsib.proteomics.mzviz.commons.TempMongoDBForSpecs
-import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
+import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode, ProteinIdentifier}
 import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
 import ch.isbsib.proteomics.mzviz.theoretical.services.SequenceMongoDBService
 import com.google.common.io.CharSource.CharSequenceCharSource
@@ -23,21 +23,25 @@ class FastaParserSpecs extends Specification with ScalaFutures {
 
 
   "FastaExtractorACFromHeader.parse()" should {
-    ">tr|NC_999_2_1" in {
-      FastaExtractorACFromHeader.parse(">tr|NC_999_2_1") must equalTo(AccessionCode("NC_999_2_1"))
+    def check(header:String, ac:String, ids:String) = {
+      s"$header -> AC($ac)" in {
+        FastaExtractorACFromHeader.parseAC(header) must equalTo(AccessionCode(ac))
+      }
+      s"$header -> identifiers($ac,$ids)" in {
+        val rids = FastaExtractorACFromHeader.parseIdentifiers(header)
+        if(ids == ""){
+          rids must equalTo (Set())
+        }else{
+          rids must equalTo((ids.split(",").toList).map(ProteinIdentifier.apply).toSet)
+        }
+      }
     }
-    ">sp|P04899|GNAI2_HUMAN Guanine nucleotide-binding protein G(i) subunit alpha-2 OS=Homo sapiens GN=GNAI2 PE=1 SV=3" in {
-      FastaExtractorACFromHeader.parse(">sp|P04899|GNAI2_HUMAN Guanine nucleotide-binding protein G(i) subunit alpha-2 OS=Homo sapiens GN=GNAI2 PE=1 SV=3") must equalTo(AccessionCode("P04899"))
-    }
-    ">P01044-1 SWISS-PROT:P01044-1" in {
-      FastaExtractorACFromHeader.parse(">P01044-1 SWISS-PROT:P01044-1") must equalTo(AccessionCode("P01044-1"))
-    }
-    ">ENSEMBL:ENSBTAP00000024466 (Bos taurus) 44 kDa protein" in {
-      FastaExtractorACFromHeader.parse(">ENSEMBL:ENSBTAP00000024466 (Bos taurus) 44 kDa protein") must equalTo(AccessionCode("ENSEMBL:ENSBTAP00000024466"))
-    }
-    ">P21578 SWISS-PROT:P21578|LUXY_VIBFI Yellow fluorescent protein (YFP)- Vibrio fischeri." in {
-      FastaExtractorACFromHeader.parse("P21578 SWISS-PROT:P21578|LUXY_VIBFI Yellow fluorescent protein (YFP)- Vibrio fischeri.") must equalTo(AccessionCode("P21578"))
-    }
+
+    check(">tr|NC_999_2_1","NC_999_2_1", "")
+    check("sp|P04899|GNAI2_HUMAN Guanine nucleotide-binding protein G(i) subunit alpha-2 OS=Homo sapiens GN=GNAI2 PE=1 SV=3", "P04899", "GNAI2_HUMAN")
+    check(">P01044-1 SWISS-PROT:P01044-1", "P01044-1", "")
+    check(">ENSEMBL:ENSBTAP00000024466 (Bos taurus) 44 kDa protein", "ENSEMBL:ENSBTAP00000024466", "")
+    check(">P21578 SWISS-PROT:P21578|LUXY_VIBFI Yellow fluorescent protein (YFP)- Vibrio fischeri.", "P21578", "")
   }
 
   "parse" should {
@@ -57,11 +61,15 @@ class FastaParserSpecs extends Specification with ScalaFutures {
     "P07355 exists" in {
       mapEntries.get(AccessionCode("P07355")).isDefined must equalTo(true)
     }
+    "P07355 identifiers" in {
+      mapEntries.get(AccessionCode("P07355")).get.proteinRef.identifiers must equalTo(Set(ProteinIdentifier("P07355"), ProteinIdentifier("ANXA2_HUMAN")))
+    }
 
-    "sequence space must have been removed" in {
+
+      "sequence space must have been removed" in {
       mapEntries(AccessionCode("P07355")).sequence must equalTo("MSTVHEILCKLSLEGDHSTPPSAYGSVKAYTNFDAERDALNIETAIKTKGVDEVTIVNILTNRSNAQRQDIAFAYQRRTKKELASALKSALSGHLETVILGLLKTPAQYDASELKASMKGLGTDEDSLIEIICSRTNQELQEINRVYKEMYKTDLEKDIISDTSGDFRKLMVALAKGRRAEDGSVIDYELIDQDARDLYDAGVKRKGTDVPKWISIMTERSVPHLQKVFDRYKSYSPYDMLESIRKEVKGDLENAFLNLVQCIQNKPLYFADRLYDSMKGKGTRDKVLIRIMVSRSEVDMLKIRSEFKRKYGKSLYYYIQQDTKGDYQKALLYLCGGDD")
     }
-    "source is None" in {
+    "source is pipo" in {
       mapEntries(AccessionCode("P07355")).proteinRef.source must equalTo(Some(SequenceSource("pipo")))
     }
   }
