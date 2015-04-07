@@ -24,6 +24,7 @@
     <script src='lib/swagger-oauth.js' type='text/javascript'></script>
     <script type="text/javascript">
         $(function () {
+            var href = window.location.href;
             var url= href.substring(0, href.indexOf('/doc'))+'/api-docs';
 
             window.swaggerUi = new SwaggerUi({
