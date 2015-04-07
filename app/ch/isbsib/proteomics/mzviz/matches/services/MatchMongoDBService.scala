@@ -9,6 +9,7 @@ import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models.{PepSpectraMatch, ProteinRef}
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
 import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
+import play.api.Logger
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json.{JsArray, JsObject, Json}
 import play.api.mvc.Controller
@@ -121,7 +122,7 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
    */
   def findPSMByProtein(accessionCode: AccessionCode, source: Option[SequenceSource] = None, searchIds: Option[Set[SearchId]] = None): Future[Seq[PepSpectraMatch]] = {
 
-
+    Logger.info(s"accessionCode=$accessionCode, searchIds = $searchIds")
     val query = Json.obj("proteinList.proteinRef.AC" -> accessionCode.value) ++
       (source match {
         case Some(SequenceSource(src)) => Json.obj("proteinList.proteinRef.source" -> src)

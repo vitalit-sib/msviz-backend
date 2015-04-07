@@ -75,7 +75,9 @@ object MatchController extends CommonController {
           case None => RunId(searchId)
         }
         (for {
-          psms <- Future { LoaderMzIdent.parse(request.body.file, SearchId(searchId), rid)}
+          psms <- Future {
+            LoaderMzIdent.parse(request.body.file, SearchId(searchId), rid)
+          }
           n <- MatchMongoDBService().insert(psms)
         } yield {
             Ok(Json.obj("inserted" -> n))
@@ -98,7 +100,7 @@ object MatchController extends CommonController {
       MatchMongoDBService().findAllPSMBySearchId(SearchId(searchId))
         .map { case sphList =>
         render {
-          case acceptsTsv => Ok(TsvFormats.toTsv(sphList))
+          case acceptsTsv() => Ok(TsvFormats.toTsv(sphList))
           case _ => Ok(Json.toJson(sphList))
         }
       }
@@ -107,7 +109,7 @@ object MatchController extends CommonController {
       }
     }
 
-  @ApiOperation(nickname = "findProteinsBySearchId",
+  @ApiOperation(nickname = "findAllProteinRefsBySearchId",
     value = "find all protein for a given searchId",
     notes = """ProteinRef list""",
     response = classOf[List[ProteinRef]],
@@ -125,22 +127,29 @@ object MatchController extends CommonController {
 
   @ApiOperation(nickname = "findPSMByProtein",
     value = "find all PSMs object for a given protein",
-    notes = """PSMs like list (there is no list of the protein, but just a pointer to the one asked""",
+    notes = """PSMs  list in TSV or JSON form""",
     response = classOf[List[PepSpectraMatch]],
+    produces = "application/json, application/tsv",
     httpMethod = "GET")
+  @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "sequenceSource", value = "", required = false, dataType = "string", paramType = "sequenceSource")
+  ))
   def findPSMByProtein(
+                        @ApiParam(value = """searchIds""", defaultValue = "") @PathParam("searchIds") searchIds: String,
                         @ApiParam(value = """accessionCode""", defaultValue = "") @PathParam("accessionCode") accessionCode: String,
-                        @ApiParam(value = """searchId""", defaultValue = "") @PathParam("searchId") searchIds: Option[String],
-                        @ApiParam(value = """sequenceSource""", defaultValue = "") @PathParam("sequenceSource") sequenceSource: Option[String]
+                        sequenceSource: Option[String]
                         ) =
-    Action.async {
+    Action.async { implicit request =>
       MatchMongoDBService().findPSMByProtein(
         AccessionCode(accessionCode),
         source = sequenceSource.map(s => SequenceSource(s)),
-        searchIds = searchIds.map(_.split(",").toList.map(s => SearchId(s)).toSet)
+        searchIds = if(searchIds == "*") None else Some(searchIds.split(",").toList.map(s => SearchId(s)).toSet)
       )
         .map { case psms =>
-        Ok(TsvFormats.toTsv(psms.map(_.extractAC(AccessionCode(accessionCode))), showFirstProtMatchInfo = true))
+        render {
+          case acceptsTsv() => Ok(TsvFormats.toTsv(psms.map(_.extractAC(AccessionCode(accessionCode))), showFirstProtMatchInfo = true))
+          case _ => Ok(Json.toJson(psms))
+        }
       }
         .recover {
         case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
