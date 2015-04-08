@@ -19,6 +19,16 @@ trait SpectraSimilarity {
    * @param absTolerance peak match tolerance in Dalton (default 0.5)
    * @return similiraty between 0 and 1
    */
-  def calcSimilarity(sp1: ExpMSnSpectrum, sp2: ExpMSnSpectrum, absTolerance: Double = 0.5): SpSpMatch
+  def calcSimilarity(sp1: ExpMSnSpectrum, sp2: ExpMSnSpectrum, absTolerance: Double): SpSpMatch
+
+  /**
+   * calculates spectra similarity between one spectra and a list of spectra
+   *
+   * @param sp1
+   * @param sp2List
+   * @param absTolerance
+   * @return
+   */
+  def calcSimilarityList(sp1: ExpMSnSpectrum, sp2List: Seq[ExpMSnSpectrum], absTolerance: Double): Seq[SpSpMatch]
 
 }

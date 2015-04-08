@@ -6,6 +6,7 @@ import ch.isbsib.proteomics.mzviz.commons._
 import ch.isbsib.proteomics.mzviz.experimental.importer.LoaderMGF
 import ch.isbsib.proteomics.mzviz.experimental.models._
 import ch.isbsib.proteomics.mzviz.experimental.{MSRun, RunId, ScanNumber, SpectrumUniqueId}
+import ch.isbsib.proteomics.mzviz.spectrasim.models.SpSpMatch
 import org.specs2.mutable.Specification
 
 
@@ -14,6 +15,8 @@ import org.specs2.mutable.Specification
  *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 class NormDotProductSimSpecs extends Specification {
+
+  val peakMatchTol = 0.5
 
   "compute normalized dot product" should {
 
@@ -36,7 +39,7 @@ class NormDotProductSimSpecs extends Specification {
 
     "compare two spectra" in {
 
-      val spSpMatch = new NormDotProdSim().calcSimilarity(sp1, sp2)
+      val spSpMatch = new NormDotProdSim().calcSimilarity(sp1, sp2, peakMatchTol)
 
       spSpMatch.similarity must equalTo(0.7215238028982041)
 
@@ -50,9 +53,19 @@ class NormDotProductSimSpecs extends Specification {
 
     "compare two spectra from MGF" in {
 
-      val spSpMatch = new NormDotProdSim().calcSimilarity(run.msnSpectra(0), run.msnSpectra(1))
+      val spSpMatches = new NormDotProdSim().calcSimilarityList(run.msnSpectra(0), run.msnSpectra, peakMatchTol)
 
-      spSpMatch.similarity must equalTo(0.09029509137335748)
+      // best match should be spectra 0
+      def maxMatch(match1: SpSpMatch, match2: SpSpMatch): SpSpMatch = if(match1.similarity > match2.similarity) match1 else match2
+      val bestMatch = spSpMatches.reduceLeft(maxMatch)
+
+      run.msnSpectra(0) must equalTo(bestMatch.sp2)
+
+      // we should have same number of matches as search spectra
+      run.msnSpectra.length must equalTo(spSpMatches.length)
+
+      // look at score of second match
+      spSpMatches(1).similarity must equalTo(0.09029509137335748)
 
     }
   }

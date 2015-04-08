@@ -7,31 +7,64 @@ import org.expasy.mzjava.core.ms.peaklist.{DoublePeakList, PeakAnnotation, PeakL
 import org.expasy.mzjava.core.ms.spectrasim.NdpSimFunc
 
 /**
- * computes the normalized dot product between 2 spectra
+ * computes the normalized dot product between 2 spectra or between a spectra and a list of spectra
  *
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
  *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 class NormDotProdSim extends SpectraSimilarity{
 
-  def calcSimilarity(sp1: ExpMSnSpectrum, sp2: ExpMSnSpectrum, absTolerance: Double = 0.5): SpSpMatch ={
+  def calcSimilarity(sp1: ExpMSnSpectrum, sp2: ExpMSnSpectrum, absTolerance: Double): SpSpMatch = {
 
-    // convert the peaklists
-    val peakList1: PeakList[PeakAnnotation] = new DoublePeakList[PeakAnnotation]
-    val peakList2: PeakList[PeakAnnotation] = new DoublePeakList[PeakAnnotation]
-
-    def sortPeaks(sp: ExpMSnSpectrum) =  sp.peaks.sortBy(_.moz.value).map(p => Tuple2(p.moz.value, p.intensity.value))
-    val peaks1 = sortPeaks(sp1)
-    val peaks2 = sortPeaks(sp2)
-
-    peakList1.addSorted(peaks1.map(_._1).toArray, peaks1.map(_._2).toArray)
-    peakList2.addSorted(peaks2.map(_._1).toArray, peaks2.map(_._2).toArray)
+    def peakList1 = convertSpectrum(sp1)
+    def peakList2 = convertSpectrum(sp2)
 
     // compute the similarity
-    val simFunc: NdpSimFunc[PeakAnnotation, PeakAnnotation] = new NdpSimFunc[PeakAnnotation, PeakAnnotation](0, new AbsoluteTolerance(absTolerance))
+    val simFunc = createSimFunc(absTolerance)
     val sim: Double = simFunc.calcSimilarity(peakList1, peakList2)
 
     SpSpMatch(sp1, sp2, sim)
   }
+
+
+  def calcSimilarityList(sp1: ExpMSnSpectrum, sp2List: Seq[ExpMSnSpectrum], absTolerance: Double): Seq[SpSpMatch] = {
+
+    def peakList1 = convertSpectrum(sp1)
+
+    // prepare the MzJava similarity
+    val simFunc = createSimFunc(absTolerance)
+
+    // compute SpSpMatches
+    val spSpMatches = sp2List.map({ sp2 =>
+      val peakList2 = convertSpectrum(sp2)
+      val sim = simFunc.calcSimilarity(peakList1, peakList2)
+      SpSpMatch(sp1, sp2, sim)
+    })
+
+    spSpMatches
+  }
+
+  /**
+   * Convert msViz spectrum to MzJava peaklist
+   * @param sp msViz spectrum
+   * @return MzJava peaklist
+   */
+  def convertSpectrum(sp: ExpMSnSpectrum): PeakList[PeakAnnotation] = {
+    val peakList: PeakList[PeakAnnotation] = new DoublePeakList[PeakAnnotation]
+
+    def sortPeaks(sp: ExpMSnSpectrum) =  sp.peaks.sortBy(_.moz.value).map(p => Tuple2(p.moz.value, p.intensity.value))
+    val peaks = sortPeaks(sp)
+
+    peakList.addSorted(peaks.map(_._1).toArray, peaks.map(_._2).toArray)
+    peakList
+  }
+
+  /**
+   * create the MzJava similarity function
+   * @param absTolerance
+   * @return
+   */
+  def createSimFunc(absTolerance: Double): NdpSimFunc[PeakAnnotation, PeakAnnotation] = new NdpSimFunc[PeakAnnotation, PeakAnnotation](0, new AbsoluteTolerance(absTolerance))
+
 
 }
