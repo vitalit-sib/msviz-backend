@@ -146,6 +146,7 @@ object MatchController extends CommonController {
         searchIds = if(searchIds == "*") None else Some(searchIds.split(",").toList.map(s => SearchId(s)).toSet)
       )
         .map { case psms =>
+        Logger.info(s"PSM =$psms")
         render {
           case acceptsTsv() => Ok(TsvFormats.toTsv(psms.map(_.extractAC(AccessionCode(accessionCode))), showFirstProtMatchInfo = true))
           case _ => Ok(Json.toJson(psms))
