@@ -76,5 +76,16 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
 
     }
   }
+  "findSpectrumByRunId" should {
+    "find one" in new TempMongoDBService {
+      val n = service.insert(LoaderMGF.load(new File("test/resources/M_100.mgf"), RunId("test-1")).get).futureValue
+
+      val sp = service.findSpectrumByRunId(RunId("test-1")).futureValue
+
+      sp.length must equalTo(123)
+
+    }
+  }
+
 }
 

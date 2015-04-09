@@ -67,4 +67,12 @@ class NormDotProdSim extends SpectraSimilarity{
   def createSimFunc(absTolerance: Double): NdpSimFunc[PeakAnnotation, PeakAnnotation] = new NdpSimFunc[PeakAnnotation, PeakAnnotation](0, new AbsoluteTolerance(absTolerance))
 
 
+
+}
+
+/**
+ * companion object
+ */
+object NormDotProdSim{
+  def apply() = new NormDotProdSim()
 }
