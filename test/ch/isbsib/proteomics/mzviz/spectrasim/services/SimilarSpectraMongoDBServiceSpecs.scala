@@ -1,7 +1,6 @@
 package ch.isbsib.proteomics.mzviz.spectrasim.services
 
 import java.io.File
-
 import ch.isbsib.proteomics.mzviz.commons.TempMongoDBForSpecs
 import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.experimental.importer.LoaderMGF
@@ -34,24 +33,39 @@ class SimilarSpectraMongoDBServiceSpecs extends Specification with ScalaFutures 
     val simService = new SimilarSpectraMongoDBService(db)
   }
 
-  "findSpectrumByRunId" should {
-    "find one" in new TempDBService {
+  "findSimilar" should {
+
+    "find similar SpSpMatches" in new TempDBService {
 
       // prepare experimental data
       val n = expService.insert(LoaderMGF.load(new File("test/resources/M_100.mgf"), RunId("test-1")).get).futureValue
       val sp = expService.findSpectrumByRunIdAndTitle(RunId("test-1"), "File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 56.254 min, Period: 1, Cycle(s): 2083 (Experiment 4)").futureValue
 
-      val spSpMatches = simService.findSimilarSpectra(RunId("test-1"), sp, 0.1, 0.5).futureValue
+      val spSpMatches = simService.findSimSpMatches(RunId("test-1"), sp, 0.1, 0.5).futureValue
 
       spSpMatches.length must equalTo(18)
 
       // best match should be search spectrum
-      def maxMatch(match1: SpSpMatch, match2: SpSpMatch): SpSpMatch = if(match1.similarity > match2.similarity) match1 else match2
+      def maxMatch(match1: SpSpMatch, match2: SpSpMatch): SpSpMatch = if(match1.score > match2.score) match1 else match2
       val bestMatch = spSpMatches.reduceLeft(maxMatch)
 
       sp must equalTo(bestMatch.sp2)
 
     }
+
+    "find similar SpSpMatches as JSon" in new TempDBService {
+
+      // prepare experimental data
+      val title = "File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 56.254 min, Period: 1, Cycle(s): 2083 (Experiment 4)"
+      val n = expService.insert(LoaderMGF.load(new File("test/resources/M_100.mgf"), RunId("test-1")).get).futureValue
+      val sp = expService.findSpectrumByRunIdAndTitle(RunId("test-1"), title).futureValue
+
+      val spSpMatches = simService.findSimSpRefMatches(RunId("test-1"), title, 0.1, 0.5).futureValue
+
+      spSpMatches.length must equalTo(18)
+
+    }
+
   }
 
 }

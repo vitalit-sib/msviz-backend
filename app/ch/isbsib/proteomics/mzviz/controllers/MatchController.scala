@@ -7,6 +7,7 @@ import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
 import ch.isbsib.proteomics.mzviz.matches.models.{ProteinRef, PepSpectraMatch}
+import ch.isbsib.proteomics.mzviz.spectrasim.models.SpSpRefMatch
 import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
 import ch.isbsib.proteomics.mzviz.theoretical.models.SequenceSourceStats
 import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
@@ -124,6 +125,21 @@ object MatchController extends CommonController {
     }
 
   }
+
+  @ApiOperation(nickname = "findSimilarSpectra",
+    value = "find similar spectra for a given run id and spectrum title",
+    notes = """Returns spectra matches""",
+    response = classOf[List[SpSpRefMatch]],
+    httpMethod = "GET")
+  def findSimilarSpectra(@ApiParam(value = """run id""", defaultValue = "") @PathParam("runId") runId: String) =
+    Action.async {
+      ExpMongoDBService().findAllSpectraRefByrunId(RunId(runId))
+        .map { case sphList: List[JsObject] => Ok(Json.toJson(sphList))}
+        .recover {
+        case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
+      }
+    }
+
 
   @ApiOperation(nickname = "findPSMByProtein",
     value = "find all PSMs object for a given protein",

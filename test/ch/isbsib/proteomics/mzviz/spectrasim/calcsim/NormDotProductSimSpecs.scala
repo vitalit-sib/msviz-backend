@@ -40,7 +40,7 @@ class NormDotProductSimSpecs extends Specification {
 
       val spSpMatch = NormDotProdSim().calcSimilarity(sp1, sp2, peakMatchTol)
 
-      spSpMatch.similarity must equalTo(0.7215238028982041)
+      spSpMatch.score must equalTo(0.7215238028982041)
 
     }
   }
@@ -55,7 +55,7 @@ class NormDotProductSimSpecs extends Specification {
       val spSpMatches = NormDotProdSim().calcSimilarityList(run.msnSpectra(0), run.msnSpectra, peakMatchTol)
 
       // best match should be spectra 0
-      def maxMatch(match1: SpSpMatch, match2: SpSpMatch): SpSpMatch = if(match1.similarity > match2.similarity) match1 else match2
+      def maxMatch(match1: SpSpMatch, match2: SpSpMatch): SpSpMatch = if(match1.score > match2.score) match1 else match2
       val bestMatch = spSpMatches.reduceLeft(maxMatch)
 
       run.msnSpectra(0) must equalTo(bestMatch.sp2)
@@ -64,7 +64,7 @@ class NormDotProductSimSpecs extends Specification {
       run.msnSpectra.length must equalTo(spSpMatches.length)
 
       // look at score of second match
-      spSpMatches(1).similarity must equalTo(0.09029509137335748)
+      spSpMatches(1).score must equalTo(0.09029509137335748)
 
     }
   }
