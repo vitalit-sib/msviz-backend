@@ -9,6 +9,7 @@ import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
 import ch.isbsib.proteomics.mzviz.spectrasim.models.SpSpMatch
+import ch.isbsib.proteomics.mzviz.spectrasim.services.SimilarSpectraMongoDBService
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.specs2.mutable.Specification
