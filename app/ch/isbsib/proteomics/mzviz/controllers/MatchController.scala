@@ -13,6 +13,7 @@ import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
 import ch.isbsib.proteomics.mzviz.theoretical.models.SequenceSourceStats
 import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
+import ch.isbsib.proteomics.mzviz.spectrasim.services.JsonSimFormats._
 import ch.isbsib.proteomics.mzviz.matches.services.MatchMongoDBService
 import com.wordnik.swagger.annotations._
 import play.api.Logger
