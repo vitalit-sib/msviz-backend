@@ -3,6 +3,7 @@ package ch.isbsib.proteomics.mzviz.matches.models
 import java.text.SimpleDateFormat
 
 import ch.isbsib.proteomics.mzviz.matches.SearchId
+import ch.isbsib.proteomics.mzviz.theoretical.SequenceSource
 import ch.isbsib.proteomics.mzviz.theoretical.models.SearchDatabase
 
 /**
@@ -11,5 +12,5 @@ import ch.isbsib.proteomics.mzviz.theoretical.models.SearchDatabase
  */
 case class SearchInfo (searchId: SearchId,
                        title: String,
-                       database: SearchDatabase,
+                       database: Seq[SearchDatabase],
                        username:String)

@@ -1,4 +1,4 @@
-import ch.isbsib.proteomics.mzviz.matches.SearchId
+package ch.isbsib.proteomics.mzviz.theoretical.models
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
@@ -6,5 +6,5 @@ import ch.isbsib.proteomics.mzviz.matches.SearchId
  */
 case class SearchDatabase (id: String,
                            version:String,
-                           entries:String)
+                           entries:Int)
 
