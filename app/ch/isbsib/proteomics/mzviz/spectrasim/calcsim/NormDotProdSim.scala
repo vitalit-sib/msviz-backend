@@ -5,6 +5,7 @@ import ch.isbsib.proteomics.mzviz.spectrasim.models.SpSpMatch
 import org.expasy.mzjava.core.ms.AbsoluteTolerance
 import org.expasy.mzjava.core.ms.peaklist.{DoublePeakList, PeakAnnotation, PeakList}
 import org.expasy.mzjava.core.ms.spectrasim.NdpSimFunc
+import org.expasy.mzjava.core.ms.spectrasim.peakpairprocessor.transformer.PeakPairIntensitySqrtTransformer
 
 /**
  * computes the normalized dot product between 2 spectra or between a spectra and a list of spectra
@@ -60,11 +61,16 @@ class NormDotProdSim extends SpectraSimilarity{
   }
 
   /**
-   * create the MzJava similarity function
+   * NdpSimFunc<>(0, new DefaultPeakListAligner<>(fragmentTolerance), new PeakPairIntensitySqrtTransformer<>())
+   *
+   * create the MzJava similarity function using PeakPairIntensitySqrt transformation
    * @param absTolerance
    * @return
    */
-  def createSimFunc(absTolerance: Double): NdpSimFunc[PeakAnnotation, PeakAnnotation] = new NdpSimFunc[PeakAnnotation, PeakAnnotation](0, new AbsoluteTolerance(absTolerance))
+  def createSimFunc(absTolerance: Double): NdpSimFunc[PeakAnnotation, PeakAnnotation] = {
+    //new NdpSimFunc[PeakAnnotation, PeakAnnotation](0, new AbsoluteTolerance(absTolerance), new PeakPairIntensitySqrtTransformer[PeakAnnotation, PeakAnnotation]())
+    new NdpSimFunc[PeakAnnotation, PeakAnnotation](0, new AbsoluteTolerance(absTolerance))
+  }
 
 
 

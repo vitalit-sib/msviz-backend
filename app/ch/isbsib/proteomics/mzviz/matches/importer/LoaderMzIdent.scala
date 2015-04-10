@@ -160,11 +160,11 @@ object LoaderMzIdent {
 
       val searchDb = searchDbSourceInfo.find(db =>
         db.id==pMatch.getSearchDatabase.get()).map(db =>
-          db.version
+          SequenceSource(db.version)
       )
 
       ProteinMatch(proteinRef = ProteinRef(AC = AccessionCode(pMatch.getAccession),
-        source = searchDb.asInstanceOf[Option[SequenceSource]]),
+        source = searchDb),
         previousAA = OptionConverter.convertGoogleOption(pMatch.getPreviousAA),
         nextAA = OptionConverter.convertGoogleOption(pMatch.getNextAA),
         startPos = pMatch.getStart,
