@@ -1,19 +1,14 @@
 package ch.isbsib.proteomics.mzviz.spectrasim.services
 
-import ch.isbsib.proteomics.mzviz.commons.services.MongoDBService
 import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.experimental.models.ExpMSnSpectrum
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.spectrasim.calcsim.NormDotProdSim
 import ch.isbsib.proteomics.mzviz.spectrasim.models.{SpSpRefMatch, SpSpMatch}
-import ch.isbsib.proteomics.mzviz.spectrasim.services.SimilarSpectraMongoDBService
-import play.api.libs.json.{JsValue, Json, JsObject}
 import play.modules.reactivemongo.MongoController
 import reactivemongo.api.DefaultDB
 import scala.concurrent.Future
 import play.api.libs.concurrent.Execution.Implicits._
-import ch.isbsib.proteomics.mzviz.spectrasim.services.JsonSimFormats._
-import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import play.api.mvc.Controller
 
 /**
@@ -26,6 +21,15 @@ class SimilarSpectraMongoDBService (val db: DefaultDB) {
 
   val expService = new ExpMongoDBService(db)
 
+  /**
+   * find similar spectra matches providing a spectrum
+   *
+   * @param runId
+   * @param sp
+   * @param scoreThreshold
+   * @param ms2PeakMatchTol MS2 peak match tolerance in Daltons
+   * @return
+   */
   def findSimSpMatches(runId: RunId, sp: ExpMSnSpectrum, scoreThreshold: Double, ms2PeakMatchTol: Double): Future[Seq[SpSpMatch]] = {
 
     expService.findSpectrumByRunId(runId).map({ spList =>
@@ -35,17 +39,20 @@ class SimilarSpectraMongoDBService (val db: DefaultDB) {
 
   }
 
-  def findSimSpRefMatches(runId: RunId, spTitle: String, scoreThreshold: Double, ms2PeakMatchTol: Double): Future[Seq[JsValue]] = {
+  /**
+   * find similar spectra matches providing a runId and a spectrum title
+   *
+   * @param runId
+   * @param spTitle
+   * @param scoreThreshold
+   * @param ms2PeakMatchTol MS2 peak match tolerance in Daltons
+   * @return
+   */
+  def findSimSpRefMatches(runId: RunId, spTitle: String, scoreThreshold: Double, ms2PeakMatchTol: Double): Future[Seq[SpSpRefMatch]] = {
 
-    val spSpMatches = for{
-      sp <- expService.findSpectrumByRunIdAndTitle(runId, spTitle)
-    }yield {
-        findSimSpMatches(runId, sp, scoreThreshold, ms2PeakMatchTol)
-    }
-
-    spSpMatches.flatMap({ spMatches1 =>
-      spMatches1.map({ spMatches2 =>
-        spMatches2.map(aMatch => Json.toJson(SpSpRefMatch(aMatch.sp1.ref, aMatch.sp2.ref, aMatch.score)))
+    expService.findSpectrumByRunIdAndTitle(runId, spTitle).flatMap({ sp =>
+      findSimSpMatches(runId, sp, scoreThreshold, ms2PeakMatchTol).map({ matches =>
+        matches.map(aMatch => SpSpRefMatch(aMatch.sp1.ref, aMatch.sp2.ref, aMatch.score))
       })
     })
 
