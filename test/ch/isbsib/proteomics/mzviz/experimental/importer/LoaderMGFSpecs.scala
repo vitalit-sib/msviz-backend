@@ -46,8 +46,8 @@ class LoaderMGFSpecs extends Specification {
       val peaks = LoaderMGF.text2peaks(txt).get
       peaks must have size 3
 
-      peaks(1).intensity must equalTo(Intensity(567.0))
-      peaks(1).intensityRank must equalTo(IntensityRank(1))
+      peaks(2).intensity must equalTo(Intensity(567.0))
+      peaks(2).intensityRank must equalTo(IntensityRank(1))
     }
 
   }
@@ -114,6 +114,11 @@ class LoaderMGFSpecs extends Specification {
       sp.ref.title must equalTo("20141008_BSA_25cm_column2.10823.10823.2")
       sp.ref.scanNumber must equalTo(ScanNumber(10823))
     }
+    "m/z are increasing order" in {
+      val mozs = run.get.msnSpectra(0).peaks.map(_.moz).toList
+      val mDelta = mozs.drop(1).zip(mozs.dropRight(1)).map (p => p._1.value - p._2.value).filter(_<0)
+      mDelta must have size(0)
+    }
   }
 
   "loading wiff" should {
@@ -155,5 +160,7 @@ class LoaderMGFSpecs extends Specification {
       val rt = LoaderMGF.args2RT(map)
       rt must equalTo(Success(RetentionTime(30*(49.454 + 49.574))))
     }
+
+
   }
 }

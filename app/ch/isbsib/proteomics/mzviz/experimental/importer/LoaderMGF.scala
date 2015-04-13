@@ -54,6 +54,7 @@ object LoaderMGF {
 
   /**
    * from an MGF MSn text block, extract all peaks
+   * the returned peaks are sorted by increasing m/z, but the instensityr rank is taken out from the inputMGF (that is current mascort default)
    * @param text BEGIN/END IONS text block
    * @return
    */
@@ -67,7 +68,7 @@ object LoaderMGF {
         t.map({ case (m, i) => ExpPeakMSn(m, i, IntensityRank(iRank), MSLevel(2))})
     })
     lTry.find(x => x.isFailure) match {
-      case None => Success(lTry.map(_.get))
+      case None => Success(lTry.map(_.get).sortBy(_.moz.value))
       case Some(Failure(e)) => Failure(e)
     }
   }
