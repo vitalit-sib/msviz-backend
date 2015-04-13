@@ -98,7 +98,6 @@ object ExperimentalController extends CommonController {
           mostIntense match {
             case None => true
             case Some(thres) =>
-              println (p.intensityRank.value, "<=", thres)
               p.intensityRank.value <= thres
           }
         })
