@@ -72,7 +72,7 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
       sp.peaks must have size 190
 
       val p2 = sp.peaks(2)
-      p2 must equalTo(ExpPeakMSn(Moz(307.916800), Intensity(0.1253), IntensityRank(2), MSLevel(2)))
+      p2 must equalTo(ExpPeakMSn(Moz(86.0752), Intensity(0.0083), IntensityRank(63), MSLevel(2)))
 
     }
   }

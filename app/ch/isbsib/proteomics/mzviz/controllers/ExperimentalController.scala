@@ -66,8 +66,10 @@ object ExperimentalController extends CommonController {
         }.recover {
           case e => BadRequest(e.getMessage)
         }
-        case Failure(e) => Future{BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))}
+        case Failure(e) => Future {
+          BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
         }
+      }
 
   }
 
@@ -77,21 +79,31 @@ object ExperimentalController extends CommonController {
     response = classOf[ExpMSnSpectrum],
     httpMethod = "GET")
   @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "sortByMoz", value = "sort the fragment peaks by m/z (defaukt false)", required = false, dataType = "Boolean", paramType = "query")
+    new ApiImplicitParam(name = "sortByMoz", value = "sort the fragment peaks by m/z (defaukt false)", required = false, dataType = "Boolean", paramType = "query"),
+    new ApiImplicitParam(name = "mostIntense", value = "take the n most intense peaks", required = false, dataType = "Integer", paramType = "query")
   ))
   def findExpSpectrum(@ApiParam(value = """run id""", defaultValue = "") @PathParam("runId") runId: String,
-                         @ApiParam(value = """spectrum title""", defaultValue = "") @PathParam("title") title: String,
-                         sortByMoz: Option[Boolean]
-                          ) =
+                      @ApiParam(value = """spectrum title""", defaultValue = "") @PathParam("title") title: String,
+                      sortByMoz: Option[Boolean]=None,
+                      mostIntense: Option[Integer]=None
+                       ) =
     Action.async {
+      println(sortByMoz, mostIntense)
       ExpMongoDBService().findSpectrumByRunIdAndTitle(RunId(runId), title)
         .map { case sp: ExpMSnSpectrum =>
-          if(sortByMoz.getOrElse(false)) {
-            Ok(Json.toJson(sp))
-          }else{
-            Ok(Json.toJson(ExpMSnSpectrum(sp.ref, sp.peaks.sortBy(_.moz.value))))
+        val peaks = (sortByMoz match {
+          case Some(false) => sp.peaks
+          case _ => sp.peaks.sortBy(_.moz.value)
+        }).filter({ p =>
+          mostIntense match {
+            case None => true
+            case Some(thres) =>
+              println (p.intensityRank.value, "<=", thres)
+              p.intensityRank.value <= thres
           }
-        }
+        })
+          Ok(Json.toJson(ExpMSnSpectrum(sp.ref,peaks)))
+      }
         .recover {
         case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
       }
