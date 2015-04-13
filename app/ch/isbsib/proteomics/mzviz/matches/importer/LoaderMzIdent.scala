@@ -9,6 +9,7 @@ import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models._
 import ch.isbsib.proteomics.mzviz.modifications.{ModifName}
 import ch.isbsib.proteomics.mzviz.modifications.models.{PositionedModifRef}
+import ch.isbsib.proteomics.mzviz.theoretical.models.SearchDatabase
 import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, NumDatabaseSequences, SequenceSource}
 import org.apache.commons.io.FilenameUtils
 import org.expasy.mzjava.proteomics.io.ms.ident.{MzIdentMlReader, PSMReaderCallback}
@@ -56,6 +57,20 @@ object LoaderMzIdent {
     }).toSeq
 
   }
+  /**
+   * parse a .mzid file and return search information.
+   * @param file an .mzid file
+   * @return
+   */
+  def parseSearchInfo(file: File, searchId: SearchId): SearchInfo = {
+
+    // get the info about the SearchDatabases
+    val title =parseTitleFilename(file)
+    val database= parseSearchDbSourceInfo(file)
+    val username=parseUsernameFilename(file)
+
+    SearchInfo(searchId,title,database,username)
+  }
 
   /**
    * parse the spectraFileName from the MzIdenML file. We do this seperately, since the MzJava parser doesn't take care of this information.
@@ -70,17 +85,39 @@ object LoaderMzIdent {
   }
 
   /**
+   * parse the title from the MzIdenML file.
+   * @param filename MzIdentML path
+   * @return title file name (e.g. blabla.mgf)
+   */
+  def parseTitleFilename(filename: File): String = {
+    val mzIdentML = scala.xml.XML.loadFile(filename)
+    val titleLocation = mzIdentML \\ "userParam" \ "@value"
+    FilenameUtils.getBaseName(titleLocation.text)
+  }
+
+  /**
+   * parse the username from the MzIdenML file.
+   * @param filename MzIdentML path
+   * @return title file name (e.g. blabla.mgf)
+   */
+  def parseUsernameFilename(filename: File): String = {
+    val mzIdentML = scala.xml.XML.loadFile(filename)
+    val usernameLocation = mzIdentML \\ "Person" \ "@name"
+    FilenameUtils.getBaseName(usernameLocation.text)
+  }
+
+  /**
    * parse the database  from the MzIdenML file. We do this seperately, since the MzJava parser doesn't take care of this information.
    * TODO: adapt MzJava MzIdentMlParser, so that it parses searchDb information
    * @param file MzIdentML file
    * @return a list of Tuples containing the SequenceSource and the number of entries
    */
-  def parseSearchDbSourceInfo(file: File): Map[String, Tuple2[SequenceSource, NumDatabaseSequences]] = {
+  def parseSearchDbSourceInfo(file: File):Seq[SearchDatabase] = {
     val mzIdentML = scala.xml.XML.loadFile(file)
 
     (mzIdentML \\ "SearchDatabase").map { db =>
-      ((db \ "@id").text -> Tuple2( SequenceSource((db \ "@version").text), NumDatabaseSequences((db \ "@numDatabaseSequences").text.toInt) ))
-    }.toMap
+      SearchDatabase((db \ "@id").text,((db \ "@version").text),((db \ "@numDatabaseSequences").text.toInt))
+    }
   }
 
 
@@ -109,7 +146,7 @@ object LoaderMzIdent {
    * @param mzJavaMatch a PeptideMatch obtained from the MzJava mzIdentML parser
    * @return
    */
-  def convertProtMatches(mzJavaMatch: PeptideMatch, searchDbSourceInfo: Map[String, Tuple2[SequenceSource, NumDatabaseSequences]]): Seq[ProteinMatch] = {
+  def convertProtMatches(mzJavaMatch: PeptideMatch, searchDbSourceInfo: Seq[SearchDatabase]): Seq[ProteinMatch] = {
     (for {
       pMatch: PeptideProteinMatch <- mzJavaMatch.getProteinMatches.iterator().asScala
     } yield {
@@ -121,9 +158,13 @@ object LoaderMzIdent {
         case _ => None
       }
 
-      val searchDb = searchDbSourceInfo(pMatch.getSearchDatabase.get())._1
+      val searchDb = searchDbSourceInfo.find(db =>
+        db.id==pMatch.getSearchDatabase.get()).map(db =>
+          SequenceSource(db.version)
+      )
+
       ProteinMatch(proteinRef = ProteinRef(AC = AccessionCode(pMatch.getAccession),
-        source = Some(searchDb)),
+        source = searchDb),
         previousAA = OptionConverter.convertGoogleOption(pMatch.getPreviousAA),
         nextAA = OptionConverter.convertGoogleOption(pMatch.getNextAA),
         startPos = pMatch.getStart,

@@ -7,10 +7,13 @@ import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
 import ch.isbsib.proteomics.mzviz.matches.models.{ProteinRef, PepSpectraMatch}
+import ch.isbsib.proteomics.mzviz.spectrasim.models.SpSpRefMatch
+import ch.isbsib.proteomics.mzviz.spectrasim.services.{SimilarSpectraMongoDBService}
 import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
 import ch.isbsib.proteomics.mzviz.theoretical.models.SequenceSourceStats
 import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
+import ch.isbsib.proteomics.mzviz.spectrasim.services.JsonSimFormats._
 import ch.isbsib.proteomics.mzviz.matches.services.MatchMongoDBService
 import com.wordnik.swagger.annotations._
 import play.api.Logger
@@ -124,6 +127,24 @@ object MatchController extends CommonController {
     }
 
   }
+
+  @ApiOperation(nickname = "findSimilarSpectra",
+    value = "find similar spectra for a given run id and spectrum title",
+    notes = """Returns spectra matches""",
+    response = classOf[List[SpSpRefMatch]],
+    httpMethod = "GET")
+  def findSimilarSpectra(@ApiParam(value = """run id""", defaultValue = "") @PathParam("runId") runId: String,
+                         @ApiParam(value = """spectrum title""", defaultValue = "") @PathParam("title") title: String,
+                         @ApiParam(value = """score threshold""", defaultValue = "") @PathParam("scoreThreshold") scoreThreshold: String,
+                         @ApiParam(value = """tolerance in Dalton to match ms2 peaks""", defaultValue = "") @PathParam("ms2PeakMatchTol") ms2PeakMatchTol: String) = Action.async {
+    for {
+      spMatches <- SimilarSpectraMongoDBService().findSimSpRefMatches(RunId(runId), title, scoreThreshold.toDouble, ms2PeakMatchTol.toDouble)
+    } yield {
+      Ok(Json.toJson(spMatches))
+    }
+
+  }
+
 
   @ApiOperation(nickname = "findPSMByProtein",
     value = "find all PSMs object for a given protein",

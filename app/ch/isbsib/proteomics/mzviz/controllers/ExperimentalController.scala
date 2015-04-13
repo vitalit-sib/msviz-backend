@@ -9,6 +9,7 @@ import ch.isbsib.proteomics.mzviz.experimental.importer.LoaderMGF
 import ch.isbsib.proteomics.mzviz.experimental.models.{SpectrumRef, ExpMSnSpectrum}
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
+import ch.isbsib.proteomics.mzviz.spectrasim.models.SpSpMatch
 import com.wordnik.swagger.annotations._
 import play.api.libs.Files
 import play.api.mvc.{MultipartFormData, Request, Action, Controller}
