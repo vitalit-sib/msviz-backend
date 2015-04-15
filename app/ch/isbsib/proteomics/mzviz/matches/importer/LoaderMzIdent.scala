@@ -17,6 +17,7 @@ import org.expasy.mzjava.proteomics.mol.modification.ModAttachment
 import org.expasy.mzjava.proteomics.mol.modification.unimod.UnimodManager
 import org.expasy.mzjava.proteomics.ms.ident.{ModificationMatch, PeptideMatch, PeptideProteinMatch, SpectrumIdentifier}
 import play.{Logger, Play}
+import com.google.common.base.Optional
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
@@ -50,9 +51,9 @@ object LoaderMzIdent {
         searchId = searchId,
         spectrumId = SpectrumId(
           SpectrumUniqueId(t._1.getSpectrum),
-        runId = runId),
+          runId = runId),
         pep = convertPeptide(t._2),
-        matchInfo = convertPepMatch(t._2),
+        matchInfo = convertPepMatch(t),
         proteinList = convertProtMatches(t._2, searchDbSourceInfo))
     }).toSeq
 
@@ -176,10 +177,13 @@ object LoaderMzIdent {
 
   /**
    * convert a MzJava PeptideMatch into our PepMatchInfo object
-   * @param mzJavaMatch a PeptideMatch obtained from the MzJava mzIdentML parser
+   * @param mzJavaRes a Tuple of a SpectrumIdentifier and a PeptideMatch obtained from the MzJava mzIdentML parser
    * @return
    */
-  def convertPepMatch(mzJavaMatch: PeptideMatch): PepMatchInfo = {
+  def convertPepMatch(mzJavaRes: Tuple2[SpectrumIdentifier, PeptideMatch]): PepMatchInfo = {
+    val mzJavaMatch = mzJavaRes._2
+
+
     // create the score map
     val scoreMap:Map[String, Double] =
       (for {k <- mzJavaMatch.getScoreMap.keys()}
@@ -193,6 +197,7 @@ object LoaderMzIdent {
       numMissedCleavages = Option(mzJavaMatch.getNumMissedCleavages),
       massDiff = Option(mzJavaMatch.getNumMissedCleavages),
       rank = mzJavaMatch.getRank,
+      chargeState = OptionConverter.convertGoogleOption[Int](mzJavaRes._1.getAssumedCharge.asInstanceOf[Optional[Int]]),
       totalNumIons = Option(mzJavaMatch.getTotalNumIons),
       isRejected = Option(mzJavaMatch.isRejected))
 
@@ -250,7 +255,6 @@ object LoaderMzIdent {
    */
   def mzJavaParse(file: File): ListBuffer[Tuple2[SpectrumIdentifier, PeptideMatch]] = {
     val searchResults = ListBuffer[Tuple2[SpectrumIdentifier, PeptideMatch]]()
-
     val insertIdResultCB: PSMReaderCallback = new PSMReaderCallback {
       def resultRead(identifier: SpectrumIdentifier, peptideMatch: PeptideMatch) = searchResults.append(Tuple2(identifier, peptideMatch))
     }
