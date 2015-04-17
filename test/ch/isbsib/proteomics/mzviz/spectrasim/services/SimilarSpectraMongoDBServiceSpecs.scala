@@ -42,9 +42,9 @@ class SimilarSpectraMongoDBServiceSpecs extends Specification with ScalaFutures 
       val n = expService.insert(LoaderMGF.load(new File("test/resources/M_100.mgf"), RunId("test-1")).get).futureValue
       val sp = expService.findSpectrumByRunIdAndTitle(RunId("test-1"), "File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 56.254 min, Period: 1, Cycle(s): 2083 (Experiment 4)").futureValue
 
-      val spSpMatches = simService.findSimSpMatches(RunId("test-1"), sp, 0.1, 0.5).futureValue
+      val spSpMatches = simService.findSimSpMatches(RunId("test-1"), sp, 0.1, 0.5).futureValue.toList
 
-      spSpMatches.length must equalTo(18)
+      spSpMatches.size must equalTo(18)
 
       // best match should be search spectrum
       def maxMatch(match1: SpSpMatch, match2: SpSpMatch): SpSpMatch = if(match1.score > match2.score) match1 else match2

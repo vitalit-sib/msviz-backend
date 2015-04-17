@@ -5,6 +5,7 @@ import ch.isbsib.proteomics.mzviz.experimental.models.ExpMSnSpectrum
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.spectrasim.calcsim.NormDotProdSim
 import ch.isbsib.proteomics.mzviz.spectrasim.models.{SpSpRefMatch, SpSpMatch}
+import play.api.Logger
 import play.modules.reactivemongo.MongoController
 import reactivemongo.api.DefaultDB
 import scala.concurrent.Future
@@ -21,6 +22,8 @@ class SimilarSpectraMongoDBService (val db: DefaultDB) {
 
   val expService = new ExpMongoDBService(db)
 
+
+
   /**
    * find similar spectra matches providing a spectrum
    *
@@ -30,11 +33,14 @@ class SimilarSpectraMongoDBService (val db: DefaultDB) {
    * @param ms2PeakMatchTol MS2 peak match tolerance in Daltons
    * @return
    */
-  def findSimSpMatches(runId: RunId, sp: ExpMSnSpectrum, scoreThreshold: Double, ms2PeakMatchTol: Double): Future[Seq[SpSpMatch]] = {
-
+  def findSimSpMatches(runId: RunId, sp: ExpMSnSpectrum, scoreThreshold: Double, ms2PeakMatchTol: Double): Future[Iterator[SpSpMatch]] = {
+    Logger.info(s"lifinting spectra collection")
     expService.findSpectrumByRunId(runId).map({ spList =>
       spList.map(sp2 => NormDotProdSim().calcSimilarity(sp, sp2, ms2PeakMatchTol))
-      .filter(_.score >= scoreThreshold)
+      .filter({ssm =>
+        Logger.info(s"${ssm.score}\t${ssm.sp1.ref.spectrumId.id}\t\t${ssm.sp2.ref.spectrumId.id}")
+        ssm.score >= scoreThreshold
+      })
     })
 
   }
@@ -48,7 +54,7 @@ class SimilarSpectraMongoDBService (val db: DefaultDB) {
    * @param ms2PeakMatchTol MS2 peak match tolerance in Daltons
    * @return
    */
-  def findSimSpRefMatches(runId: RunId, spTitle: String, scoreThreshold: Double, ms2PeakMatchTol: Double): Future[Seq[SpSpRefMatch]] = {
+  def findSimSpRefMatches(runId: RunId, spTitle: String, scoreThreshold: Double, ms2PeakMatchTol: Double): Future[Iterator[SpSpRefMatch]] = {
 
     expService.findSpectrumByRunIdAndTitle(runId, spTitle).flatMap({ sp =>
       findSimSpMatches(runId, sp, scoreThreshold, ms2PeakMatchTol).map({ matches =>

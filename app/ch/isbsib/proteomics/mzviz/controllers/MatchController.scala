@@ -140,7 +140,7 @@ object MatchController extends CommonController {
     for {
       spMatches <- SimilarSpectraMongoDBService().findSimSpRefMatches(RunId(runId), title, scoreThreshold.toDouble, ms2PeakMatchTol.toDouble)
     } yield {
-      Ok(Json.toJson(spMatches))
+      Ok(Json.toJson(spMatches.toList))
     }
 
   }

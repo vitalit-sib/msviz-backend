@@ -95,9 +95,9 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @param runId the run id
    * @return
    */
-  def findSpectrumByRunId(runId: RunId): Future[Seq[ExpMSnSpectrum]] = {
+  def findSpectrumByRunId(runId: RunId): Future[Iterator[ExpMSnSpectrum]] = {
     val query = Json.obj("ref.spectrumId.runId" -> runId.value)
-    collection.find(query).cursor[ExpMSnSpectrum].collect[List]()
+    collection.find(query).cursor[ExpMSnSpectrum].collect[Iterator]()
   }
 
   /**

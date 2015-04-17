@@ -1,9 +1,13 @@
 package ch.isbsib.proteomics.mzviz.experimental.services
 
+import java.io.{ByteArrayInputStream, ObjectInputStream, ObjectOutputStream}
+
 import ch.isbsib.proteomics.mzviz.commons._
 import ch.isbsib.proteomics.mzviz.experimental._
 import ch.isbsib.proteomics.mzviz.experimental.models._
 import ch.isbsib.proteomics.mzviz.theoretical.AccessionCode
+import org.apache.commons.codec.binary.Base64
+import org.apache.commons.io.output.ByteArrayOutputStream
 import play.api.libs.json._
 import play.api.libs.json.Reads._
 import play.api.libs.functional.syntax._
@@ -11,7 +15,7 @@ import reactivemongo.bson.{BSONDocument, BSONDocumentReader}
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
- * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
+ *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 object JsonExpFormats {
 
@@ -19,6 +23,19 @@ object JsonExpFormats {
   import play.api.data._
   import play.api.data.Forms._
 
+  def encode64[T <: AnyVal](list: List[T]): String = {
+    var baos = new ByteArrayOutputStream()
+    var oos = new ObjectOutputStream(baos)
+    oos.writeObject(list.toVector)
+    oos.close()
+    new String(Base64.encodeBase64(baos.toByteArray()))
+  }
+
+  def decode64[T <: AnyVal](str: String): List[T] = {
+    val ois = new ObjectInputStream(
+      new ByteArrayInputStream(Base64.decodeBase64(str)));
+    ois.readObject().asInstanceOf[Vector[T]].toList
+  }
 
   implicit val formatIntensityRank = new Format[IntensityRank] {
     override def reads(json: JsValue): JsResult[IntensityRank] = JsSuccess(IntensityRank(json.as[Int]))
@@ -52,7 +69,7 @@ object JsonExpFormats {
   }
 
   implicit val formatMSLevel = new Format[MSLevel] {
-    override def reads(json: JsValue): JsResult[MSLevel] =JsSuccess(MSLevel(json.as[Int]))
+    override def reads(json: JsValue): JsResult[MSLevel] = JsSuccess(MSLevel(json.as[Int]))
 
     def writes(o: MSLevel) = JsNumber(o.value)
   }
@@ -75,7 +92,6 @@ object JsonExpFormats {
   }
 
 
-
   // Generates Writes and Reads for Feed and User thanks to Json Macros
   implicit val formatExpPeakPrecursor = Json.format[ExpPeakPrecursor]
   implicit val formatExpPeakMSn = Json.format[ExpPeakMSn]
@@ -88,15 +104,13 @@ object JsonExpFormats {
       val msLevel = MSLevel(json.validate[Int]((JsPath \ "peaks" \ "msLevel").read[Int]).get)
 
       //re-assemble the peaks
-      val dtlistReads =
-        (JsPath \ "peaks" \ "mozs").read[List[Double]] and
-          (JsPath \ "peaks" \ "intensities").read[List[Double]] and
-          (JsPath \ "peaks" \ "intensityRanks").read[List[Int]] tupled
+      val mozs:List[Double] = decode64(json.validate[String]((JsPath \ "peaks" \ "mozs").read[String]).get)
+      val intensities:List[Double] = decode64(json.validate[String]((JsPath \ "peaks" \ "intensities").read[String]).get)
+      val intensityRanks:List[Int] = decode64(json.validate[String]((JsPath \ "peaks" \ "intensityRanks").read[String]).get)
 
-      val dt = dtlistReads.reads(json).get
-      val peaks:List[ExpPeakMSn] =
+      val peaks: List[ExpPeakMSn] =
         for {
-          ((m:Double, i:Double), r:Int) <- dt._1.zip(dt._2).zip(dt._3)
+          ((m: Double, i: Double), r: Int) <- mozs.zip(intensities).zip(intensityRanks)
         } yield {
           ExpPeakMSn(moz = Moz(m), intensity = Intensity(i), intensityRank = IntensityRank(r), msLevel = msLevel)
         }
@@ -110,10 +124,10 @@ object JsonExpFormats {
     def writes(o: ExpMSnSpectrum) = Json.obj(
       "ref" -> o.ref,
       "peaks" -> Json.obj(
-        "msLevel" -> o.peaks.head.msLevel,
-        "mozs" -> o.peaks.map(_.moz),
-        "intensities" -> o.peaks.map(_.intensity),
-        "intensityRanks" -> o.peaks.map(_.intensityRank)
+        "msLevel" -> o.peaks.head.msLevel.value,
+        "mozs" -> encode64[Double](o.peaks.map(_.moz.value)),
+        "intensities" -> encode64[Double](o.peaks.map(_.intensity.value)),
+        "intensityRanks" -> encode64[Int](o.peaks.map(_.intensityRank.value))
       )
     )
   }
