@@ -1,4 +1,4 @@
-language: scala
+language: SearchInfoMongoDBServiceXXX.scala
 scala:
   - 2.11.4
 services:
