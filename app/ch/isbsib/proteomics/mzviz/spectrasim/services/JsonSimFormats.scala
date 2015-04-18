@@ -19,6 +19,6 @@ object JsonSimFormats {
 
   implicit val formatSpSpRefMatch = Json.format[SpSpRefMatch]
 
-  implicit val formatSpSpMatch = Json.format[SpSpMatch]
+  implicit val writesSpSpMatch = Json.writes[SpSpMatch]
 
 }

@@ -98,36 +98,15 @@ object JsonExpFormats {
   implicit val formatSpectrumId = Json.format[SpectrumId]
   implicit val formatSpectrumRef = Json.format[SpectrumRef]
 
-  implicit val formatExpMSnSpectrum = new Format[ExpMSnSpectrum] {
-    override def reads(json: JsValue): JsResult[ExpMSnSpectrum] = {
-      val ref = (JsPath \ "ref").read[SpectrumRef].reads(json).get
-      val msLevel = MSLevel(json.validate[Int]((JsPath \ "peaks" \ "msLevel").read[Int]).get)
-
-      //re-assemble the peaks
-      val mozs:List[Double] = decode64(json.validate[String]((JsPath \ "peaks" \ "mozs").read[String]).get)
-      val intensities:List[Double] = decode64(json.validate[String]((JsPath \ "peaks" \ "intensities").read[String]).get)
-      val intensityRanks:List[Int] = decode64(json.validate[String]((JsPath \ "peaks" \ "intensityRanks").read[String]).get)
-
-      val peaks: List[ExpPeakMSn] =
-        for {
-          ((m: Double, i: Double), r: Int) <- mozs.zip(intensities).zip(intensityRanks)
-        } yield {
-          ExpPeakMSn(moz = Moz(m), intensity = Intensity(i), intensityRank = IntensityRank(r), msLevel = msLevel)
-        }
-
-      JsSuccess(
-        ExpMSnSpectrum(ref = ref, peaks = peaks)
-      )
-
-    }
+  implicit val writesExpMSnSpectrum = new Writes[ExpMSnSpectrum] {
 
     def writes(o: ExpMSnSpectrum) = Json.obj(
       "ref" -> o.ref,
       "peaks" -> Json.obj(
         "msLevel" -> o.peaks.head.msLevel.value,
-        "mozs" -> encode64[Double](o.peaks.map(_.moz.value)),
-        "intensities" -> encode64[Double](o.peaks.map(_.intensity.value)),
-        "intensityRanks" -> encode64[Int](o.peaks.map(_.intensityRank.value))
+        "mozs" -> o.peaks.map(_.moz.value),
+        "intensities" -> o.peaks.map(_.intensity.value),
+        "intensityRanks" -> o.peaks.map(_.intensityRank.value)
       )
     )
   }
