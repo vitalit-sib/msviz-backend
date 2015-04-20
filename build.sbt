@@ -17,6 +17,7 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   ws,
+  cache,
   "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test",
   "org.specs2" %% "specs2" % "2.3.11" % "test",
   "org.expasy.mzjava" % "mzjava-core" %"1.0.1-SNAPSHOT",
