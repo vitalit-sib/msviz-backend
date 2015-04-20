@@ -12,5 +12,6 @@ case class PepMatchInfo(
                          massDiff: Option[Double],
                          rank: Int,
                          totalNumIons: Option[Int],
+                         chargeState: Option[Int],
                          isRejected: Option[Boolean]
                          )

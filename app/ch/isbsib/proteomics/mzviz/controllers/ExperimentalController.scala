@@ -57,16 +57,18 @@ object ExperimentalController extends CommonController {
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name = "body", value = "mgf peak list", required = true, dataType = "text/plain", paramType = "body")
   ))
-  def loadMSRun(@ApiParam(name = "runId", value = "a string id with run identifier", required = true)  @PathParam("runId") runId: String) = Action.async(parse.temporaryFile) {
+  def loadMSRun(@ApiParam(name = "runId", value = "a string id with run identifier", required = true) @PathParam("runId") runId: String) = Action.async(parse.temporaryFile) {
     request =>
 
-     LoaderMGF.load(request.body.file, RunId(runId))match{
-        case Success(msRun)=> ExpMongoDBService().insert(msRun)
+      LoaderMGF.load(request.body.file, RunId(runId)) match {
+        case Success(msRun) => ExpMongoDBService().insert(msRun)
           .map { n => Ok(Json.obj("inserted" -> n))
         }.recover {
           case e => BadRequest(e.getMessage)
         }
-        case Failure(e) => Future{BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))}
+        case Failure(e) => Future {
+          BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
+        }
       }
 
   }
@@ -76,11 +78,31 @@ object ExperimentalController extends CommonController {
     notes = """the tuple should be unique by indexing""",
     response = classOf[ExpMSnSpectrum],
     httpMethod = "GET")
+  @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "sortByMoz", value = "sort the fragment peaks by m/z (defaukt false)", required = false, dataType = "Boolean", paramType = "query"),
+    new ApiImplicitParam(name = "mostIntense", value = "take the n most intense peaks", required = false, dataType = "Integer", paramType = "query")
+  ))
   def findExpSpectrum(@ApiParam(value = """run id""", defaultValue = "") @PathParam("runId") runId: String,
-                      @ApiParam(value = """spectrum title""", defaultValue = "") @PathParam("title") title: String) =
+                      @ApiParam(value = """spectrum title""", defaultValue = "") @PathParam("title") title: String,
+                      sortByMoz: Option[Boolean]=None,
+                      mostIntense: Option[Integer]=None
+                       ) =
     Action.async {
+      println(sortByMoz, mostIntense)
       ExpMongoDBService().findSpectrumByRunIdAndTitle(RunId(runId), title)
-        .map { case sp: ExpMSnSpectrum => Ok(Json.toJson(sp))}
+        .map { case sp: ExpMSnSpectrum =>
+        val peaks = (sortByMoz match {
+          case Some(false) => sp.peaks
+          case _ => sp.peaks.sortBy(_.moz.value)
+        }).filter({ p =>
+          mostIntense match {
+            case None => true
+            case Some(thres) =>
+              p.intensityRank.value <= thres
+          }
+        })
+          Ok(Json.toJson(ExpMSnSpectrum(sp.ref,peaks)))
+      }
         .recover {
         case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
       }
@@ -94,7 +116,7 @@ object ExperimentalController extends CommonController {
   def findAllSpectraRefByRunId(@ApiParam(value = """run id""", defaultValue = "") @PathParam("runId") runId: String) =
     Action.async {
       ExpMongoDBService().findAllSpectraRefByrunId(RunId(runId))
-        .map { case sphList: List[JsObject] => Ok(Json.toJson(sphList))}
+        .map { case sphList: List[JsObject] => Ok(Json.toJson(sphList)) }
         .recover {
         case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
       }

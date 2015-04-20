@@ -54,12 +54,17 @@ object LoaderMGF {
 
   /**
    * from an MGF MSn text block, extract all peaks
+   * We assume that peaks are sorted by "mascot" intensity rank. This is not universale, but suits our first purpose
+   * the returned peaks are sorted by increasing m/z, but the instensityr rank is taken out from the inputMGF (that is current mascort default)
+   * Only takes maxPeaks peaks
    * @param text BEGIN/END IONS text block
+   * @param maxPeaks the firs x peaks to be taken
    * @return
    */
-  def text2peaks(text: String): Try[Seq[ExpPeakMSn]] = {
-    val lTry = text.split("\n").toSeq
+  def text2peaks(text: String, maxPeaks:Int=300): Try[List[ExpPeakMSn]] = {
+    val lTry = text.split("\n").toList
       .filter(l => rePeak.findFirstIn(l).isDefined)
+      .take(maxPeaks)
       .zipWithIndex
       .map({
 
@@ -67,7 +72,7 @@ object LoaderMGF {
         t.map({ case (m, i) => ExpPeakMSn(m, i, IntensityRank(iRank), MSLevel(2))})
     })
     lTry.find(x => x.isFailure) match {
-      case None => Success(lTry.map(_.get))
+      case None => Success(lTry.map(_.get).sortBy(_.moz.value))
       case Some(Failure(e)) => Failure(e)
     }
   }

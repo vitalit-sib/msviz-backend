@@ -16,7 +16,7 @@ class PepSpectraMatchSpecs extends Specification {
   "pepSpectraMatch" should {
 
     // vals used in following tests
-    val matching = PepMatchInfo(scoreMap = Map("p-value" -> 0.001), numMissedCleavages = Option(1), massDiff = Option(0.01), rank = 1, totalNumIons = Option(1), isRejected = None)
+    val matching = PepMatchInfo(scoreMap = Map("p-value" -> 0.001), numMissedCleavages = Option(1), massDiff = Option(0.01), rank = 1, totalNumIons = Option(1), isRejected = None, chargeState = Option(2  ))
     val sequence = "AKKKAA"
     val oneModifRef = ModifName("Phospho")
     val modificationRefs = Vector(Nil, Seq(oneModifRef), Nil, Nil, Nil, Nil)

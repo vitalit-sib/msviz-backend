@@ -1,12 +1,13 @@
 package ch.isbsib.proteomics.mzviz.experimental.services
 
+import ch.isbsib.proteomics.mzviz.commons.{IntensityRank, Intensity, Moz, MSLevel}
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoDBService, MongoNotFoundException}
-import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, SpectrumRef}
+import ch.isbsib.proteomics.mzviz.experimental.models.{ExpPeakMSn, ExpMSnSpectrum, SpectrumRef}
 import ch.isbsib.proteomics.mzviz.experimental.{ScanNumber, RunId, MSRun}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import play.api.Logger
 import play.api.libs.iteratee.Enumerator
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json._
 import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
 import play.modules.reactivemongo.json.collection.JSONCollection
@@ -28,8 +29,6 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
   val mainKeyName = "ref.spectrumId.runId"
 
   setIndexes(List(
-
-
     new Index(
       Seq("ref.spectrumId.runId" -> IndexType.Ascending), // "ref.title" -> IndexType.Ascending),
       name = Some("runId")),
@@ -41,7 +40,41 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
 
   // "ref.title" -> IndexType.Ascending),
 
+  //we put a implicit JSON serilizer here, the JSON Mongo ormat is differenc from the JSON web format
+  // peak array are serilized for sake of speed
+  implicit val formatExpMSnSpectrum = new Format[ExpMSnSpectrum] {
+    override def reads(json: JsValue): JsResult[ExpMSnSpectrum] = {
+      val ref = (JsPath \ "ref").read[SpectrumRef].reads(json).get
+      val msLevel = MSLevel(json.validate[Int]((JsPath \ "peaks" \ "msLevel").read[Int]).get)
 
+      //re-assemble the peaks
+      val mozs:List[Double] = decode64(json.validate[String]((JsPath \ "peaks" \ "mozs").read[String]).get)
+      val intensities:List[Double] = decode64(json.validate[String]((JsPath \ "peaks" \ "intensities").read[String]).get)
+      val intensityRanks:List[Int] = decode64(json.validate[String]((JsPath \ "peaks" \ "intensityRanks").read[String]).get)
+
+      val peaks: List[ExpPeakMSn] =
+        for {
+          ((m: Double, i: Double), r: Int) <- mozs.zip(intensities).zip(intensityRanks)
+        } yield {
+          ExpPeakMSn(moz = Moz(m), intensity = Intensity(i), intensityRank = IntensityRank(r), msLevel = msLevel)
+        }
+
+      JsSuccess(
+        ExpMSnSpectrum(ref = ref, peaks = peaks)
+      )
+
+    }
+
+    def writes(o: ExpMSnSpectrum) = Json.obj(
+      "ref" -> o.ref,
+      "peaks" -> Json.obj(
+        "msLevel" -> o.peaks.head.msLevel.value,
+        "mozs" -> encode64[Double](o.peaks.map(_.moz.value)),
+        "intensities" -> encode64[Double](o.peaks.map(_.intensity.value)),
+        "intensityRanks" -> encode64[Int](o.peaks.map(_.intensityRank.value))
+      )
+    )
+  }
   /**
    * insert an ms run into the database.
    * @param run already parsed and ready
@@ -95,9 +128,9 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @param runId the run id
    * @return
    */
-  def findSpectrumByRunId(runId: RunId): Future[Seq[ExpMSnSpectrum]] = {
+  def findSpectrumByRunId(runId: RunId): Future[Iterator[ExpMSnSpectrum]] = {
     val query = Json.obj("ref.spectrumId.runId" -> runId.value)
-    collection.find(query).cursor[ExpMSnSpectrum].collect[List]()
+    collection.find(query).cursor[ExpMSnSpectrum].collect[Iterator]()
   }
 
   /**

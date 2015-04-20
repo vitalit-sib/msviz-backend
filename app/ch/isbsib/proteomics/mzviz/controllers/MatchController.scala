@@ -17,6 +17,8 @@ import ch.isbsib.proteomics.mzviz.spectrasim.services.JsonSimFormats._
 import ch.isbsib.proteomics.mzviz.matches.services.MatchMongoDBService
 import com.wordnik.swagger.annotations._
 import play.api.Logger
+import play.api.Play.current
+import play.api.cache.Cached
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json._
 import play.api.mvc.Action
@@ -54,11 +56,15 @@ object MatchController extends CommonController {
     notes = """from the parameter search-id at load time""",
     response = classOf[List[String]],
     httpMethod = "GET")
-  def listSearchIds = Action.async {
-    MatchMongoDBService().listSearchIds.map {
-      ids => Ok(Json.obj("searchIds" -> ids.map(_.value)))
+  def listSearchIds =
+    Action
+
+      .async {
+      MatchMongoDBService().listSearchIds.map {
+        ids => Ok(Json.obj("searchIds" -> ids.map(_.value)))
+      }
     }
-  }
+
 
   @ApiOperation(nickname = "loadMzId",
     value = "Loads an mzid run",
@@ -71,24 +77,26 @@ object MatchController extends CommonController {
   def loadPsms(@ApiParam(name = "searchId", value = "a string id with search identifier") @PathParam("searchId") searchId: String,
                //@ApiParam(name = "runId", value = "a string id with run identifier (if not present, the searchId will be taken)", required = false)
                runId: Option[String]) =
-    Action.async(parse.temporaryFile) {
-      request =>
-        val rid = runId match {
-          case Some(r: String) => RunId(r)
-          case None => RunId(searchId)
-        }
-        (for {
-          psms <- Future {
-            LoaderMzIdent.parse(request.body.file, SearchId(searchId), rid)
+    Cached(req => req.uri) {
+      Action.async(parse.temporaryFile) {
+        request =>
+          val rid = runId match {
+            case Some(r: String) => RunId(r)
+            case None => RunId(searchId)
           }
-          n <- MatchMongoDBService().insert(psms)
-        } yield {
-            Ok(Json.obj("inserted" -> n))
-          }).recover {
-          case e =>
-            Logger.error(e.getMessage, e)
-            BadRequest(Json.prettyPrint(Json.obj("status" -> "ERROR", "message" -> e.getMessage)) + "\n")
-        }
+          (for {
+            psms <- Future {
+              LoaderMzIdent.parse(request.body.file, SearchId(searchId), rid)
+            }
+            n <- MatchMongoDBService().insert(psms)
+          } yield {
+              Ok(Json.obj("inserted" -> n))
+            }).recover {
+            case e =>
+              Logger.error(e.getMessage, e)
+              BadRequest(Json.prettyPrint(Json.obj("status" -> "ERROR", "message" -> e.getMessage)) + "\n")
+          }
+      }
     }
 
   @ApiOperation(nickname = "findAllPSMByRunId",
@@ -119,13 +127,15 @@ object MatchController extends CommonController {
     httpMethod = "GET")
   def findAllProteinRefsBySearchId(
                                     @ApiParam(value = """searchId""", defaultValue = "M_100") @PathParam("searchId") searchId: String
-                                    ) = Action.async {
-    for {
-      protRefs <- MatchMongoDBService().listProteinRefsBySearchId(SearchId(searchId))
-    } yield {
-      Ok(Json.toJson(protRefs))
-    }
+                                    ) =  Cached(req => req.uri) {
+    Action.async {
+      for {
+        protRefs <- MatchMongoDBService().listProteinRefsBySearchId(SearchId(searchId))
+      } yield {
+        Ok(Json.toJson(protRefs))
+      }
 
+    }
   }
 
   @ApiOperation(nickname = "findSimilarSpectra",
@@ -136,14 +146,17 @@ object MatchController extends CommonController {
   def findSimilarSpectra(@ApiParam(value = """run id""", defaultValue = "") @PathParam("runId") runId: String,
                          @ApiParam(value = """spectrum title""", defaultValue = "") @PathParam("title") title: String,
                          @ApiParam(value = """score threshold""", defaultValue = "") @PathParam("scoreThreshold") scoreThreshold: String,
-                         @ApiParam(value = """tolerance in Dalton to match ms2 peaks""", defaultValue = "") @PathParam("ms2PeakMatchTol") ms2PeakMatchTol: String) = Action.async {
-    for {
-      spMatches <- SimilarSpectraMongoDBService().findSimSpRefMatches(RunId(runId), title, scoreThreshold.toDouble, ms2PeakMatchTol.toDouble)
-    } yield {
-      Ok(Json.toJson(spMatches))
-    }
+                         @ApiParam(value = """tolerance in Dalton to match ms2 peaks""", defaultValue = "") @PathParam("ms2PeakMatchTol") ms2PeakMatchTol: String) =
+    Cached(req => req.uri) {
+      Action.async {
+        for {
+          spMatches <- SimilarSpectraMongoDBService().findSimSpMatches(RunId(runId), title, scoreThreshold.toDouble, ms2PeakMatchTol.toDouble)
+        } yield {
+          Ok(Json.toJson(spMatches.toList))
+        }
 
-  }
+      }
+    }
 
 
   @ApiOperation(nickname = "findPSMByProtein",
@@ -160,21 +173,22 @@ object MatchController extends CommonController {
                         @ApiParam(value = """accessionCode""", defaultValue = "") @PathParam("accessionCode") accessionCode: String,
                         sequenceSource: Option[String]
                         ) =
-    Action.async { implicit request =>
-      MatchMongoDBService().findPSMByProtein(
-        AccessionCode(accessionCode),
-        source = sequenceSource.map(s => SequenceSource(s)),
-        searchIds = if(searchIds == "*") None else Some(searchIds.split(",").toList.map(s => SearchId(s)).toSet)
-      )
-        .map { case psms =>
-        Logger.info(s"PSM =$psms")
-        render {
-          case acceptsTsv() => Ok(TsvFormats.toTsv(psms.map(_.extractAC(AccessionCode(accessionCode))), showFirstProtMatchInfo = true))
-          case _ => Ok(Json.toJson(psms))
+    Cached(req => req.uri) {
+      Action.async { implicit request =>
+        MatchMongoDBService().findPSMByProtein(
+          AccessionCode(accessionCode),
+          source = sequenceSource.map(s => SequenceSource(s)),
+          searchIds = if (searchIds == "*") None else Some(searchIds.split(",").toList.map(s => SearchId(s)).toSet)
+        )
+          .map { case psms =>
+          render {
+            case acceptsTsv() => Ok(TsvFormats.toTsv(psms.map(_.extractAC(AccessionCode(accessionCode))), showFirstProtMatchInfo = true))
+            case _ => Ok(Json.toJson(psms))
+          }
         }
-      }
-        .recover {
-        case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
+          .recover {
+          case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
+        }
       }
     }
 
