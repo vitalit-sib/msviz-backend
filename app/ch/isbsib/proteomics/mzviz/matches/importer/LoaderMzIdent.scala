@@ -68,7 +68,6 @@ object LoaderMzIdent {
     val title =parseTitleFilename(file)
     val database= parseSearchDbSourceInfo(file)
     val username=parseUsernameFilename(file)
-
     SearchInfo(searchId,title,database,username)
   }
 
@@ -87,22 +86,23 @@ object LoaderMzIdent {
   /**
    * parse the title from the MzIdenML file.
    * @param filename MzIdentML path
-   * @return title file name (e.g. blabla.mgf)
+   * @return title file name
    */
   def parseTitleFilename(filename: File): String = {
     val mzIdentML = scala.xml.XML.loadFile(filename)
-    val titleLocation = mzIdentML \\ "userParam" \ "@value"
+    // to have only the first of the values
+    val titleLocation = (mzIdentML \\ "userParam" \\ "@value").head
     FilenameUtils.getBaseName(titleLocation.text)
   }
 
   /**
    * parse the username from the MzIdenML file.
    * @param filename MzIdentML path
-   * @return title file name (e.g. blabla.mgf)
+   * @return username
    */
   def parseUsernameFilename(filename: File): String = {
     val mzIdentML = scala.xml.XML.loadFile(filename)
-    val usernameLocation = mzIdentML \\ "Person" \ "@name"
+    val usernameLocation =mzIdentML \\ "Person" \\ "@name"
     FilenameUtils.getBaseName(usernameLocation.text)
   }
 
