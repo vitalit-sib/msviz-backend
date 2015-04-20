@@ -138,7 +138,7 @@ object MatchController extends CommonController {
                          @ApiParam(value = """score threshold""", defaultValue = "") @PathParam("scoreThreshold") scoreThreshold: String,
                          @ApiParam(value = """tolerance in Dalton to match ms2 peaks""", defaultValue = "") @PathParam("ms2PeakMatchTol") ms2PeakMatchTol: String) = Action.async {
     for {
-      spMatches <- SimilarSpectraMongoDBService().findSimSpRefMatches(RunId(runId), title, scoreThreshold.toDouble, ms2PeakMatchTol.toDouble)
+      spMatches <- SimilarSpectraMongoDBService().findSimSpMatches(RunId(runId), title, scoreThreshold.toDouble, ms2PeakMatchTol.toDouble)
     } yield {
       Ok(Json.toJson(spMatches.toList))
     }
@@ -164,10 +164,9 @@ object MatchController extends CommonController {
       MatchMongoDBService().findPSMByProtein(
         AccessionCode(accessionCode),
         source = sequenceSource.map(s => SequenceSource(s)),
-        searchIds = if(searchIds == "*") None else Some(searchIds.split(",").toList.map(s => SearchId(s)).toSet)
+        searchIds = if (searchIds == "*") None else Some(searchIds.split(",").toList.map(s => SearchId(s)).toSet)
       )
         .map { case psms =>
-        Logger.info(s"PSM =$psms")
         render {
           case acceptsTsv() => Ok(TsvFormats.toTsv(psms.map(_.extractAC(AccessionCode(accessionCode))), showFirstProtMatchInfo = true))
           case _ => Ok(Json.toJson(psms))

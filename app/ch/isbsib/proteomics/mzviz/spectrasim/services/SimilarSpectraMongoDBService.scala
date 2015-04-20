@@ -34,11 +34,9 @@ class SimilarSpectraMongoDBService (val db: DefaultDB) {
    * @return
    */
   def findSimSpMatches(runId: RunId, sp: ExpMSnSpectrum, scoreThreshold: Double, ms2PeakMatchTol: Double): Future[Iterator[SpSpMatch]] = {
-    Logger.info(s"lifinting spectra collection")
     expService.findSpectrumByRunId(runId).map({ spList =>
       spList.map(sp2 => NormDotProdSim().calcSimilarity(sp, sp2, ms2PeakMatchTol))
       .filter({ssm =>
-        Logger.info(s"${ssm.score}\t${ssm.sp1.ref.spectrumId.id}\t\t${ssm.sp2.ref.spectrumId.id}")
         ssm.score >= scoreThreshold
       })
     })
@@ -47,6 +45,7 @@ class SimilarSpectraMongoDBService (val db: DefaultDB) {
 
   /**
    * find similar spectra matches providing a runId and a spectrum title
+   * returns the matches with  onl reference description
    *
    * @param runId
    * @param spTitle
@@ -59,6 +58,24 @@ class SimilarSpectraMongoDBService (val db: DefaultDB) {
     expService.findSpectrumByRunIdAndTitle(runId, spTitle).flatMap({ sp =>
       findSimSpMatches(runId, sp, scoreThreshold, ms2PeakMatchTol).map({ matches =>
         matches.map(aMatch => SpSpRefMatch(aMatch.sp1.ref, aMatch.sp2.ref, aMatch.score))
+      })
+    })
+
+  }
+  /**
+   * find similar spectra matches providing a runId and a spectrum title
+   * returns the matches with full spectra objets
+   *
+   * @param runId
+   * @param spTitle
+   * @param scoreThreshold
+   * @param ms2PeakMatchTol MS2 peak match tolerance in Daltons
+   * @return
+   */
+  def findSimSpMatches(runId: RunId, spTitle: String, scoreThreshold: Double, ms2PeakMatchTol: Double): Future[Iterator[SpSpMatch]] = {
+    expService.findSpectrumByRunIdAndTitle(runId, spTitle).flatMap({ sp =>
+      findSimSpMatches(runId, sp, scoreThreshold, ms2PeakMatchTol).map({ matches =>
+        matches.map(aMatch => SpSpMatch(aMatch.sp1, aMatch.sp2, aMatch.score))
       })
     })
 
