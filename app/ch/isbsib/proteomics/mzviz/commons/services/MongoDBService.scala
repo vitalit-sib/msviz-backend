@@ -1,25 +1,13 @@
 package ch.isbsib.proteomics.mzviz.commons.services
 
-import ch.isbsib.proteomics.mzviz.commons.services.MongoDuplicateKeyException
-import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, SpectrumRef}
-import ch.isbsib.proteomics.mzviz.experimental.{ScanNumber, RunId, MSRun}
-import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
-import ch.isbsib.proteomics.mzviz.matches.SearchId
-import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
 import play.api.Logger
-import play.api.libs.iteratee.Enumerator
 import play.api.libs.json.{JsObject, Json}
-import play.api.mvc.Controller
-import play.modules.reactivemongo.MongoController
 import play.modules.reactivemongo.json.collection.JSONCollection
 import reactivemongo.api._
-import reactivemongo.api.indexes.{IndexType, Index}
-import reactivemongo.bson._
-import reactivemongo.core.commands.{LastError, GetLastError, RawCommand, Count}
-import scala.concurrent.ExecutionContext.Implicits.global
+import reactivemongo.api.indexes.Index
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
