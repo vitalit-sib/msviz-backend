@@ -4,6 +4,7 @@ import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models._
+import ch.isbsib.proteomics.mzviz.theoretical.models.SearchDatabase
 import ch.isbsib.proteomics.mzviz.theoretical.{ProteinIdentifier, SequenceSource, AccessionCode}
 import play.api.libs.json._
 import play.api.libs.json.Reads._
@@ -70,5 +71,8 @@ object JsonMatchFormats {
   implicit val formatPeptide = Json.format[Peptide]
   implicit val formatPepMatchInfo = Json.format[PepMatchInfo]
   implicit val formatPepSpectraMatch = Json.format[PepSpectraMatch]
+
+  implicit val formatSearchDatabase =  Json.format[SearchDatabase]
+  implicit val formatSearchInfo =  Json.format[SearchInfo]
 
 }

@@ -88,7 +88,6 @@ object ExperimentalController extends CommonController {
                       mostIntense: Option[Integer]=None
                        ) =
     Action.async {
-      println(sortByMoz, mostIntense)
       ExpMongoDBService().findSpectrumByRunIdAndTitle(RunId(runId), title)
         .map { case sp: ExpMSnSpectrum =>
         val peaks = (sortByMoz match {
