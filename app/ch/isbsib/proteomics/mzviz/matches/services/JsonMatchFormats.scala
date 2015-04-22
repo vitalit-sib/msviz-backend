@@ -66,11 +66,43 @@ object JsonMatchFormats {
 
   }
 
+  implicit val formatSearchDatabase = Json.format[SearchDatabase]
 
+  /*
+  implicit val formatSearchInfo = new Writes[SearchInfo] {
+    override def writes(o: SearchInfo): JsValue = Json.obj(
+      "searchId" -> o.searchId,
+      "title" -> o.title,
+      "database" -> o.database,
+      "username" -> o.username
+    )
+  }
+*/
+  /*
+  implicit val formatSearchInfo = new Format[SearchInfo] {
+    override def reads(json: JsValue): JsResult[SearchInfo] = {
+      JsSuccess(SearchInfo(
+        searchId = SearchId((json \ "searchId").as[String]),
+        title = (json \ "title").as[String]),
+        database = (json \ "database").asOpt[Set[String]].getOrElse(Set()).map(SearchDatabase.apply)
+        username= (json \ "username").as[String])
+      ))
+    }
+
+    def writes(o: SearchInfo) = Json.obj(
+      "searchId" -> o.searchId,
+      "title" -> o.title,
+      "database" -> o.database,
+      "username" -> o.username
+    )
+
+  }
+*/
   implicit val formatProteinMatch = Json.format[ProteinMatch]
   implicit val formatPeptide = Json.format[Peptide]
   implicit val formatPepMatchInfo = Json.format[PepMatchInfo]
   implicit val formatPepSpectraMatch = Json.format[PepSpectraMatch]
+  implicit val formatSearchInfo = Json.format[SearchInfo]
 
   implicit val formatSearchDatabase =  Json.format[SearchDatabase]
   implicit val formatSearchInfo =  Json.format[SearchInfo]
