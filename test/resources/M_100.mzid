@@ -48,7 +48,7 @@
     <Person id="PERSON_MSL">
       <Affiliation organization_ref="ORG_MSL" />
     </Person>
-    <Person id="PERSON_DOC_OWNER" name="">
+    <Person id="PERSON_DOC_OWNER" name="roman">
       <Affiliation organization_ref="ORG_DOC_OWNER" />
     </Person>
     <Organization id="ORG_MSL" name="Matrix Science Limited">
