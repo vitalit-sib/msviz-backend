@@ -4,6 +4,7 @@ import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models._
+import ch.isbsib.proteomics.mzviz.theoretical.models.SearchDatabase
 import ch.isbsib.proteomics.mzviz.theoretical.{ProteinIdentifier, SequenceSource, AccessionCode}
 import play.api.libs.json._
 import play.api.libs.json.Reads._
@@ -65,10 +66,42 @@ object JsonMatchFormats {
 
   }
 
+  implicit val formatSearchDatabase = Json.format[SearchDatabase]
 
+  /*
+  implicit val formatSearchInfo = new Writes[SearchInfo] {
+    override def writes(o: SearchInfo): JsValue = Json.obj(
+      "searchId" -> o.searchId,
+      "title" -> o.title,
+      "database" -> o.database,
+      "username" -> o.username
+    )
+  }
+*/
+  /*
+  implicit val formatSearchInfo = new Format[SearchInfo] {
+    override def reads(json: JsValue): JsResult[SearchInfo] = {
+      JsSuccess(SearchInfo(
+        searchId = SearchId((json \ "searchId").as[String]),
+        title = (json \ "title").as[String]),
+        database = (json \ "database").asOpt[Set[String]].getOrElse(Set()).map(SearchDatabase.apply)
+        username= (json \ "username").as[String])
+      ))
+    }
+
+    def writes(o: SearchInfo) = Json.obj(
+      "searchId" -> o.searchId,
+      "title" -> o.title,
+      "database" -> o.database,
+      "username" -> o.username
+    )
+
+  }
+*/
   implicit val formatProteinMatch = Json.format[ProteinMatch]
   implicit val formatPeptide = Json.format[Peptide]
   implicit val formatPepMatchInfo = Json.format[PepMatchInfo]
   implicit val formatPepSpectraMatch = Json.format[PepSpectraMatch]
+  implicit val formatSearchInfo = Json.format[SearchInfo]
 
 }
