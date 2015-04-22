@@ -66,8 +66,6 @@ object JsonMatchFormats {
 
   }
 
-  implicit val formatSearchDatabase = Json.format[SearchDatabase]
-
   /*
   implicit val formatSearchInfo = new Writes[SearchInfo] {
     override def writes(o: SearchInfo): JsValue = Json.obj(
@@ -102,7 +100,6 @@ object JsonMatchFormats {
   implicit val formatPeptide = Json.format[Peptide]
   implicit val formatPepMatchInfo = Json.format[PepMatchInfo]
   implicit val formatPepSpectraMatch = Json.format[PepSpectraMatch]
-  implicit val formatSearchInfo = Json.format[SearchInfo]
 
   implicit val formatSearchDatabase =  Json.format[SearchDatabase]
   implicit val formatSearchInfo =  Json.format[SearchInfo]
