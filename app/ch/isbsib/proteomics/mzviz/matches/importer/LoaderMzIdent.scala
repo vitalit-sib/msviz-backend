@@ -63,13 +63,16 @@ object LoaderMzIdent {
    * @param file an .mzid file
    * @return
    */
-  def parseSearchInfo(file: File, searchId: SearchId): SearchInfo = {
+  def parseSearchInfo(file: File, searchId: SearchId): Iterator[SearchInfo] = {
 
     // get the info about the SearchDatabases
     val title =parseTitleFilename(file)
     val database= parseSearchDbSourceInfo(file)
     val username=parseUsernameFilename(file)
-    SearchInfo(searchId,title,database,username)
+    val searchI=SearchInfo(searchId,title,database,username)
+    val it: Iterator[SearchInfo] = Iterator(searchI)
+    it
+    //it.map(searchI)
   }
 
   /**
