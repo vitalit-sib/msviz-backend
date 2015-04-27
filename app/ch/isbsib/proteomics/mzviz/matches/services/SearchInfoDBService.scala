@@ -24,7 +24,7 @@ import scala.concurrent.Future
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
  *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
-class SearchInfoDBService (val db: DefaultDB) extends MongoDBService {
+class SearchInfoDBService(val db: DefaultDB) extends MongoDBService {
   val collectionName = "searchInfo"
   val mainKeyName = "searchId"
 
@@ -34,7 +34,7 @@ class SearchInfoDBService (val db: DefaultDB) extends MongoDBService {
    * @param entries to be inserted
    * @return a Future of the number of entries loaded
    */
-  def insert(entries: Iterator[SearchInfo]): Future[Int]  = {
+  def insert(entries: Iterator[SearchInfo]): Future[Int] = {
     val enumerator = Enumerator.enumerate(entries)
     collection.bulkInsert(enumerator)
   }
@@ -79,17 +79,18 @@ class SearchInfoDBService (val db: DefaultDB) extends MongoDBService {
         }
     })
   }
+}
 
-  object SearchInfoDBService extends Controller with MongoController {
-    val default = new SearchInfoDBService(db)
+object SearchInfoDBService extends Controller with MongoController {
+  val default = new SearchInfoDBService(db)
 
-    /**
-     * get the default database
-     * @return
-     */
-    def apply() = default
+  /**
+   * get the default database
+   * @return
+   */
+  def apply() = default
 
-
-  }
 
 }
+
+
