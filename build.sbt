@@ -27,4 +27,5 @@ libraryDependencies ++= Seq(
   "org.scalamock" %% "scalamock-specs2-support" % "3.2"
 )
 
+
 //parallelExecution in Test := false

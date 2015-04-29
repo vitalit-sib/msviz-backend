@@ -7,6 +7,7 @@ import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
 import ch.isbsib.proteomics.mzviz.matches.models.{ProteinRef, PepSpectraMatch}
+import ch.isbsib.proteomics.mzviz.matches.services.SearchInfoDBService
 import ch.isbsib.proteomics.mzviz.spectrasim.models.SpSpRefMatch
 import ch.isbsib.proteomics.mzviz.spectrasim.services.{SimilarSpectraMongoDBService}
 import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
@@ -14,7 +15,7 @@ import ch.isbsib.proteomics.mzviz.theoretical.models.SequenceSourceStats
 import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
 import ch.isbsib.proteomics.mzviz.spectrasim.services.JsonSimFormats._
-import ch.isbsib.proteomics.mzviz.matches.services.MatchMongoDBService
+import ch.isbsib.proteomics.mzviz.matches.services.{SearchInfoDBService, MatchMongoDBService}
 import com.wordnik.swagger.annotations._
 import play.api.Logger
 import play.api.Play.current
@@ -88,9 +89,13 @@ object MatchController extends CommonController {
             psms <- Future {
               LoaderMzIdent.parse(request.body.file, SearchId(searchId), rid)
             }
+            searchInfo <- Future {
+              LoaderMzIdent.parseSearchInfo(request.body.file, SearchId(searchId))
+            }
             n <- MatchMongoDBService().insert(psms)
+            nInfo<-SearchInfoDBService().insert(searchInfo)
           } yield {
-              Ok(Json.obj("inserted" -> n))
+              Ok(Json.obj("inserted" -> n, "searchInfoInserted" -> nInfo))
             }).recover {
             case e =>
               Logger.error(e.getMessage, e)
