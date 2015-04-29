@@ -6,7 +6,7 @@ import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
-import ch.isbsib.proteomics.mzviz.matches.models.{ProteinRef, PepSpectraMatch}
+import ch.isbsib.proteomics.mzviz.matches.models.{ProteinRef, PepSpectraMatch, SearchInfo}
 import ch.isbsib.proteomics.mzviz.matches.services.SearchInfoDBService
 import ch.isbsib.proteomics.mzviz.spectrasim.models.SpSpRefMatch
 import ch.isbsib.proteomics.mzviz.spectrasim.services.{SimilarSpectraMongoDBService}
@@ -196,6 +196,28 @@ object MatchController extends CommonController {
         }
       }
     }
+
+  @ApiOperation(nickname = "findAllSearchInfoBySearchId",
+    value = "find all SearchInfo object for a given searchId",
+    notes = """SearchInfos  list in TSV or JSON form""",
+    response = classOf[List[SearchInfo]],
+    produces = "application/json, application/tsv",
+    httpMethod = "GET")
+  @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "searchId", value = "", required = false, dataType = "string", paramType = "searchId")
+  ))
+  def findAllSearchInfoBySearchId(
+                                   @ApiParam(value = """searchId""", defaultValue = "M_100") @PathParam("searchId") searchId: String
+                                   ) =  Cached(req => req.uri) {
+    Action.async {
+      for {
+        searchInfo <- SearchInfoDBService().findAllSearchInfoBySearchId(SearchId(searchId))
+      } yield {
+        Ok(Json.toJson(searchInfo))
+      }
+
+    }
+  }
 
   @ApiOperation(nickname = "deleteAllByRunId",
     value = "delete PSMs for a given list of searchIds (or one), seperated by comma",

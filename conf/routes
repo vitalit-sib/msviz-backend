@@ -25,6 +25,7 @@ GET           /sequence/:sourceId/:identifier                        ch.isbsib.p
 GET           /api-docs/match                                        controllers.ApiHelpController.getResource(path = "/match")
 POST          /match/psms/:searchId                                  ch.isbsib.proteomics.mzviz.controllers.MatchController.loadPsms(searchId:String, runId:Option[String])
 GET           /match/psms/:searchId                                  ch.isbsib.proteomics.mzviz.controllers.MatchController.findAllPSMBySearchId(searchId)
+GET           /match/searchInfo/:searchId                            ch.isbsib.proteomics.mzviz.controllers.MatchController.findAllSearchInfoBySearchId(searchId)
 DELETE        /match/psms/:searchIds                                 ch.isbsib.proteomics.mzviz.controllers.MatchController.deleteAllBySearchId(searchIds)
 GET           /match/searches                                        ch.isbsib.proteomics.mzviz.controllers.MatchController.listSearchIds
 GET           /match/proteins/:searchId                              ch.isbsib.proteomics.mzviz.controllers.MatchController.findAllProteinRefsBySearchId(searchId)
