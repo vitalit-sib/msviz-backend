@@ -4,6 +4,7 @@ import ch.isbsib.proteomics.mzviz.commons.services.{MongoDBService, MongoNotFoun
 import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
+import ch.isbsib.proteomics.mzviz.modifications.ModifName
 import ch.isbsib.proteomics.mzviz.modifications.services.JsonModificationFormats._
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models.{PepSpectraMatch, ProteinRef}
@@ -17,7 +18,7 @@ import play.modules.reactivemongo.MongoController
 import play.modules.reactivemongo.json.BSONFormats._
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.{BSONArray, BSONDocument}
+import reactivemongo.bson.{BSONDocument, BSONString, BSONArray}
 import reactivemongo.core.commands._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -40,6 +41,10 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
     new Index(
       Seq("proteinList.proteinRef.AC" -> IndexType.Ascending, "proteinList.proteinRef.source" -> IndexType.Ascending),
       name = Some("proteinRef"),
+      unique = false),
+    new Index(
+      Seq("pep.modificationNames" -> IndexType.Ascending),
+      name = Some("modificationNames"),
       unique = false)
   ))
 
@@ -230,18 +235,31 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
   }
 
 
+  def qFilter(searchIds: Set[SearchId]) = searchIds.toList match {
+    case x :: Nil => BSONDocument("searchId" -> x.value)
+    case xs => BSONDocument("searchId" -> BSONDocument("$in" -> BSONArray(xs.map(id => BSONString(id.value)))))
+  }
+
+  def qFilter(withModification: Option[ModifName]) = withModification match {
+    case Some(name) => BSONDocument("pep.modificationNames" -> BSONArray(BSONString(name.value)))
+    case None => BSONDocument()
+  }
+
   /**
    * retrieves a list of Proteins from one source
    * NB: the identifiers field is not populated by the match database (information is not available)
-   * @param searchId search identifier
+   * @param searchIds searches identifier
    * @return list of Proteins
    */
 
-  def listProteinRefsBySearchId(searchId: SearchId): Future[Seq[ProteinRef]] = {
+  def listProteinRefsBySearchIds(searchIds: Set[SearchId], withModification: Option[ModifName] = None): Future[Seq[ProteinRef]] = {
+    Logger.info(s"listProteinRefsBySearchIds($searchIds, $withModification")
+    val qMatch = qFilter(searchIds) ++ qFilter(withModification)
+
     val command = RawCommand(BSONDocument(
       "aggregate" -> collectionName,
       "pipeline" -> BSONArray(
-        BSONDocument("$match" -> BSONDocument("searchId" -> searchId.value)),
+        BSONDocument("$match" -> qMatch),
         BSONDocument("$project" -> BSONDocument("proteinList.proteinRef.AC" -> 1, "proteinList.proteinRef.source" -> 1, "searchId" -> 1, "_id" -> 0)),
         BSONDocument("$unwind" -> "$proteinList"),
         BSONDocument("$project" -> BSONDocument("AC" -> "$proteinList.proteinRef.AC", "source" -> "$proteinList.proteinRef.source"))
@@ -256,6 +274,37 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
               Set(),
               Some(SequenceSource(elDoc.getAs[String]("source").get)))
         }).distinct
+    })
+  }
+
+  /**
+   * retrieves a list of Proteins from one source
+   * NB: the identifiers field is not populated by the match database (information is not available)
+   *
+  db.psm.aggregate([{$match:{ 'searchId':'mascot:F001303'}}, {$project:{'modif':'$pep.modificationNames', _id:0}}, {$unwind:'$modif'}, {$unwind:'$modif'}, {$match:{'modif':{$ne:[]}}}, {$group: {_id:'$modif', count:{$sum:1}}}]).pretty()   * @param searchIds a set of search
+   * @return list of Modification
+   */
+  def findAllModificationsBySearchIds(searchIds: Set[SearchId]): Future[Map[ModifName, Int]] = {
+    val command = RawCommand(BSONDocument(
+      "aggregate" -> collectionName,
+      "pipeline" -> BSONArray(
+        BSONDocument("$match" -> qFilter(searchIds)),
+        BSONDocument("$project" -> BSONDocument(
+          "modif" -> "$pep.modificationNames",
+          "_id" -> 0)),
+        BSONDocument("$unwind" -> "$modif"),
+        BSONDocument("$unwind" -> "$modif"),
+        BSONDocument("$match" -> BSONDocument("modif" -> BSONDocument("$ne" -> BSONArray.empty))),
+        BSONDocument("$group" -> BSONDocument("_id" -> "$modif", "count" -> BSONDocument("$sum" -> 1)))
+      )
+    ))
+
+    db.command(command).map({
+      doc =>
+        doc.getAs[List[BSONDocument]]("result").get.map({
+          elDoc: BSONDocument =>
+            (ModifName(elDoc.getAs[String]("_id").get), elDoc.getAs[Int]("count").get)
+        }).toMap
     })
   }
 

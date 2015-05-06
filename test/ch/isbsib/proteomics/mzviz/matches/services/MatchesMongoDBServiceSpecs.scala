@@ -106,7 +106,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
     "list all" in new TempMongoDBService {
 
       service.insert(LoaderMzIdent.parse(new File("test/resources/M_100.mzid"), SearchId("M_100"), RunId("M_100.mgf"))).futureValue
-      val protRefList = service.listProteinRefsBySearchId(SearchId("M_100")).futureValue
+      val protRefList = service.listProteinRefsBySearchIds(Set(SearchId("M_100"))).futureValue
       Thread.sleep(200)
       protRefList.size must equalTo(27)
       protRefList(0).AC mustEqual AccessionCode("CD109_HUMAN")
@@ -119,7 +119,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
     "list all" in new TempMongoDBService {
 
       service.insert(LoaderMzIdent.parse(new File("test/resources/M_100.mzid"), SearchId("M_100"), RunId("M_100.mgf"))).futureValue
-      val protRefList = service.listProteinRefsBySearchId(SearchId("M_100")).futureValue
+      val protRefList = service.listProteinRefsBySearchIds(Set(SearchId("M_100"))).futureValue
       Thread.sleep(200)
       protRefList.size must equalTo(27)
       protRefList(0).AC mustEqual AccessionCode("CD109_HUMAN")

@@ -6,6 +6,8 @@ package ch.isbsib.proteomics.mzviz
  */
 package object modifications {
 
-  case class ModifName(value:String) extends AnyVal
+  case class ModifName(value:String) extends AnyVal{
+    override def toString=value
+  }
 
 }

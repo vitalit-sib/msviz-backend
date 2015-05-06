@@ -27,6 +27,12 @@ object JsonCommonsFormats {
     }
   }
 
+  implicit def jsonWritesImpMap[T<:AnyVal] : Writes[Map[T, Int]] = new Writes[Map[T, Int]] {
+    override def writes(o: Map[T, Int]): JsValue = {
+      o.foldLeft(Json.obj())({ (acc, p) => acc ++ Json.obj(p._1.toString -> p._2)})
+    }
+  }
+
   //  implicit val formatAccessionCode = new Format[AccessionCode] {
   //    override def reads(json: JsValue): JsResult[AccessionCode] = JsSuccess(AccessionCode(json.as[String]))
   //

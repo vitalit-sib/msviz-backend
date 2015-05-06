@@ -28,7 +28,8 @@ GET           /match/psms/:searchId                                  ch.isbsib.p
 GET           /match/searchInfo/:searchId                            ch.isbsib.proteomics.mzviz.controllers.MatchController.findAllSearchInfoBySearchId(searchId)
 DELETE        /match/psms/:searchIds                                 ch.isbsib.proteomics.mzviz.controllers.MatchController.deleteAllBySearchId(searchIds)
 GET           /match/searches                                        ch.isbsib.proteomics.mzviz.controllers.MatchController.listSearchIds
-GET           /match/proteins/:searchId                              ch.isbsib.proteomics.mzviz.controllers.MatchController.findAllProteinRefsBySearchId(searchId)
+GET           /match/proteins/:searchIds                             ch.isbsib.proteomics.mzviz.controllers.MatchController.findAllProteinRefsBySearchIds(searchIds, withModif:Option[String])
+GET           /match/modifications/:searchIds                        ch.isbsib.proteomics.mzviz.controllers.MatchController.findAllModificationsBySearchIds(searchIds)
 GET           /match/psms/:searchIds/by-ac/:accessionCode            ch.isbsib.proteomics.mzviz.controllers.MatchController.findPSMByProtein(searchIds, accessionCode, sequenceSource:Option[String])
 GET           /match/sim/:runId/:title/:scoreThresh/:matchTol        ch.isbsib.proteomics.mzviz.controllers.MatchController.findSimilarSpectra(runId, title, scoreThresh, matchTol)
 

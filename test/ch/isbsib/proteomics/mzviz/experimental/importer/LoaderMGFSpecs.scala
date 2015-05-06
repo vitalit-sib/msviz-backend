@@ -3,9 +3,8 @@ package ch.isbsib.proteomics.mzviz.experimental.importer
 import java.io.File
 
 import ch.isbsib.proteomics.mzviz.commons._
-import ch.isbsib.proteomics.mzviz.experimental.models.ExpPeakMSn
-import org.specs2.mutable.Specification
 import ch.isbsib.proteomics.mzviz.experimental._
+import org.specs2.mutable.Specification
 
 import scala.util.Success
 

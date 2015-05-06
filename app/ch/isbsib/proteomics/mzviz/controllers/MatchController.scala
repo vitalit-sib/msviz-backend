@@ -8,6 +8,7 @@ import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
 import ch.isbsib.proteomics.mzviz.matches.models.{ProteinRef, PepSpectraMatch, SearchInfo}
 import ch.isbsib.proteomics.mzviz.matches.services.SearchInfoDBService
+import ch.isbsib.proteomics.mzviz.modifications.ModifName
 import ch.isbsib.proteomics.mzviz.spectrasim.models.SpSpRefMatch
 import ch.isbsib.proteomics.mzviz.spectrasim.services.{SimilarSpectraMongoDBService}
 import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
@@ -27,13 +28,28 @@ import reactivemongo.bson.BSONDocument
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
-
+import ch.isbsib.proteomics.mzviz.modifications.services.JsonModificationFormats._
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
  *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 @Api(value = "/match", description = "PSMs, SSMs, protain matches etc.")
 object MatchController extends CommonController {
+
+  /**
+   * transform searchIds comma separated parameter into a set of sSearchId
+   * @param searchIds
+   * @return
+   */
+  def paramSearchIds(searchIds:String):Set[SearchId] = searchIds.split(",").toList.map(SearchId.apply).toSet
+
+  /**
+   * simply map an option of a string into an option of a ModifName
+   * @param withModif
+   * @return
+   */
+  def paramOModifName(withModif:Option[String]):Option[ModifName] = withModif.map(ModifName.apply)
+
 
   def stats = Action.async {
     ExpMongoDBService().stats.map { st =>
@@ -130,14 +146,37 @@ object MatchController extends CommonController {
     notes = """ProteinRef list""",
     response = classOf[List[ProteinRef]],
     httpMethod = "GET")
-  def findAllProteinRefsBySearchId(
-                                    @ApiParam(value = """searchId""", defaultValue = "M_100") @PathParam("searchId") searchId: String
+  @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "withModif", value = "modification name", required = false, dataType = "String", paramType = "query")
+  ))
+  def findAllProteinRefsBySearchIds(
+                                    @ApiParam(value = """searchIds""", defaultValue = "M_100") @PathParam("searchIds") searchIds: String,
+                                    withModif:Option[String]
                                     ) =  Cached(req => req.uri) {
     Action.async {
       for {
-        protRefs <- MatchMongoDBService().listProteinRefsBySearchId(SearchId(searchId))
+        protRefs <- MatchMongoDBService().listProteinRefsBySearchIds(paramSearchIds(searchIds), paramOModifName(withModif))
       } yield {
         Ok(Json.toJson(protRefs))
+      }
+
+    }
+  }
+
+  @ApiOperation(nickname = "findAllModificationsBySearchIds",
+    value = "find all unique modification for a list of searchIds",
+    notes = """modification name lis""",
+    response = classOf[List[String]],
+    httpMethod = "GET")
+  def findAllModificationsBySearchIds(
+                                    @ApiParam(value = """searchIds""", defaultValue = "M_100") @PathParam("searchIds") searchIds: String
+                                    ) =  Cached(req => req.uri) {
+    val sids = paramSearchIds(searchIds)
+    Action.async {
+      for {
+        modifNames <- MatchMongoDBService().findAllModificationsBySearchIds(sids)
+      } yield {
+        Ok(Json.toJson(modifNames))
       }
 
     }
