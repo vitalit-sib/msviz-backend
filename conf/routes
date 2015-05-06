@@ -23,15 +23,17 @@ GET           /api-docs/sequence                                     controllers
 GET           /sequence/:sourceId/:identifier                        ch.isbsib.proteomics.mzviz.controllers.theoretical.OneSequenceController.get(sourceId, identifier)
 
 GET           /api-docs/match                                        controllers.ApiHelpController.getResource(path = "/match")
-POST          /match/psms/:searchId                                  ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.loadPsms(searchId:String, runId:Option[String])
 GET           /match/psms/:searchId                                  ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findAllPSMBySearchId(searchId)
-GET           /match/searchInfo/:searchId                            ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findAllSearchInfoBySearchId(searchId)
-DELETE        /match/psms/:searchIds                                 ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.deleteAllBySearchId(searchIds)
-GET           /match/searches                                        ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.listSearchIds
 GET           /match/proteins/:searchIds                             ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findAllProteinRefsBySearchIds(searchIds, withModif:Option[String])
 GET           /match/modifications/:searchIds                        ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findAllModificationsBySearchIds(searchIds)
-GET           /match/psms/:searchIds/by-ac/:accessionCode            ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findPSMByProtein(searchIds, accessionCode, sequenceSource:Option[String])
+GET           /match/psms/:searchIds/by-ac/:accessionCode            ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findAllPSMByProteinAC(searchIds, accessionCode, sequenceSource:Option[String])
 GET           /match/sim/:runId/:title/:scoreThresh/:matchTol        ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findSimilarSpectra(runId, title, scoreThresh, matchTol)
+
+GET           /api-docs/search                                        controllers.ApiHelpController.getResource(path = "/search")
+GET           /search/searchInfo/:searchId                            ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.findAllSearchInfoBySearchId(searchId)
+GET           /search/searches                                        ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.listSearchIds
+POST          /search/:searchId                                  ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.loadMzId(searchId:String, runId:Option[String])
+DELETE        /search/:searchIds                                 ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.delete(searchIds)
 
 GET           /docs/*file                                            controllers.Assets.at(path="/public/docs", file)
 GET           /api-docs                                              controllers.ApiHelpController.getResources

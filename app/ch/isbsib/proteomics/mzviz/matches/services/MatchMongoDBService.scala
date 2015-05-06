@@ -79,8 +79,8 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @param searchIds mutliple search ids
    * @return
    */
-  def deleteAllBySearchId(searchIds: List[SearchId]): Future[Boolean] = {
-    val query = Json.obj("searchId" -> Json.obj("$in" -> searchIds))
+  def deleteAllBySearchId(searchIds: Set[SearchId]): Future[Boolean] = {
+    val query = Json.obj("searchId" -> Json.obj("$in" -> searchIds.toList))
     collection.remove(query).map {
       case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
       case _ => true

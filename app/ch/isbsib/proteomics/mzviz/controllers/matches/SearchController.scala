@@ -3,17 +3,22 @@ package ch.isbsib.proteomics.mzviz.controllers.matches
 import javax.ws.rs.PathParam
 
 import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
+import ch.isbsib.proteomics.mzviz.controllers.matches.PSMController._
+import ch.isbsib.proteomics.mzviz.experimental.RunId
+import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models.SearchInfo
 import ch.isbsib.proteomics.mzviz.matches.services.{MatchMongoDBService, SearchInfoDBService}
 import com.wordnik.swagger.annotations._
+import play.api.Logger
 import play.api.cache.Cached
 import play.api.libs.json._
 import play.api.mvc.Action
 import play.api.Play.current
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
@@ -77,4 +82,51 @@ object SearchController extends MatchController {
     }
   }
 
+  @ApiOperation(nickname = "loadMzId",
+    value = "Loads an mzid run, psms & searchInfo",
+    notes = """ """,
+    response = classOf[String],
+    httpMethod = "POST")
+  @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "body", value = "mzid file", required = true, dataType = "application/xml", paramType = "body")
+  ))
+  def loadMzId(@ApiParam(name = "searchId", value = "a string id with search identifier") @PathParam("searchId") searchId: String,
+               //@ApiParam(name = "runId", value = "a string id with run identifier (if not present, the searchId will be taken)", required = false)
+               runId: Option[String]) =
+    Cached(req => req.uri) {
+      Action.async(parse.temporaryFile) {
+        request =>
+          val rid = runId match {
+            case Some(r: String) => RunId(r)
+            case None => RunId(searchId)
+          }
+          (for {
+            psms <- Future {
+              LoaderMzIdent.parse(request.body.file, SearchId(searchId), rid)
+            }
+            searchInfo <- Future {
+              LoaderMzIdent.parseSearchInfo(request.body.file, SearchId(searchId))
+            }
+            n <- MatchMongoDBService().insert(psms)
+            nInfo<-SearchInfoDBService().insert(searchInfo)
+          } yield {
+              Ok(Json.obj("inserted" -> n, "searchInfoInserted" -> nInfo))
+            }).recover {
+            case e =>
+              Logger.error(e.getMessage, e)
+              BadRequest(Json.prettyPrint(Json.obj("status" -> "ERROR", "message" -> e.getMessage)) + "\n")
+          }
+      }
+    }
+  @ApiOperation(nickname = "delete",
+    value = "delete PSMs & searchInfo for a given list of searchIds (or one), seperated by comma",
+    notes = """No double check is done. Use with caution""",
+    response = classOf[String],
+    httpMethod = "DELETE")
+  def delete(@ApiParam(value = """searchIds""", defaultValue = "") @PathParam("searchIds") searchIds: String) = Action.async {
+    MatchMongoDBService().deleteAllBySearchId(queryParamSearchIds(searchIds)).map {
+      x =>
+        Ok("OK")
+    }
+  }
 }

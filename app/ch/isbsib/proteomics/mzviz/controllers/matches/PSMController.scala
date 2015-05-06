@@ -38,68 +38,6 @@ object PSMController extends MatchController {
     }
   }
 
-  @ApiOperation(nickname = "listMSRunIds",
-    value = "the list of run ids",
-    notes = """from the parameter run-id at load time""",
-    response = classOf[List[String]],
-    httpMethod = "GET")
-  def listMSRunIds = Action.async {
-    ExpMongoDBService().listMsRunIds.map {
-      ids => Ok(Json.obj("msRuns" -> ids.map(_.value)))
-    }
-  }
-
-  @ApiOperation(nickname = "listSearchIds",
-    value = "the list of search ids",
-    notes = """from the parameter search-id at load time""",
-    response = classOf[List[String]],
-    httpMethod = "GET")
-  def listSearchIds =
-    Action
-
-      .async {
-      MatchMongoDBService().listSearchIds.map {
-        ids => Ok(Json.obj("searchIds" -> ids.map(_.value)))
-      }
-    }
-
-
-  @ApiOperation(nickname = "loadMzId",
-    value = "Loads an mzid run",
-    notes = """ """,
-    response = classOf[String],
-    httpMethod = "POST")
-  @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "body", value = "mzid file", required = true, dataType = "application/xml", paramType = "body")
-  ))
-  def loadPsms(@ApiParam(name = "searchId", value = "a string id with search identifier") @PathParam("searchId") searchId: String,
-               //@ApiParam(name = "runId", value = "a string id with run identifier (if not present, the searchId will be taken)", required = false)
-               runId: Option[String]) =
-    Cached(req => req.uri) {
-      Action.async(parse.temporaryFile) {
-        request =>
-          val rid = runId match {
-            case Some(r: String) => RunId(r)
-            case None => RunId(searchId)
-          }
-          (for {
-            psms <- Future {
-              LoaderMzIdent.parse(request.body.file, SearchId(searchId), rid)
-            }
-            searchInfo <- Future {
-              LoaderMzIdent.parseSearchInfo(request.body.file, SearchId(searchId))
-            }
-            n <- MatchMongoDBService().insert(psms)
-            nInfo<-SearchInfoDBService().insert(searchInfo)
-          } yield {
-              Ok(Json.obj("inserted" -> n, "searchInfoInserted" -> nInfo))
-            }).recover {
-            case e =>
-              Logger.error(e.getMessage, e)
-              BadRequest(Json.prettyPrint(Json.obj("status" -> "ERROR", "message" -> e.getMessage)) + "\n")
-          }
-      }
-    }
 
   @ApiOperation(nickname = "findAllPSMByRunId",
     value = "find all PSMs by searchId",
@@ -184,7 +122,7 @@ object PSMController extends MatchController {
     }
 
 
-  @ApiOperation(nickname = "findPSMByProtein",
+  @ApiOperation(nickname = "findAllPSMByProteinAC",
     value = "find all PSMs object for a given protein",
     notes = """PSMs  list in TSV or JSON form""",
     response = classOf[List[PepSpectraMatch]],
@@ -193,7 +131,7 @@ object PSMController extends MatchController {
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name = "sequenceSource", value = "", required = false, dataType = "string", paramType = "sequenceSource")
   ))
-  def findPSMByProtein(
+  def findAllPSMByProteinAC(
                         @ApiParam(value = """searchIds""", defaultValue = "") @PathParam("searchIds") searchIds: String,
                         @ApiParam(value = """accessionCode""", defaultValue = "") @PathParam("accessionCode") accessionCode: String,
                         sequenceSource: Option[String]
@@ -217,38 +155,5 @@ object PSMController extends MatchController {
       }
     }
 
-  @ApiOperation(nickname = "findAllSearchInfoBySearchId",
-    value = "find all SearchInfo object for a given searchId",
-    notes = """SearchInfos  list in TSV or JSON form""",
-    response = classOf[List[SearchInfo]],
-    produces = "application/json, application/tsv",
-    httpMethod = "GET")
-  @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "searchId", value = "", required = false, dataType = "string", paramType = "searchId")
-  ))
-  def findAllSearchInfoBySearchId(
-                                   @ApiParam(value = """searchId""", defaultValue = "M_100") @PathParam("searchId") searchId: String
-                                   ) =  Cached(req => req.uri) {
-    Action.async {
-      for {
-        searchInfo <- SearchInfoDBService().findAllSearchInfoBySearchId(SearchId(searchId))
-      } yield {
-        Ok(Json.toJson(searchInfo))
-      }
 
-    }
-  }
-
-  @ApiOperation(nickname = "deleteAllByRunId",
-    value = "delete PSMs for a given list of searchIds (or one), seperated by comma",
-    notes = """No double check is done. Use with caution""",
-    response = classOf[String],
-    httpMethod = "DELETE")
-  def deleteAllBySearchId(@ApiParam(value = """searchIds""", defaultValue = "") @PathParam("searchIds") searchIds: String) = Action.async {
-    val s = searchIds.split(",").toList.map(SearchId.apply)
-    MatchMongoDBService().deleteAllBySearchId(s).map {
-      x =>
-        Ok("OK")
-    }
-  }
 }
