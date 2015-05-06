@@ -1,54 +1,35 @@
-package ch.isbsib.proteomics.mzviz.controllers
+package ch.isbsib.proteomics.mzviz.controllers.matches
 
 import javax.ws.rs.PathParam
+
 import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
+import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
+import ch.isbsib.proteomics.mzviz.spectrasim.services.JsonSimFormats._
+import ch.isbsib.proteomics.mzviz.controllers.TsvFormats
 import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
-import ch.isbsib.proteomics.mzviz.matches.models.{ProteinRef, PepSpectraMatch, SearchInfo}
-import ch.isbsib.proteomics.mzviz.matches.services.SearchInfoDBService
-import ch.isbsib.proteomics.mzviz.modifications.ModifName
+import ch.isbsib.proteomics.mzviz.matches.models.{PepSpectraMatch, ProteinRef, SearchInfo}
+import ch.isbsib.proteomics.mzviz.matches.services.{MatchMongoDBService, SearchInfoDBService}
 import ch.isbsib.proteomics.mzviz.spectrasim.models.SpSpRefMatch
-import ch.isbsib.proteomics.mzviz.spectrasim.services.{SimilarSpectraMongoDBService}
+import ch.isbsib.proteomics.mzviz.spectrasim.services.SimilarSpectraMongoDBService
 import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
-import ch.isbsib.proteomics.mzviz.theoretical.models.SequenceSourceStats
-import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
-import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
-import ch.isbsib.proteomics.mzviz.spectrasim.services.JsonSimFormats._
-import ch.isbsib.proteomics.mzviz.matches.services.{SearchInfoDBService, MatchMongoDBService}
 import com.wordnik.swagger.annotations._
 import play.api.Logger
-import play.api.Play.current
 import play.api.cache.Cached
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import play.api.libs.json._
+import play.api.libs.json.Json
 import play.api.mvc.Action
-import reactivemongo.bson.BSONDocument
-
+import play.api.Play.current
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
-import ch.isbsib.proteomics.mzviz.modifications.services.JsonModificationFormats._
+
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
  *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 @Api(value = "/match", description = "PSMs, SSMs, protain matches etc.")
-object MatchController extends CommonController {
-
-  /**
-   * transform searchIds comma separated parameter into a set of sSearchId
-   * @param searchIds
-   * @return
-   */
-  def paramSearchIds(searchIds:String):Set[SearchId] = searchIds.split(",").toList.map(SearchId.apply).toSet
-
-  /**
-   * simply map an option of a string into an option of a ModifName
-   * @param withModif
-   * @return
-   */
-  def paramOModifName(withModif:Option[String]):Option[ModifName] = withModif.map(ModifName.apply)
+object PSMController extends MatchController {
 
 
   def stats = Action.async {
@@ -155,7 +136,7 @@ object MatchController extends CommonController {
                                     ) =  Cached(req => req.uri) {
     Action.async {
       for {
-        protRefs <- MatchMongoDBService().listProteinRefsBySearchIds(paramSearchIds(searchIds), paramOModifName(withModif))
+        protRefs <- MatchMongoDBService().listProteinRefsBySearchIds(queryParamSearchIds(searchIds), queryParamOModifName(withModif))
       } yield {
         Ok(Json.toJson(protRefs))
       }
@@ -171,7 +152,7 @@ object MatchController extends CommonController {
   def findAllModificationsBySearchIds(
                                     @ApiParam(value = """searchIds""", defaultValue = "M_100") @PathParam("searchIds") searchIds: String
                                     ) =  Cached(req => req.uri) {
-    val sids = paramSearchIds(searchIds)
+    val sids = queryParamSearchIds(searchIds)
     Action.async {
       for {
         modifNames <- MatchMongoDBService().findAllModificationsBySearchIds(sids)

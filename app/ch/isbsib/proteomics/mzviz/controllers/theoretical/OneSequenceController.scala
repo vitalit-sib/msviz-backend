@@ -1,12 +1,12 @@
-package ch.isbsib.proteomics.mzviz.controllers
+package ch.isbsib.proteomics.mzviz.controllers.theoretical
 
 import javax.ws.rs.PathParam
 
+import ch.isbsib.proteomics.mzviz.controllers.CommonController
 import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
-import ch.isbsib.proteomics.mzviz.theoretical.importer.FastaParser
 import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
 import ch.isbsib.proteomics.mzviz.theoretical.services.SequenceMongoDBService
-import ch.isbsib.proteomics.mzviz.theoretical.{ProteinIdentifier, AccessionCode, SequenceSource}
+import ch.isbsib.proteomics.mzviz.theoretical.{ProteinIdentifier, SequenceSource}
 import com.wordnik.swagger.annotations._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json._

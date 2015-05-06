@@ -23,7 +23,6 @@ import scala.concurrent.Future
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
  * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
-@Api(value = "/exp", description = "experimental data access")
 trait CommonController extends Controller {
   val acceptsTsv = Accepting("application/tsv")
 
