@@ -48,11 +48,10 @@ class SearchInfoMongoDBServiceSpecs extends Specification with ScalaFutures {
 
       val searchEntries =LoaderMzIdent.parseSearchInfo(new File("test/resources/M_100.mzid"), SearchId("M_100"))
       val inserted = service.insert(searchEntries).futureValue
-      val sequenceList = service.findAllSearchInfoBySearchId(SearchId("M_100")).futureValue
+      val oSearch = service.get(SearchId("M_100")).futureValue
       Thread.sleep(200)
-      sequenceList.size must equalTo(1)
-      print (sequenceList.toString())
-      sequenceList.toString() must equalTo("List(SearchInfo(SearchId(M_100),test rafts sample 123 spectra for Roman,List(SearchDatabase(SDB_SwissProt_ID,SwissProt_2014_08.fasta,546238)),roman))")
+      oSearch.isDefined must equalTo(true)
+      oSearch.get.toString() must equalTo("SearchInfo(SearchId(M_100),test rafts sample 123 spectra for Roman,List(SearchDatabase(SDB_SwissProt_ID,SwissProt_2014_08.fasta,546238)),roman)")
     }
   }
 
