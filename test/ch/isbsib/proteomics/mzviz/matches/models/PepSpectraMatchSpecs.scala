@@ -16,7 +16,8 @@ class PepSpectraMatchSpecs extends Specification {
   "pepSpectraMatch" should {
 
     // vals used in following tests
-    val matching = PepMatchInfo(scoreMap = Map("p-value" -> 0.001), numMissedCleavages = Option(1), rank= 1, massDiff = Option(0.01), totalNumIons = Option(1), isRejected = None, chargeState = Option(2  ))
+    val score = IdentScore(mainScore = 0.8, scoreMap = Map("p-value" -> 0.001))
+    val matching = PepMatchInfo(score, numMissedCleavages = Option(1), rank= 1, massDiff = Option(0.01), totalNumIons = Option(1), isRejected = None, chargeState = Option(2  ))
     val sequence = "AKKKAA"
     val oneModifRef = ModifName("Phospho")
     val modificationRefs = Vector(Nil, Seq(oneModifRef), Nil, Nil, Nil, Nil)
@@ -29,7 +30,8 @@ class PepSpectraMatchSpecs extends Specification {
     }
 
     "create simple PepMatchInfo" in {
-      matching.scoreMap("p-value") must equalTo(0.001)
+      matching.score.mainScore must equalTo(0.8)
+      matching.score.scoreMap("p-value") must equalTo(0.001)
       matching.isRejected should be(None)
     }
 

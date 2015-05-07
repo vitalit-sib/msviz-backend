@@ -63,7 +63,8 @@ class LoaderMzIdentSpecs extends Specification {
       }
 
       "check first peptide score" in {
-        psm(0).matchInfo.scoreMap("Mascot:score") must equalTo(31.41)
+        psm(0).matchInfo.score.mainScore must equalTo(31.41)
+        psm(0).matchInfo.score.scoreMap("Mascot:expectation value") must equalTo(0.0356686898077671)
       }
 
       "check peptide match info" in {

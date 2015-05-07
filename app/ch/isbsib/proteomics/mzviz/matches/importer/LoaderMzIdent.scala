@@ -187,6 +187,8 @@ object LoaderMzIdent {
   def convertPepMatch(mzJavaRes: Tuple2[SpectrumIdentifier, PeptideMatch]): PepMatchInfo = {
     val mzJavaMatch = mzJavaRes._2
 
+    val MainScoreName = "Mascot:score"
+
     // create the score map
     val scoreMap:Map[String, Double] =
       (for {k <- mzJavaMatch.getScoreMap.keys()}
@@ -195,8 +197,10 @@ object LoaderMzIdent {
         key -> mzJavaMatch.getScoreMap.get(key)
       }).toMap
 
+    val identScore = IdentScore(scoreMap.get(MainScoreName).getOrElse(-1.0), scoreMap)
+
     // create and return a new PepMatchInfo
-    PepMatchInfo(scoreMap = scoreMap,
+    PepMatchInfo(score = identScore,
       numMissedCleavages = Option(mzJavaMatch.getNumMissedCleavages),
       massDiff = Option(mzJavaMatch.getNumMissedCleavages),
       rank = mzJavaMatch.getRank,

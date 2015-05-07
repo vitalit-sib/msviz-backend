@@ -7,7 +7,7 @@ package ch.isbsib.proteomics.mzviz.matches.models
 
 
 case class PepMatchInfo(
-                         scoreMap: Map[String, Double],
+                         score: IdentScore,
                          numMissedCleavages: Option[Int],
                          massDiff: Option[Double],
                          rank: Int,

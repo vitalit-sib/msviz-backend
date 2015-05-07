@@ -104,6 +104,7 @@ object JsonMatchFormats {
 */
   implicit val formatProteinMatch = Json.format[ProteinMatch]
   implicit val formatPeptide = Json.format[Peptide]
+  implicit val formatIdentScore = Json.format[IdentScore]
   implicit val formatPepMatchInfo = Json.format[PepMatchInfo]
   implicit val formatPepSpectraMatch = Json.format[PepSpectraMatch]
   implicit val formatSearchDatabase =  Json.format[SearchDatabase]
