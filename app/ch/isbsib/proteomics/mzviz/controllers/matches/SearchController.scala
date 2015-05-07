@@ -45,22 +45,20 @@ object SearchController extends MatchController {
     }
   }
 
-  @ApiOperation(nickname = "listSearchIds",
+  @ApiOperation(nickname = "list",
     value = "the list of search ids",
     notes = """from the parameter search-id at load time""",
     response = classOf[List[String]],
     httpMethod = "GET")
-  def listSearchIds =
-    Action
-
-      .async {
+  def list =
+    Action.async {
       MatchMongoDBService().listSearchIds.map {
         ids => Ok(Json.obj("searchIds" -> ids.map(_.value)))
       }
     }
 
 
-  @ApiOperation(nickname = "findAllSearchInfoBySearchId",
+  @ApiOperation(nickname = "get",
     value = "find all SearchInfo object for a given searchId",
     notes = """SearchInfos  list in TSV or JSON form""",
     response = classOf[List[SearchInfo]],
@@ -69,12 +67,12 @@ object SearchController extends MatchController {
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name = "searchId", value = "", required = false, dataType = "string", paramType = "searchId")
   ))
-  def findAllSearchInfoBySearchId(
-                                   @ApiParam(value = """searchId""", defaultValue = "M_100") @PathParam("searchId") searchId: String
-                                   ) = Cached(req => req.uri) {
+  def get(
+           @ApiParam(value = """searchId""", defaultValue = "M_100") @PathParam("searchId") searchId: String
+           ) = Cached(req => req.uri) {
     Action.async {
       for {
-        searchInfo <- SearchInfoDBService().findAllSearchInfoBySearchId(SearchId(searchId))
+        searchInfo <- SearchInfoDBService().get(SearchId(searchId))
       } yield {
         Ok(Json.toJson(searchInfo))
       }
@@ -93,31 +91,30 @@ object SearchController extends MatchController {
   def loadMzId(@ApiParam(name = "searchId", value = "a string id with search identifier") @PathParam("searchId") searchId: String,
                //@ApiParam(name = "runId", value = "a string id with run identifier (if not present, the searchId will be taken)", required = false)
                runId: Option[String]) =
-    Cached(req => req.uri) {
-      Action.async(parse.temporaryFile) {
-        request =>
-          val rid = runId match {
-            case Some(r: String) => RunId(r)
-            case None => RunId(searchId)
+    Action.async(parse.temporaryFile) {
+      request =>
+        val rid = runId match {
+          case Some(r: String) => RunId(r)
+          case None => RunId(searchId)
+        }
+        (for {
+          psms <- Future {
+            LoaderMzIdent.parse(request.body.file, SearchId(searchId), rid)
           }
-          (for {
-            psms <- Future {
-              LoaderMzIdent.parse(request.body.file, SearchId(searchId), rid)
-            }
-            searchInfo <- Future {
-              LoaderMzIdent.parseSearchInfo(request.body.file, SearchId(searchId))
-            }
-            n <- MatchMongoDBService().insert(psms)
-            nInfo<-SearchInfoDBService().insert(searchInfo)
-          } yield {
-              Ok(Json.obj("inserted" -> n, "searchInfoInserted" -> nInfo))
-            }).recover {
-            case e =>
-              Logger.error(e.getMessage, e)
-              BadRequest(Json.prettyPrint(Json.obj("status" -> "ERROR", "message" -> e.getMessage)) + "\n")
+          searchInfo <- Future {
+            LoaderMzIdent.parseSearchInfo(request.body.file, SearchId(searchId))
           }
-      }
+          n <- MatchMongoDBService().insert(psms)
+          nInfo <- SearchInfoDBService().insert(searchInfo)
+        } yield {
+            Ok(Json.obj("psms" -> n, "searches" -> nInfo))
+          }).recover {
+          case e =>
+            Logger.error(e.getMessage, e)
+            BadRequest(Json.prettyPrint(Json.obj("status" -> "ERROR", "message" -> e.getMessage)) + "\n")
+        }
     }
+
   @ApiOperation(nickname = "delete",
     value = "delete PSMs & searchInfo for a given list of searchIds (or one), seperated by comma",
     notes = """No double check is done. Use with caution""",

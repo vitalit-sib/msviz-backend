@@ -29,11 +29,11 @@ GET           /match/modifications/:searchIds                        ch.isbsib.p
 GET           /match/psms/:searchIds/by-ac/:accessionCode            ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findAllPSMByProteinAC(searchIds, accessionCode, sequenceSource:Option[String])
 GET           /match/sim/:runId/:title/:scoreThresh/:matchTol        ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findSimilarSpectra(runId, title, scoreThresh, matchTol)
 
-GET           /api-docs/search                                        controllers.ApiHelpController.getResource(path = "/search")
-GET           /search/searchInfo/:searchId                            ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.findAllSearchInfoBySearchId(searchId)
-GET           /search/searches                                        ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.listSearchIds
-POST          /search/:searchId                                  ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.loadMzId(searchId:String, runId:Option[String])
-DELETE        /search/:searchIds                                 ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.delete(searchIds)
+GET           /api-docs/search                                       controllers.ApiHelpController.getResource(path = "/search")
+GET           /search/:searchId                                      ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.get(searchId)
+GET           /search                                                ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.list
+POST          /search/:searchId                                      ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.loadMzId(searchId:String, runId:Option[String])
+DELETE        /search/:searchIds                                     ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.delete(searchIds)
 
 GET           /docs/*file                                            controllers.Assets.at(path="/public/docs", file)
 GET           /api-docs                                              controllers.ApiHelpController.getResources

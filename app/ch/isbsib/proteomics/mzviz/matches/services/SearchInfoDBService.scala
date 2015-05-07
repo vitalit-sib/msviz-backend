@@ -54,13 +54,13 @@ class SearchInfoDBService(val db: DefaultDB) extends MongoDBService {
   }
 
   /**
-   * retrieves all entries for a given searchId
+   * retrieves searchInfo for a given searchId
    * @param searchId the search id
    * @return
    */
-  def findAllSearchInfoBySearchId(searchId: SearchId): Future[Seq[SearchInfo]] = {
+  def get(searchId: SearchId): Future[Option[SearchInfo]] = {
     val query = Json.obj("searchId" -> searchId.value)
-    collection.find(query).cursor[SearchInfo].collect[List]()
+    collection.find(query).cursor[SearchInfo].headOption
   }
 
 
