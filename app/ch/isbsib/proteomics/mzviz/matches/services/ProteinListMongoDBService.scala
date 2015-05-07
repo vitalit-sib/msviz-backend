@@ -85,7 +85,7 @@ class ProteinListMongoDBService (val db: DefaultDB) extends MongoDBService {
 
 
 object ProteinListMongoDBService extends Controller with MongoController {
-  val default = new MatchMongoDBService(db)
+  val default = new ProteinListMongoDBService(db)
 
   /**
    * get the default db/collection

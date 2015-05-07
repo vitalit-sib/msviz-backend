@@ -5,7 +5,7 @@ import java.io.File
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.matches.{HitRank, SearchId}
-import ch.isbsib.proteomics.mzviz.matches.models.{ProteinRef, PepSpectraMatch}
+import ch.isbsib.proteomics.mzviz.matches.models.{ProteinIdent, ProteinRef, PepSpectraMatch}
 import ch.isbsib.proteomics.mzviz.modifications.ModifName
 import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, NumDatabaseSequences, SequenceSource}
 import org.specs2.mutable.Specification
@@ -50,10 +50,16 @@ class LoaderMzIdentSpecs extends Specification {
   }
 
     "parse M_100" should {
-      val psm: Seq[PepSpectraMatch] = LoaderMzIdent.parse(new File("test/resources/M_100.mzid"), SearchId("M_100"), RunId("M_100.mgf"))
+      val psmAndProtLists: Tuple2[Seq[PepSpectraMatch], Seq[ProteinIdent]] = LoaderMzIdent.parse(new File("test/resources/M_100.mzid"), SearchId("M_100"), RunId("M_100.mgf"))
+      val psm = psmAndProtLists._1
+      val prots = psmAndProtLists._2
 
-      "check size" in {
+      "check size PSMs" in {
         psm.size must equalTo(62)
+      }
+
+      "check size Proteins" in {
+        prots.size must equalTo(27)
       }
 
       "check first peptide" in {
@@ -127,10 +133,16 @@ class LoaderMzIdentSpecs extends Specification {
     }
 
     "parse F001644" should {
-      val psms: Seq[PepSpectraMatch] = LoaderMzIdent.parse(new File("test/resources/F001644.mzid"), SearchId("F001644"), RunId("F001644.mgf"))
+      val psmAndProtLists: Tuple2[Seq[PepSpectraMatch], Seq[ProteinIdent]] = LoaderMzIdent.parse(new File("test/resources/F001644.mzid"), SearchId("F001644"), RunId("F001644.mgf"))
+      val psms = psmAndProtLists._1
+      val prots = psmAndProtLists._2
 
-      "check size" in {
+      "check PSMs size" in {
         psms.size must equalTo(437)
+      }
+
+      "check Proteins size" in {
+        prots.size must equalTo(24)
       }
 
       "check psm content" in {
@@ -144,7 +156,8 @@ class LoaderMzIdentSpecs extends Specification {
     }
 
   "parse M_100_with_X" should {
-    val psm: Seq[PepSpectraMatch] = LoaderMzIdent.parse(new File("test/resources/M_100_with_X.mzid"), SearchId("with_X"), RunId("M_100.mgf"))
+    val psmAndProtLists: Tuple2[Seq[PepSpectraMatch], Seq[ProteinIdent]] = LoaderMzIdent.parse(new File("test/resources/M_100_with_X.mzid"), SearchId("with_X"), RunId("M_100.mgf"))
+    val psm = psmAndProtLists._1
 
     "check first peptide" in {
       psm(0).pep.sequence must equalTo("TYTXLK")

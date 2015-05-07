@@ -28,23 +28,34 @@ import scala.collection.mutable.ListBuffer
  */
 object LoaderMzIdent {
 
-  /**
-   * parse a .mzid file and return a full run.
-   * @param file an .mzid file
-   * @return
-   */
-  def parse(file: File, searchId: SearchId, runId: RunId): Seq[PepSpectraMatch] = {
+
+  def parse(file: File, searchId: SearchId, runId: RunId): Tuple2[Seq[PepSpectraMatch], Seq[ProteinIdent]] = {
     // @TODO set the unimodXMLPath in the controller? Currently we only take the Unimod.XML provided by MzJava into account
     // set the unimodXmlPath for MzJavaunimodXmlPath
     //val s = Play.application().configuration().getString("unimod.xml")
     //println("unimod location: " + s)
     //UnimodManager.setUnimodPath(s)
 
-    // data from MzJava parser are stored in a list
-    val searchResults = mzJavaParse(file)
-
     // get the info about the SearchDatabases
     val searchDbSourceInfo = parseSearchDbSourceInfo(file)
+
+    // parse PSM and Protein lists
+    def psmList = parsePsm(file, searchId, runId, searchDbSourceInfo)
+    def proteinList = ParseProteinList.parseProtList(file, searchId, searchDbSourceInfo)
+
+    Tuple2(psmList, proteinList)
+  }
+
+
+  /**
+   * parse a .mzid file and return a full run.
+   * @param file an .mzid file
+   * @return
+   */
+  def parsePsm(file: File, searchId: SearchId, runId: RunId, searchDbSourceInfo:Seq[SearchDatabase]): Seq[PepSpectraMatch] = {
+
+    // data from MzJava parser are stored in a list
+    val searchResults = mzJavaParse(file)
     
     // convert the resulting list into our proper object
     searchResults.map({ t =>

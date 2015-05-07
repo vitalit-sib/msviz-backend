@@ -28,7 +28,7 @@ import scala.concurrent.Future
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
  *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
-@Api(value = "/match", description = "PSMs, SSMs, protain matches etc.")
+@Api(value = "/match", description = "PSMs, SSMs, protein matches etc.")
 object PSMController extends MatchController {
 
 
@@ -37,7 +37,6 @@ object PSMController extends MatchController {
       Ok(jsonWritesMap.writes(st))
     }
   }
-
 
   @ApiOperation(nickname = "findAllPSMByRunId",
     value = "find all PSMs by searchId",

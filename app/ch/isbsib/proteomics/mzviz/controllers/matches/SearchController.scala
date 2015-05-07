@@ -10,7 +10,7 @@ import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models.SearchInfo
-import ch.isbsib.proteomics.mzviz.matches.services.{MatchMongoDBService, SearchInfoDBService}
+import ch.isbsib.proteomics.mzviz.matches.services.{ProteinListMongoDBService, MatchMongoDBService, SearchInfoDBService}
 import com.wordnik.swagger.annotations._
 import play.api.Logger
 import play.api.cache.Cached
@@ -98,16 +98,17 @@ object SearchController extends MatchController {
           case None => RunId(searchId)
         }
         (for {
-          psms <- Future {
+          psmAndProteinList <- Future {
             LoaderMzIdent.parse(request.body.file, SearchId(searchId), rid)
           }
           searchInfo <- Future {
             LoaderMzIdent.parseSearchInfo(request.body.file, SearchId(searchId))
           }
-          n <- MatchMongoDBService().insert(psms)
+          nMatches <- MatchMongoDBService().insert(psmAndProteinList._1)
+          nProteins <- ProteinListMongoDBService().insert(psmAndProteinList._2)
           nInfo <- SearchInfoDBService().insert(searchInfo)
         } yield {
-            Ok(Json.obj("psms" -> n, "searches" -> nInfo))
+            Ok(Json.obj("psms" -> nMatches, "proteins" -> nProteins, "searches" -> nInfo))
           }).recover {
           case e =>
             Logger.error(e.getMessage, e)
