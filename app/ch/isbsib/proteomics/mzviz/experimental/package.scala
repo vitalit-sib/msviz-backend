@@ -14,4 +14,11 @@ package object experimental {
    * @param value just a value class
    */
   case class SpectrumUniqueId(value:String) extends AnyVal
+
+  /**
+   * the spectrum identifier from MzIdentML
+   * @param value just a value class
+   */
+  case class SpectrumIdentifictionItem(value:String) extends AnyVal
+
 }

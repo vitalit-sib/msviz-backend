@@ -5,7 +5,7 @@ import java.io.{File, FileInputStream, InputStream}
 import ch.isbsib.proteomics.mzviz.commons.helpers.OptionConverter
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
-import ch.isbsib.proteomics.mzviz.matches.SearchId
+import ch.isbsib.proteomics.mzviz.matches.{HitRank, SearchId}
 import ch.isbsib.proteomics.mzviz.matches.models._
 import ch.isbsib.proteomics.mzviz.modifications.{ModifName}
 import ch.isbsib.proteomics.mzviz.modifications.models.{PositionedModifRef}
@@ -34,6 +34,7 @@ object LoaderMzIdent {
    * @return
    */
   def parse(file: File, searchId: SearchId, runId: RunId): Seq[PepSpectraMatch] = {
+    // @TODO set the unimodXMLPath in the controller? Currently we only take the Unimod.XML provided by MzJava into account
     // set the unimodXmlPath for MzJavaunimodXmlPath
     //val s = Play.application().configuration().getString("unimod.xml")
     //println("unimod location: " + s)
@@ -186,7 +187,6 @@ object LoaderMzIdent {
   def convertPepMatch(mzJavaRes: Tuple2[SpectrumIdentifier, PeptideMatch]): PepMatchInfo = {
     val mzJavaMatch = mzJavaRes._2
 
-
     // create the score map
     val scoreMap:Map[String, Double] =
       (for {k <- mzJavaMatch.getScoreMap.keys()}
@@ -259,7 +259,11 @@ object LoaderMzIdent {
   def mzJavaParse(file: File): ListBuffer[Tuple2[SpectrumIdentifier, PeptideMatch]] = {
     val searchResults = ListBuffer[Tuple2[SpectrumIdentifier, PeptideMatch]]()
     val insertIdResultCB: PSMReaderCallback = new PSMReaderCallback {
-      def resultRead(identifier: SpectrumIdentifier, peptideMatch: PeptideMatch) = searchResults.append(Tuple2(identifier, peptideMatch))
+      def resultRead(identifier: SpectrumIdentifier, peptideMatch: PeptideMatch) = {
+        //@TODO store the SpectrumIdentifictionItem in MzJava as the name
+        //@TODO MzJava provides an spectra index (is it the same as ScanNumber?)
+        searchResults.append(Tuple2(identifier, peptideMatch))
+      }
     }
 
     val fr: InputStream = new FileInputStream(file)

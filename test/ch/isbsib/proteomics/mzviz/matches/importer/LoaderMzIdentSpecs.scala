@@ -4,7 +4,7 @@ import java.io.File
 
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
-import ch.isbsib.proteomics.mzviz.matches.SearchId
+import ch.isbsib.proteomics.mzviz.matches.{HitRank, SearchId}
 import ch.isbsib.proteomics.mzviz.matches.models.{ProteinRef, PepSpectraMatch}
 import ch.isbsib.proteomics.mzviz.modifications.ModifName
 import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, NumDatabaseSequences, SequenceSource}
@@ -126,10 +126,18 @@ class LoaderMzIdentSpecs extends Specification {
     }
 
     "parse F001644" should {
-      val psm: Seq[PepSpectraMatch] = LoaderMzIdent.parse(new File("test/resources/F001644.mzid"), SearchId("F001644"), RunId("F001644.mgf"))
+      val psms: Seq[PepSpectraMatch] = LoaderMzIdent.parse(new File("test/resources/F001644.mzid"), SearchId("F001644"), RunId("F001644.mgf"))
 
       "check size" in {
-        psm.size must equalTo(437)
+        psms.size must equalTo(437)
+      }
+
+      "check psm content" in {
+        val psmsFlt = psms.filter({ psm =>
+          psm.spectrumId.id == SpectrumUniqueId("20141008_BSA_25cm_column2.8507.8507.2")
+        })
+
+        psmsFlt.size must equalTo(2)
       }
 
     }

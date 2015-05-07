@@ -2,7 +2,7 @@ package ch.isbsib.proteomics.mzviz.matches.services
 
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
-import ch.isbsib.proteomics.mzviz.matches.SearchId
+import ch.isbsib.proteomics.mzviz.matches.{HitRank, SearchId}
 import ch.isbsib.proteomics.mzviz.matches.models._
 import ch.isbsib.proteomics.mzviz.theoretical.models.SearchDatabase
 import ch.isbsib.proteomics.mzviz.theoretical.{ProteinIdentifier, SequenceSource, AccessionCode}
@@ -23,6 +23,12 @@ object JsonMatchFormats {
     override def reads(json: JsValue): JsResult[SpectrumId] = JsSuccess(SpectrumId(SpectrumUniqueId((json \ "id").as[String]), RunId((json \ "runId").as[String])))
 
     def writes(o: SpectrumId) = Json.obj("id" -> o.id.value, "runId" -> o.runId.value)
+  }
+
+  implicit val formatHitRank = new Format[HitRank] {
+    override def reads(json: JsValue): JsResult[HitRank] = JsSuccess(HitRank(json.as[Int]))
+
+    def writes(o: HitRank) = JsNumber(o.value)
   }
 
   implicit val formatAccessionCode = new Format[AccessionCode] {
@@ -100,7 +106,6 @@ object JsonMatchFormats {
   implicit val formatPeptide = Json.format[Peptide]
   implicit val formatPepMatchInfo = Json.format[PepMatchInfo]
   implicit val formatPepSpectraMatch = Json.format[PepSpectraMatch]
-
   implicit val formatSearchDatabase =  Json.format[SearchDatabase]
   implicit val formatSearchInfo =  Json.format[SearchInfo]
 

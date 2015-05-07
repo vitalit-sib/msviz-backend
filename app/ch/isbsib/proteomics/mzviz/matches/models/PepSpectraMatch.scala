@@ -1,6 +1,5 @@
 package ch.isbsib.proteomics.mzviz.matches.models
 
-import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.theoretical.AccessionCode

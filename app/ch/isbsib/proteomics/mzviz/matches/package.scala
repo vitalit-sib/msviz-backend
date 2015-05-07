@@ -6,4 +6,6 @@ package ch.isbsib.proteomics.mzviz
  */
 package object matches {
   case class SearchId(value:String) extends AnyVal
+
+  case class HitRank(value:Int) extends AnyVal
 }
