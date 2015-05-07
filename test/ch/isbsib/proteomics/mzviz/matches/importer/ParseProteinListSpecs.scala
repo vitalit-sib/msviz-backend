@@ -60,33 +60,51 @@ class ParseProteinListSpecs extends Specification {
     val db2 = SearchDatabase(id = "SDB_custom", version="2.0", entries=100)
     val searchDbs = Seq(db1, db2)
 
+    val mzIdentML = new File("test/resources/F001644.mzid")
+    val spIdTitleRelation = ParseProteinList.parseProtList(mzIdentML, SearchId("hoho"), searchDbs)
+
     "check size and title" in {
-      val mzIdentML = new File("test/resources/F001644.mzid")
-      val spIdTitleRelation = ParseProteinList.parseProtList(mzIdentML, SearchId("hoho"), searchDbs)
-
       spIdTitleRelation.size must equalTo(24)
+    }
 
-      // check main protein
-      spIdTitleRelation(0).mainProt.proteinAC mustEqual(AccessionCode("P02769"))
-      spIdTitleRelation(0).mainProt.nrPsms mustEqual(368)
-      spIdTitleRelation(0).mainProt.passThreshold mustEqual(true)
-      spIdTitleRelation(0).mainProt.score.mainScore mustEqual(10884.08)
-      spIdTitleRelation(0).mainProt.nrSequences mustEqual(32)
+    "check main protein hit" in {
+      spIdTitleRelation(0).mainProt.proteinAC mustEqual (AccessionCode("P02769"))
+      spIdTitleRelation(0).mainProt.nrPsms mustEqual (368)
+      spIdTitleRelation(0).mainProt.passThreshold mustEqual (true)
+      spIdTitleRelation(0).mainProt.score.mainScore mustEqual (10884.08)
+      spIdTitleRelation(0).mainProt.nrSequences mustEqual (32)
+    }
 
-      // check subsets
-      spIdTitleRelation(0).subsetProts.size mustEqual(2)
-      spIdTitleRelation(0).subsetProts(0).proteinAC mustEqual(AccessionCode("P02768-1"))
-      spIdTitleRelation(0).subsetProts(1).proteinAC mustEqual(AccessionCode("Q3SZ57"))
+    "check subsets" in {
+      spIdTitleRelation(0).subsetProts.size mustEqual (2)
+      spIdTitleRelation(0).subsetProts(0).proteinAC mustEqual (AccessionCode("P02768-1"))
+      spIdTitleRelation(0).subsetProts(1).proteinAC mustEqual (AccessionCode("Q3SZ57"))
+    }
 
-      // check other protein
+    "check proteins with special names" in {
       spIdTitleRelation(7).mainProt.proteinAC mustEqual(AccessionCode("mAbEDAR_1_2"))
       spIdTitleRelation(8).mainProt.proteinAC mustEqual(AccessionCode("sp|OVAL_CHICK|"))
       spIdTitleRelation(11).mainProt.proteinAC mustEqual(AccessionCode("REFSEQ:XP_001252647"))
 
     }
 
+  }
 
 
+  "check source information" should {
+
+    val file = new File("test/resources/F001644.mzid")
+    val dbInfo = LoaderMzIdent.parseSearchDbSourceInfo(file)
+    val spIdTitleRelation = ParseProteinList.parseProtList(file, SearchId("hoho"), dbInfo)
+
+    "check size" in {
+      spIdTitleRelation.size must equalTo(24)
+    }
+
+    "check source info" in {
+      spIdTitleRelation(0).mainProt.source must equalTo(SequenceSource("SDB_contaminants_PAF"))
+      spIdTitleRelation(2).mainProt.source must equalTo(SequenceSource("SDB_custom"))
+    }
 
   }
 
