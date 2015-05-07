@@ -3,7 +3,7 @@ package ch.isbsib.proteomics.mzviz.controllers
 import ch.isbsib.proteomics.mzviz.matches.models.ProteinRef
 import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
 import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
-import play.api.libs.json.{JsValue, Writes}
+import play.api.libs.json.{JsArray, JsValue, Writes}
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
@@ -32,6 +32,7 @@ object JsonCommonsFormats {
       o.foldLeft(Json.obj())({ (acc, p) => acc ++ Json.obj(p._1.toString -> p._2)})
     }
   }
+
 
   //  implicit val formatAccessionCode = new Format[AccessionCode] {
   //    override def reads(json: JsValue): JsResult[AccessionCode] = JsSuccess(AccessionCode(json.as[String]))

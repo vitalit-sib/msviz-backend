@@ -1,22 +1,20 @@
 package ch.isbsib.proteomics.mzviz.matches.services
 
-import ch.isbsib.proteomics.mzviz.commons.services.{MongoNotFoundException, MongoDBService}
-import ch.isbsib.proteomics.mzviz.controllers.routes
+import ch.isbsib.proteomics.mzviz.commons.services.{MongoDBService, MongoNotFoundException}
 import ch.isbsib.proteomics.mzviz.matches.SearchId
-import ch.isbsib.proteomics.mzviz.matches.models.{SearchInfo, PepSpectraMatch}
-import ch.isbsib.proteomics.mzviz.theoretical.SequenceSource
-import ch.isbsib.proteomics.mzviz.theoretical.models.FastaEntry
-import ch.isbsib.proteomics.mzviz.theoretical.services.SequenceMongoDBService._
+import ch.isbsib.proteomics.mzviz.matches.models.SearchInfo
+import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
+import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
+
+import play.api.libs.concurrent.Execution.Implicits._
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
 import reactivemongo.api.DefaultDB
-import reactivemongo.api.indexes.{IndexType, Index}
-import play.api.libs.concurrent.Execution.Implicits._
+import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONDocument
-import reactivemongo.core.commands.{RawCommand, LastError}
-import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
+import reactivemongo.core.commands.{LastError, RawCommand}
 
 import scala.concurrent.Future
 
@@ -28,6 +26,12 @@ class SearchInfoDBService(val db: DefaultDB) extends MongoDBService {
   val collectionName = "searchInfo"
   val mainKeyName = "searchId"
 
+  setIndexes(List(
+    new Index(
+      Seq("searchId" -> IndexType.Ascending),
+      name = Some("searchId"),
+      unique = true)
+  ));
 
   /**
    * insert a list of SearchInfo entries
@@ -45,7 +49,7 @@ class SearchInfoDBService(val db: DefaultDB) extends MongoDBService {
    * @param searchId the seach id
    * @return
    */
-  def deleteAllBySearchId(searchId: SearchId): Future[Boolean] = {
+  def delete(searchId: SearchId): Future[Boolean] = {
     val query = Json.obj("searchId" -> searchId.value)
     collection.remove(query).map {
       case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
@@ -68,6 +72,14 @@ class SearchInfoDBService(val db: DefaultDB) extends MongoDBService {
    * retrieves a list of SearchId's
    * @return
    */
+  def list: Future[List[SearchInfo]] = {
+    collection.find(Json.obj()).cursor[SearchInfo].collect[List]()
+  }
+
+  /**
+   * retrieves a list of SearchId's
+   * @return
+   */
   def listSearchIds: Future[Seq[SearchId]] = {
     val command = RawCommand(BSONDocument("distinct" -> collectionName, "key" -> "searchId"))
     db.command(command)
@@ -79,7 +91,21 @@ class SearchInfoDBService(val db: DefaultDB) extends MongoDBService {
         }
     })
   }
+
+  /**
+   * check if a results has already been loaded for the given searchId
+   * @param searchId search key
+   */
+  def isSearchIdExist(searchId: SearchId): Future[Boolean] = {
+    val query = Json.obj("searchId" -> searchId.value)
+    collection.find(query)
+      .cursor[JsObject]
+      .headOption
+      .map(_.isDefined)
+  }
+
 }
+
 
 object SearchInfoDBService extends Controller with MongoController {
   val default = new SearchInfoDBService(db)

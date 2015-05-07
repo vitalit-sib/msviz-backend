@@ -38,13 +38,13 @@ class SearchInfoMongoDBServiceSpecs extends Specification with ScalaFutures {
       val searchEntries =LoaderMzIdent.parseSearchInfo(new File("test/resources/M_100.mzid"), SearchId("M_100"))
       val inserted = service.insert(searchEntries).futureValue
       //remove
-      val n: Boolean = service.deleteAllBySearchId(SearchId("M_100")).futureValue
+      val n: Boolean = service.delete(SearchId("M_100")).futureValue
       n must equalTo(true)
     }
   }
 
-  "findAllSearchInfoBySearchId" should {
-    "find all by searchId" in new TempMongoDBService {
+  "get" should {
+    "find by searchId" in new TempMongoDBService {
 
       val searchEntries =LoaderMzIdent.parseSearchInfo(new File("test/resources/M_100.mzid"), SearchId("M_100"))
       val inserted = service.insert(searchEntries).futureValue
@@ -55,8 +55,20 @@ class SearchInfoMongoDBServiceSpecs extends Specification with ScalaFutures {
     }
   }
 
+  "list" should {
+    "all" in new TempMongoDBService {
+      service.insert(LoaderMzIdent.parseSearchInfo(new File("test/resources/M_100.mzid"), SearchId("M_100"))).futureValue
+      service.insert(LoaderMzIdent.parseSearchInfo(new File("test/resources/M_100.mzid"), SearchId("M_100_2"))).futureValue
+      val searchIds = service.list.futureValue
+      Thread.sleep(200)
+      searchIds.size must equalTo(2)
+      searchIds(0).searchId mustEqual SearchId("M_100")
+      searchIds(1).searchId mustEqual SearchId("M_100_2")
+    }
+  }
+
   "listSearchIds" should {
-    "list all" in new TempMongoDBService {
+    "list all ids" in new TempMongoDBService {
       val searchEntries =LoaderMzIdent.parseSearchInfo(new File("test/resources/M_100.mzid"), SearchId("M_100"))
       val inserted = service.insert(searchEntries).futureValue
       val searchIds = service.listSearchIds.futureValue
@@ -64,7 +76,35 @@ class SearchInfoMongoDBServiceSpecs extends Specification with ScalaFutures {
       searchIds.size must equalTo(1)
       searchIds(0) mustEqual SearchId("M_100")
     }
+
+    "list all ids 2" in new TempMongoDBService {
+      service.insert(LoaderMzIdent.parseSearchInfo(new File("test/resources/M_100.mzid"), SearchId("M_100"))).futureValue
+      service.insert(LoaderMzIdent.parseSearchInfo(new File("test/resources/M_100.mzid"), SearchId("M_100_2"))).futureValue
+      val searchIds = service.listSearchIds.futureValue
+      Thread.sleep(200)
+      searchIds.size must equalTo(2)
+      searchIds(0) mustEqual SearchId("M_100")
+      searchIds(1) mustEqual SearchId("M_100_2")
+    }
   }
 
 
+
+  "isSearchIdExist" should {
+    "check val" in new TempMongoDBService {
+      service.isSearchIdExist(SearchId("M_100")).futureValue must equalTo(false)
+      service.insert(LoaderMzIdent.parseSearchInfo(new File("test/resources/M_100.mzid"), SearchId("M_100"))).futureValue
+      Thread.sleep(200)
+      service.isSearchIdExist(SearchId("M_100")).futureValue must equalTo(true)
+    }
+
+    "inserting with duplicate SearchId must throw error" in new TempMongoDBService {
+      {
+        service.insert(LoaderMzIdent.parseSearchInfo(new File("test/resources/M_100.mzid"), SearchId("M_100"))).futureValue
+        Thread.sleep(200)
+        //        Await.ready(service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("M_100"), RunId("M_100.mgf"))), 300 milli)
+        service.insert(LoaderMzIdent.parseSearchInfo(new File("test/resources/M_100.mzid"), SearchId("M_100"))).futureValue
+      } must throwA[Exception]
+    }
+  }
 }

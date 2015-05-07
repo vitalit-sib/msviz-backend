@@ -204,35 +204,6 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
   //  }
 
 
-  /**
-   * retrieves a list of SearchId's
-   *
-   * @return list of SearchId
-   */
-
-  def listSearchIds: Future[Seq[SearchId]] = {
-    val command = RawCommand(BSONDocument("distinct" -> collectionName, "key" -> "searchId"))
-    db.command(command)
-      .map({
-      doc =>
-        doc.getAs[List[String]]("values").get
-          .map {
-          i => SearchId(i)
-        }
-    })
-  }
-
-  /**
-   * check if a results has already been loaded for the given searchId
-   * @param searchId search key
-   */
-  def isSearchIdExist(searchId: SearchId): Future[Boolean] = {
-    val query = Json.obj("searchId" -> searchId.value)
-    collection.find(query)
-      .cursor[JsObject]
-      .headOption
-      .map(_.isDefined)
-  }
 
 
   def qFilter(searchIds: Set[SearchId]) = searchIds.toList match {

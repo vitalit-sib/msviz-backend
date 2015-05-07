@@ -52,8 +52,8 @@ object SearchController extends MatchController {
     httpMethod = "GET")
   def list =
     Action.async {
-      MatchMongoDBService().listSearchIds.map {
-        ids => Ok(Json.obj("searchIds" -> ids.map(_.value)))
+      SearchInfoDBService().list.map {
+        searchInfos => Ok(Json.toJson(searchInfos))
       }
     }
 
