@@ -15,7 +15,7 @@ import scala.xml.NodeSeq
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
  *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
-object ParseProteinList {
+object ParseProteinMatches {
 
   val CvParamSpectrumTitle = "MS:1000796"
   val CvParamMascotScore = "MS:1001171"

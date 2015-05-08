@@ -11,7 +11,7 @@ import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models.{PepSpectraMatch, SearchInfo}
-import ch.isbsib.proteomics.mzviz.matches.services.{ProteinListMongoDBService, MatchMongoDBService, SearchInfoDBService}
+import ch.isbsib.proteomics.mzviz.matches.services.{ProteinMatchMongoDBService, MatchMongoDBService, SearchInfoDBService}
 import com.wordnik.swagger.annotations._
 import play.api.Logger
 import play.api.cache.Cached
@@ -26,7 +26,7 @@ import scala.concurrent.Future
  *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 @Api(value = "/proteinList", description = "list of identified proteins")
-object ProteinListController extends MatchController {
+object ProteinMatchController extends MatchController {
 
 
   @ApiOperation(nickname = "findAllProteinsBySearchId",
@@ -35,11 +35,12 @@ object ProteinListController extends MatchController {
     response = classOf[List[String]],
     httpMethod = "GET")
   def findAllProteinsBySearchIds(
-                                       @ApiParam(value = """searchId""") @PathParam("searchId") searchId: String
+                                       @ApiParam(value = """searchIds""") @PathParam("searchIds") searchIds: String
                                        ) =  Cached(req => req.uri) {
     Action.async {
+      val sids = queryParamSearchIds(searchIds)
       for {
-        proteinList <- ProteinListMongoDBService().findAllProteinsBySearchId(SearchId(searchId))
+        proteinList <- ProteinMatchMongoDBService().findAllProteinsBySearchIds(sids)
       } yield {
         Ok(Json.toJson(proteinList))
       }

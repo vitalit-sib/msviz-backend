@@ -21,8 +21,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
  *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
-class ProteinListMongoDBService (val db: DefaultDB) extends MongoDBService {
-  val collectionName = "protein.list"
+class ProteinMatchMongoDBService (val db: DefaultDB) extends MongoDBService {
+  val collectionName = "proteinMatches"
   val mainKeyName = "searchId"
 
   setIndexes(List(
@@ -51,7 +51,7 @@ class ProteinListMongoDBService (val db: DefaultDB) extends MongoDBService {
 
   /**
    * remove all entries from the mongodb
-   * @param searchId the seach id
+   * @param searchId the search id
    * @return
    */
   def deleteAllBySearchId(searchId: SearchId): Future[Boolean] = {
@@ -62,7 +62,20 @@ class ProteinListMongoDBService (val db: DefaultDB) extends MongoDBService {
     }
   }
 
+  /**
+   * remove all entries from the mongodb
+   * @param searchIds mutliple search ids
+   * @return
+   */
+  def deleteAllBySearchIds(searchIds: Set[SearchId]): Future[Boolean] = {
+    val query = Json.obj("searchId" -> Json.obj("$in" -> searchIds.toList))
+    collection.remove(query).map {
+      case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
+      case _ => true
+    }
+  }
 
+  
   /**
    * retrieves all entries for a given source
    * @param searchId the search id
@@ -72,6 +85,17 @@ class ProteinListMongoDBService (val db: DefaultDB) extends MongoDBService {
     val query = Json.obj("searchId" -> searchId.value)
     collection.find(query).cursor[ProteinIdent].collect[List]()
   }
+
+  /**
+   * retrieves all entries for a list of sources
+   * @param searchIds list of search ids
+   * @return
+   */
+  def findAllProteinsBySearchIds(searchIds: Set[SearchId]): Future[Seq[ProteinIdent]] = {
+    val query = Json.obj("searchId" -> Json.obj("$in" -> searchIds.toList))
+    collection.find(query).cursor[ProteinIdent].collect[List]()
+  }
+
 
   /**
    * count the number of Entries
@@ -84,8 +108,8 @@ class ProteinListMongoDBService (val db: DefaultDB) extends MongoDBService {
 }
 
 
-object ProteinListMongoDBService extends Controller with MongoController {
-  val default = new ProteinListMongoDBService(db)
+object ProteinMatchMongoDBService extends Controller with MongoController {
+  val default = new ProteinMatchMongoDBService(db)
 
   /**
    * get the default db/collection

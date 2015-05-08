@@ -14,14 +14,14 @@ import org.specs2.mutable.Specification
  * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 
-class ParseProteinListSpecs extends Specification {
+class ParseProteinMatchesSpecs extends Specification {
 
 
   "parseSpectrumIdAndTitleRelation" should {
 
     "check size and title" in {
       val mzIdentML = scala.xml.XML.loadFile(new File("test/resources/F001644.mzid"))
-      val spIdTitleRelation = ParseProteinList.parseSpectrumIdAndTitleRelation(mzIdentML \\ "SpectrumIdentificationList")
+      val spIdTitleRelation = ParseProteinMatches.parseSpectrumIdAndTitleRelation(mzIdentML \\ "SpectrumIdentificationList")
 
       spIdTitleRelation.get(SpectrumIdentifictionItem("SII_71_1")) must equalTo(Some(SpectrumUniqueId("20141008_BSA_25cm_column2.9985.9985.2")))
 
@@ -38,14 +38,14 @@ class ParseProteinListSpecs extends Specification {
     val searchDbs = Seq(db1, db2)
 
     "check convertion 1" in {
-      def acAndDb = ParseProteinList.convertDbSeqId("DBSeq_1_Q0IIK2", searchDbs).get
+      def acAndDb = ParseProteinMatches.convertDbSeqId("DBSeq_1_Q0IIK2", searchDbs).get
 
       acAndDb._1 must equalTo(AccessionCode("Q0IIK2"))
       acAndDb._2 must equalTo(SequenceSource("SDB_contaminants_PAF"))
     }
 
     "check convertion 2" in {
-      def acAndDb = ParseProteinList.convertDbSeqId("DBSeq_2_sp|TRFL_HUMAN|", searchDbs).get
+      def acAndDb = ParseProteinMatches.convertDbSeqId("DBSeq_2_sp|TRFL_HUMAN|", searchDbs).get
 
       acAndDb._1 must equalTo(AccessionCode("sp|TRFL_HUMAN|"))
       acAndDb._2 must equalTo(SequenceSource("SDB_custom"))
@@ -61,7 +61,7 @@ class ParseProteinListSpecs extends Specification {
     val searchDbs = Seq(db1, db2)
 
     val mzIdentML = new File("test/resources/F001644.mzid")
-    val spIdTitleRelation = ParseProteinList.parseProtList(mzIdentML, SearchId("hoho"), searchDbs)
+    val spIdTitleRelation = ParseProteinMatches.parseProtList(mzIdentML, SearchId("hoho"), searchDbs)
 
     "check size and title" in {
       spIdTitleRelation.size must equalTo(24)
@@ -95,7 +95,7 @@ class ParseProteinListSpecs extends Specification {
 
     val file = new File("test/resources/F001644.mzid")
     val dbInfo = LoaderMzIdent.parseSearchDbSourceInfo(file)
-    val spIdTitleRelation = ParseProteinList.parseProtList(file, SearchId("hoho"), dbInfo)
+    val spIdTitleRelation = ParseProteinMatches.parseProtList(file, SearchId("hoho"), dbInfo)
 
     "check size" in {
       spIdTitleRelation.size must equalTo(24)
