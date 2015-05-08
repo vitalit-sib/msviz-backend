@@ -21,6 +21,7 @@ import com.google.common.base.Optional
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
+import scala.xml.Elem
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
@@ -29,21 +30,25 @@ import scala.collection.mutable.ListBuffer
 object LoaderMzIdent {
 
 
-  def parse(file: File, searchId: SearchId, runId: RunId): Tuple2[Seq[PepSpectraMatch], Seq[ProteinIdent]] = {
+  def parse(file: File, searchId: SearchId, runId: RunId): Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], Iterator[SearchInfo]] = {
     // @TODO set the unimodXMLPath in the controller? Currently we only take the Unimod.XML provided by MzJava into account
     // set the unimodXmlPath for MzJavaunimodXmlPath
     //val s = Play.application().configuration().getString("unimod.xml")
     //println("unimod location: " + s)
     //UnimodManager.setUnimodPath(s)
 
+    // load MzIdentML as scala xml elem
+    val mzidXml = scala.xml.XML.loadFile(file)
+
     // get the info about the SearchDatabases
-    val searchDbSourceInfo = parseSearchDbSourceInfo(file)
+    val searchDbSourceInfo = parseSearchDbSourceInfo(mzidXml)
 
-    // parse PSM and Protein lists
+    // parse PSM, Protein matches and searchInfo
     def psmList = parsePsm(file, searchId, runId, searchDbSourceInfo)
-    def proteinList = ParseProteinMatches.parseProtList(file, searchId, searchDbSourceInfo)
+    def proteinList = ParseProteinMatches.parseProtList(mzidXml, searchId, searchDbSourceInfo)
+    def searchInfo = parseSearchInfo(mzidXml, searchId)
 
-    Tuple2(psmList, proteinList)
+    Tuple3(psmList, proteinList, searchInfo)
   }
 
 
@@ -72,18 +77,18 @@ object LoaderMzIdent {
   }
   /**
    * parse a .mzid file and return search information.
-   * @param file an .mzid file
+   * @param mzidXml Scala XML element
    * @return
    */
-  def parseSearchInfo(file: File, searchId: SearchId): Iterator[SearchInfo] = {
+  def parseSearchInfo(mzidXml: Elem, searchId: SearchId): Iterator[SearchInfo] = {
 
     // get the info about the SearchDatabases
-    val title =parseTitleFilename(file)
-    val database= parseSearchDbSourceInfo(file)
-    val username=parseUsernameFilename(file)
-    val enzyme=parseEnzymeFilename(file)
-    val parentTolerance=parseParentToleranceFilename(file)
-    val fragmentTolerance=parseFragmentToleranceFilename(file)
+    val title =parseTitleFilename(mzidXml)
+    val database= parseSearchDbSourceInfo(mzidXml)
+    val username=parseUsernameFilename(mzidXml)
+    val enzyme=parseEnzymeFilename(mzidXml)
+    val parentTolerance=parseParentToleranceFilename(mzidXml)
+    val fragmentTolerance=parseFragmentToleranceFilename(mzidXml)
     val searchI=SearchInfo(searchId,title,database,username, enzyme,parentTolerance,fragmentTolerance)
     val it: Iterator[SearchInfo] = Iterator(searchI)
     it
@@ -93,58 +98,53 @@ object LoaderMzIdent {
   /**
    * parse the spectraFileName from the MzIdenML file. We do this seperately, since the MzJava parser doesn't take care of this information.
    * TODO: adapt MzJava MzIdentMlParser, so that it parses spectra filename information
-   * @param filename MzIdentML path
+   * @param mzidXml Scala XML element
    * @return spectra file name (e.g. blabla.mgf)
    */
-  def parseSpectraFilename(filename: String): String = {
-    val mzIdentML = scala.xml.XML.loadFile(filename)
-    val spectraDataLocation = mzIdentML \\ "SpectraData" \ "@location"
+  def parseSpectraFilename(mzidXml: Elem): String = {
+    val spectraDataLocation = mzidXml \\ "SpectraData" \ "@location"
     FilenameUtils.getBaseName(spectraDataLocation.text)
   }
 
   /**
    * parse the title from the MzIdenML file.
-   * @param filename MzIdentML path
+   * @param mzidXml Scala XML element
    * @return title file name
    */
-  def parseTitleFilename(filename: File): String = {
-    val mzIdentML = scala.xml.XML.loadFile(filename)
+  def parseTitleFilename(mzidXml: Elem): String = {
     // to have only the first of the values
-    val titleLocation = (mzIdentML \\ "userParam" \\ "@value").head
+    val titleLocation = (mzidXml \\ "userParam" \\ "@value").head
     FilenameUtils.getBaseName(titleLocation.text)
   }
 
   /**
    * parse the username from the MzIdenML file.
-   * @param filename MzIdentML path
+   * @param mzidXml Scala XML element
    * @return username
    */
-  def parseUsernameFilename(filename: File): String = {
-    val mzIdentML = scala.xml.XML.loadFile(filename)
-    val usernameLocation =mzIdentML \\ "Person" \\ "@name"
+  def parseUsernameFilename(mzidXml: Elem): String = {
+    val usernameLocation =mzidXml \\ "Person" \\ "@name"
     FilenameUtils.getBaseName(usernameLocation.text)
   }
 
   /**
    * parse the enzyme from the MzIdenML file.
-   * @param filename MzIdentML path
+   * @param mzidXml Scala XML element
    * @return enzyme
    */
-  def parseEnzymeFilename(filename: File): String = {
-    val mzIdentML = scala.xml.XML.loadFile(filename)
-    val enzymeLocation =mzIdentML \\ "EnzymeName" \\ "@name"
+  def parseEnzymeFilename(mzidXml: Elem): String = {
+    val enzymeLocation =mzidXml \\ "EnzymeName" \\ "@name"
     FilenameUtils.getBaseName(enzymeLocation.text)
   }
 
   /**
    * parse the parent tolerance from the MzIdenML file.
-   * @param filename MzIdentML path
+   * @param mzidXml Scala XML element
    * @return parent tolerance
    */
-  def parseParentToleranceFilename(filename: File): String = {
-    val mzIdentML = scala.xml.XML.loadFile(filename)
-    val toleranceValue=((mzIdentML \\ "ParentTolerance" \ "cvParam").filter(n =>(n \ "@name").text == "search tolerance plus value") \ "@value").text
-    val toleranceUnitValue=((mzIdentML \\ "ParentTolerance" \ "cvParam").filter(n =>(n \ "@name").text == "search tolerance plus value") \ "@unitName").text
+  def parseParentToleranceFilename(mzidXml: Elem): String = {
+    val toleranceValue=((mzidXml \\ "ParentTolerance" \ "cvParam").filter(n =>(n \ "@name").text == "search tolerance plus value") \ "@value").text
+    val toleranceUnitValue=((mzidXml \\ "ParentTolerance" \ "cvParam").filter(n =>(n \ "@name").text == "search tolerance plus value") \ "@unitName").text
 
     val tolerance=toleranceValue + " " + toleranceUnitValue
     tolerance
@@ -152,13 +152,12 @@ object LoaderMzIdent {
 
   /**
    * parse the fragment tolerance from the MzIdenML file.
-   * @param filename MzIdentML path
+   * @param mzidXml Scala XML element
    * @return fragment tolerance
    */
-  def parseFragmentToleranceFilename(filename: File): String = {
-    val mzIdentML = scala.xml.XML.loadFile(filename)
-    val toleranceValue=((mzIdentML \\ "FragmentTolerance" \ "cvParam").filter(n =>(n \ "@name").text == "search tolerance plus value") \ "@value").text
-    val toleranceUnitValue=((mzIdentML \\ "FragmentTolerance" \ "cvParam").filter(n =>(n \ "@name").text == "search tolerance plus value") \ "@unitName").text
+  def parseFragmentToleranceFilename(mzidXml: Elem): String = {
+    val toleranceValue=((mzidXml \\ "FragmentTolerance" \ "cvParam").filter(n =>(n \ "@name").text == "search tolerance plus value") \ "@value").text
+    val toleranceUnitValue=((mzidXml \\ "FragmentTolerance" \ "cvParam").filter(n =>(n \ "@name").text == "search tolerance plus value") \ "@unitName").text
 
     val tolerance=toleranceValue + " " + toleranceUnitValue
     tolerance
@@ -167,13 +166,11 @@ object LoaderMzIdent {
   /**
    * parse the database  from the MzIdenML file. We do this seperately, since the MzJava parser doesn't take care of this information.
    * TODO: adapt MzJava MzIdentMlParser, so that it parses searchDb information
-   * @param file MzIdentML file
+   * @param mzidXml Scala XML elem
    * @return a list of Tuples containing the SequenceSource and the number of entries
    */
-  def parseSearchDbSourceInfo(file: File):Seq[SearchDatabase] = {
-    val mzIdentML = scala.xml.XML.loadFile(file)
-
-    (mzIdentML \\ "SearchDatabase").map { db =>
+  def parseSearchDbSourceInfo(mzidXml: Elem):Seq[SearchDatabase] = {
+    (mzidXml \\ "SearchDatabase").map { db =>
       SearchDatabase((db \ "@id").text,((db \ "@version").text),((db \ "@numDatabaseSequences").text.toInt))
     }
   }

@@ -5,7 +5,7 @@ import java.io.File
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.matches.{HitRank, SearchId}
-import ch.isbsib.proteomics.mzviz.matches.models.{ProteinIdent, ProteinRef, PepSpectraMatch}
+import ch.isbsib.proteomics.mzviz.matches.models.{SearchInfo, ProteinIdent, ProteinRef, PepSpectraMatch}
 import ch.isbsib.proteomics.mzviz.modifications.ModifName
 import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, NumDatabaseSequences, SequenceSource}
 import org.specs2.mutable.Specification
@@ -16,14 +16,17 @@ import org.specs2.mutable.Specification
  */
 
 class LoaderMzIdentSpecs extends Specification {
+
+  def mzidXml(filename:String) = scala.xml.XML.loadFile(new File(filename))
+
     "parse spectraFileName" should {
 
       "parse spectraFileName from M_100" in {
-        LoaderMzIdent.parseSpectraFilename("test/resources/M_100.mzid") must equalTo("rafts1_123spectra")
+        LoaderMzIdent.parseSpectraFilename(mzidXml("test/resources/M_100.mzid")) must equalTo("rafts1_123spectra")
       }
 
       "parse spectraFileName from F001644" in {
-        LoaderMzIdent.parseSpectraFilename("test/resources/F001644.mzid") must equalTo("20141008_BSA_25cm_column2")
+        LoaderMzIdent.parseSpectraFilename(mzidXml("test/resources/F001644.mzid")) must equalTo("20141008_BSA_25cm_column2")
       }
 
     }
@@ -31,7 +34,7 @@ class LoaderMzIdentSpecs extends Specification {
   "parseSearchDbSourceInfo" should {
 
     "parseSearchDbSourceInfo from M_100" in {
-      val dbInfo = LoaderMzIdent.parseSearchDbSourceInfo(new File("test/resources/M_100.mzid"))
+      val dbInfo = LoaderMzIdent.parseSearchDbSourceInfo(mzidXml("test/resources/M_100.mzid"))
       dbInfo.size must equalTo(1)
       dbInfo(0).id must equalTo("SDB_SwissProt_ID")
       dbInfo(0).version must equalTo("SwissProt_2014_08.fasta")
@@ -41,7 +44,7 @@ class LoaderMzIdentSpecs extends Specification {
     }
 
     "parseSearchDbSourceInfo from F001644" in {
-      val dbInfo = LoaderMzIdent.parseSearchDbSourceInfo(new File("test/resources/F001644.mzid"))
+      val dbInfo = LoaderMzIdent.parseSearchDbSourceInfo(mzidXml("test/resources/F001644.mzid"))
       dbInfo.size must equalTo(2)
       //dbInfo("SDB_contaminants_PAF") must equalTo(Tuple2(SequenceSource("contaminants_PAF_20130207_1455.fasta"), NumDatabaseSequences(854)))
       //dbInfo("SDB_custom") must equalTo(Tuple2(SequenceSource("custom_20141007_1128.fasta"), NumDatabaseSequences(854)))
@@ -50,7 +53,7 @@ class LoaderMzIdentSpecs extends Specification {
   }
 
     "parse M_100" should {
-      val psmAndProtLists: Tuple2[Seq[PepSpectraMatch], Seq[ProteinIdent]] = LoaderMzIdent.parse(new File("test/resources/M_100.mzid"), SearchId("M_100"), RunId("M_100.mgf"))
+      val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], Iterator[SearchInfo]] = LoaderMzIdent.parse(new File("test/resources/M_100.mzid"), SearchId("M_100"), RunId("M_100.mgf"))
       val psm = psmAndProtLists._1
       val prots = psmAndProtLists._2
 
@@ -133,7 +136,7 @@ class LoaderMzIdentSpecs extends Specification {
     }
 
     "parse F001644" should {
-      val psmAndProtLists: Tuple2[Seq[PepSpectraMatch], Seq[ProteinIdent]] = LoaderMzIdent.parse(new File("test/resources/F001644.mzid"), SearchId("F001644"), RunId("F001644.mgf"))
+      val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], Iterator[SearchInfo]] = LoaderMzIdent.parse(new File("test/resources/F001644.mzid"), SearchId("F001644"), RunId("F001644.mgf"))
       val psms = psmAndProtLists._1
       val prots = psmAndProtLists._2
 
@@ -156,7 +159,7 @@ class LoaderMzIdentSpecs extends Specification {
     }
 
   "parse M_100_with_X" should {
-    val psmAndProtLists: Tuple2[Seq[PepSpectraMatch], Seq[ProteinIdent]] = LoaderMzIdent.parse(new File("test/resources/M_100_with_X.mzid"), SearchId("with_X"), RunId("M_100.mgf"))
+    val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], Iterator[SearchInfo]] = LoaderMzIdent.parse(new File("test/resources/M_100_with_X.mzid"), SearchId("with_X"), RunId("M_100.mgf"))
     val psm = psmAndProtLists._1
 
     "check first peptide" in {

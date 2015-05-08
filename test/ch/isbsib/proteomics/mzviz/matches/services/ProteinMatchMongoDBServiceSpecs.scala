@@ -37,15 +37,12 @@ class ProteinMatchMongoDBServiceSpecs extends Specification with ScalaFutures {
     val file_1 = new File("test/resources/M_100.mzid")
     val file_2 = new File("test/resources/F001644.mzid")
 
-    val dbInfo_1 = LoaderMzIdent.parseSearchDbSourceInfo(file_1)
-    val dbInfo_2 = LoaderMzIdent.parseSearchDbSourceInfo(file_2)
-
     "get them up " in new TempMongoDBService {
       service.countEntries.futureValue must equalTo(0)
-      service.insert(ParseProteinMatches.parseProtList(file_1, SearchId("M_100"), dbInfo_1)).futureValue
+      service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("1"))._2).futureValue
       Thread.sleep(200)
       service.countEntries.futureValue must equalTo(27)
-      service.insert(ParseProteinMatches.parseProtList(file_2, SearchId("F001644"), dbInfo_2)).futureValue
+      service.insert(LoaderMzIdent.parse(file_2, SearchId("F001644"), RunId("2"))._2).futureValue
       Thread.sleep(200)
       service.countEntries.futureValue must equalTo(51)
     }
@@ -53,10 +50,9 @@ class ProteinMatchMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "delete" should {
     val file_1 = new File("test/resources/M_100.mzid")
-    val dbInfo_1 = LoaderMzIdent.parseSearchDbSourceInfo(file_1)
 
     "get 2 , remove 1 " in new TempMongoDBService {
-      service.insert(ParseProteinMatches.parseProtList(file_1, SearchId("M_100"), dbInfo_1)).futureValue
+      service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("1"))._2).futureValue
       Thread.sleep(200)
       val psmList = service.findAllProteinsBySearchId(SearchId("M_100")).futureValue
       psmList.size must equalTo(27)
@@ -72,15 +68,12 @@ class ProteinMatchMongoDBServiceSpecs extends Specification with ScalaFutures {
     val file_1 = new File("test/resources/M_100.mzid")
     val file_2 = new File("test/resources/F001644.mzid")
 
-    val dbInfo_1 = LoaderMzIdent.parseSearchDbSourceInfo(file_1)
-    val dbInfo_2 = LoaderMzIdent.parseSearchDbSourceInfo(file_2)
-
     "insert and find" in new TempMongoDBService {
       service.countEntries.futureValue must equalTo(0)
-      service.insert(ParseProteinMatches.parseProtList(file_1, SearchId("M_100"), dbInfo_1)).futureValue
+      service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("1"))._2).futureValue
       Thread.sleep(200)
       service.countEntries.futureValue must equalTo(27)
-      service.insert(ParseProteinMatches.parseProtList(file_2, SearchId("F001644"), dbInfo_2)).futureValue
+      service.insert(LoaderMzIdent.parse(file_2, SearchId("F001644"), RunId("2"))._2).futureValue
       Thread.sleep(200)
       service.countEntries.futureValue must equalTo(51)
 
@@ -101,15 +94,12 @@ class ProteinMatchMongoDBServiceSpecs extends Specification with ScalaFutures {
     val file_1 = new File("test/resources/M_100.mzid")
     val file_2 = new File("test/resources/F001644.mzid")
 
-    val dbInfo_1 = LoaderMzIdent.parseSearchDbSourceInfo(file_1)
-    val dbInfo_2 = LoaderMzIdent.parseSearchDbSourceInfo(file_2)
-
     "insert and delete" in new TempMongoDBService {
       service.countEntries.futureValue must equalTo(0)
-      service.insert(ParseProteinMatches.parseProtList(file_1, SearchId("M_100"), dbInfo_1)).futureValue
+      service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("1"))._2).futureValue
       Thread.sleep(200)
       service.countEntries.futureValue must equalTo(27)
-      service.insert(ParseProteinMatches.parseProtList(file_2, SearchId("F001644"), dbInfo_2)).futureValue
+      service.insert(LoaderMzIdent.parse(file_2, SearchId("F001644"), RunId("2"))._2).futureValue
       Thread.sleep(200)
       service.countEntries.futureValue must equalTo(51)
 

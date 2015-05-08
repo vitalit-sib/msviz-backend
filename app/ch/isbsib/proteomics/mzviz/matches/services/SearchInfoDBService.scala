@@ -31,7 +31,7 @@ class SearchInfoDBService(val db: DefaultDB) extends MongoDBService {
       Seq("searchId" -> IndexType.Ascending),
       name = Some("searchId"),
       unique = true)
-  ));
+  ))
 
   /**
    * insert a list of SearchInfo entries

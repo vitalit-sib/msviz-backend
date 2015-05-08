@@ -101,12 +101,9 @@ object SearchController extends MatchController {
           psmAndProteinList <- Future {
             LoaderMzIdent.parse(request.body.file, SearchId(searchId), rid)
           }
-          searchInfo <- Future {
-            LoaderMzIdent.parseSearchInfo(request.body.file, SearchId(searchId))
-          }
           nMatches <- MatchMongoDBService().insert(psmAndProteinList._1)
           nProteins <- ProteinMatchMongoDBService().insert(psmAndProteinList._2)
-          nInfo <- SearchInfoDBService().insert(searchInfo)
+          nInfo <- SearchInfoDBService().insert(psmAndProteinList._3)
         } yield {
             Ok(Json.obj("psms" -> nMatches, "proteins" -> nProteins, "searches" -> nInfo))
           }).recover {

@@ -9,7 +9,7 @@ import ch.isbsib.proteomics.mzviz.theoretical.models.SearchDatabase
 import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, ProteinIdentifier, AccessionCode}
 import org.apache.commons.io.FilenameUtils
 
-import scala.xml.NodeSeq
+import scala.xml.{Elem, NodeSeq}
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
@@ -21,11 +21,9 @@ object ParseProteinMatches {
   val CvParamMascotScore = "MS:1001171"
   val CvDistinctPeptidesSequences = "MS:1001097"
 
-  def parseProtList(file: File, searchId: SearchId, searchDbSourceInfo: Seq[SearchDatabase]): Seq[ProteinIdent] = {
+  def parseProtList(mzidXml: Elem, searchId: SearchId, searchDbSourceInfo: Seq[SearchDatabase]): Seq[ProteinIdent] = {
 
-    val mzIdentML = scala.xml.XML.loadFile(file)
-
-    val proteinAmbiguityGroupList = mzIdentML \\ "ProteinDetectionList" \\ "ProteinAmbiguityGroup"
+    val proteinAmbiguityGroupList = mzidXml \\ "ProteinDetectionList" \\ "ProteinAmbiguityGroup"
 
     proteinAmbiguityGroupList.map({ onePAG =>
         val protDectList = (onePAG \\ "ProteinDetectionHypothesis").map({ oneDH =>
