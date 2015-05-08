@@ -13,4 +13,7 @@ import ch.isbsib.proteomics.mzviz.theoretical.models.SearchDatabase
 case class SearchInfo (searchId: SearchId,
                        title: String,
                        database: Seq[SearchDatabase],
-                       username:String)
+                       username:String,
+                       enzyme: String,
+                       parentTolerance: String,
+                       fragmentTolerance: String)
