@@ -29,31 +29,23 @@ import scala.concurrent.Future
 object ProteinListController extends MatchController {
 
 
-  def stats = Action.async {
-    ExpMongoDBService().stats.map { st =>
-      Ok(jsonWritesMap.writes(st))
+  @ApiOperation(nickname = "findAllProteinsBySearchId",
+    value = "find all proteins corresponding to a given searchId",
+    notes = """protein list""",
+    response = classOf[List[String]],
+    httpMethod = "GET")
+  def findAllProteinsBySearchIds(
+                                       @ApiParam(value = """searchId""") @PathParam("searchId") searchId: String
+                                       ) =  Cached(req => req.uri) {
+    Action.async {
+      for {
+        proteinList <- ProteinListMongoDBService().findAllProteinsBySearchId(SearchId(searchId))
+      } yield {
+        Ok(Json.toJson(proteinList))
+      }
+
     }
   }
 
-  @ApiOperation(nickname = "findAllPSMByRunId",
-    value = "find all PSMs by searchId",
-    notes = """PSMs list""",
-    response = classOf[List[PepSpectraMatch]],
-    httpMethod = "GET")
-  def findAllPSMBySearchId(
-                            @ApiParam(value = """searchId""", defaultValue = "") @PathParam("searchId") searchId: String
-                            ) =
-    Action.async { implicit request =>
-      MatchMongoDBService().findAllPSMBySearchId(SearchId(searchId))
-        .map { case sphList =>
-        render {
-          case acceptsTsv() => Ok(TsvFormats.toTsv(sphList))
-          case _ => Ok(Json.toJson(sphList))
-        }
-      }
-        .recover {
-        case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
-      }
-    }
 
 }

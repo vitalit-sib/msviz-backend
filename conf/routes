@@ -25,6 +25,7 @@ GET           /sequence/:sourceId/:identifier                        ch.isbsib.p
 GET           /api-docs/match                                        controllers.ApiHelpController.getResource(path = "/match")
 GET           /match/psms/:searchId                                  ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findAllPSMBySearchId(searchId)
 GET           /match/proteins/:searchIds                             ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findAllProteinRefsBySearchIds(searchIds, withModif:Option[String])
+GET           /match/proteinList/:searchId                           ch.isbsib.proteomics.mzviz.controllers.matches.ProteinListController.findAllProteinsBySearchIds(searchId)
 GET           /match/modifications/:searchIds                        ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findAllModificationsBySearchIds(searchIds)
 GET           /match/psms/:searchIds/by-ac/:accessionCode            ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findAllPSMByProteinAC(searchIds, accessionCode, sequenceSource:Option[String])
 GET           /match/sim/:runId/:title/:scoreThresh/:matchTol        ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findSimilarSpectra(runId, title, scoreThresh, matchTol)

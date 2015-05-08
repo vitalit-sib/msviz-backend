@@ -117,7 +117,7 @@ object SearchController extends MatchController {
     }
 
   @ApiOperation(nickname = "delete",
-    value = "delete PSMs & searchInfo for a given list of searchIds (or one), seperated by comma",
+    value = "delete PSMs, Proteins & searchInfo for a given list of searchIds (or one), seperated by comma",
     notes = """No double check is done. Use with caution""",
     response = classOf[String],
     httpMethod = "DELETE")
