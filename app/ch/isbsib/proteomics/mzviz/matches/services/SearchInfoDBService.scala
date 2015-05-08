@@ -58,19 +58,6 @@ class SearchInfoDBService(val db: DefaultDB) extends MongoDBService {
   }
 
   /**
-   * remove all entries from the mongodb
-   * @param searchIds mutliple search ids
-   * @return
-   */
-  def deleteAllBySearchIds(searchIds: Set[SearchId]): Future[Boolean] = {
-    val query = Json.obj("searchId" -> Json.obj("$in" -> searchIds.toList))
-    collection.remove(query).map {
-      case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
-      case _ => true
-    }
-  }
-
-  /**
    * retrieves searchInfo for a given searchId
    * @param searchId the search id
    * @return
