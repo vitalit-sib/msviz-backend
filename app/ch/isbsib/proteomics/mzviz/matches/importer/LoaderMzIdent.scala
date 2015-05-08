@@ -28,6 +28,7 @@ import scala.collection.mutable.ListBuffer
  */
 object LoaderMzIdent {
 
+
   /**
    * parse a .mzid file and return a full run.
    * @param file an .mzid file
@@ -70,7 +71,10 @@ object LoaderMzIdent {
     val title =parseTitleFilename(file)
     val database= parseSearchDbSourceInfo(file)
     val username=parseUsernameFilename(file)
-    val searchI=SearchInfo(searchId,title,database,username)
+    val enzyme=parseEnzymeFilename(file)
+    val parentTolerance=parseParentToleranceFilename(file)
+    val fragmentTolerance=parseFragmentToleranceFilename(file)
+    val searchI=SearchInfo(searchId,title,database,username, enzyme,parentTolerance,fragmentTolerance)
     val it: Iterator[SearchInfo] = Iterator(searchI)
     it
     //it.map(searchI)
@@ -109,6 +113,45 @@ object LoaderMzIdent {
     val mzIdentML = scala.xml.XML.loadFile(filename)
     val usernameLocation =mzIdentML \\ "Person" \\ "@name"
     FilenameUtils.getBaseName(usernameLocation.text)
+  }
+
+  /**
+   * parse the enzyme from the MzIdenML file.
+   * @param filename MzIdentML path
+   * @return enzyme
+   */
+  def parseEnzymeFilename(filename: File): String = {
+    val mzIdentML = scala.xml.XML.loadFile(filename)
+    val enzymeLocation =mzIdentML \\ "EnzymeName" \\ "@name"
+    FilenameUtils.getBaseName(enzymeLocation.text)
+  }
+
+  /**
+   * parse the parent tolerance from the MzIdenML file.
+   * @param filename MzIdentML path
+   * @return parent tolerance
+   */
+  def parseParentToleranceFilename(filename: File): String = {
+    val mzIdentML = scala.xml.XML.loadFile(filename)
+    val toleranceValue=((mzIdentML \\ "ParentTolerance" \ "cvParam").filter(n =>(n \ "@name").text == "search tolerance plus value") \ "@value").text
+    val toleranceUnitValue=((mzIdentML \\ "ParentTolerance" \ "cvParam").filter(n =>(n \ "@name").text == "search tolerance plus value") \ "@unitName").text
+
+    val tolerance=toleranceValue + " " + toleranceUnitValue
+    tolerance
+  }
+
+  /**
+   * parse the fragment tolerance from the MzIdenML file.
+   * @param filename MzIdentML path
+   * @return fragment tolerance
+   */
+  def parseFragmentToleranceFilename(filename: File): String = {
+    val mzIdentML = scala.xml.XML.loadFile(filename)
+    val toleranceValue=((mzIdentML \\ "FragmentTolerance" \ "cvParam").filter(n =>(n \ "@name").text == "search tolerance plus value") \ "@value").text
+    val toleranceUnitValue=((mzIdentML \\ "FragmentTolerance" \ "cvParam").filter(n =>(n \ "@name").text == "search tolerance plus value") \ "@unitName").text
+
+    val tolerance=toleranceValue + " " + toleranceUnitValue
+    tolerance
   }
 
   /**

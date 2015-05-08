@@ -29,17 +29,23 @@ class SearchInfoSpecs extends Specification with ScalaFutures {
 
 
   "parser" should {
-    "parse returns title, database, username" in new TempMongoDBService {
+    "parse returns title, database, username, enzyme, parent tol and fragment tol" in new TempMongoDBService {
       val itSearchEntries =LoaderMzIdent.parseSearchInfo(new File("test/resources/M_100.mzid"), SearchId("M_100"))
       val searchEntries=itSearchEntries.next()
       print (searchEntries)
       val title = searchEntries.title
       val databaseName = searchEntries.database
       val username= searchEntries.username
+      val enzyme= searchEntries.enzyme
+      val parentTol= searchEntries.parentTolerance
+      val fragmentTol=searchEntries.fragmentTolerance
 
       title mustEqual("test rafts sample 123 spectra for Roman")
       databaseName mustEqual List(SearchDatabase("SDB_SwissProt_ID","SwissProt_2014_08.fasta",546238))
       username mustEqual("roman")
+      enzyme mustEqual("Trypsin")
+      parentTol mustEqual("0.3 dalton")
+      fragmentTol mustEqual("0.3 dalton")
     }
   }
 
