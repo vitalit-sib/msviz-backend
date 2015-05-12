@@ -135,7 +135,9 @@ object PSMController extends MatchController {
                         @ApiParam(value = """accessionCode""", defaultValue = "") @PathParam("accessionCode") accessionCode: String,
                         sequenceSource: Option[String]
                         ) =
-    Cached(req => req.uri) {
+    Cached(req => {
+      req.uri+"/Accept="+req.headers.get("Accept")
+    }) {
       Action.async { implicit request =>
         MatchMongoDBService().findPSMByProtein(
           AccessionCode(accessionCode),
@@ -144,7 +146,7 @@ object PSMController extends MatchController {
         )
           .map { case psms =>
           render {
-            case acceptsTsv() => Ok(TsvFormats.toTsv(psms.map(_.extractAC(AccessionCode(accessionCode))), showFirstProtMatchInfo = true))
+            //case acceptsTsv() => Ok(TsvFormats.toTsv(psms.map(_.extractAC(AccessionCode(accessionCode))), showFirstProtMatchInfo = true))
             case _ => Ok(Json.toJson(psms))
           }
         }
