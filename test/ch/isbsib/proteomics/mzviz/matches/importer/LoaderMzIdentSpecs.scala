@@ -169,4 +169,30 @@ class LoaderMzIdentSpecs extends Specification {
 
   }
 
+  "parse modification scores" should {
+    val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], Iterator[SearchInfo]] = LoaderMzIdent.parse(new File("test/resources/F002687_acetylation.mzid"), SearchId("modif"), RunId("M_100.mgf"))
+    val psms = psmAndProtLists._1
+
+    "check modif position score" in {
+      val psmsFlt = psms.filter({ psm =>
+        psm.spectrumId.id == SpectrumUniqueId("2012_12_20_OT_ALH_103_HSA+20ASA_1pmol_Acetylation.2329.2")
+      })
+
+      psmsFlt(0).matchInfo.score.scoreMap("Mascot:delta score") mustEqual(97.87)
+      psmsFlt(1).matchInfo.score.scoreMap("Mascot:delta score") mustEqual(2.11)
+    }
+
+    "check another modif position score" in {
+      val psmsFlt = psms.filter({ psm =>
+        psm.spectrumId.id == SpectrumUniqueId("2012_12_20_OT_ALH_102_HSA+20ASA_1pmol_Acetylation.2098.2")
+      })
+
+      psmsFlt(0).matchInfo.score.scoreMap("Mascot:delta score") mustEqual(90.46)
+      psmsFlt(1).matchInfo.score.scoreMap("Mascot:delta score") mustEqual(9.21)
+    }
+
+
+  }
+
+
 }
