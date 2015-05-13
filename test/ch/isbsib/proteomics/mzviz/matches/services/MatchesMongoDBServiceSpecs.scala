@@ -142,7 +142,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
       service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"))._1).futureValue
       service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100_1"), RunId("M_100.mgf"))._1).futureValue
 
-      val psms = service.findPSMByProtein(AccessionCode("CD109_HUMAN")).futureValue
+      val psms = service.findAllPSMsByProtein(AccessionCode("CD109_HUMAN")).futureValue
       println(psms.mkString("\n"))
 
       psms.size must equalTo(4)
@@ -151,7 +151,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
       service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"))._1).futureValue
       service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100_1"), RunId("M_100.mgf"))._1).futureValue
 
-      val psms = service.findPSMByProtein(AccessionCode("CD109_HUMAN"), searchIds=Some(Set(SearchId("M_100_1")))).futureValue
+      val psms = service.findAllPSMsByProtein(AccessionCode("CD109_HUMAN"), searchIds=Some(Set(SearchId("M_100_1")))).futureValue
       println(psms.mkString("\n"))
 
       psms.size must equalTo(2)

@@ -6,7 +6,7 @@ import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
 import ch.isbsib.proteomics.mzviz.spectrasim.services.JsonSimFormats._
 import ch.isbsib.proteomics.mzviz.controllers.TsvFormats
-import ch.isbsib.proteomics.mzviz.experimental.RunId
+import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
@@ -68,9 +68,9 @@ object PSMController extends MatchController {
     new ApiImplicitParam(name = "withModif", value = "modification name", required = false, dataType = "String", paramType = "query")
   ))
   def findAllProteinRefsBySearchIds(
-                                    @ApiParam(value = """searchIds""", defaultValue = "M_100") @PathParam("searchIds") searchIds: String,
-                                    withModif:Option[String]
-                                    ) =  Cached(req => req.uri) {
+                                     @ApiParam(value = """searchIds""", defaultValue = "M_100") @PathParam("searchIds") searchIds: String,
+                                     withModif: Option[String]
+                                     ) = Cached(req => req.uri) {
     Action.async {
       for {
         protRefs <- MatchMongoDBService().listProteinRefsBySearchIds(queryParamSearchIds(searchIds), queryParamOModifName(withModif))
@@ -87,8 +87,8 @@ object PSMController extends MatchController {
     response = classOf[List[String]],
     httpMethod = "GET")
   def findAllModificationsBySearchIds(
-                                    @ApiParam(value = """searchIds""", defaultValue = "M_100") @PathParam("searchIds") searchIds: String
-                                    ) =  Cached(req => req.uri) {
+                                       @ApiParam(value = """searchIds""", defaultValue = "M_100") @PathParam("searchIds") searchIds: String
+                                       ) = Cached(req => req.uri) {
     val sids = queryParamSearchIds(searchIds)
     Action.async {
       for {
@@ -131,15 +131,15 @@ object PSMController extends MatchController {
     new ApiImplicitParam(name = "sequenceSource", value = "", required = false, dataType = "string", paramType = "sequenceSource")
   ))
   def findAllPSMByProteinAC(
-                        @ApiParam(value = """searchIds""", defaultValue = "") @PathParam("searchIds") searchIds: String,
-                        @ApiParam(value = """accessionCode""", defaultValue = "") @PathParam("accessionCode") accessionCode: String,
-                        sequenceSource: Option[String]
-                        ) =
+                             @ApiParam(value = """searchIds""", defaultValue = "") @PathParam("searchIds") searchIds: String,
+                             @ApiParam(value = """accessionCode""", defaultValue = "") @PathParam("accessionCode") accessionCode: String,
+                             sequenceSource: Option[String]
+                             ) =
     Cached(req => {
-      req.uri+"/Accept="+req.headers.get("Accept")
+      req.uri + "/Accept=" + req.headers.get("Accept")
     }) {
       Action.async { implicit request =>
-        MatchMongoDBService().findPSMByProtein(
+        MatchMongoDBService().findAllPSMsByProtein(
           AccessionCode(accessionCode),
           source = sequenceSource.map(s => SequenceSource(s)),
           searchIds = if (searchIds == "*") None else Some(searchIds.split(",").toList.map(s => SearchId(s)).toSet)
@@ -156,5 +156,34 @@ object PSMController extends MatchController {
       }
     }
 
+  @ApiOperation(nickname = "findAllBySearchIdAndSpectrumId",
+    value = "find all PSMs object for a given protein",
+    notes = """PSMs  list in TSV or JSON form""",
+    response = classOf[List[PepSpectraMatch]],
+    produces = "application/json, application/tsv",
+    httpMethod = "GET")
+  def findAllBySearchIdAndSpectrumId(
+                                      @ApiParam(value = """searchId""", defaultValue = "") @PathParam("searchId") searchId: String,
+                                      @ApiParam(value = """spectrumId""", defaultValue = "") @PathParam("spectrumId") spectrumId: String
+                                      ) =
+    Cached(req => {
+      req.uri
+    }) {
+      Action.async { implicit request =>
+        MatchMongoDBService().findAllBySearchIdAndSpectrumId(
+          SearchId(searchId),
+          SpectrumUniqueId(spectrumId)
+        )
+          .map { case psms =>
+          render {
+            //case acceptsTsv() => Ok(TsvFormats.toTsv(psms.map(_.extractAC(AccessionCode(accessionCode))), showFirstProtMatchInfo = true))
+            case _ => Ok(Json.toJson(psms))
+          }
+        }
+          .recover {
+          case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
+        }
+      }
+    }
 
 }
