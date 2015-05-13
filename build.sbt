@@ -27,6 +27,6 @@ libraryDependencies ++= Seq(
   "org.scalamock" %% "scalamock-specs2-support" % "3.2"
 )
 
-ScoverageSbtPlugin.ScoverageKeys.coverageExcludedPackages := ".*Reverse.*;.*Filter.*"
+//ScoverageSbtPlugin.ScoverageKeys.coverageExcludedPackages := ".*Reverse.*;.*Filter.*"
 
 //parallelExecution in Test := false

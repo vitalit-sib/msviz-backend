@@ -1,7 +1,7 @@
 package ch.isbsib.proteomics.mzviz.matches.services
 
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoDBService, MongoNotFoundException}
-import ch.isbsib.proteomics.mzviz.experimental.RunId
+import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import ch.isbsib.proteomics.mzviz.modifications.ModifName
@@ -106,6 +106,18 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @param searchId the search id
    * @return
    */
+  def findAllBySearchIdAndSpectrumId(searchId: SearchId, spectrumUniqueId: SpectrumUniqueId): Future[Seq[PepSpectraMatch]] = {
+    val query = Json.obj("searchId" -> searchId.value, "spectrumId.id" -> spectrumUniqueId.value)
+    collection.find(query)
+      .cursor[PepSpectraMatch]
+      .collect[List]()
+  }
+
+  /**
+   * retrieves all entries for a given source
+   * @param searchId the search id
+   * @return
+   */
   def findAllPSMBySearchId(searchId: SearchId): Future[Seq[PepSpectraMatch]] = {
     val query = Json.obj("searchId" -> searchId.value)
     collection.find(query).cursor[PepSpectraMatch].collect[List]()
@@ -125,7 +137,7 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @param accessionCode entry AC
    * @return
    */
-  def findPSMByProtein(accessionCode: AccessionCode, source: Option[SequenceSource] = None, searchIds: Option[Set[SearchId]] = None): Future[Seq[PepSpectraMatch]] = {
+  def findAllPSMsByProtein(accessionCode: AccessionCode, source: Option[SequenceSource] = None, searchIds: Option[Set[SearchId]] = None): Future[Seq[PepSpectraMatch]] = {
 
     Logger.info(s"accessionCode=$accessionCode, searchIds = $searchIds")
     val query = Json.obj("proteinList.proteinRef.AC" -> accessionCode.value) ++
@@ -202,8 +214,6 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
   //        JsArray(doc.getAs[List[BSONDocument]]("result").get.map(o => toJSON(o).asInstanceOf[JsObject])) //=>Json.toJson(o))
   //    })
   //  }
-
-
 
 
   def qFilter(searchIds: Set[SearchId]) = searchIds.toList match {
