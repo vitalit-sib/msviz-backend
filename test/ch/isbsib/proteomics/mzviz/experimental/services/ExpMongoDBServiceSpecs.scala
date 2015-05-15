@@ -91,7 +91,7 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
     "find all with one runID" in new TempMongoDBService {
       val n = service.insert(LoaderMGF.load(new File("test/resources/M_100.mgf"), RunId("chanclas")).get).futureValue
 
-      val spRefs = service.findAllSpectraRefByrunId(RunId("test-1")).futureValue.toList
+      val spRefs = service.findAllSpectraRefByrunId(RunId("chanclas")).futureValue.toList
       spRefs must have size(123)
       spRefs(0).spectrumId.runId must equalTo(RunId("chanclas"))
 
