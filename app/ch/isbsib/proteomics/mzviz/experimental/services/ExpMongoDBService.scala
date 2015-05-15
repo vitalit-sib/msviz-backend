@@ -48,9 +48,9 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
       val msLevel = MSLevel(json.validate[Int]((JsPath \ "peaks" \ "msLevel").read[Int]).get)
 
       //re-assemble the peaks
-      val mozs:List[Double] = decode64(json.validate[String]((JsPath \ "peaks" \ "mozs").read[String]).get)
-      val intensities:List[Double] = decode64(json.validate[String]((JsPath \ "peaks" \ "intensities").read[String]).get)
-      val intensityRanks:List[Int] = decode64(json.validate[String]((JsPath \ "peaks" \ "intensityRanks").read[String]).get)
+      val mozs: List[Double] = decode64(json.validate[String]((JsPath \ "peaks" \ "mozs").read[String]).get)
+      val intensities: List[Double] = decode64(json.validate[String]((JsPath \ "peaks" \ "intensities").read[String]).get)
+      val intensityRanks: List[Int] = decode64(json.validate[String]((JsPath \ "peaks" \ "intensityRanks").read[String]).get)
 
       val peaks: List[ExpPeakMSn] =
         for {
@@ -75,6 +75,7 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
       )
     )
   }
+
   /**
    * insert an ms run into the database.
    * @param run already parsed and ready
@@ -103,10 +104,16 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @param runId the run id
    * @return
    */
-  def findAllSpectraRefByrunId(runId: RunId): Future[Seq[JsObject]] = {
+  def findAllSpectraRefByrunId(runId: RunId): Future[Seq[SpectrumRef]] = {
     val query = Json.obj("ref.spectrumId.runId" -> runId.value)
     val projection = Json.obj("ref" -> 1, "_id" -> 0)
-    collection.find(query, projection).cursor[JsObject].collect[List]()
+    collection.find(query, projection)
+      .cursor[JsObject]
+      .collect[List]()
+      .map(lo => lo.map({ o =>
+      Json.fromJson[SpectrumRef](o \ "ref").asOpt.get
+    }))
+
   }
 
   /**
