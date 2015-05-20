@@ -7,7 +7,7 @@ import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.matches.{HitRank, SearchId}
 import ch.isbsib.proteomics.mzviz.matches.models.{SearchInfo, ProteinIdent, ProteinRef, PepSpectraMatch}
 import ch.isbsib.proteomics.mzviz.modifications.ModifName
-import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, NumDatabaseSequences, SequenceSource}
+import ch.isbsib.proteomics.mzviz.theoretical.{ProteinIdentifier, AccessionCode, NumDatabaseSequences, SequenceSource}
 import org.specs2.mutable.Specification
 
 /**
@@ -195,4 +195,57 @@ class LoaderMzIdentSpecs extends Specification {
   }
 
 
-}
+  "parse modification scores" should {
+    val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], Iterator[SearchInfo]] = LoaderMzIdent.parse(new File("test/resources/F001303.mzid"), SearchId("modif"), RunId("M_100.mgf"))
+    val psms = psmAndProtLists._1
+
+    "check position 1" in {
+      val psmsFlt = psms.filter({ psm =>
+        psm.spectrumId.id == SpectrumUniqueId("20140811_REFERENCESAMPLE_RFamp_switch_1.9071.9071.2")
+      })
+
+      psmsFlt.size mustEqual(1)
+
+      psmsFlt(0).proteinList.size mustEqual(3)
+
+      // verify first protein
+      psmsFlt(0).proteinList(0).startPos mustEqual(769)
+      psmsFlt(0).proteinList(0).endPos mustEqual(773)
+      psmsFlt(0).proteinList(0).proteinRef.AC mustEqual(AccessionCode("APAF_MOUSE"))
+      psmsFlt(0).proteinList(0).proteinRef.source.get mustEqual(SequenceSource("SwissProt_2013_12.fasta"))
+
+      // verify last protein
+      psmsFlt(0).proteinList(2).startPos mustEqual(210)
+      psmsFlt(0).proteinList(2).endPos mustEqual(214)
+      psmsFlt(0).proteinList(2).proteinRef.AC mustEqual(AccessionCode("GBB2_MOUSE"))
+      psmsFlt(0).proteinList(2).proteinRef.source.get mustEqual(SequenceSource("SwissProt_2013_12.fasta"))
+
+    }
+
+    "check position 2" in {
+      val psmsFlt = psms.filter({ psm =>
+        psm.spectrumId.id == SpectrumUniqueId("20140811_REFERENCESAMPLE_RFamp_switch_1.10716.10716.2")
+      })
+
+      psmsFlt.size mustEqual(1)
+
+      psmsFlt(0).proteinList.size mustEqual(2)
+
+      // verify first protein
+      psmsFlt(0).proteinList(0).startPos mustEqual(180)
+      psmsFlt(0).proteinList(0).endPos mustEqual(185)
+      psmsFlt(0).proteinList(0).proteinRef.AC mustEqual(AccessionCode("HNRPF_MOUSE"))
+      psmsFlt(0).proteinList(0).proteinRef.source.get mustEqual(SequenceSource("SwissProt_2013_12.fasta"))
+
+      // verify last protein
+      psmsFlt(0).proteinList(1).startPos mustEqual(82)
+      psmsFlt(0).proteinList(1).endPos mustEqual(87)
+      psmsFlt(0).proteinList(1).proteinRef.AC mustEqual(AccessionCode("HNRPF_MOUSE"))
+      psmsFlt(0).proteinList(1).proteinRef.source.get mustEqual(SequenceSource("SwissProt_2013_12.fasta"))
+
+    }
+
+  }
+
+
+  }
