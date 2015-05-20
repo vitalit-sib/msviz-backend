@@ -4,6 +4,7 @@ import java.io.File
 
 import ch.isbsib.proteomics.mzviz.commons._
 import ch.isbsib.proteomics.mzviz.commons.services.MongoDuplicateKeyException
+import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
@@ -29,6 +30,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
    */
   trait TempMongoDBService extends TempMongoDBForSpecs {
     val service = new MatchMongoDBService(db)
+    val expService = new ExpMongoDBService(db)
   }
 
   "empty service" should {

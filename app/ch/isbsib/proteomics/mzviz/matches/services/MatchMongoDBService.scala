@@ -1,13 +1,14 @@
 package ch.isbsib.proteomics.mzviz.matches.services
 
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoDBService, MongoNotFoundException}
+import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
-import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
+import ch.isbsib.proteomics.mzviz.experimental.models.{SpectrumRef, ExpMSnSpectrum, SpectrumId}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import ch.isbsib.proteomics.mzviz.modifications.ModifName
 import ch.isbsib.proteomics.mzviz.modifications.services.JsonModificationFormats._
 import ch.isbsib.proteomics.mzviz.matches.SearchId
-import ch.isbsib.proteomics.mzviz.matches.models.{PepSpectraMatch, ProteinRef}
+import ch.isbsib.proteomics.mzviz.matches.models.{PepSpectraMatchWithSpectrumRef, PepSpectraMatch, ProteinRef}
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
 import ch.isbsib.proteomics.mzviz.theoretical.{ProteinIdentifier, AccessionCode, SequenceSource}
 import play.api.Logger
@@ -23,6 +24,7 @@ import reactivemongo.core.commands._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scalaz.std.java.util.map
 
 
 /**
@@ -151,6 +153,37 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
       })
 
     collection.find(query).cursor[PepSpectraMatch].collect[List]()
+  }
+
+  /**
+   * decorated all PePMAtchSpectra with Spectrum refm turning htem into PepSpectraMatchWithSpectrumRef
+   * @param psms  list of psms
+   * @return
+   */
+  def findAllPSMsWithSpectrumRefByRunId(psms: Seq[PepSpectraMatch]): Future[Seq[PepSpectraMatchWithSpectrumRef]] = {
+
+    implicit def searchIdToRunId(searchId: SearchId): RunId = RunId(searchId.value)
+    val runIds:Set[RunId] = psms.map(p => RunId(p.searchId.value)).toSet
+
+    val futSpectrumRefs: Future[Seq[SpectrumRef]] = ExpMongoDBService().findAllSpectraRefByrunId(runIds)
+
+    val futRunId2speRefDict: Future[Map[RunId, Map[SpectrumId, SpectrumRef]]] =
+      futSpectrumRefs.map({ spectrumRefs =>
+        spectrumRefs
+          .groupBy(_.spectrumId.runId) // map[RunIds, Seq[SpectrumRefs]
+          .map(({
+          case (runId, spRefs) => //now, transform the list of spref to a map spectrumId -> spRef
+            (runId, spRefs.map(spRef => (spRef.spectrumId, spRef)).toMap)
+        }))
+      })
+
+    for {
+      dict <- futRunId2speRefDict
+    } yield {
+      psms.map({ psm =>
+        PepSpectraMatchWithSpectrumRef(psm, dict(psm.searchId)(psm.spectrumId))
+      })
+    }
   }
 
   //    val command = RawCommand(BSONDocument(

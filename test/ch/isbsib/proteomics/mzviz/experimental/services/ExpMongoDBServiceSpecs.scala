@@ -12,7 +12,7 @@ import org.specs2.mutable.Specification
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
- * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
+ *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 
 class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
@@ -22,7 +22,7 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
   /**
    * extends the temp mngodatabase and add a exp service above it
    */
-  trait TempMongoDBService extends TempMongoDBForSpecs{
+  trait TempMongoDBService extends TempMongoDBForSpecs {
     val service = new ExpMongoDBService(db)
   }
 
@@ -92,8 +92,19 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
       val n = service.insert(LoaderMGF.load(new File("test/resources/M_100.mgf"), RunId("chanclas")).get).futureValue
 
       val spRefs = service.findAllSpectraRefByrunId(RunId("chanclas")).futureValue.toList
-      spRefs must have size(123)
+      spRefs must have size (123)
       spRefs(0).spectrumId.runId must equalTo(RunId("chanclas"))
+
+    }
+
+    "find all with one runId in set" in new TempMongoDBService {
+      service.insert(LoaderMGF.load(new File("test/resources/M_100.mgf"), RunId("chanclas_0")).get).futureValue
+      service.insert(LoaderMGF.load(new File("test/resources/M_100.mgf"), RunId("chanclas_1")).get).futureValue
+      service.insert(LoaderMGF.load(new File("test/resources/M_100.mgf"), RunId("chanclas_2")).get).futureValue
+
+      val spRefs = service.findAllSpectraRefByrunId(Set(RunId("chanclas_0"), RunId("chanclas_2"))).futureValue.toList
+      spRefs must have size (123*2)
+      spRefs(0).spectrumId.runId must equalTo(RunId("chanclas_0"))
 
     }
   }
