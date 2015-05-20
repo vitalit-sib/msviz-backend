@@ -195,7 +195,7 @@ class LoaderMzIdentSpecs extends Specification {
   }
 
 
-  "parse modification scores" should {
+  "parse protein positions" should {
     val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], Iterator[SearchInfo]] = LoaderMzIdent.parse(new File("test/resources/F001303.mzid"), SearchId("modif"), RunId("M_100.mgf"))
     val psms = psmAndProtLists._1
 
@@ -245,6 +245,24 @@ class LoaderMzIdentSpecs extends Specification {
 
     }
 
+  }
+
+  "parse passThresholds" should {
+    val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], Iterator[SearchInfo]] = LoaderMzIdent.parse(new File("test/resources/F001303.mzid"), SearchId("modif"), RunId("M_100.mgf"))
+    val psms = psmAndProtLists._1
+
+    "check first" in {
+      val psmsFlt = psms.filter({ psm =>
+        psm.spectrumId.id == SpectrumUniqueId("20140811_REFERENCESAMPLE_RFamp_switch_1.11315.11315.2")
+      })
+
+      psmsFlt.size mustEqual (4)
+
+      psmsFlt(0).matchInfo.isRejected mustEqual(Option(false))
+      psmsFlt(1).matchInfo.isRejected mustEqual(Option(false))
+      psmsFlt(2).matchInfo.isRejected mustEqual(Option(false))
+      psmsFlt(3).matchInfo.isRejected mustEqual(Option(true))
+    }
   }
 
 
