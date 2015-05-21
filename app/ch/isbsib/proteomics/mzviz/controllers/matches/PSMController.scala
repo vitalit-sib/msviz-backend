@@ -43,12 +43,25 @@ object PSMController extends MatchController {
     notes = """PSMs list""",
     response = classOf[List[PepSpectraMatch]],
     httpMethod = "GET")
+  @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "withSpectrumRef", value = "spectrum reference", required = false, dataType = "String", paramType = "query")
+  ))
   def findAllPSMBySearchId(
-                            @ApiParam(value = """searchId""", defaultValue = "") @PathParam("searchId") searchId: String
+                            @ApiParam(value = """searchId""", defaultValue = "") @PathParam("searchId") searchId: String,
+                            spectrumRef: Option[String]
                             ) =
     Action.async { implicit request =>
+
       MatchMongoDBService().findAllPSMBySearchId(SearchId(searchId))
         .map { case sphList =>
+
+        //TOCHECK
+        /*
+        val spectrumR = spectrumRef match {
+          case Some(r: String) => MatchMongoDBService().findAllPSMsWithSpectrumRefByRunId(sphList)
+        }
+        */
+        //
         render {
           case acceptsTsv() => Ok(TsvFormats.toTsv(sphList))
           case _ => Ok(Json.toJson(sphList))

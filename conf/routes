@@ -23,7 +23,7 @@ GET           /api-docs/sequence                                     controllers
 GET           /sequence/:sourceId/:identifier                        ch.isbsib.proteomics.mzviz.controllers.theoretical.OneSequenceController.get(sourceId, identifier)
 
 GET           /api-docs/match                                        controllers.ApiHelpController.getResource(path = "/match")
-GET           /match/psms/:searchId                                  ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findAllPSMBySearchId(searchId)
+GET           /match/psms/:searchId                                  ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findAllPSMBySearchId(searchId, spectrumRef:Option[String])
 GET           /match/proteins/:searchIds                             ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findAllProteinRefsBySearchIds(searchIds, withModif:Option[String])
 GET           /match/protein-matches/:searchIds                      ch.isbsib.proteomics.mzviz.controllers.matches.ProteinMatchController.findAllProteinsBySearchIds(searchIds)
 GET           /match/modifications/:searchIds                        ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findAllModificationsBySearchIds(searchIds)
