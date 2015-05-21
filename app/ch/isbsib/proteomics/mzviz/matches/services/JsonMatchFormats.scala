@@ -1,5 +1,6 @@
 package ch.isbsib.proteomics.mzviz.matches.services
 
+import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
@@ -70,5 +71,6 @@ object JsonMatchFormats {
   implicit val formatPeptide = Json.format[Peptide]
   implicit val formatPepMatchInfo = Json.format[PepMatchInfo]
   implicit val formatPepSpectraMatch = Json.format[PepSpectraMatch]
+  implicit val formatSearchInfo = Json.format[SearchInfo]
 
 }

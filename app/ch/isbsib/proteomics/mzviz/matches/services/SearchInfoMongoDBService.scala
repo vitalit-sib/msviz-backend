@@ -1,20 +1,15 @@
 package ch.isbsib.proteomics.mzviz.matches.services
 
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoDBService, MongoNotFoundException}
-import ch.isbsib.proteomics.mzviz.experimental.RunId
-import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
-import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import ch.isbsib.proteomics.mzviz.matches.SearchId
-import ch.isbsib.proteomics.mzviz.matches.models.{PepSpectraMatch, ProteinRef, SearchInfo}
+import ch.isbsib.proteomics.mzviz.matches.models.SearchInfo
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
-import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
-import play.api.Logger
+import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
 import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.{BSONArray, BSONDocument}
 import reactivemongo.core.commands._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -109,7 +104,7 @@ class SearchInfoMongoDBService(val db: DefaultDB) extends MongoDBService {
    */
 
   def list: Future[Seq[SearchInfo]] = {
-    collection.find().cursor[SearchInfo].collect[List]()
+    collection.find(Json.obj()).cursor[SearchInfo].collect[List]()
   }
 
 
