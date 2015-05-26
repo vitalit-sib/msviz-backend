@@ -1,6 +1,8 @@
 package ch.isbsib.proteomics.mzviz.matches.services
 
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
+import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
+import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.matches.{HitRank, SearchId}
 import ch.isbsib.proteomics.mzviz.matches.models._
@@ -107,10 +109,13 @@ object JsonMatchFormats {
   implicit val formatIdentScore = Json.format[IdentScore]
   implicit val formatPepMatchInfo = Json.format[PepMatchInfo]
   implicit val formatPepSpectraMatch = Json.format[PepSpectraMatch]
-  implicit val formatSearchDatabase =  Json.format[SearchDatabase]
-  implicit val formatSearchInfo =  Json.format[SearchInfo]
-  implicit val formatProteinIdentInfo =  Json.format[ProteinIdentInfo]
-  implicit val formatProteinIdent =  Json.format[ProteinIdent]
-  implicit val formatPepSpectraMatchWithSpectrumRef= Json.format[PepSpectraMatchWithSpectrumRef]
+  implicit val formatSearchDatabase = Json.format[SearchDatabase]
+  implicit val formatSearchInfo = Json.format[SearchInfo]
+  implicit val formatProteinIdentInfo = Json.format[ProteinIdentInfo]
+  implicit val formatProteinIdent = Json.format[ProteinIdent]
+  implicit val writesPepSpectraMatchWithSpectrumRef = new Writes[PepSpectraMatchWithSpectrumRef] {
+    def writes(o: PepSpectraMatchWithSpectrumRef) =
+    Json.toJson(o.asInstanceOf[PepSpectraMatch]).asInstanceOf[JsObject] ++ Json.obj ("paf" -> "le chien")
+  }
 
 }

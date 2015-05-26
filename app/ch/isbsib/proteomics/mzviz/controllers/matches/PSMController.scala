@@ -56,16 +56,30 @@ object PSMController extends MatchController {
         .map { case sphList =>
 
         //TOCHECK
-        /*
-        val spectrumR = spectrumRef match {
-          case Some(r: String) => MatchMongoDBService().findAllPSMsWithSpectrumRefByRunId(sphList)
+
+        val spectrumR  = spectrumRef match {
+          case Some(r: String) => Some(MatchMongoDBService().findAllPSMsWithSpectrumRefByRunId(sphList))
+          case _ => None
+            //.map {case_ => Ok(Json.toJson(spectrumR))}
         }
-        */
+
         //
         render {
-          case acceptsTsv() => Ok(TsvFormats.toTsv(sphList))
-          case _ => Ok(Json.toJson(sphList))
-        }
+          case _ =>
+
+          if(spectrumR.isDefined) {
+            //Ok(Json.toJson(spectrumR))
+            Ok("yo1234")
+          }else{
+            Ok(Json.toJson(sphList))
+          }
+
+          //case _ => Ok(Json.toJson(sphList))
+
+          }
+          //case acceptsTsv() => Ok(TsvFormats.toTsv(sphList))
+          //case _ => Ok(Json.toJson(sphList))
+        //}
       }
         .recover {
         case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
