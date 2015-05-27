@@ -21,6 +21,8 @@ object JsonCommonsFormats {
     }
   }
 
+
+
   implicit val jsonWritesMap = new Writes[Map[String, Int]] {
     override def writes(o: Map[String, Int]): JsValue = {
       o.foldLeft(Json.obj())({ (acc, p) => acc ++ Json.obj(p._1 -> p._2)})

@@ -160,10 +160,13 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @param psms  list of psms
    * @return
    */
-  def findAllPSMsWithSpectrumRefByRunId(psms: Seq[PepSpectraMatch]): Future[Seq[PepSpectraMatchWithSpectrumRef]] = {
+  def enrichWithSpectrumRefs(psms: Seq[PepSpectraMatch]): Future[Seq[PepSpectraMatchWithSpectrumRef]] = {
 
     implicit def searchIdToRunId(searchId: SearchId): RunId = RunId(searchId.value)
+
+    //println (s"psms=$psms")
     val runIds:Set[RunId] = psms.map(p => RunId(p.searchId.value)).toSet
+    //println(s"runIds = $runIds")
 
     val futSpectrumRefs: Future[Seq[SpectrumRef]] = ExpMongoDBService().findAllSpectraRefByrunId(runIds)
 
@@ -181,6 +184,8 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
       dict <- futRunId2speRefDict
     } yield {
       psms.map({ psm =>
+        //println (s"DICT = $dict)
+        //println(s"DICT= $dict(psm.searchId)(psm.spectrumId)")
         PepSpectraMatchWithSpectrumRef(psm, dict(psm.searchId)(psm.spectrumId))
       })
     }

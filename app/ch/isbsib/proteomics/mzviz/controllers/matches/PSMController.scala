@@ -2,15 +2,16 @@ package ch.isbsib.proteomics.mzviz.controllers.matches
 
 import javax.ws.rs.PathParam
 
-import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
+import ch.isbsib.proteomics.mzviz.controllers.matches.PSMController._
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
 import ch.isbsib.proteomics.mzviz.spectrasim.services.JsonSimFormats._
+import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
 import ch.isbsib.proteomics.mzviz.controllers.TsvFormats
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
-import ch.isbsib.proteomics.mzviz.matches.models.{PepSpectraMatch, ProteinRef, SearchInfo}
+import ch.isbsib.proteomics.mzviz.matches.models.{PepSpectraMatchWithSpectrumRef, PepSpectraMatch, ProteinRef, SearchInfo}
 import ch.isbsib.proteomics.mzviz.matches.services.{MatchMongoDBService, SearchInfoDBService}
 import ch.isbsib.proteomics.mzviz.spectrasim.models.SpSpRefMatch
 import ch.isbsib.proteomics.mzviz.spectrasim.services.SimilarSpectraMongoDBService
@@ -18,7 +19,7 @@ import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
 import com.wordnik.swagger.annotations._
 import play.api.Logger
 import play.api.cache.Cached
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Writes, Json}
 import play.api.mvc.Action
 import play.api.Play.current
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -30,6 +31,7 @@ import scala.concurrent.Future
  */
 @Api(value = "/match", description = "PSMs, SSMs, protein matches etc.")
 object PSMController extends MatchController {
+
 
 
   def stats = Action.async {
@@ -44,42 +46,31 @@ object PSMController extends MatchController {
     response = classOf[List[PepSpectraMatch]],
     httpMethod = "GET")
   @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "withSpectrumRef", value = "spectrum reference", required = false, dataType = "String", paramType = "query")
+    new ApiImplicitParam(name = "addSpectrumRef", value = "if spectra ref are to be appended to PSM", required = false, dataType = "String", paramType = "query")
   ))
   def findAllPSMBySearchId(
                             @ApiParam(value = """searchId""", defaultValue = "") @PathParam("searchId") searchId: String,
-                            spectrumRef: Option[String]
+                            addSpectrumRef: Option[Boolean]
                             ) =
     Action.async { implicit request =>
 
-      MatchMongoDBService().findAllPSMBySearchId(SearchId(searchId))
-        .map { case sphList =>
+      val futPSMs = MatchMongoDBService().findAllPSMBySearchId(SearchId(searchId))
+      val enrichSR = addSpectrumRef.getOrElse(false)
 
-        //TOCHECK
-
-        val spectrumR  = spectrumRef match {
-          case Some(r: String) => Some(MatchMongoDBService().findAllPSMsWithSpectrumRefByRunId(sphList))
-          case _ => None
-            //.map {case_ => Ok(Json.toJson(spectrumR))}
-        }
-
-        //
-        render {
-          case _ =>
-
-          if(spectrumR.isDefined) {
-            //Ok(Json.toJson(spectrumR))
-            Ok("yo1234")
-          }else{
-            Ok(Json.toJson(sphList))
-          }
-
-          //case _ => Ok(Json.toJson(sphList))
-
-          }
-          //case acceptsTsv() => Ok(TsvFormats.toTsv(sphList))
-          //case _ => Ok(Json.toJson(sphList))
-        //}
+      if (enrichSR) {
+        futPSMs.flatMap({ psms =>
+          MatchMongoDBService().enrichWithSpectrumRefs(psms)
+            .map(enrichPSMs => Ok(Json.toJson(enrichPSMs)))
+        })
+ /*
+        for {
+          psms <- futPSMs
+          enrichedPMSs <- MatchMongoDBService().enrichWithSpectrumRefs(psms)
+        } yield {
+          Ok(Json.toJson(enrichedPMSs))
+        }*/
+      } else {
+        futPSMs.map(psms => Ok(Json.toJson(psms)))
       }
         .recover {
         case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))

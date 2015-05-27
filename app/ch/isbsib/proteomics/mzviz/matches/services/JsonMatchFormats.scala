@@ -113,9 +113,16 @@ object JsonMatchFormats {
   implicit val formatSearchInfo = Json.format[SearchInfo]
   implicit val formatProteinIdentInfo = Json.format[ProteinIdentInfo]
   implicit val formatProteinIdent = Json.format[ProteinIdent]
+
   implicit val writesPepSpectraMatchWithSpectrumRef = new Writes[PepSpectraMatchWithSpectrumRef] {
     def writes(o: PepSpectraMatchWithSpectrumRef) =
-    Json.toJson(o.asInstanceOf[PepSpectraMatch]).asInstanceOf[JsObject] ++ Json.obj ("paf" -> "le chien")
+    Json.toJson(o.asInstanceOf[PepSpectraMatch]).asInstanceOf[JsObject]
   }
 
+
+  implicit def writesPepSpectraMatchWithSpectrumRefSeq = new Writes[Seq[PepSpectraMatchWithSpectrumRef]] {
+    override def writes(o: Seq[PepSpectraMatchWithSpectrumRef]): JsValue = {
+      JsArray(o.map(writesPepSpectraMatchWithSpectrumRef.writes))
+    }
+  }
 }
