@@ -116,7 +116,7 @@ object JsonMatchFormats {
 
   implicit val writesPepSpectraMatchWithSpectrumRef = new Writes[PepSpectraMatchWithSpectrumRef] {
     def writes(o: PepSpectraMatchWithSpectrumRef) =
-    Json.toJson(o.asInstanceOf[PepSpectraMatch]).asInstanceOf[JsObject]
+    Json.toJson(o.asInstanceOf[PepSpectraMatch]).asInstanceOf[JsObject] ++ Json.obj("spectrumRef" -> Json.toJson(o.spectrumRef))
   }
 
 

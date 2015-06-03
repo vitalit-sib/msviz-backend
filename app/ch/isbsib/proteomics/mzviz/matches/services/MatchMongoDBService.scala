@@ -156,7 +156,7 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
   }
 
   /**
-   * decorated all PePMAtchSpectra with Spectrum refm turning htem into PepSpectraMatchWithSpectrumRef
+   * decorated all PePMAtchSpectra with Spectrum refm turning them into PepSpectraMatchWithSpectrumRef
    * @param psms  list of psms
    * @return
    */
