@@ -11,8 +11,9 @@ scalaVersion := "2.11.4"
 resolvers ++= Seq(
   "mvnrepository" at "http://mvnrepository.com/artifact",
   "expasy" at "http://mzjava.expasy.org/maven",
-  "csvjdbc" at "http://csvjdbc.sourceforge.net/maven2"
-//  "ivy2 cache" at "file:// /Users/amasselo/.ivy2/cache"
+  "csvjdbc" at "http://csvjdbc.sourceforge.net/maven2",
+  "netbeans" at "http://bits.netbeans.org/maven2/"
+  //  "ivy2 cache" at "file:// /Users/amasselo/.ivy2/cache"
   )
 
 libraryDependencies ++= Seq(
