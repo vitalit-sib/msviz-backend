@@ -3,7 +3,7 @@ package ch.isbsib.proteomics.mzviz.matches.services
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoNotFoundException, MongoDBService}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
-import ch.isbsib.proteomics.mzviz.matches.models.{ProteinIdent, PepSpectraMatch}
+import ch.isbsib.proteomics.mzviz.matches.models.{ProteinIdentInfo, ProteinIdent, PepSpectraMatch}
 import ch.isbsib.proteomics.mzviz.theoretical.AccessionCode
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
 import play.api.libs.iteratee.Enumerator
@@ -95,7 +95,6 @@ class ProteinMatchMongoDBService (val db: DefaultDB) extends MongoDBService {
     val query = Json.obj("searchId" -> Json.obj("$in" -> searchIds.toList))
     collection.find(query).cursor[ProteinIdent].collect[List]()
   }
-
 
   /**
    * count the number of Entries
