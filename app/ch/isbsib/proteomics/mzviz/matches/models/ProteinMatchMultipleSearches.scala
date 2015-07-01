@@ -13,7 +13,6 @@ case class ProteinMatchMultipleSearches (dict:Map[AccessionCode,Seq[ProteinIdent
   def add(proteinInfo:ProteinIdent): ProteinMatchMultipleSearches = {
 
     val newSeq= dict.getOrElse(proteinInfo.mainProt.proteinAC, Seq()) :+  proteinInfo
-    println(newSeq)
     val newDict=dict + (proteinInfo.mainProt.proteinAC -> newSeq)
     ProteinMatchMultipleSearches(newDict)
   }
