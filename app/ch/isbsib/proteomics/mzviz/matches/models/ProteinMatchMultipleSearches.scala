@@ -8,13 +8,14 @@ import ch.isbsib.proteomics.mzviz.theoretical.AccessionCode
  * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 
-case class ProteinMatchMultipleSearches (dict:Map[AccessionCode,Map[SearchId,Seq[ProteinIdent]]]){
+case class ProteinMatchMultipleSearches (dict:Map[AccessionCode,Map[SearchId,ProteinIdent]]){
 
   def add(searchId:SearchId,proteinInfo:ProteinIdent): ProteinMatchMultipleSearches = {
 
     val newMapSearchProt= dict.getOrElse(proteinInfo.mainProt.proteinAC, Map())
-    val newSeq= newMapSearchProt.getOrElse(searchId, Seq()) :+  proteinInfo
-    val newMap= newMapSearchProt + (searchId -> newSeq)
+    val newProt= newMapSearchProt.getOrElse(searchId,proteinInfo)
+    println(newProt)
+    val newMap= newMapSearchProt + (searchId -> newProt)
     val newDict=dict + (proteinInfo.mainProt.proteinAC -> newMap)
     ProteinMatchMultipleSearches(newDict)
   }
