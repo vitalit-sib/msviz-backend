@@ -41,11 +41,11 @@ class ProteinMatchMultipleSearchesSpecs extends Specification {
 
     "add one protein" in {
       val pmm = proteinMatchMulti.add(SearchId("s1"),proteinInfo1)
-      toMap(pmm) must equalTo(Map("P1"->List("s1")))
+      toMap(pmm) must equalTo(Map("P1" -> Map("s1" -> List("s1"))))
     }
     "add twice the same proteinInfo" in {
       val pmm = proteinMatchMulti.add(SearchId("s1"),proteinInfo1).add(SearchId("s1"),proteinInfo1)
-      toMap(pmm) must equalTo(Map("P1"->List("s1")))
+      toMap(pmm) must equalTo(Map("P1" -> Map("s1" -> List("s1"))))
     }
 
     "add proteinInfo" in {
@@ -54,7 +54,7 @@ class ProteinMatchMultipleSearchesSpecs extends Specification {
       val proteinMatchMulti3 = proteinMatchMulti2.add(SearchId("s2"),proteinInfo2)
       val proteinMatchMulti4 = proteinMatchMulti3.add(SearchId("s3"),proteinInfo3)
       println(s"HAHAHA ${toMap(proteinMatchMulti4)}")
-      proteinMatchMulti4.dict.get(AccessionCode("P1")).get.size mustEqual (2)
+      proteinMatchMulti4.dict.get(AccessionCode("P1")).get.size mustEqual (1)
       proteinMatchMulti4.dict.get(AccessionCode("P2")).get.size mustEqual (2)
     }
 
