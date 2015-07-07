@@ -1,6 +1,10 @@
 package ch.isbsib.proteomics.mzviz.matches.models
 
+import java.io.File
+
+import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
+import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
 import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 import org.specs2.mutable.Specification
 
@@ -53,6 +57,15 @@ class ProteinMatchMultipleSearchesSpecs extends Specification {
     }
 
   }
+
+//  "proteinMatchMultipleSearches from files" should {
+//
+//    val psmAndProtLists1: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], Iterator[SearchInfo]] = LoaderMzIdent.parse(new File("test/resources/M_100.mzid"), SearchId("M_100"), RunId("M_100"))
+//    val psmAndProtLists2: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], Iterator[SearchInfo]] = LoaderMzIdent.parse(new File("test/resources/F001644.mzid"), SearchId("F001644"), RunId("F001644"))
+//
+//
+//
+//  }
 
 
 }

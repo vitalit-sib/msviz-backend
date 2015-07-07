@@ -26,11 +26,11 @@ class SearchInfoMongoDBServiceSpecs extends Specification with ScalaFutures {
   }
 
   "insert" should {
-    "insert  1" in new TempMongoDBService {
+    "insert  true" in new TempMongoDBService {
       val mzIdent = scala.xml.XML.loadFile(new File("test/resources/M_100.mzid"))
       val searchEntries =LoaderMzIdent.parseSearchInfo(mzIdent, SearchId("M_100"))
       val inserted = service.insert(searchEntries).futureValue
-      inserted mustEqual(1)
+      inserted mustEqual(true)
     }
   }
 

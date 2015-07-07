@@ -36,11 +36,14 @@ class SearchInfoDBService(val db: DefaultDB) extends MongoDBService {
   /**
    * insert a list of SearchInfo entries
    * @param entries to be inserted
-   * @return a Future of the number of entries loaded
+   * @return true for succesful insert
    */
-  def insert(entries: Iterator[SearchInfo]): Future[Int] = {
-    val enumerator = Enumerator.enumerate(entries)
-    collection.bulkInsert(enumerator)
+  def insert(entries: SearchInfo): Future[Boolean] = {
+    collection.insert(entries).map{
+      case e: LastError if e.inError => false
+      case _ => true
+    }
+
   }
 
 

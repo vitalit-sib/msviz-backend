@@ -30,7 +30,7 @@ import scala.xml.Elem
 object LoaderMzIdent {
 
 
-  def parse(file: File, searchId: SearchId, runId: RunId): Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], Iterator[SearchInfo]] = {
+  def parse(file: File, searchId: SearchId, runId: RunId): Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = {
     // @TODO set the unimodXMLPath in the controller? Currently we only take the Unimod.XML provided by MzJava into account
     // set the unimodXmlPath for MzJavaunimodXmlPath
     //val s = Play.application().configuration().getString("unimod.xml")
@@ -80,7 +80,7 @@ object LoaderMzIdent {
    * @param mzidXml Scala XML element
    * @return
    */
-  def parseSearchInfo(mzidXml: Elem, searchId: SearchId): Iterator[SearchInfo] = {
+  def parseSearchInfo(mzidXml: Elem, searchId: SearchId): SearchInfo = {
 
     // get the info about the SearchDatabases
     val title =parseTitleFilename(mzidXml)
@@ -89,10 +89,7 @@ object LoaderMzIdent {
     val enzyme=parseEnzymeFilename(mzidXml)
     val parentTolerance=parseParentToleranceFilename(mzidXml)
     val fragmentTolerance=parseFragmentToleranceFilename(mzidXml)
-    val searchI=SearchInfo(searchId,title,database,username, enzyme,parentTolerance,fragmentTolerance)
-    val it: Iterator[SearchInfo] = Iterator(searchI)
-    it
-    //it.map(searchI)
+    SearchInfo(searchId,title,database,username, enzyme,parentTolerance,fragmentTolerance)
   }
 
   /**

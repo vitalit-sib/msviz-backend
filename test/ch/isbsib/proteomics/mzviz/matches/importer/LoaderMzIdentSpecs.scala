@@ -53,7 +53,7 @@ class LoaderMzIdentSpecs extends Specification {
   }
 
     "parse M_100" should {
-      val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], Iterator[SearchInfo]] = LoaderMzIdent.parse(new File("test/resources/M_100.mzid"), SearchId("M_100"), RunId("M_100.mgf"))
+      val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/M_100.mzid"), SearchId("M_100"), RunId("M_100.mgf"))
       val psm = psmAndProtLists._1
       val prots = psmAndProtLists._2
 
@@ -136,7 +136,7 @@ class LoaderMzIdentSpecs extends Specification {
     }
 
     "parse F001644" should {
-      val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], Iterator[SearchInfo]] = LoaderMzIdent.parse(new File("test/resources/F001644.mzid"), SearchId("F001644"), RunId("F001644.mgf"))
+      val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/F001644.mzid"), SearchId("F001644"), RunId("F001644.mgf"))
       val psms = psmAndProtLists._1
       val prots = psmAndProtLists._2
 
@@ -159,7 +159,7 @@ class LoaderMzIdentSpecs extends Specification {
     }
 
   "parse M_100_with_X" should {
-    val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], Iterator[SearchInfo]] = LoaderMzIdent.parse(new File("test/resources/M_100_with_X.mzid"), SearchId("with_X"), RunId("M_100.mgf"))
+    val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/M_100_with_X.mzid"), SearchId("with_X"), RunId("M_100.mgf"))
     val psm = psmAndProtLists._1
 
     "check first peptide" in {
@@ -170,7 +170,7 @@ class LoaderMzIdentSpecs extends Specification {
   }
 
   "parse modification scores" should {
-    val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], Iterator[SearchInfo]] = LoaderMzIdent.parse(new File("test/resources/F002687_acetylation.mzid"), SearchId("modif"), RunId("M_100.mgf"))
+    val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/F002687_acetylation.mzid"), SearchId("modif"), RunId("M_100.mgf"))
     val psms = psmAndProtLists._1
 
     "check modif position score" in {
@@ -196,7 +196,7 @@ class LoaderMzIdentSpecs extends Specification {
 
 
   "parse protein positions" should {
-    val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], Iterator[SearchInfo]] = LoaderMzIdent.parse(new File("test/resources/F001303.mzid"), SearchId("modif"), RunId("M_100.mgf"))
+    val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/F001303.mzid"), SearchId("modif"), RunId("M_100.mgf"))
     val psms = psmAndProtLists._1
 
     "check position 1" in {
@@ -248,7 +248,7 @@ class LoaderMzIdentSpecs extends Specification {
   }
 
   "parse passThresholds" should {
-    val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], Iterator[SearchInfo]] = LoaderMzIdent.parse(new File("test/resources/F001303.mzid"), SearchId("modif"), RunId("M_100.mgf"))
+    val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/F001303.mzid"), SearchId("modif"), RunId("M_100.mgf"))
     val psms = psmAndProtLists._1
 
     "check first" in {
