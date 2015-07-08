@@ -75,50 +75,6 @@ object JsonMatchFormats {
 
   }
 
-  /*
-  implicit val formatSearchInfo = new Writes[SearchInfo] {
-    override def writes(o: SearchInfo): JsValue = Json.obj(
-      "searchId" -> o.searchId,
-      "title" -> o.title,
-      "database" -> o.database,
-      "username" -> o.username
-    )
-  }
-*/
-  /*
-  implicit val formatSearchInfo = new Format[SearchInfo] {
-    override def reads(json: JsValue): JsResult[SearchInfo] = {
-      JsSuccess(SearchInfo(
-        searchId = SearchId((json \ "searchId").as[String]),
-        title = (json \ "title").as[String]),
-        database = (json \ "database").asOpt[Set[String]].getOrElse(Set()).map(SearchDatabase.apply)
-        username= (json \ "username").as[String])
-      ))
-    }
-
-    def writes(o: SearchInfo) = Json.obj(
-      "searchId" -> o.searchId,
-      "title" -> o.title,
-      "database" -> o.database,
-      "username" -> o.username
-    )
-
-  }
-*/
-
-
-  //implicit val formatProteinMatchMultipleSearches = Json.format[ProteinMatchMultipleSearches]
-
-//  implicit val writeProteinMatchMultipleSearches = new Writes[ProteinMatchMultipleSearches] {
-//    override def writes(o: ProteinMatchMultipleSearches): JsValue = {
-//      o.dict.map(acVal =>
-//        JsObject(acVal._1.value -> acVal._2.map(protId =>
-//          JsObject(protId._1.value -> ))
-//      )))
-//    }
-//  }
-
-
   implicit val formatProteinMatch = Json.format[ProteinMatch]
   implicit val formatPeptide = Json.format[Peptide]
   implicit val formatIdentScore = Json.format[IdentScore]
@@ -128,6 +84,16 @@ object JsonMatchFormats {
   implicit val formatSearchInfo = Json.format[SearchInfo]
   implicit val formatProteinIdentInfo = Json.format[ProteinIdentInfo]
   implicit val formatProteinIdent = Json.format[ProteinIdent]
+
+  implicit val writeProteinMatchMultipleSearches = new Writes[ProteinMatchMultipleSearches] {
+    override def writes(o: ProteinMatchMultipleSearches): JsValue = {
+      Json.arr(o.dict.map(acVal =>
+        Json.obj(acVal._1.value -> Json.arr(acVal._2.map(protId =>
+          Json.obj(protId._1.value -> Json.toJson(protId._2))
+        ))
+        )))
+    }
+  }
 
   implicit val writesPepSpectraMatchWithSpectrumRef = new Writes[PepSpectraMatchWithSpectrumRef] {
     def writes(o: PepSpectraMatchWithSpectrumRef) =
