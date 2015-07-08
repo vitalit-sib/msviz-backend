@@ -8,6 +8,7 @@ import ch.isbsib.proteomics.mzviz.matches.{HitRank, SearchId}
 import ch.isbsib.proteomics.mzviz.matches.models._
 import ch.isbsib.proteomics.mzviz.theoretical.models.SearchDatabase
 import ch.isbsib.proteomics.mzviz.theoretical.{ProteinIdentifier, SequenceSource, AccessionCode}
+import ch.isbsib.proteomics.mzviz.matches.models.ProteinMatchMultipleSearches
 import play.api.libs.json._
 import play.api.libs.json.Reads._
 import play.api.libs.json.Json
@@ -104,6 +105,20 @@ object JsonMatchFormats {
 
   }
 */
+
+
+  //implicit val formatProteinMatchMultipleSearches = Json.format[ProteinMatchMultipleSearches]
+
+//  implicit val writeProteinMatchMultipleSearches = new Writes[ProteinMatchMultipleSearches] {
+//    override def writes(o: ProteinMatchMultipleSearches): JsValue = {
+//      o.dict.map(acVal =>
+//        JsObject(acVal._1.value -> acVal._2.map(protId =>
+//          JsObject(protId._1.value -> ))
+//      )))
+//    }
+//  }
+
+
   implicit val formatProteinMatch = Json.format[ProteinMatch]
   implicit val formatPeptide = Json.format[Peptide]
   implicit val formatIdentScore = Json.format[IdentScore]
