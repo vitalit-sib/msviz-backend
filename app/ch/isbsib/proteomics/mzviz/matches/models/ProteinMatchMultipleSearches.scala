@@ -14,7 +14,6 @@ case class ProteinMatchMultipleSearches (dict:Map[AccessionCode,Map[SearchId,Pro
 
     val newMapSearchProt= dict.getOrElse(proteinInfo.mainProt.proteinAC, Map())
     val newProt= newMapSearchProt.getOrElse(searchId,proteinInfo)
-    println(newProt)
     val newMap= newMapSearchProt + (searchId -> newProt)
     val newDict=dict + (proteinInfo.mainProt.proteinAC -> newMap)
     ProteinMatchMultipleSearches(newDict)

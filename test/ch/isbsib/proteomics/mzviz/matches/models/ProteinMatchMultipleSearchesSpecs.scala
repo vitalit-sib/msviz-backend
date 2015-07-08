@@ -58,16 +58,37 @@ class ProteinMatchMultipleSearchesSpecs extends Specification {
 
   }
 
-//  "proteinMatchMultipleSearches from files" should {
-//
-//    val psmAndProtLists1: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/M_100.mzid"), SearchId("M_100"), RunId("M_100"))
-//    val psmAndProtLists2: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/F001644.mzid"), SearchId("F001644"), RunId("F001644"))
-//
-//    psmAndProtLists1._2.foldLeft()()
-//
-//    }
-//
-//  }
+  "proteinMatchMultipleSearches from files" should {
+
+    val psmAndProtLists1: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/M_100.mzid"), SearchId("M_100"), RunId("M_100"))
+    val psmAndProtLists4: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/F002687_acetylation.mzid"), SearchId("F002687"), RunId("F002687"))
+
+    "add proteinInfos M_100" in {
+      val proteinInfo_M_100 = psmAndProtLists1._2.foldLeft(ProteinMatchMultipleSearches(Map()))((r, c) => r.add(psmAndProtLists1._3.searchId, c))
+      proteinInfo_M_100.dict.size mustEqual psmAndProtLists1._2.size
+    }
+
+    "add proteinInfos M_100 twice" in {
+      val proteinInfo_M_100 = psmAndProtLists1._2.foldLeft(ProteinMatchMultipleSearches(Map()))((r, c) => r.add(psmAndProtLists1._3.searchId, c))
+      val proteinInfo_M_100_2 = psmAndProtLists1._2.foldLeft(proteinInfo_M_100)((r, c) => r.add(psmAndProtLists1._3.searchId, c))
+      proteinInfo_M_100_2.dict.size mustEqual psmAndProtLists1._2.size
+    }
+
+    "add proteinInfos M_100 and F002687" in {
+      val proteinInfo_1 = psmAndProtLists1._2.foldLeft(ProteinMatchMultipleSearches(Map()))((r, c) => r.add(psmAndProtLists1._3.searchId, c))
+      val proteinInfo_2 = psmAndProtLists4._2.foldLeft(proteinInfo_1)((r, c) => r.add(psmAndProtLists4._3.searchId, c))
+
+      val albu_human = proteinInfo_2.dict.filter(_._2.size > 1)
+      albu_human.get(AccessionCode("ALBU_HUMAN")).get.size mustEqual(2)
+
+      // ALBU_HUMAN should be in both runs
+      proteinInfo_2.dict.size mustEqual (psmAndProtLists1._2.size + psmAndProtLists4._2.size - 1)
+
+
+    }
+
+
+  }
 
 
 }
