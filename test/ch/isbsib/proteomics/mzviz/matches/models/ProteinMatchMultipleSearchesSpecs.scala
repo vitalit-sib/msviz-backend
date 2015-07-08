@@ -60,10 +60,12 @@ class ProteinMatchMultipleSearchesSpecs extends Specification {
 
 //  "proteinMatchMultipleSearches from files" should {
 //
-//    val psmAndProtLists1: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], Iterator[SearchInfo]] = LoaderMzIdent.parse(new File("test/resources/M_100.mzid"), SearchId("M_100"), RunId("M_100"))
-//    val psmAndProtLists2: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], Iterator[SearchInfo]] = LoaderMzIdent.parse(new File("test/resources/F001644.mzid"), SearchId("F001644"), RunId("F001644"))
+//    val psmAndProtLists1: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/M_100.mzid"), SearchId("M_100"), RunId("M_100"))
+//    val psmAndProtLists2: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/F001644.mzid"), SearchId("F001644"), RunId("F001644"))
 //
+//    psmAndProtLists1._2.foldLeft()()
 //
+//    }
 //
 //  }
 
