@@ -35,7 +35,9 @@ object ProteinMatchMultipleSearchesController extends MatchController {
       val sids = queryParamSearchIds(searchIds)
 
       for {
-        proteinMultipleList <- ProteinMatchMongoDBService().findAllProteinsBySearchIds(sids).map(_.foldLeft(ProteinMatchMultipleSearches(Map()))((r, c) => r.add(c.searchId, c)))
+        proteinMultipleList <- ProteinMatchMongoDBService().findAllProteinsBySearchIds(sids).map(
+          _.foldLeft( ProteinMatchMultipleSearches(Map()) )( (r, c) => r.add(c.searchId, c) )
+        )
       } yield {
         Ok(Json.toJson(proteinMultipleList))
       }
