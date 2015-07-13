@@ -87,11 +87,13 @@ object JsonMatchFormats {
 
   implicit val writeProteinMatchMultipleSearches = new Writes[ProteinMatchMultipleSearches] {
     override def writes(o: ProteinMatchMultipleSearches): JsValue = {
-      Json.arr(o.dict.map(acVal =>
-        Json.obj(acVal._1.value -> Json.arr(acVal._2.map(protId =>
-          Json.obj(protId._1.value -> Json.toJson(protId._2))
-        ))
-        )))
+      JsObject(o.dict.map(acVal =>
+        acVal._1.value -> JsObject(acVal._2.map(protId =>
+            protId._1.value -> Json.toJson(protId._2)
+          ).toSeq
+        )
+      ).toSeq
+      )
     }
   }
 
