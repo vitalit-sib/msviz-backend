@@ -11,7 +11,7 @@ import ch.isbsib.proteomics.mzviz.theoretical.services.SequenceMongoDBService
 import scala.util.matching.Regex
 
 /**
- * opens a file and get a list of fasta entries
+ * opens a file and get a list of FASTA entries
  *
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
  *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
