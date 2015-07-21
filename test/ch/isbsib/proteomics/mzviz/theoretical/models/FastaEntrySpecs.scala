@@ -15,7 +15,7 @@ class FastaEntrySpecs extends Specification with ScalaFutures {
 
     "fastaEntry" should {
 
-      // vals used in following tests
+      // values used in following tests
 
 
       "create simple fasta entry" in {
