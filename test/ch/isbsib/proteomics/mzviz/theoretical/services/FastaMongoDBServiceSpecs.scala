@@ -29,7 +29,7 @@ class FastaMongoDBServiceSpecs extends Specification with ScalaFutures {
     PatienceConfig(timeout = Span(15, Seconds), interval = Span(5000, Millis))
 
   /**
-   * extends the temp mongodatabase and add a exp service above it
+   * extends the temp mongo database and add a exp service above it
    */
   trait TempMongoDBService extends TempMongoDBForSpecs {
     val service = new SequenceMongoDBService(db)
