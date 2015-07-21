@@ -34,7 +34,7 @@ class FastaParser(file: File, source: SequenceSource) {
   }
 
   /**
-   * parse the given source and produces and iterator of FastaEntry
+   * parse the given source and produce an iterator of FastaEntry
    * @return
    */
   def parse: Iterator[FastaEntry] = {
