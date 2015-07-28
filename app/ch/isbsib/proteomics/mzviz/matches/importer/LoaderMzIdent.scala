@@ -248,12 +248,12 @@ object LoaderMzIdent {
 
     // create and return a new PepMatchInfo
     PepMatchInfo(score = identScore,
-      numMissedCleavages = Option(mzJavaMatch.getNumMissedCleavages),
-      massDiff = Option(mzJavaMatch.getNumMissedCleavages),
-      rank = mzJavaMatch.getRank,
+      numMissedCleavages = OptionConverter.convertGoogleOption[Int](mzJavaMatch.getNumMissedCleavages.asInstanceOf[Optional[Int]]),
+      massDiff = OptionConverter.convertGoogleOption[Double](mzJavaMatch.getMassDiff.asInstanceOf[Optional[Double]]),
+      rank = OptionConverter.convertGoogleOption[Int](mzJavaMatch.getRank.asInstanceOf[Optional[Int]]),
       chargeState = OptionConverter.convertGoogleOption[Int](mzJavaRes._1.getAssumedCharge.asInstanceOf[Optional[Int]]),
-      totalNumIons = Option(mzJavaMatch.getTotalNumIons),
-      isRejected = Option(mzJavaMatch.isRejected))
+      totalNumIons = OptionConverter.convertGoogleOption[Int](mzJavaMatch.getTotalNumIons.asInstanceOf[Optional[Int]]),
+      isRejected = OptionConverter.convertGoogleOption[Boolean](mzJavaMatch.isRejected.asInstanceOf[Optional[Boolean]]))
 
   }
 

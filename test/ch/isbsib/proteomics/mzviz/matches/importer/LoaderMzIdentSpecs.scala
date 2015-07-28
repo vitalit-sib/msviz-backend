@@ -81,7 +81,7 @@ class LoaderMzIdentSpecs extends Specification {
         psm(0).matchInfo.chargeState must equalTo(Some(2))
         // psm(0).matchInfo.massDiff must equalTo(99.99)
         // psm(0).matchInfo.numMissedCleavages must equalTo(999)
-        psm(0).matchInfo.rank must equalTo(1)
+        psm(0).matchInfo.rank must equalTo(Some(1))
         // psm(0).matchInfo.totalNumIons must equalTo(999)
       }
 
