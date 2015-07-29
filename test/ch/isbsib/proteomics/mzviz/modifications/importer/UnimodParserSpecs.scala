@@ -13,7 +13,7 @@ class UnimodParserSpecs extends Specification with ScalaFutures {
 
 
   "unimod" should {
-    val filename=("test/resources/unimod.xml")
+    val filename=("test/resources/modifications/unimod.xml")
     val n = UnimodParser(filename).getDictionarySize
     val value=Some(42.010565)
 

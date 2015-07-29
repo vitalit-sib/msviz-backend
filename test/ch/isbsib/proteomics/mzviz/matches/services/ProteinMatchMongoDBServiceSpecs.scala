@@ -34,8 +34,8 @@ class ProteinMatchMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "import and insert protein list" should {
 
-    val file_1 = new File("test/resources/M_100.mzid")
-    val file_2 = new File("test/resources/F001644.mzid")
+    val file_1 = new File("test/resources/mascot/M_100.mzid")
+    val file_2 = new File("test/resources/mascot/F001644.mzid")
 
     "get them up " in new TempMongoDBService {
       service.countEntries.futureValue must equalTo(0)
@@ -49,7 +49,7 @@ class ProteinMatchMongoDBServiceSpecs extends Specification with ScalaFutures {
   }
 
   "delete" should {
-    val file_1 = new File("test/resources/M_100.mzid")
+    val file_1 = new File("test/resources/mascot/M_100.mzid")
 
     "get 2 , remove 1 " in new TempMongoDBService {
       service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("1"))._2).futureValue
@@ -65,8 +65,8 @@ class ProteinMatchMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "insert protein list and find protein identification" should {
 
-    val file_1 = new File("test/resources/M_100.mzid")
-    val file_2 = new File("test/resources/F001644.mzid")
+    val file_1 = new File("test/resources/mascot/M_100.mzid")
+    val file_2 = new File("test/resources/mascot/F001644.mzid")
 
     "insert and find" in new TempMongoDBService {
       service.countEntries.futureValue must equalTo(0)
@@ -91,8 +91,8 @@ class ProteinMatchMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "delete multiple sources" should {
 
-    val file_1 = new File("test/resources/M_100.mzid")
-    val file_2 = new File("test/resources/F001644.mzid")
+    val file_1 = new File("test/resources/mascot/M_100.mzid")
+    val file_2 = new File("test/resources/mascot/F001644.mzid")
 
     "insert and delete" in new TempMongoDBService {
       service.countEntries.futureValue must equalTo(0)

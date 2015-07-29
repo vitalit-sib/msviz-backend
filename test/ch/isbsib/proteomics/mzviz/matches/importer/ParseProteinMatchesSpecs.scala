@@ -20,7 +20,7 @@ class ParseProteinMatchesSpecs extends Specification {
   "parseSpectrumIdAndTitleRelation" should {
 
     "check size and title" in {
-      val mzIdentML = scala.xml.XML.loadFile(new File("test/resources/F001644.mzid"))
+      val mzIdentML = scala.xml.XML.loadFile(new File("test/resources/mascot/F001644.mzid"))
       val spIdTitleRelation = ParseProteinMatches.parseSpectrumIdAndTitleRelation(mzIdentML \\ "SpectrumIdentificationList")
 
       spIdTitleRelation.get(SpectrumIdentifictionItem("SII_71_1")) must equalTo(Some(SpectrumUniqueId("20141008_BSA_25cm_column2.9985.9985.2")))
@@ -60,7 +60,7 @@ class ParseProteinMatchesSpecs extends Specification {
     val db2 = SearchDatabase(id = "SDB_custom", version="2.0", entries=100)
     val searchDbs = Seq(db1, db2)
 
-    val mzIdentML = scala.xml.XML.loadFile(new File("test/resources/F001644.mzid"))
+    val mzIdentML = scala.xml.XML.loadFile(new File("test/resources/mascot/F001644.mzid"))
     val spIdTitleRelation = ParseProteinMatches.parseProtList(mzIdentML, SearchId("hoho"), searchDbs)
 
     "check size and title" in {
@@ -93,7 +93,7 @@ class ParseProteinMatchesSpecs extends Specification {
 
   "check source information" should {
 
-    val file = scala.xml.XML.loadFile(new File("test/resources/F001644.mzid"))
+    val file = scala.xml.XML.loadFile(new File("test/resources/mascot/F001644.mzid"))
     val dbInfo = LoaderMzIdent.parseSearchDbSourceInfo(file)
     val spIdTitleRelation = ParseProteinMatches.parseProtList(file, SearchId("hoho"), dbInfo)
 

@@ -45,7 +45,7 @@ class FastaParserSpecs extends Specification with ScalaFutures {
   }
 
   "parse" should {
-    val entries = FastaParser("test/resources/M_100small.fasta", SequenceSource("pipo")).parse.toList
+    val entries = FastaParser("test/resources/sequences/M_100small.fasta", SequenceSource("pipo")).parse.toList
 
     val mapEntries: Map[AccessionCode, FastaEntry] = entries.map(e => (e.proteinRef.AC, e)).toMap
 
@@ -75,7 +75,7 @@ class FastaParserSpecs extends Specification with ScalaFutures {
   }
 
   "parse with a source" should {
-    val entries = FastaParser("test/resources/M_100small.fasta", SequenceSource("manon")).parse
+    val entries = FastaParser("test/resources/sequences/M_100small.fasta", SequenceSource("manon")).parse
 
     val mapEntries: Map[AccessionCode, FastaEntry] = entries.map(e => (e.proteinRef.AC, e)).toMap
 
@@ -89,7 +89,7 @@ class FastaParserSpecs extends Specification with ScalaFutures {
   }
 
   "parse trembl" should{
-    val entries = FastaParser("test/resources/tr.fasta", SequenceSource("tr")).parse
+    val entries = FastaParser("test/resources/sequences/tr.fasta", SequenceSource("tr")).parse
 
     "size" in {
       entries must have size 2
