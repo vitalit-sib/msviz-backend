@@ -87,7 +87,7 @@ class LoaderMGFSpecs extends Specification {
   }
 
   "load" should {
-    val run = LoaderMGF.load(new File("test/resources/F001644.mgf"), RunId("pipo"))
+    val run = LoaderMGF.load(new File("test/resources/mascot/F001644.mgf"), RunId("pipo"))
     "get runId out of filename" in {
       run.get.id must equalTo(RunId("pipo"))
     }
@@ -121,7 +121,7 @@ class LoaderMGFSpecs extends Specification {
   }
 
   "loading wiff" should {
-    val run = LoaderMGF.load(new File("test/resources/M_100.mgf"), RunId("pipo"))
+    val run = LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("pipo"))
 
     "get runId out of filename" in {
       run.get.id must equalTo(RunId("pipo"))

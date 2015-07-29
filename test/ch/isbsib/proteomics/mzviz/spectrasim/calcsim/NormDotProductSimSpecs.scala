@@ -48,7 +48,7 @@ class NormDotProductSimSpecs extends Specification {
 
   "compute normalized dot product from MGF" should {
 
-    val run: MSRun = LoaderMGF.load(new File("test/resources/M_100.mgf"), RunId("pipo")).get
+    val run: MSRun = LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("pipo")).get
 
     "compare two spectra from MGF" in {
 

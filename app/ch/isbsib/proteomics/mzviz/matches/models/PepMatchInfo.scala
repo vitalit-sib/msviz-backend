@@ -10,7 +10,7 @@ case class PepMatchInfo(
                          score: IdentScore,
                          numMissedCleavages: Option[Int],
                          massDiff: Option[Double],
-                         rank: Int,
+                         rank: Option[Int],
                          totalNumIons: Option[Int],
                          chargeState: Option[Int],
                          isRejected: Option[Boolean]

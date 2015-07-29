@@ -17,7 +17,7 @@ class PepSpectraMatchSpecs extends Specification {
 
     // vals used in following tests
     val score = IdentScore(mainScore = 0.8, scoreMap = Map("p-value" -> 0.001))
-    val matching = PepMatchInfo(score, numMissedCleavages = Option(1), rank= 1, massDiff = Option(0.01), totalNumIons = Option(1), isRejected = None, chargeState = Option(2  ))
+    val matching = PepMatchInfo(score, numMissedCleavages = Option(1), rank= Option(1), massDiff = Option(0.01), totalNumIons = Option(1), isRejected = None, chargeState = Option(2  ))
     val sequence = "AKKKAA"
     val oneModifRef = ModifName("Phospho")
     val modificationRefs = Vector(Nil, Seq(oneModifRef), Nil, Nil, Nil, Nil)

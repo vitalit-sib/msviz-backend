@@ -41,8 +41,8 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
   }
 
   "import and insert q psm list" should {
-    val file_1 = new File("test/resources/M_100.mzid")
-    val file_2 = new File("test/resources/F001644.mzid")
+    val file_1 = new File("test/resources/mascot/M_100.mzid")
+    val file_2 = new File("test/resources/mascot/F001644.mzid")
 
     "get them up " in new TempMongoDBService {
       service.countEntries.futureValue must equalTo(0)
@@ -58,7 +58,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "delete" should {
 
-    val file_1 = new File("test/resources/M_100.mzid")
+    val file_1 = new File("test/resources/mascot/M_100.mzid")
 
     "get 2 , remove 1 " in new TempMongoDBService {
       service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"))._1).futureValue
@@ -75,7 +75,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
   "findAllEntriesByRunId" should {
     "find all" in new TempMongoDBService {
 
-      val file_1 = new File("test/resources/M_100.mzid")
+      val file_1 = new File("test/resources/mascot/M_100.mzid")
 
       println("insert and check size")
       service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"))._1).futureValue
@@ -91,7 +91,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "findAllPSMByRunId" should {
 
-    val file_1 = new File("test/resources/M_100.mzid")
+    val file_1 = new File("test/resources/mascot/M_100.mzid")
 
     "find all" in new TempMongoDBService {
 
@@ -106,7 +106,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "listProteinRefsBySearchId" should {
 
-    val file_1 = new File("test/resources/M_100.mzid")
+    val file_1 = new File("test/resources/mascot/M_100.mzid")
 
     "list all" in new TempMongoDBService {
 
@@ -122,7 +122,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "listProteinRefsBySearchId" should {
 
-    val file_1 = new File("test/resources/M_100.mzid")
+    val file_1 = new File("test/resources/mascot/M_100.mzid")
 
     "list all" in new TempMongoDBService {
 
@@ -138,7 +138,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "findPSMByProtein" should {
 
-    val file_1 = new File("test/resources/M_100.mzid")
+    val file_1 = new File("test/resources/mascot/M_100.mzid")
 
     "list all" in new TempMongoDBService {
       service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"))._1).futureValue

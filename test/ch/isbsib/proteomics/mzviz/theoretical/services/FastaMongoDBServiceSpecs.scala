@@ -38,7 +38,7 @@ class FastaMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "insert" should {
     "insert  2" in new TempMongoDBService {
-      val entries = FastaParser("test/resources/M_100small.fasta",SequenceSource("small-1")).parse
+      val entries = FastaParser("test/resources/sequences/M_100small.fasta",SequenceSource("small-1")).parse
       val n: Int = service.insert(entries).futureValue
       n must equalTo(2)
     }
@@ -47,8 +47,8 @@ class FastaMongoDBServiceSpecs extends Specification with ScalaFutures {
   "listSources" should {
     "get 2 fasta" in new TempMongoDBService {
 
-      val f1 = service.insert(FastaParser("test/resources/M_100small.fasta", SequenceSource("small-1")).parse)
-      val f2 = service.insert(FastaParser("test/resources/M_100small.fasta", SequenceSource("small-2")).parse)
+      val f1 = service.insert(FastaParser("test/resources/sequences/M_100small.fasta", SequenceSource("small-1")).parse)
+      val f2 = service.insert(FastaParser("test/resources/sequences/M_100small.fasta", SequenceSource("small-2")).parse)
       Future.sequence(List(f1, f2)).futureValue
       val sources = service.listSources.futureValue.sortBy(_.value) mustEqual List(SequenceSource("small-1"), SequenceSource("small-2"))
     }
@@ -56,8 +56,8 @@ class FastaMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "countSequences" should {
     "get 2 sequences" in new TempMongoDBService {
-      val f1 = service.insert(FastaParser("test/resources/M_100small.fasta", SequenceSource("small-1")).parse)
-      val f2 = service.insert(FastaParser("test/resources/M_100small.fasta", SequenceSource("small-2")).parse)
+      val f1 = service.insert(FastaParser("test/resources/sequences/M_100small.fasta", SequenceSource("small-1")).parse)
+      val f2 = service.insert(FastaParser("test/resources/sequences/M_100small.fasta", SequenceSource("small-2")).parse)
       Future.sequence(List(f1, f2)).futureValue
       val n: Int = service.countSequencesBySource(SequenceSource("small-1")).futureValue
       n must equalTo(2)
@@ -66,8 +66,8 @@ class FastaMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "deleteAllBySource" should {
     "remove 2 sequences" in new TempMongoDBService {
-      val f1 = service.insert(FastaParser("test/resources/M_100small.fasta", SequenceSource("small-1")).parse)
-      val f2 = service.insert(FastaParser("test/resources/M_100small.fasta", SequenceSource("small-2")).parse)
+      val f1 = service.insert(FastaParser("test/resources/sequences/M_100small.fasta", SequenceSource("small-1")).parse)
+      val f2 = service.insert(FastaParser("test/resources/sequences/M_100small.fasta", SequenceSource("small-2")).parse)
       Future.sequence(List(f1, f2)).futureValue
       //remove
       val n: Boolean = service.deleteAllBySource(SequenceSource("small-1")).futureValue
@@ -80,7 +80,7 @@ class FastaMongoDBServiceSpecs extends Specification with ScalaFutures {
   "findAllEntriesBySource" should {
     "find all" in new TempMongoDBService {
 
-      val f1 = service.insert(FastaParser("test/resources/M_100small.fasta", SequenceSource("small-1")).parse).futureValue
+      val f1 = service.insert(FastaParser("test/resources/sequences/M_100small.fasta", SequenceSource("small-1")).parse).futureValue
       val sequenceList = service.findAllEntriesBySource(SequenceSource("small-1")).futureValue
       Thread.sleep(200)
       sequenceList.size must equalTo(2)
@@ -94,7 +94,7 @@ class FastaMongoDBServiceSpecs extends Specification with ScalaFutures {
   "findEntryByAccessionCodeAndSource" should {
     "find one entry" in new TempMongoDBService {
 
-      val f1 = service.insert(FastaParser("test/resources/M_100small.fasta", SequenceSource("small-1")).parse).futureValue
+      val f1 = service.insert(FastaParser("test/resources/sequences/M_100small.fasta", SequenceSource("small-1")).parse).futureValue
       val entry = service.findEntryByAccessionCodeAndSource(AccessionCode("P04899"),SequenceSource("small-1")).futureValue
       Thread.sleep(200)
       entry.proteinRef.AC must equalTo(AccessionCode("P04899"))
@@ -106,7 +106,7 @@ class FastaMongoDBServiceSpecs extends Specification with ScalaFutures {
   "findEntryByIdentifierAndSource (AC)" should {
     "find one entry" in new TempMongoDBService {
 
-      val f1 = service.insert(FastaParser("test/resources/M_100small.fasta", SequenceSource("small-1")).parse).futureValue
+      val f1 = service.insert(FastaParser("test/resources/sequences/M_100small.fasta", SequenceSource("small-1")).parse).futureValue
       val entry = service.findEntryByIdentifierAndSource(ProteinIdentifier("P04899"),SequenceSource("small-1")).futureValue
       Thread.sleep(200)
       entry.proteinRef.AC must equalTo(AccessionCode("P04899"))
@@ -118,7 +118,7 @@ class FastaMongoDBServiceSpecs extends Specification with ScalaFutures {
   "findEntryByIdentifierAndSource (AC)" should {
     "find one entry" in new TempMongoDBService {
 
-      val f1 = service.insert(FastaParser("test/resources/M_100small.fasta", SequenceSource("small-1")).parse).futureValue
+      val f1 = service.insert(FastaParser("test/resources/sequences/M_100small.fasta", SequenceSource("small-1")).parse).futureValue
       val entry = service.findEntryByIdentifierAndSource(ProteinIdentifier("GNAI2_HUMAN"),SequenceSource("small-1")).futureValue
       Thread.sleep(200)
       entry.proteinRef.AC must equalTo(AccessionCode("P04899"))
@@ -131,7 +131,7 @@ class FastaMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "stats" should{
     "get nb" in new TempMongoDBService {
-      val f1 = service.insert(FastaParser("test/resources/M_100small.fasta", SequenceSource("small-1")).parse).futureValue
+      val f1 = service.insert(FastaParser("test/resources/sequences/M_100small.fasta", SequenceSource("small-1")).parse).futureValue
 
       Thread.sleep(200)
       val stats= service.stats.futureValue

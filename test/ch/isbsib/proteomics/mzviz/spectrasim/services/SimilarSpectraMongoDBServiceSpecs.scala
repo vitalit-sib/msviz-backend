@@ -39,7 +39,7 @@ class SimilarSpectraMongoDBServiceSpecs extends Specification with ScalaFutures 
     "find similar SpSpMatches" in new TempDBService {
 
       // prepare experimental data
-      val n = expService.insert(LoaderMGF.load(new File("test/resources/M_100.mgf"), RunId("test-1")).get).futureValue
+      val n = expService.insert(LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("test-1")).get).futureValue
       val sp = expService.findSpectrumByRunIdAndTitle(RunId("test-1"), "File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 56.254 min, Period: 1, Cycle(s): 2083 (Experiment 4)").futureValue
 
       val spSpMatches = simService.findSimSpMatches(RunId("test-1"), sp, 0.1, 0.5).futureValue.toList
@@ -58,7 +58,7 @@ class SimilarSpectraMongoDBServiceSpecs extends Specification with ScalaFutures 
 
       // prepare experimental data
       val title = "File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 56.254 min, Period: 1, Cycle(s): 2083 (Experiment 4)"
-      val n = expService.insert(LoaderMGF.load(new File("test/resources/M_100.mgf"), RunId("test-1")).get).futureValue
+      val n = expService.insert(LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("test-1")).get).futureValue
       val sp = expService.findSpectrumByRunIdAndTitle(RunId("test-1"), title).futureValue
 
       val spSpMatches = simService.findSimSpRefMatches(RunId("test-1"), title, 0.1, 0.5).futureValue
