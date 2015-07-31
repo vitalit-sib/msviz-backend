@@ -13,6 +13,7 @@ resolvers ++= Seq(
   "expasy" at "http://mzjava.expasy.org/maven",
   "csvjdbc" at "http://csvjdbc.sourceforge.net/maven2",
   "netbeans" at "http://bits.netbeans.org/maven2/"
+ // "typesafe" at "http://repo.typesafe.com/typesafe/releases/"
   //  "ivy2 cache" at "file:// /Users/amasselo/.ivy2/cache"
   )
 
@@ -26,6 +27,8 @@ libraryDependencies ++= Seq(
   "org.reactivemongo" %% "play2-reactivemongo" % "0.10.5.0.akka23",
   "com.wordnik" %% "swagger-play2" % "1.3.10",
   "org.scalamock" %% "scalamock-specs2-support" % "3.2"
+ // "com.typesafe.slick" %% "slick" % "2.0.0",
+ // "org.slf4j" % "slf4j-nop" % "1.6.4"
 )
 
 //ScoverageSbtPlugin.ScoverageKeys.coverageExcludedPackages := ".*Reverse.*;.*Filter.*"
