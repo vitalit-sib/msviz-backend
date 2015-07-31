@@ -6,4 +6,4 @@ import ch.isbsib.proteomics.mzviz.qc
 /**
  * Created by qjolliet on 28/07/15.
  */
-case class SummaryEntry(Date:String,Index:String,MS:Int,MMS:Int,MmsIdentify:Int,PeptideSeq:Int)
+case class QcSummaryEntry(Date:String,Index:String,MS:Int,MMS:Int,MmsIdentify:Int,PeptideSeq:Int)
