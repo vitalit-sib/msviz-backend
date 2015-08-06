@@ -37,10 +37,10 @@ class FastaMongoDBServiceSpecs extends Specification with ScalaFutures {
 
 
   "insert" should {
-    "insert  2" in new TempMongoDBService {
-      val entries = FastaParser("test/resources/sequences/M_100small.fasta",SequenceSource("small-1")).parse
-      val n: Int = service.insert(entries).futureValue
-      n must equalTo(2)
+        "insert  2" in new TempMongoDBService {
+          val entries = FastaParser("test/resources/sequences/M_100small.fasta",SequenceSource("small-1")).parse
+          val n: Int = service.insert(entries).futureValue
+          n must equalTo(2)
     }
   }
 
