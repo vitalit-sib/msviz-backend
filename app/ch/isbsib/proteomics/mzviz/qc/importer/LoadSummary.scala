@@ -9,6 +9,7 @@ import scala.io.Source
 import scala.reflect.io
 import scala.util.{Failure, Success, Try}
 import scalaz.std.map
+import scalaz.syntax.std.option
 
 /**
  * Created by qjolliet on 27/07/15.
@@ -49,14 +50,15 @@ class LoadSummary (file:String) {
   def getSummaryEntry:Seq[QcSummaryEntry] = mSummary.map{
       m => {
         var rawfile = getInfo(m("Raw file"))
-        var protein = rawfile(0)
-        var quantity = rawfile(1)
-        var machineName = rawfile(2)
-        var columnType = rawfile(3) + "_" + rawfile(4)
-        var Date = if (isAllDigits(rawfile(5)))  rawfile(5)
-                   else throw new SummaryParsingException(s"It's not a valide date:\n$rawfile(5)")
-        var Index = rawfile(6)
-        var rawfileInfo=RawfileInfomation(protein,quantity,machineName,columnType,Date,Index)
+        var proteinName = ProteinName(rawfile(0))
+        var proteinQuantity = ProteinQuantity(rawfile(1))
+        var machineName = MachineName(rawfile(2))
+        var columnType = ColumnType(rawfile(3) + "_" + rawfile(4))
+        //var Date = if (isAllDigits(rawfile(5)))  rawfile(5)
+                   //else throw new SummaryParsingException(s"It's not a valide date:\n$rawfile(5)")
+        var qcDate= QcDate(parserDate(rawfile(5)))
+        var qcIndex = QcIndex(rawfile(6))
+        var rawfileInfo=RawfileInfomation(proteinName,proteinQuantity,machineName,columnType,qcDate,qcIndex)
         QcSummaryEntry(rawfileInfo,m("MS").toInt,m("MS/MS").toInt,m("MS/MS Identified").toInt,m("Peptide Sequences Identified").toInt)
       }
   }
@@ -66,7 +68,14 @@ class LoadSummary (file:String) {
     rawfile.split("_")
   }
 
-  def isAllDigits(x: String) = x forall Character.isDigit
+  //def isAllDigits(x: String) = x forall Character.isDigit
+  val reDate="""(\d{6})""".r
+
+  def parserDate(x:String):String = x match{
+        case reDate(x) => x.toString
+        case _ => throw new SummaryParsingException(s"It's not a valide date:\n$x")
+    }
+
 }
 /**
  * companion object
