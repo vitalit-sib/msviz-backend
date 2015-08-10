@@ -1,6 +1,8 @@
 package ch.isbsib.proteomics.mzviz.qc.models
 
 import ch.isbsib.proteomics.mzviz.qc
+import ch.isbsib.proteomics.mzviz.qc._
+
 
 
 /**
@@ -8,4 +10,4 @@ import ch.isbsib.proteomics.mzviz.qc
  */
 case class QcSummaryEntry(rawfileInfomation:RawfileInfomation,MS:Int,MMS:Int,MmsIdentify:Int,PeptideSeq:Int)
 
-case class RawfileInfomation(proteinName:String,pQuantity:String,machineName:String,columnType:String,Date:String,Index:String)
+case class RawfileInfomation(proteinName:ProteinName,pQuantity:ProteinQuantity,machineName:MachineName,columnType:ColumnType,Date:QcDate,Index:QcIndex)
