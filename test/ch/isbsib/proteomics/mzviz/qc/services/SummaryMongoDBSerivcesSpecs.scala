@@ -31,4 +31,36 @@ class SummaryMongoDBSerivcesSpecs extends Specification with ScalaFutures {
     }
   }
 
+
+
+  "Insert 2 delete2 " should {
+    "delete 2" in new TempMongoDBService{
+      val ins1 = service.insert(LoadSummary("./test/resources/qc/summary.txt").getSummaryEntry).futureValue
+      val cnt1= service.countSummary.futureValue
+      cnt1 must equalTo(2)
+      val n: Boolean = service.deleteAllByDate("150507").futureValue
+      n must equalTo(true)
+
+    }
+
+  }
+
+
+  "Insert 13,delete 3 " should {
+    "find 4" in new TempMongoDBService{
+      val ins1 = service.insert(LoadSummary("./test/resources/qc/summary1.txt").getSummaryEntry).futureValue
+      ins1 must equalTo(13)
+
+      val n: Boolean = service.deleteAllByDate("150507").futureValue
+      n must equalTo(true)
+      val cnt =service.countSummary.futureValue
+      cnt must equalTo(10)
+
+      val qcSummaryEntry = service.findAllByDate("150520").futureValue
+      Thread.sleep(200)
+      qcSummaryEntry.size must equalTo(4)
+    }
+
+  }
+
 }
