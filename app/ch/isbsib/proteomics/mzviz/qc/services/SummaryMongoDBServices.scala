@@ -1,17 +1,22 @@
 package ch.isbsib.proteomics.mzviz.qc.services
 
-import ch.isbsib.proteomics.mzviz.commons.services.MongoDBService
+import ch.isbsib.proteomics.mzviz.commons.services.{MongoNotFoundException, MongoDBService}
 import ch.isbsib.proteomics.mzviz.qc.models.QcSummaryEntry
 
 
 import ch.isbsib.proteomics.mzviz.qc.services.JsonQCFormats._
+import ch.isbsib.proteomics.mzviz.theoretical.SequenceSource
 import play.api.libs.iteratee.Enumerator
+import play.api.libs.json.Json
 import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
 import reactivemongo.api._
 import reactivemongo.api.indexes.{Index, IndexType}
+import reactivemongo.core.commands.{Count, LastError}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
 /**
  * Created by qjolliet on 04/08/15.
  */
@@ -33,6 +38,35 @@ class SummaryMongoDBServices(val db: DefaultDB) extends MongoDBService  {
   def insert(entries: Seq[QcSummaryEntry]) = {
     val enumerator = Enumerator.enumerate(entries)
     collection.bulkInsert(enumerator)
+  }
+  /**
+   * retieves all entries for a given date
+   * @param d the date
+   * @return
+   */
+  def findAllByDate(d: String): Future[Seq[QcSummaryEntry]] = {
+    val query = Json.obj("rawfileInfomation.Date" -> d)
+    collection.find(query).cursor[QcSummaryEntry].collect[List]()
+  }
+  /**
+   * remove all entries from the mongodb
+   * @param d the date
+   * @return
+   */
+  def deleteAllByDate(d: String): Future[Boolean] = {
+    val query = Json.obj("rawfileInfomation.Date" -> d)
+    collection.remove(query).map {
+      case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
+      case _ => true
+    }
+  }
+
+  /**
+   * count the number of Entries
+   * @return
+   */
+  def countSummary: Future[Int] = {
+    db.command(Count(collectionName))
   }
 }
 
