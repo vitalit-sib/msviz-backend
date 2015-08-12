@@ -35,7 +35,7 @@ class SummaryMongoDBServices(val db: DefaultDB) extends MongoDBService  {
    * @return a Future of the number of entries loaded
    */
 
-  def insert(entries: Seq[QcSummaryEntry]) = {
+  def insert(entries: Seq[QcSummaryEntry]):Future[Int] ={
     val enumerator = Enumerator.enumerate(entries)
     collection.bulkInsert(enumerator)
   }
