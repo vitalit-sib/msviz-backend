@@ -14,7 +14,7 @@ import scalaz.syntax.std.option
 /**
  * Created by qjolliet on 27/07/15.
  */
-class LoadSummary (file:String) {
+class LoadSummary (file:File) {
 
 
   /**
@@ -69,21 +69,22 @@ class LoadSummary (file:String) {
   }
 
   //def isAllDigits(x: String) = x forall Character.isDigit
-  val reDate="""(\d{6})""".r
+  val reDate="""(^\d{6})""".r
 
   def parserDate(x:String):String = x match{
-        case reDate(x) => x.toString
+        case reDate(x) => x
         case _ => throw new SummaryParsingException(s"It's not a valide date:\n$x")
     }
 
 }
+
 /**
  * companion object
  */
 object LoadSummary {
 
-  def apply(filename: String) = new LoadSummary(filename)
-
+  def apply(filename: String) = new LoadSummary(new File(filename))
+  def apply(file: File) = new LoadSummary(file)
 
 }
 
