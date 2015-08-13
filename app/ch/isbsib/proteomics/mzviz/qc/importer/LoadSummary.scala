@@ -49,16 +49,16 @@ class LoadSummary (file:File) {
   ***/
   def getSummaryEntry:Seq[QcSummaryEntry] = mSummary.map{
       m => {
-        var rawfile = getInfo(m("Raw file"))
-        var proteinName = ProteinName(rawfile(0))
-        var proteinQuantity = ProteinQuantity(rawfile(1))
-        var machineName = MachineName(rawfile(2))
-        var columnType = ColumnType(rawfile(3) + "_" + rawfile(4))
+        val rawfile = getInfo(m("Raw file"))
+        val proteinName = ProteinName(rawfile(0))
+        val proteinQuantity = ProteinQuantity(rawfile(1))
+        val machineName = MachineName(rawfile(2))
+        val columnType = ColumnType(rawfile(3) + "_" + rawfile(4))
         //var Date = if (isAllDigits(rawfile(5)))  rawfile(5)
                    //else throw new SummaryParsingException(s"It's not a valide date:\n$rawfile(5)")
-        var qcDate= QcDate(parserDate(rawfile(5)))
-        var qcIndex = QcIndex(rawfile(6))
-        var rawfileInfo=RawfileInfomation(proteinName,proteinQuantity,machineName,columnType,qcDate,qcIndex)
+        val qcDate= QcDate(parserDate(rawfile(5)))
+        val qcIndex = QcIndex(rawfile(6))
+        val rawfileInfo=RawfileInfomation(proteinName,proteinQuantity,machineName,columnType,qcDate,qcIndex)
         QcSummaryEntry(rawfileInfo,m("MS").toInt,m("MS/MS").toInt,m("MS/MS Identified").toInt,m("Peptide Sequences Identified").toInt)
       }
   }
