@@ -1,5 +1,5 @@
 package ch.isbsib.proteomics.mzviz.qc.services
-
+import java.util
 import ch.isbsib.proteomics.mzviz.qc._
 import ch.isbsib.proteomics.mzviz.qc.models.{Quantity, QcSummaryEntry, RawfileInfomation}
 import play.api.libs.json._
@@ -34,9 +34,9 @@ object JsonQCFormats {
   }
 
   implicit val formatQcDate = new Format[QcDate] {
-    override def reads(json: JsValue): JsResult[QcDate] = JsSuccess(QcDate(json.as[String]))
+    override def reads(json: JsValue): JsResult[QcDate] = JsSuccess(QcDate(json.as[util.Date]))
 
-    def writes(o: QcDate) = JsString(o.value)
+    def writes(o: QcDate) = JsString(o.toString)
   }
   implicit val formatQcIndex = new Format[QcIndex] {
     override def reads(json: JsValue): JsResult[QcIndex] = JsSuccess(QcIndex(json.as[String]))

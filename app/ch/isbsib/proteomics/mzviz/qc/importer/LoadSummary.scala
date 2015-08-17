@@ -1,9 +1,14 @@
 package ch.isbsib.proteomics.mzviz.qc.importer
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util
 
 import ch.isbsib.proteomics.mzviz.commons._
 import ch.isbsib.proteomics.mzviz.qc._
 import ch.isbsib.proteomics.mzviz.qc.models.{QcSummaryEntry, RawfileInfomation}
+
+
+
 
 import scala.io.Source
 import scala.reflect.io
@@ -67,14 +72,25 @@ class LoadSummary (file:File) {
   def getInfo(rawfile:String) = {
     rawfile.split("_")
   }
-
-  //def isAllDigits(x: String) = x forall Character.isDigit
-  val reDate="""(^\d{6})""".r
-
+/***
+  def isAllDigits(x: String) = x forall Character.isDigit
+  //val reDate="""(\d{6})""".r
   def parserDate(x:String):String = x match{
         case reDate(x) => x
         case _ => throw new SummaryParsingException(s"It's not a valide date:\n$x")
     }
+  ***/
+
+def parserDate(x:String): util.Date = try
+  {
+    val formatter = new SimpleDateFormat("yyMMdd")
+    formatter.parse(x)
+  } catch {
+    case e:Exception =>throw new SummaryParsingException(s"It's not a valide date:\n$x")
+}
+
+
+
 
 }
 

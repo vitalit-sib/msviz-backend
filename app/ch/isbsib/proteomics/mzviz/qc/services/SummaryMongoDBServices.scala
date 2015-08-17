@@ -21,14 +21,15 @@ import scala.concurrent.Future
  * Created by qjolliet on 04/08/15.
  */
 class SummaryMongoDBServices(val db: DefaultDB) extends MongoDBService  {
-  val collectionName = "summary"
+  val collectionName = "qc.summary"
   val mainKeyName = "rawfileInfomation.Date"
-
+/****
   setIndexes(List(
     new Index(Seq("rawfileInfomation.Date"->IndexType.Ascending,"rawfileInfomation.Index"->IndexType.Ascending),name = Some("Date")),
     new Index(
       Seq("rawfileInfomation" -> IndexType.Ascending), name = Some("RawfileInfomation"),unique = true))
   )
+  ***/
   /**
    * insert a list of Summary entries
    * @param   entries to be inserted
@@ -46,6 +47,15 @@ class SummaryMongoDBServices(val db: DefaultDB) extends MongoDBService  {
    */
   def findAllByDate(d: String): Future[Seq[QcSummaryEntry]] = {
     val query = Json.obj("rawfileInfomation.Date" -> d)
+    collection.find(query).cursor[QcSummaryEntry].collect[List]()
+  }
+  /**
+   * retieves all entries for a given date
+   * @param d1,d2 the dates
+   * @return
+   */
+  def findAllBtw2Date(d1: String,d2:String): Future[Seq[QcSummaryEntry]] = {
+    val query = Json.obj("rawfileInfomation.Date" ->Json.obj("$gt"->d1,"$lt->"->d2))
     collection.find(query).cursor[QcSummaryEntry].collect[List]()
   }
   /**
