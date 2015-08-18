@@ -25,7 +25,7 @@ class LoadSummarySpecs extends Specification with ScalaFutures{
       n must equalTo(2)
     }
     "rawfile Date should be yymmdd " in {
-      summaryEntry(0).rawfileInfomation.Date.value must equalTo(new SimpleDateFormat("yyMMdd").parse("150507"))
+      summaryEntry(0).rawfileInfomation.Date.value must equalTo("150508")
     }
     "rawfile Index should be nn" in {
       summaryEntry(0).rawfileInfomation.Index.value must equalTo("00")

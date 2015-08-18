@@ -3,7 +3,7 @@ package ch.isbsib.proteomics.mzviz
 
 import java.util
 
-import sun.util.calendar.LocalGregorianCalendar.Date
+import org.joda.time.DateTime
 
 /**
  * Created by qjolliet on 07/08/15.
@@ -23,7 +23,9 @@ package object qc {
     override def toString = value
   }
   //case class QcDate(value: String) extends AnyVal {
-  case class QcDate(value: util.Date) extends AnyVal
+  case class QcDate(value: String) extends AnyVal{
+    override def toString=value
+  }
 
   case class QcIndex(value: String) extends AnyVal {
     override def toString = value

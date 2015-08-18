@@ -22,38 +22,29 @@ class SummaryMongoDBSerivcesSpecs extends Specification with ScalaFutures {
     val service = new SummaryMongoDBServices(db)
   }
 
-/****
+
   "insert" should {
     "insert  2" in new TempMongoDBService {
       val entries = LoadSummary("./test/resources/qc/summary.txt").getSummaryEntry
       val n: Int = service.insert(entries).futureValue
       n must equalTo(2)
-    }
-  }
 
-
-
-  "Insert 2 delete2 " should {
-    "delete 2" in new TempMongoDBService{
-      val ins1 = service.insert(LoadSummary("./test/resources/qc/summary.txt").getSummaryEntry).futureValue
-      val cnt1= service.countSummary.futureValue
-      cnt1 must equalTo(2)
-      val n: Boolean = service.deleteAllByDate("150507").futureValue
-      n must equalTo(true)
+      val qcSummaryEntry = service.findAllByDate("150508").futureValue
+      Thread.sleep(200)
+      qcSummaryEntry.size must equalTo(2)
 
     }
-
   }
 
 
   "Insert 13,delete 3 " should {
-    "find 4" in new TempMongoDBService{
+    "find 4" in new TempMongoDBService {
       val ins1 = service.insert(LoadSummary("./test/resources/qc/summary1.txt").getSummaryEntry).futureValue
       ins1 must equalTo(13)
 
       val n: Boolean = service.deleteAllByDate("150507").futureValue
       n must equalTo(true)
-      val cnt =service.countSummary.futureValue
+      val cnt = service.countSummary.futureValue
       cnt must equalTo(10)
 
       val qcSummaryEntry = service.findAllByDate("150520").futureValue
@@ -61,36 +52,19 @@ class SummaryMongoDBSerivcesSpecs extends Specification with ScalaFutures {
       qcSummaryEntry.size must equalTo(4)
     }
 
-    "Insert 13,delete 3 " should {
-      "find 4" in new TempMongoDBService{
-        val ins1 = service.insert(LoadSummary("./test/resources/qc/summary1.txt").getSummaryEntry).futureValue
-        ins1 must equalTo(13)
+  }
 
-        val n: Boolean = service.deleteAllByDate("150507").futureValue
-        n must equalTo(true)
-        val cnt =service.countSummary.futureValue
-        cnt must equalTo(10)
 
-        val qcSummaryEntry = service.findAllByDate("150520").futureValue
-        Thread.sleep(200)
-        qcSummaryEntry.size must equalTo(4)
-      }
+  "Insert 13,find 3 " should {
+    "find between date1 and date2" in new TempMongoDBService {
+      val ins1 = service.insert(LoadSummary("./test/resources/qc/summary1.txt").getSummaryEntry).futureValue
+      ins1 must equalTo(13)
 
-    }
-  ****/
-
-    "Insert 13,find 3 " should {
-      "find between date1 and date2" in new TempMongoDBService{
-        val ins1 = service.insert(LoadSummary("./test/resources/qc/summary1.txt").getSummaryEntry).futureValue
-        ins1 must equalTo(13)
-
-       // val qcSummaryEntry = service.findAllBtw2Date("150507","150610").futureValue
-        //Thread.sleep(200)
-        //qcSummaryEntry.size must equalTo(4)
-      }
-
+      val qcSummaryEntry = service.findAllBtw2Date("150507", "150610").futureValue
+      Thread.sleep(200)
+      qcSummaryEntry.size must equalTo(4)
     }
 
-
+  }
 
 }

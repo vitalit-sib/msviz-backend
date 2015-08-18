@@ -1,17 +1,22 @@
 package ch.isbsib.proteomics.mzviz.qc.services
 
+import java.text.{DateFormat, SimpleDateFormat}
+
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoNotFoundException, MongoDBService}
 import ch.isbsib.proteomics.mzviz.qc.models.QcSummaryEntry
 
 
 import ch.isbsib.proteomics.mzviz.qc.services.JsonQCFormats._
 import ch.isbsib.proteomics.mzviz.theoretical.SequenceSource
+import org.joda.time.format.ISODateTimeFormat
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json.Json
 import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
 import reactivemongo.api._
 import reactivemongo.api.indexes.{Index, IndexType}
+import reactivemongo.bson
+import reactivemongo.bson.BSON
 import reactivemongo.core.commands.{Count, LastError}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -47,7 +52,7 @@ class SummaryMongoDBServices(val db: DefaultDB) extends MongoDBService  {
    */
   def findAllByDate(d: String): Future[Seq[QcSummaryEntry]] = {
     val query = Json.obj("rawfileInfomation.Date" -> d)
-    collection.find(query).cursor[QcSummaryEntry].collect[List]()
+      collection.find(query).cursor[QcSummaryEntry].collect[List]()
   }
   /**
    * retieves all entries for a given date
@@ -55,7 +60,7 @@ class SummaryMongoDBServices(val db: DefaultDB) extends MongoDBService  {
    * @return
    */
   def findAllBtw2Date(d1: String,d2:String): Future[Seq[QcSummaryEntry]] = {
-    val query = Json.obj("rawfileInfomation.Date" ->Json.obj("$gt"->d1,"$lt->"->d2))
+    val query = Json.obj("rawfileInfomation.Date" ->Json.obj("$gt"-> d1,"$lt" ->d2))
     collection.find(query).cursor[QcSummaryEntry].collect[List]()
   }
   /**
