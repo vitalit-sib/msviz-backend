@@ -85,6 +85,7 @@ object JsonMatchFormats {
   implicit val formatProteinIdentInfo = Json.format[ProteinIdentInfo]
   implicit val formatProteinIdent = Json.format[ProteinIdent]
 
+
   implicit val writeProteinMatchMultipleSearches = new Writes[ProteinMatchMultipleSearches] {
     override def writes(o: ProteinMatchMultipleSearches): JsValue = {
       JsObject(o.dict.map(acVal =>
@@ -96,7 +97,6 @@ object JsonMatchFormats {
       )
     }
   }
-
   implicit val writesPepSpectraMatchWithSpectrumRef = new Writes[PepSpectraMatchWithSpectrumRef] {
     def writes(o: PepSpectraMatchWithSpectrumRef) =
     Json.toJson(o.asInstanceOf[PepSpectraMatch]).asInstanceOf[JsObject] ++ Json.obj("spectrumRef" -> Json.toJson(o.spectrumRef))

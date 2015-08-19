@@ -65,15 +65,18 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
 
     }
 
-    def writes(o: ExpMSnSpectrum) = Json.obj(
-      "ref" -> o.ref,
-      "peaks" -> Json.obj(
-        "msLevel" -> o.peaks.head.msLevel.value,
-        "mozs" -> encode64[Double](o.peaks.map(_.moz.value)),
-        "intensities" -> encode64[Double](o.peaks.map(_.intensity.value)),
-        "intensityRanks" -> encode64[Int](o.peaks.map(_.intensityRank.value))
+    def writes(o: ExpMSnSpectrum) = {
+      val msLevel:Int = o.peaks.headOption.map(_.msLevel.value).getOrElse(-1)
+      Json.obj(
+        "ref" -> o.ref,
+        "peaks" -> Json.obj(
+          "msLevel" -> msLevel,
+          "mozs" -> encode64[Double](o.peaks.map(_.moz.value)),
+          "intensities" -> encode64[Double](o.peaks.map(_.intensity.value)),
+          "intensityRanks" -> encode64[Int](o.peaks.map(_.intensityRank.value))
+        )
       )
-    )
+    }
   }
 
   /**
