@@ -93,11 +93,11 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
    */
   def delete(runId: RunId): Future[Boolean] = {
     val query = Json.obj("ref.spectrumId.runId" -> runId.value)
-    collection.remove(query).map {
-      case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
-      case _ => true
-    }
+  collection.remove(query).map {
+    case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
+    case _ => true
   }
+}
 
   /**
    * Returns just the spectra ref for a given run
