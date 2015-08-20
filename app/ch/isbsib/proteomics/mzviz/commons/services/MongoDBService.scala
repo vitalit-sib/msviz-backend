@@ -59,7 +59,7 @@ trait MongoDBService {
   }
 
   /**
-   * if some main key from the the list keys alreardy exists in the collectin, will return a Failure
+   * if some main key from the the list keys already exists in the collection, will return a Failure
    * @param keys a key list - key shall be projected
    * @return
    */
@@ -67,7 +67,7 @@ trait MongoDBService {
     Future.sequence(keys.map(isMainKeyExist))
       .map({ listExist =>
       if (listExist.count(e=>e) != 0) {
-        throw new MongoDuplicateKeyException(s"$mainKeyName already exit in $keys")
+        throw new MongoDuplicateKeyException(s"$mainKeyName already exists in $keys")
       }
       Future.successful[Any]()
     })

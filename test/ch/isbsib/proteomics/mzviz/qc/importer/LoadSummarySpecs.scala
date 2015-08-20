@@ -1,5 +1,7 @@
 package ch.isbsib.proteomics.mzviz.qc.importer
 
+import java.text.SimpleDateFormat
+
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.specs2.mutable.Specification
@@ -12,6 +14,7 @@ import scala.reflect.io.File
 class LoadSummarySpecs extends Specification with ScalaFutures{
   implicit val defaultPatience =
     PatienceConfig(timeout = Span(15, Seconds), interval = Span(5000, Millis))
+
   val filename="./test/resources/qc/summary.txt"
   "Loading Summary" should {
     val qcSummary = LoadSummary(filename)
@@ -21,11 +24,11 @@ class LoadSummarySpecs extends Specification with ScalaFutures{
     "numberOfEntries should be 2" in {
       n must equalTo(2)
     }
-    "rawfile Date should be yyyyymmdd " in {
-      summaryEntry(0).Date must equalTo("yyyyymmdd")
+    "rawfile Date should be yymmdd " in {
+      summaryEntry(0).rawfileInfomation.Date.value must equalTo("150508")
     }
     "rawfile Index should be nn" in {
-      summaryEntry(0).Index must equalTo("nn")
+      summaryEntry(0).rawfileInfomation.Index.value must equalTo("00")
     }
     "rawfile MS value should be 2963 " in {
       summaryEntry(0).MS must equalTo(2963)

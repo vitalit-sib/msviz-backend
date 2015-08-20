@@ -40,7 +40,7 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
 
   // "ref.title" -> IndexType.Ascending),
 
-  //we put a implicit JSON serilizer here, the JSON Mongo ormat is differenc from the JSON web format
+  //we put a implicit JSON serilizer here, the JSON Mongo format is difference from the JSON web format
   // peak array are serilized for sake of speed
   implicit val formatExpMSnSpectrum = new Format[ExpMSnSpectrum] {
     override def reads(json: JsValue): JsResult[ExpMSnSpectrum] = {
@@ -96,11 +96,11 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
    */
   def delete(runId: RunId): Future[Boolean] = {
     val query = Json.obj("ref.spectrumId.runId" -> runId.value)
-    collection.remove(query).map {
-      case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
-      case _ => true
-    }
+  collection.remove(query).map {
+    case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
+    case _ => true
   }
+}
 
   /**
    * Returns just the spectra ref for a given run
