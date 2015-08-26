@@ -10,8 +10,11 @@ import ch.isbsib.proteomics.mzviz.commons._
 sealed trait ExpPeak {
   val moz: Moz
   val intensity: Intensity
-  val msLevel: MSLevel
+  // val msLevel: MSLevel
 }
+
+// we want to have the the whole information for every peak
+case class ExpPeakMS1(moz: Moz, intensity: Intensity) extends ExpPeak
 
 case class ExpPeakMSn(moz: Moz, intensity: Intensity, intensityRank: IntensityRank, msLevel: MSLevel) extends ExpPeak
 
