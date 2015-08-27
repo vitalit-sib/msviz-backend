@@ -47,6 +47,19 @@ object QcController extends CommonController {
     }
   }
 
+  @ApiOperation(nickname = "QcSummaryEntryListAll",
+    value = "List all SummaryEntry",
+    notes = """Returns only the QcSummaryEntry information """,
+    response = classOf[Seq[QcSummaryEntry]],
+    httpMethod = "GET")
+  def listAll=
+    Action.async {
+      SummaryMongoDBServices().listAll
+        .map { qcSummaryEntry => Ok(Json.toJson(qcSummaryEntry))
+      }.recover {
+        case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
+      }
+    }
 
   @ApiOperation(nickname = "findQcSummaryEntryByDate",
     value = "find SummaryEntry by date",
@@ -56,6 +69,22 @@ object QcController extends CommonController {
   def findQcSummaryEntryByDate(@ApiParam(value = """QcDate""", defaultValue = "") @PathParam("Date") qcDate: String) =
     Action.async {
       SummaryMongoDBServices().findAllByDate(qcDate)
+        .map { qcSummaryEntry => Ok(Json.toJson(qcSummaryEntry))
+      }.recover {
+        case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
+      }
+    }
+
+  @ApiOperation(nickname = "findQcSummaryEntryBtw2Date",
+    value = "find SummaryEntry between two dates",
+    notes = """Returns only the QcSummaryEntry information """,
+    response = classOf[Seq[QcSummaryEntry]],
+    httpMethod = "GET")
+  def findQcSummaryBtw2Date(
+                             @ApiParam(value = """QcDate1""", defaultValue = "") @PathParam("Date") qcDate1: String,
+                               @ApiParam(value = """QcDate2""", defaultValue = "") @PathParam("Date") qcDate2: String) =
+    Action.async {
+      SummaryMongoDBServices().findAllBtw2Date(qcDate1,qcDate2)
         .map { qcSummaryEntry => Ok(Json.toJson(qcSummaryEntry))
       }.recover {
         case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))

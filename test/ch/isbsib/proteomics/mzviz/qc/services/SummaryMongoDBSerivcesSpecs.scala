@@ -67,4 +67,16 @@ class SummaryMongoDBSerivcesSpecs extends Specification with ScalaFutures {
 
   }
 
+  "Insert 13,find 13 " should {
+    "find all" in new TempMongoDBService {
+      val ins1 = service.insert(LoadSummary("./test/resources/qc/summary1.txt").getSummaryEntry).futureValue
+      ins1 must equalTo(13)
+
+      val qcSummaryEntry = service.listAll.futureValue
+      Thread.sleep(200)
+      qcSummaryEntry.size must equalTo(13)
+    }
+
+  }
+
 }

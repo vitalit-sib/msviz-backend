@@ -45,6 +45,14 @@ class SummaryMongoDBServices(val db: DefaultDB) extends MongoDBService  {
     val enumerator = Enumerator.enumerate(entries)
     collection.bulkInsert(enumerator)
   }
+
+  /**
+   * retieves all entries
+   * @return
+   */
+  def listAll: Future[Seq[QcSummaryEntry]] = {
+    collection.find(Json.obj()).cursor[QcSummaryEntry].collect[List]()
+  }
   /**
    * retieves all entries for a given date
    * @param d the date
@@ -60,7 +68,7 @@ class SummaryMongoDBServices(val db: DefaultDB) extends MongoDBService  {
    * @return
    */
   def findAllBtw2Date(d1: String,d2:String): Future[Seq[QcSummaryEntry]] = {
-    val query = Json.obj("rawfileInfomation.Date" ->Json.obj("$gt"-> d1,"$lt" ->d2))
+    val query = Json.obj("rawfileInfomation.Date" ->Json.obj("$gte"-> d1,"$lte" ->d2))
     collection.find(query).cursor[QcSummaryEntry].collect[List]()
   }
   /**
