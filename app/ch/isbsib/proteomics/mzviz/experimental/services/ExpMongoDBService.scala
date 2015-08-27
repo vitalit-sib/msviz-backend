@@ -2,7 +2,7 @@ package ch.isbsib.proteomics.mzviz.experimental.services
 
 import ch.isbsib.proteomics.mzviz.commons.{IntensityRank, Intensity, Moz, MSLevel}
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoDBService, MongoNotFoundException}
-import ch.isbsib.proteomics.mzviz.experimental.models.{ExpPeakMSn, ExpMSnSpectrum, SpectrumRef}
+import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMs1Spectrum, ExpPeakMSn, ExpMSnSpectrum, SpectrumRef}
 import ch.isbsib.proteomics.mzviz.experimental.{ScanNumber, RunId, MSRun}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import play.api.Logger
@@ -182,6 +182,7 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
   def countMsRuns: Future[Int] = {
     listMsRunIds.map(_.size)
   }
+
 
   /**
    * a maps with various counts (number of spectra, run ...)

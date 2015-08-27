@@ -4,7 +4,7 @@ import java.io.File
 
 import ch.isbsib.proteomics.mzviz.commons._
 import ch.isbsib.proteomics.mzviz.experimental.RunId
-import ch.isbsib.proteomics.mzviz.experimental.importer.LoaderMGF
+import ch.isbsib.proteomics.mzviz.experimental.importer._
 import ch.isbsib.proteomics.mzviz.experimental.models.ExpPeakMSn
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
@@ -61,6 +61,19 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
 
     }
   }
+  "findSpectrumByRunIdwithEmptySpectra" should {
+    "find eight" in new TempMongoDBService {
+      val n = service.insert(LoaderMGF.load(new File("test/resources/mascot/F003077.mgf"), RunId("test-empty")).get).futureValue
+      val sp = service.findSpectrumByRunId(RunId("test-empty")).futureValue.toList
+      sp.length must equalTo(6051)
+
+      val spFiltered=sp.filter(_.peaks.size == 0)
+      spFiltered.length must equalTo(8)
+
+    }
+  }
+
+
   "findSpectrumByRunIdAndTitle" should {
     "find one" in new TempMongoDBService {
       val n = service.insert(LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("test-1")).get).futureValue

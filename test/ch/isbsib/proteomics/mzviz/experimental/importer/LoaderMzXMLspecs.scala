@@ -17,12 +17,12 @@ class LoaderMzXMLspecs extends Specification {
 
   "load MzXML" should {
 
-    val mzXmlFile = new File("/Users/admin/Work/PAF/msViz/data/phosphoViz/mzXML/F001644_small.mzXML")
+    val mzXmlFile = new File("test/resources/ms1/F001644_small.mzXML")
     val ms1Iterator = LoaderMzXML.parseFile(mzXmlFile, RunId("hoho"))
     val sp = ms1Iterator.next
 
     """check file""" in {
-      mzXmlFile.getAbsolutePath mustEqual "/Users/admin/Work/PAF/msViz/data/phosphoViz/mzXML/F001644_small.mzXML"
+      mzXmlFile.getAbsolutePath mustEqual "test/resources/ms1/F001644_small.mzXML"
     }
 
     """check size""" in {

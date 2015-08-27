@@ -97,7 +97,19 @@ object JsonExpFormats {
   implicit val formatExpPeakMSn = Json.format[ExpPeakMSn]
   implicit val formatSpectrumId = Json.format[SpectrumId]
   implicit val formatSpectrumRef = Json.format[SpectrumRef]
+  implicit val formatMs1Entry = Json.format[Ms1Entry]
 
+/*
+  implicit val writesMs1Entry = new Writes[Ms1Entry] {
+
+    def writes(o: Ms1Entry) = Json.obj(
+      "runId" -> o.ref.value,
+      "rt" -> o.rt.value,
+      "intensity" -> o.intensity.value,
+      "moz" -> o.moz.value
+    )
+  }
+*/
   implicit val writesExpMSnSpectrum = new Writes[ExpMSnSpectrum] {
 
     def writes(o: ExpMSnSpectrum) = Json.obj(
