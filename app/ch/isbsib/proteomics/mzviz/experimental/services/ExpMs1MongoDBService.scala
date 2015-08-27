@@ -49,13 +49,8 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
 
       val runID = current.spId.runId
       val rt = current.retentionTime
-      val intensityList = current.peaks.map(_.intensity)
-      val mozList = current.peaks.map(_.moz)
-      for (i <- 1 to intensityList.size) {
-        val intensity: Intensity = intensityList(i)
-        val moz: Moz = mozList(i)
-        val ms1Entry: Ms1Entry = Ms1Entry(runID, rt, intensity, moz)
-
+      current.peaks.foreach {
+      peak => val ms1Entry: Ms1Entry = Ms1Entry(runID, rt, peak.intensity, peak.moz)
         collection.insert(ms1Entry)
       }
     }
@@ -76,13 +71,9 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
 
       val runID = current.spId.runId
       val rt = current.retentionTime
-      val intensityList = current.peaks.map(_.intensity)
-      val mozList = current.peaks.map(_.moz)
-      for (i <- 1 to intensityList.size) {
-        val intensity: Intensity = intensityList(i)
-        val moz: Moz = mozList(i)
-        val ms1Entry: Ms1Entry = Ms1Entry(runID, rt, intensity, moz)
-        myList += (ms1Entry)
+      current.peaks.foreach {
+        peak => val ms1Entry: Ms1Entry = Ms1Entry(runID, rt, peak.intensity, peak.moz)
+          myList += (ms1Entry)
       }
     }
     val enum = Enumerator(myList)
