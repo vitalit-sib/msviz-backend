@@ -37,6 +37,8 @@ class MzXmlIterator(file: File, runId: RunId) extends Iterator[ExpMs1Spectrum] {
   val mzXmlReader = new MzxmlReader(file, PeakList.Precision.DOUBLE)
 
   // we have to accept a couple of exceptions
+  // because of the peak 445.12 (polysolyxan)
+  // in the MzXML it is considered as base peak but filtered out in peak values
   mzXmlReader.acceptUnsortedSpectra()
   mzXmlReader.removeConsistencyChecks(util.EnumSet.of(ConsistencyCheck.MOST_INTENSE_PEAK))
   mzXmlReader.removeConsistencyChecks(util.EnumSet.of(ConsistencyCheck.TOTAL_ION_CURRENT))
