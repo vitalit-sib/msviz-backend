@@ -42,7 +42,9 @@ DELETE        /search/:searchIds                                     ch.isbsib.p
 GET           /compare/:searchIds                                    ch.isbsib.proteomics.mzviz.controllers.matches.ProteinMatchMultipleSearchesController.findAllProteinsForMultipleSearchIds(searchIds)
 
 POST          /qc/summary                                            ch.isbsib.proteomics.mzviz.controllers.qc.QcController.loadQcSummary()
+GET           /qc/summary                                            ch.isbsib.proteomics.mzviz.controllers.qc.QcController.listAll
 GET           /qc/summary/:qcDate                                    ch.isbsib.proteomics.mzviz.controllers.qc.QcController.findQcSummaryEntryByDate(qcDate)
+GET           /qc/summary/:qcDate1/:qcDate2                          ch.isbsib.proteomics.mzviz.controllers.qc.QcController.findQcSummaryBtw2Date(qcDate1,qcDate2)
 
 GET           /docs/*file                                            controllers.Assets.at(path="/public/docs", file)
 GET           /api-docs                                              controllers.ApiHelpController.getResources
