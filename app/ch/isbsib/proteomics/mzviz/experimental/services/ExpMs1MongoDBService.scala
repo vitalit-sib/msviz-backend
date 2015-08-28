@@ -4,18 +4,21 @@ import ch.isbsib.proteomics.mzviz.commons.{Moz, Intensity, RetentionTime}
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoNotFoundException, MongoDBService}
 import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.experimental.models.{SpectrumRef, Ms1Entry, ExpMs1Spectrum}
+import org.specs2.execute.Success
 import play.api.libs.iteratee.Enumerator
 import play.api.mvc.Controller
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import play.modules.reactivemongo.MongoController
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
-import reactivemongo.core.commands.LastError
+import reactivemongo.core.commands.{Count, LastError}
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.libs.json._
 
 import scala.concurrent.Future
+import scala.concurrent.duration.Duration
+import scala.util.Failure
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
@@ -23,17 +26,22 @@ import scala.concurrent.Future
  */
 class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
   val collectionName = "ms1Spectra"
-  val mainKeyName = "ref.spectrumId.runId"
+  val mainKeyName = "ref"
 
-  setIndexes(List(
-    new Index(
-      Seq("ref.spectrumId.runId" -> IndexType.Ascending), // "ref.title" -> IndexType.Ascending),
-      name = Some("runId")),
-    new Index(
-      Seq("ref.spectrumId.runId" -> IndexType.Ascending, "ref.spectrumId.id" -> IndexType.Ascending), // "ref.title" -> IndexType.Ascending),
-      name = Some("ref.spectrumId"),
-      unique = true)
-  ))
+//  setIndexes(List(
+//    new Index(
+//      Seq("ref" -> IndexType.Ascending),
+//      name = Some("ref")),
+//   new Index(
+//      Seq("runId" -> IndexType.Ascending, "intensity" -> IndexType.Ascending),
+//      name = Some("intensity"),
+//      unique = true)
+//  ))
+  new Index(
+    Seq("ref" -> IndexType.Ascending),
+    name = Some("ref")
+  )
+
 
 
   /**
@@ -42,9 +50,9 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
    * @return number of entries
    */
 
-  def insertListMS1(listMS1: Iterator[ExpMs1Spectrum]) {
+  def insertListMS1(listMS1: Iterator[ExpMs1Spectrum]){
 
-    if (listMS1.hasNext) {
+    while (listMS1.hasNext) {
       val current = listMS1.next()
 
       val runID = current.spId.runId
@@ -55,7 +63,7 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
       }
     }
   }
-
+/*
   /**
    * insert every entry with RunId, rt, intensity and moz
    * @param listMS1, iterator of MS1
@@ -79,7 +87,7 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
     val enum = Enumerator(myList)
     collection.bulkInsert(enum)
   }
-
+*/
   /**
    * retrieves  by moz and tolerance
    * @param moz
@@ -87,15 +95,25 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
    * @return seq of entries
    */
 
-//TOCHANGE!!!!
-  def findMs1ByRunID_MozAndTol(runId: RunId, moz:Moz,tolerance: Double): Future[Seq[Ms1Entry]] = {
-    val query = Json.obj("ref.runId" -> runId.value, "ref.moz"-> Json.obj("$lte" -> (moz.value + tolerance)),"ref.moz"-> Json.obj("$gte" -> (moz.value - tolerance)))
-    collection.find(query)
-      .cursor[JsObject]
-      .collect[List]()
-      .map(lo => lo.map({ o =>
-      Json.fromJson[Ms1Entry](o \ "ref").asOpt.get
-    }))
+  def findMs1ByRunID_MozAndTol(runId: RunId, moz:Moz,tolerance: Double): Future[List[Ms1Entry]] = {
+    val query = Json.obj("moz"->Json.obj("$lte" ->(moz.value + tolerance),"$gte"-> (moz.value - tolerance)))
+    collection.find(query).cursor[Ms1Entry].collect[List]()
+  }
+
+  /**
+   * extract list of intensities and list of moz from list of MS1Entries
+   * @param ms1List
+   * @return list of intensities and list of moz
+   */
+
+  def extract2Lists(ms1List:Future[List[Ms1Entry]]): Future[JsObject] = {
+
+
+    ms1List.map(m => {
+      val aux = m.map(a =>
+      (a.rt.value, a.intensity.value)).unzip
+      Json.obj("rt" ->aux._1, "intensities" -> aux._2)
+    })
   }
 
 
@@ -106,12 +124,19 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
    */
 
 
-  def findMs1ByRunId(runId: RunId): Future[Ms1Entry] = {
-    val query = Json.obj("ref.runId" -> runId.value)
-    collection.find(query).cursor[Ms1Entry].headOption map {
-      case Some(sp: Ms1Entry) => sp
-      case None => throw new MongoNotFoundException(s"${runId.value}")
-    }
+  def findMs1ByRunId(runId: RunId): Future[Iterator[Ms1Entry]] = {
+    val query = Json.obj("ref" -> runId.value)
+    collection.find(query).cursor[Ms1Entry].collect[Iterator]()
+  }
+
+
+
+  /**
+   * count the number of Spectra
+   * @return
+   */
+  def countMsnSpectra: Future[Int] = {
+    db.command(Count(collectionName))
   }
 
   /**
@@ -120,13 +145,15 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
    * @return
    */
   def delete(runId: RunId): Future[Boolean] = {
-    val query = Json.obj("ref.runId" -> runId.value)
+    val query = Json.obj("ref" -> runId.value)
     collection.remove(query).map {
       case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
       case _ => true
     }
   }
+
 }
+
 
 object ExpMs1MongoDBService extends Controller with MongoController {
   val default = new ExpMs1MongoDBService(db)

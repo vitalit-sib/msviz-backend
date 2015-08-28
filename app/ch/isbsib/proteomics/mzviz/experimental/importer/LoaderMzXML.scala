@@ -43,6 +43,9 @@ class MzXmlIterator(file: File, runId: RunId) extends Iterator[ExpMs1Spectrum] {
   mzXmlReader.removeConsistencyChecks(util.EnumSet.of(ConsistencyCheck.MOST_INTENSE_PEAK))
   mzXmlReader.removeConsistencyChecks(util.EnumSet.of(ConsistencyCheck.TOTAL_ION_CURRENT))
   mzXmlReader.removeConsistencyChecks(util.EnumSet.of(ConsistencyCheck.PEAKS_COUNT))
+  mzXmlReader.removeConsistencyChecks(util.EnumSet.of(ConsistencyCheck.LOWEST_MZ))
+  mzXmlReader.removeConsistencyChecks(util.EnumSet.of(ConsistencyCheck.HIGHEST_MZ))
+
 
   override def hasNext: Boolean = mzXmlReader.hasNext
 

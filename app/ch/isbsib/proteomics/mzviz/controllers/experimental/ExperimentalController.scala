@@ -2,12 +2,13 @@ package ch.isbsib.proteomics.mzviz.controllers.experimental
 
 import javax.ws.rs.PathParam
 
+import ch.isbsib.proteomics.mzviz.commons.Moz
 import ch.isbsib.proteomics.mzviz.controllers.CommonController
 import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
 import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.experimental.importer.LoaderMGF
 import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, SpectrumRef}
-import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
+import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMs1MongoDBService, ExpMongoDBService}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import com.wordnik.swagger.annotations._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -124,4 +125,26 @@ object ExperimentalController extends CommonController {
       Ok("OK")
     }
   }
+
+
+  @ApiOperation(nickname = "findXIC",
+    value = "find all ms1 for a given run id and moz",
+    notes = """Returns only list of retention times and intensities""",
+    httpMethod = "GET")
+  @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "tolerance", value = "tolerance", required = false, dataType = "Double", paramType = "query")
+  ))
+  def findXic(@ApiParam(value = """run id""", defaultValue = "") @PathParam("runId") runId: String,
+              @ApiParam(value = """m/z""", defaultValue = "") @PathParam("moz") moz: Double,
+              tolerance: Option[Double]=None
+               ) =
+    Action.async {
+     val futureList= ExpMs1MongoDBService().findMs1ByRunID_MozAndTol(RunId(runId),Moz(moz),tolerance.getOrElse(0.01))
+      ExpMs1MongoDBService().extract2Lists(futureList)
+      .map { case sphList: JsObject => Ok(sphList) }
+        .recover {
+        case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
+      }
+    }
+
 }

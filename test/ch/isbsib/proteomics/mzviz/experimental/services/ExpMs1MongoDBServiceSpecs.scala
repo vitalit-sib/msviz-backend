@@ -29,40 +29,53 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
   }
 
   "insert 2 ms1" should {
-    "get them up " in new TempMongoDBService {
+    "return 98 entries " in new TempMongoDBService {
 
-      print("new")
+      val n=LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzxml"), RunId("wewe"))
       service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzxml"), RunId("wewe")))
 
-      //val n: Int = service.insertListMS12(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzxml"), RunId("wewe"))).futureValue
-      //n mustEqual(100)
-    }
-  }
-
-  "delete 100 ms1" should {
-    "remove 100 " in new TempMongoDBService {
-
-      //service.insertListMS12(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzxml"), RunId("wewe")))
-
-      //service.delete(RunId("wewe"))
+      n.size mustEqual(98)
     }
   }
 
   "find ms1" should {
-    "get them up " in new TempMongoDBService {
+    "return 8 entries " in new TempMongoDBService {
+      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/tiny1_mzXML.mzxml"), RunId("tiny")))
 
-      //service.insertListMS12(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzxml"), RunId("wewe")))
 
-      //val n = service.findMs1ByRunId(RunId("wewe")).futureValue
+      Thread.sleep(200)
+      service.findMs1ByRunId(RunId("tiny")).futureValue.size mustEqual (8)
+
     }
   }
 
-  "find ms1" should {
+  "delete 8 ms1" should {
+    "remove 8 " in new TempMongoDBService {
+
+      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/tiny1_mzXML.mzxml"), RunId("tiny")))
+      //service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzxml"), RunId("wewe")))
+
+      Thread.sleep(200)
+      service.delete(RunId("tiny"))
+      Thread.sleep(200)
+      service.findMs1ByRunId(RunId("tiny")).futureValue.size mustEqual(0)
+    }
+  }
+
+
+  "find ms1 param" should {
     "with moz and tolerance " in new TempMongoDBService {
 
-      //service.insertListMS12(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzxml"), RunId("wewe")))
+      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/tiny1_mzXML.mzxml"), RunId("tiny")))
+      Thread.sleep(200)
+      service.findMs1ByRunID_MozAndTol(RunId("tiny"), Moz(2.0), 0.002).futureValue.size mustEqual(2)
 
-      //val list: Seq[Ms1Entry] = service.findMs1ByRunID_MozAndTol(RunId("wewe"), Moz(1.5), 0.002).futureValue
+      Thread.sleep(200)
+      val fullList=service.findMs1ByRunID_MozAndTol(RunId("tiny"), Moz(2.0), 0.002).futureValue
+      val splitListJson= service.extract2Lists(service.findMs1ByRunID_MozAndTol(RunId("tiny"), Moz(2.0), 0.002)).futureValue
+      print (splitListJson)
     }
   }
+
+
 }
