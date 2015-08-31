@@ -6,11 +6,13 @@ import ch.isbsib.proteomics.mzviz.commons.Moz
 import ch.isbsib.proteomics.mzviz.controllers.CommonController
 import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
 import ch.isbsib.proteomics.mzviz.experimental.RunId
-import ch.isbsib.proteomics.mzviz.experimental.importer.LoaderMGF
-import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, SpectrumRef}
+import ch.isbsib.proteomics.mzviz.experimental.importer.{LoaderMzXML, LoaderMGF}
+import ch.isbsib.proteomics.mzviz.experimental.models.{Ms1Entry, ExpMs1Spectrum, ExpMSnSpectrum, SpectrumRef}
 import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMs1MongoDBService, ExpMongoDBService}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
+import ch.isbsib.proteomics.mzviz.theoretical.services.SequenceMongoDBService
 import com.wordnik.swagger.annotations._
+import org.expasy.mzjava.core.io.ms.spectrum.MzxmlReader
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json._
 import play.api.mvc.Action
@@ -145,6 +147,37 @@ object ExperimentalController extends CommonController {
         .recover {
         case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
       }
+    }
+
+
+  @ApiOperation(nickname = "loadMS1",
+    value = "Loads a mzxml file",
+    notes = """ source will be a unique descriptor on the source""",
+    httpMethod = "POST")
+  @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "body", value = "mzxml", required = true, dataType = "text/plain", paramType = "body")
+  ))
+  def loadMS1Data(@ApiParam(name = "runId", value = "a string id with run identifier", required = true) @PathParam("runId") runId: String) =
+    Action.async(parse.temporaryFile) {
+      request =>
+          val entries = LoaderMzXML.parseFile(request.body.file, RunId(runId))
+          ExpMs1MongoDBService().insertListMS1(entries).map { n => Ok(Json.obj("inserted" -> n))
+          }.recover {
+            case e => BadRequest(Json.toJson(e))
+          }
+
+/*
+        LoaderMzXML.parseFile(request.body.file, RunId(runId)) match {
+          case Success(iter) => ExpMs1MongoDBService().insertListMS1(iter)
+            .map { n => Ok(Json.obj("inserted" -> n))
+          }.recover {
+            case e => BadRequest(e.getMessage)
+          }
+          case Failure(e) => Future {
+            BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
+          }
+        }
+        */
     }
 
 }

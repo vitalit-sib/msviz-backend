@@ -50,18 +50,21 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
    * @return number of entries
    */
 
-  def insertListMS1(listMS1: Iterator[ExpMs1Spectrum]){
+  def insertListMS1(listMS1: Iterator[ExpMs1Spectrum]): Future[Int] ={
 
+    var itEntry: List[Ms1Entry]=List()
     while (listMS1.hasNext) {
       val current = listMS1.next()
-
       val runID = current.spId.runId
       val rt = current.retentionTime
       current.peaks.foreach {
       peak => val ms1Entry: Ms1Entry = Ms1Entry(runID, rt, peak.intensity, peak.moz)
         collection.insert(ms1Entry)
+        itEntry= itEntry ::: List(ms1Entry)
       }
     }
+    val enum=Enumerator(itEntry)
+    return collection.bulkInsert(enum)
   }
 /*
   /**
@@ -116,6 +119,19 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
     })
   }
 
+  /**
+   * remove all Ms1Entry for a given run
+   * @param runId the run id
+   * @return
+   */
+  def delete(runId: RunId): Future[Boolean] = {
+    val query = Json.obj("ref" -> runId.value)
+    collection.remove(query).map {
+      case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
+      case _ => true
+    }
+  }
+
 
   /**
    * retrieves  by run id
@@ -137,19 +153,6 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
    */
   def countMsnSpectra: Future[Int] = {
     db.command(Count(collectionName))
-  }
-
-  /**
-   * remove all Ms1Entry for a given run
-   * @param runId the run id
-   * @return
-   */
-  def delete(runId: RunId): Future[Boolean] = {
-    val query = Json.obj("ref" -> runId.value)
-    collection.remove(query).map {
-      case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
-      case _ => true
-    }
   }
 
 }
