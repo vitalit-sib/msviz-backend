@@ -27,7 +27,7 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
   trait TempMongoDBService extends TempMongoDBForSpecs {
     val service = new ExpMs1MongoDBService(db)
   }
-
+/*
   "insert 2 ms1" should {
     "return 98 entries " in new TempMongoDBService {
 
@@ -74,6 +74,17 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
       val fullList=service.findMs1ByRunID_MozAndTol(RunId("tiny"), Moz(2.0), 0.002).futureValue
       val splitListJson= service.extract2Lists(service.findMs1ByRunID_MozAndTol(RunId("tiny"), Moz(2.0), 0.002)).futureValue
       print (splitListJson)
+    }
+  }
+*/
+  "insert small ms1" should {
+    "return 2 scan and 8 entries " in new TempMongoDBService {
+
+      val n=LoaderMzXML.parseFile(new File("test/resources/ms1/tiny1_mzXML.mzxml"), RunId("tiny"))
+      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/tiny1_mzXML.mzxml"), RunId("tiny")))
+        .futureValue mustEqual(8)
+
+      n.size mustEqual(2)
     }
   }
 

@@ -59,12 +59,12 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
       val rt = current.retentionTime
       current.peaks.foreach {
       peak => val ms1Entry: Ms1Entry = Ms1Entry(runID, rt, peak.intensity, peak.moz)
-        collection.insert(ms1Entry)
+        //collection.insert(ms1Entry)
         itEntry= itEntry ::: List(ms1Entry)
       }
     }
-    val enum=Enumerator(itEntry)
-    return collection.bulkInsert(enum)
+    val enum=Enumerator.enumerate(itEntry)
+    collection.bulkInsert(enum)
   }
 /*
   /**
