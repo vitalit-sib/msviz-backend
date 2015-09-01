@@ -21,10 +21,6 @@ class LoaderMzXMLspecs extends Specification {
     val ms1Iterator = LoaderMzXML.parseFile(mzXmlFile, RunId("hoho"))
     val sp = ms1Iterator.next
 
-    """check file""" in {
-      mzXmlFile.getAbsolutePath mustEqual "test/resources/ms1/F001644_small.mzXML"
-    }
-
     """check size""" in {
       ms1Iterator.size mustEqual 97
     }
@@ -38,13 +34,22 @@ class LoaderMzXMLspecs extends Specification {
     }
 
     """check peaks""" in {
-      sp.peaks.length mustEqual 13453
+      sp.peaks.length mustEqual 388
     }
 
     """check base peak""" in {
       val basePeak = sp.peaks.maxBy(_.intensity.value)
       basePeak.intensity mustEqual(Intensity(6809045.0))
       basePeak.moz mustEqual(Moz(519.1379352044135))
+    }
+
+    """check total #peaks""" in {
+      var total = 0
+      val ms1Iterator2 = LoaderMzXML.parseFile(mzXmlFile, RunId("hoho"))
+      while(ms1Iterator2.hasNext){
+        total += ms1Iterator2.next.peaks.length
+      }
+      total mustEqual 31771
     }
 
   }
