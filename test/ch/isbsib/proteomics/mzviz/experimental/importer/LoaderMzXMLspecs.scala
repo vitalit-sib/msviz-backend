@@ -34,7 +34,7 @@ class LoaderMzXMLspecs extends Specification {
     }
 
     """check peaks""" in {
-      sp.peaks.length mustEqual 13453
+      sp.peaks.length mustEqual 388
     }
 
     """check base peak""" in {

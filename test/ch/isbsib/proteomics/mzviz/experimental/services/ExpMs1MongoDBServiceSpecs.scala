@@ -52,28 +52,23 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
   "delete 8 ms1" should {
     "remove 8 " in new TempMongoDBService {
 
-      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/tiny1_mzXML.mzxml"), RunId("tiny")))
-      //service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzxml"), RunId("wewe")))
+      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzxml"), RunId("wewe")))
 
       Thread.sleep(200)
-      service.delete(RunId("tiny"))
-      Thread.sleep(200)
-      service.findMs1ByRunId(RunId("tiny")).futureValue.size mustEqual(0)
+      service.delete(RunId("wewe"))
+      Thread.sleep(1000)
+      service.findMs1ByRunId(RunId("wewe")).futureValue.size mustEqual(0)
     }
   }
 
 
-  "find ms1 param" should {
+  "find ms1 param real data" should {
     "with moz and tolerance " in new TempMongoDBService {
 
-      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/tiny1_mzXML.mzxml"), RunId("tiny")))
+      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzxml"), RunId("small")))
       Thread.sleep(200)
-      service.findMs1ByRunID_MozAndTol(RunId("tiny"), Moz(2.0), 0.002).futureValue.size mustEqual(2)
+      service.findMs1ByRunID_MozAndTol(RunId("small"), Moz(519.14), 0.5).futureValue.size mustEqual(892)
 
-      Thread.sleep(200)
-      val fullList=service.findMs1ByRunID_MozAndTol(RunId("tiny"), Moz(2.0), 0.002).futureValue
-      val splitListJson= service.extract2Lists(service.findMs1ByRunID_MozAndTol(RunId("tiny"), Moz(2.0), 0.002)).futureValue
-      print (splitListJson)
     }
   }
 

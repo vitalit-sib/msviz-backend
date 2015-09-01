@@ -28,15 +28,6 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
   val collectionName = "ms1Spectra"
   val mainKeyName = "ref"
 
-//  setIndexes(List(
-//    new Index(
-//      Seq("ref" -> IndexType.Ascending),
-//      name = Some("ref")),
-//   new Index(
-//      Seq("runId" -> IndexType.Ascending, "intensity" -> IndexType.Ascending),
-//      name = Some("intensity"),
-//      unique = true)
-//  ))
   new Index(
     Seq("ref" -> IndexType.Ascending),
     name = Some("ref")
@@ -66,31 +57,7 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
     val enum=Enumerator(itEntry)
     return collection.bulkInsert(enum)
   }
-/*
-  /**
-   * insert every entry with RunId, rt, intensity and moz
-   * @param listMS1, iterator of MS1
-   * @return number of entries
-   */
 
-  def insertListMS12(listMS1: Iterator[ExpMs1Spectrum]): Future[Int] = {
-
-    var myList = new ListBuffer[Ms1Entry]()
-
-    if (listMS1.hasNext) {
-      val current = listMS1.next()
-
-      val runID = current.spId.runId
-      val rt = current.retentionTime
-      current.peaks.foreach {
-        peak => val ms1Entry: Ms1Entry = Ms1Entry(runID, rt, peak.intensity, peak.moz)
-          myList += (ms1Entry)
-      }
-    }
-    val enum = Enumerator(myList)
-    collection.bulkInsert(enum)
-  }
-*/
   /**
    * retrieves  by moz and tolerance
    * @param moz
