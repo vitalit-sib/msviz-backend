@@ -32,6 +32,7 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
       service.countMsRuns.futureValue must equalTo(0)
     }
   }
+
   "create 2 runs" should {
     "get them up " in new TempMongoDBService {
       service.countMsnSpectra.futureValue must equalTo(0)
@@ -61,11 +62,12 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
 
     }
   }
+
   "findSpectrumByRunIdwithEmptySpectra" should {
     "find eight" in new TempMongoDBService {
       val n = service.insert(LoaderMGF.load(new File("test/resources/mascot/F003077.mgf"), RunId("test-empty")).get).futureValue
       val sp = service.findSpectrumByRunId(RunId("test-empty")).futureValue.toList
-      sp.length must equalTo(6051)
+      sp.length must equalTo(21)
 
       val spFiltered=sp.filter(_.peaks.size == 0)
       spFiltered.length must equalTo(8)
