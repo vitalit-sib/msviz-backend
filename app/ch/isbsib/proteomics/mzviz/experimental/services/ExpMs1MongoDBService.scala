@@ -43,19 +43,28 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
 
   def insertListMS1(listMS1: Iterator[ExpMs1Spectrum]): Future[Int] ={
 
-    var itEntry: List[Ms1Entry]=List()
+    var inserted: List[Future[Int]] = List()
+
     while (listMS1.hasNext) {
+
+      // store entries to insert in a list
+      var itEntry: List[Ms1Entry]=List()
+
       val current = listMS1.next()
       val runID = current.spId.runId
       val rt = current.retentionTime
-      current.peaks.foreach {
-      peak => val ms1Entry: Ms1Entry = Ms1Entry(runID, rt, peak.intensity, peak.moz)
+      current.peaks.foreach { peak =>
+        val ms1Entry: Ms1Entry = Ms1Entry(runID, rt, peak.intensity, peak.moz)
         collection.insert(ms1Entry)
-        itEntry= itEntry ::: List(ms1Entry)
+        itEntry= itEntry :+ ms1Entry
       }
+
+      val enum=Enumerator(itEntry)
+      inserted = inserted :+ collection.bulkInsert(enum)
     }
-    val enum=Enumerator(itEntry)
-    return collection.bulkInsert(enum)
+
+    // give back the sum of all peaks entered
+    Future.sequence(inserted).map(_.sum)
   }
 
   /**
