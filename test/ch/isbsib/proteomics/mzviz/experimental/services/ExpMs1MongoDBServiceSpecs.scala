@@ -40,11 +40,10 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
 
   "find ms1" should {
     "return 8 entries " in new TempMongoDBService {
-      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/tiny1_mzXML.mzxml"), RunId("tiny")))
-
+      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzxml"), RunId("wewe")))
 
       Thread.sleep(200)
-      service.findMs1ByRunId(RunId("tiny")).futureValue.size mustEqual (8)
+      service.findMs1ByRunId(RunId("wewe")).futureValue.size mustEqual (31771)
 
     }
   }

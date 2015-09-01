@@ -43,6 +43,15 @@ class LoaderMzXMLspecs extends Specification {
       basePeak.moz mustEqual(Moz(519.1379352044135))
     }
 
+    """check total #peaks""" in {
+      var total = 0
+      val ms1Iterator2 = LoaderMzXML.parseFile(mzXmlFile, RunId("hoho"))
+      while(ms1Iterator2.hasNext){
+        total += ms1Iterator2.next.peaks.length
+      }
+      total mustEqual 31771
+    }
+
   }
 
 }
