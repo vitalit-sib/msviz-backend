@@ -21,10 +21,6 @@ class LoaderMzXMLspecs extends Specification {
     val ms1Iterator = LoaderMzXML.parseFile(mzXmlFile, RunId("hoho"))
     val sp = ms1Iterator.next
 
-    """check file""" in {
-      mzXmlFile.getAbsolutePath mustEqual "test/resources/ms1/F001644_small.mzXML"
-    }
-
     """check size""" in {
       ms1Iterator.size mustEqual 97
     }
