@@ -160,24 +160,24 @@ object ExperimentalController extends CommonController {
   def loadMS1Data(@ApiParam(name = "runId", value = "a string id with run identifier", required = true) @PathParam("runId") runId: String) =
     Action.async(parse.temporaryFile) {
       request =>
-          val entries = LoaderMzXML.parseFile(request.body.file, RunId(runId))
-          ExpMs1MongoDBService().insertListMS1(entries).map { n => Ok(Json.obj("inserted" -> n))
-          }.recover {
-            case e => BadRequest(Json.toJson(e))
-          }
-
-/*
-        LoaderMzXML.parseFile(request.body.file, RunId(runId)) match {
-          case Success(iter) => ExpMs1MongoDBService().insertListMS1(iter)
-            .map { n => Ok(Json.obj("inserted" -> n))
-          }.recover {
-            case e => BadRequest(e.getMessage)
-          }
-          case Failure(e) => Future {
-            BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
-          }
+        val entries = LoaderMzXML.parseFile(request.body.file, RunId(runId))
+        ExpMs1MongoDBService().insertListMS1(entries).map { n => Ok(Json.obj("inserted" -> n))
+        }.recover {
+          case e => BadRequest(Json.toJson(e))
         }
-        */
+
+      /*
+              LoaderMzXML.parseFile(request.body.file, RunId(runId)) match {
+                case Success(iter) => ExpMs1MongoDBService().insertListMS1(iter)
+                  .map { n => Ok(Json.obj("inserted" -> n))
+                }.recover {
+                  case e => BadRequest(e.getMessage)
+                }
+                case Failure(e) => Future {
+                  BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
+                }
+              }
+              */
     }
 
 }
