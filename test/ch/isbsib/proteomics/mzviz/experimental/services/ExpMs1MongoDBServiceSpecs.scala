@@ -27,12 +27,13 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
   trait TempMongoDBService extends TempMongoDBForSpecs {
     val service = new ExpMs1MongoDBService(db)
   }
-/*
+
   "insert 2 ms1" should {
     "return 98 entries " in new TempMongoDBService {
 
       val n=LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzxml"), RunId("wewe"))
       service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzxml"), RunId("wewe")))
+        .futureValue mustEqual(31771)
 
       n.size mustEqual(98)
     }
@@ -42,7 +43,7 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
     "return 8 entries " in new TempMongoDBService {
       service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzxml"), RunId("wewe")))
 
-      Thread.sleep(200)
+      Thread.sleep(3000)
       service.findMs1ByRunId(RunId("wewe")).futureValue.size mustEqual (31771)
 
     }
@@ -53,9 +54,9 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
 
       service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzxml"), RunId("wewe")))
 
-      Thread.sleep(200)
+      Thread.sleep(3000)
       service.delete(RunId("wewe"))
-      Thread.sleep(1000)
+      Thread.sleep(3000)
       service.findMs1ByRunId(RunId("wewe")).futureValue.size mustEqual(0)
     }
   }
@@ -65,12 +66,12 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
     "with moz and tolerance " in new TempMongoDBService {
 
       service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzxml"), RunId("small")))
-      Thread.sleep(200)
+      Thread.sleep(3000)
       service.findMs1ByRunID_MozAndTol(RunId("small"), Moz(519.14), 0.5).futureValue.size mustEqual(892)
 
     }
   }
-*/
+
   "insert small ms1" should {
     "return 2 scan and 8 entries " in new TempMongoDBService {
 
