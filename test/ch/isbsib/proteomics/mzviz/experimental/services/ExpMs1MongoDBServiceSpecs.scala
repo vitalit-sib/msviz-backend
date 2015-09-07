@@ -31,8 +31,8 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
   "insert 2 ms1" should {
     "return 98 entries " in new TempMongoDBService {
 
-      val n=LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzxml"), RunId("wewe"))
-      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzxml"), RunId("wewe")))
+      val n=LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzXML"), RunId("wewe"))
+      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzXML"), RunId("wewe")))
         .futureValue mustEqual(31771)
 
       n.size mustEqual(98)
@@ -41,7 +41,7 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
 
   "find ms1" should {
     "return 8 entries " in new TempMongoDBService {
-      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzxml"), RunId("wewe")))
+      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzXML"), RunId("wewe")))
 
       Thread.sleep(3000)
       service.findMs1ByRunId(RunId("wewe")).futureValue.size mustEqual (31771)
@@ -52,7 +52,7 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
   "delete 8 ms1" should {
     "remove 8 " in new TempMongoDBService {
 
-      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzxml"), RunId("wewe")))
+      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzXML"), RunId("wewe")))
 
       Thread.sleep(3000)
       service.delete(RunId("wewe"))
@@ -65,7 +65,7 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
   "find ms1 param real data" should {
     "with moz and tolerance " in new TempMongoDBService {
 
-      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzxml"), RunId("small")))
+      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzXML"), RunId("small")))
       Thread.sleep(3000)
       service.findMs1ByRunID_MozAndTol(RunId("small"), Moz(519.14), 0.5).futureValue.size mustEqual(892)
 
@@ -75,8 +75,8 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
   "insert small ms1" should {
     "return 2 scan and 8 entries " in new TempMongoDBService {
 
-      val n=LoaderMzXML.parseFile(new File("test/resources/ms1/tiny1_mzXML.mzxml"), RunId("tiny"))
-      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/tiny1_mzXML.mzxml"), RunId("tiny")))
+      val n=LoaderMzXML.parseFile(new File("test/resources/ms1/tiny1_mzXML.mzXML"), RunId("tiny"))
+      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/tiny1_mzXML.mzXML"), RunId("tiny")))
         .futureValue mustEqual(8)
 
       n.size mustEqual(2)
