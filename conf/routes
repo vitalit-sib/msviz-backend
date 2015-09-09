@@ -7,7 +7,7 @@ GET           /                                                      ch.isbsib.p
 
 GET           /api-docs/exp                                          controllers.ApiHelpController.getResource(path = "/exp")
 GET           /exp                                                   ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.stats
-GET           /exp/xic/:runId/:moz                                   ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findXic(runId,moz:Double,tolerance:Option[Double])
+GET           /exp/xic/:runId/:moz                                   ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findXic(runId,moz:Double,tolerance:Option[Double], rtTolerance:Option[Double])
 POST          /exp/xic/:runId                                        ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.loadMS1Data(runId)
 GET           /exp/msruns                                            ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.listMSRunIds
 POST          /exp/msrun/:runId                                      ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.loadMSRun(runId)

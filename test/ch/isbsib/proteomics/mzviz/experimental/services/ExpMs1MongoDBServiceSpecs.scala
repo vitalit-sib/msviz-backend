@@ -91,11 +91,13 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
   "extract to list of Json objects" should {
     "extract to lists" in new TempMongoDBService {
 
+      val rtTolerance = 0.5
+
       service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzXML"), RunId("small")))
       Thread.sleep(3000)
-      val ms1List = service.findMs1ByRunID_MozAndTol(RunId("small"), Moz(519.14), 0.5)
+      val ms1List = service.findMs1ByRunID_MozAndTol(RunId("small"), Moz(519.14), 0.3)
 
-      val json = service.extract2Lists(ms1List).futureValue
+      val json = service.extract2Lists(ms1List, rtTolerance).futureValue
 
 
       val rts = (json \ "rt").as[List[JsValue]]

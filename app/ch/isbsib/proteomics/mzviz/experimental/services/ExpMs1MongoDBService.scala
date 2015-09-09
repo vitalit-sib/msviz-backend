@@ -79,12 +79,12 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
 
   /**
    * extract list of intensities and list of moz from list of MS1Entries. Group by retentionTimes and sum the intensities.
-   * Then sort by retentionTimes.
+   * Then sort by retentionTimes and add 0 values between points which have distances > rtTolerance.
    * @param ms1List
    * @return list of intensities and list of moz
    */
 
-  def extract2Lists(ms1List:Future[List[Ms1Entry]]): Future[JsObject] = {
+  def extract2Lists(ms1List:Future[List[Ms1Entry]], rtTolerance: Double): Future[JsObject] = {
 
     // we're in a Future
     ms1List.map(m => {
@@ -96,10 +96,33 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
       val summedMap = rtGroups.map({case(k, v) => (k, v.map(_.intensity.value).sum)})
 
       // sort by rt separate the lists and make a Json-object
-      val aux = summedMap.toSeq.sortBy(_._1).unzip
+      val sortedSums = summedMap.toSeq.sortBy(_._1)
+
+      sortedSums.foreach(println)
+
+      // helper function to add 0 values
+      def addZeroValues(val1:Double, val2:Double, maxDiff:Double):List[(Double,Double)] = {
+        if(val1 + maxDiff > val2 - maxDiff){
+          List(Tuple2((val1+val2)/2, 0.0))
+        }else{
+          List(Tuple2(val1 + maxDiff, 0.0), Tuple2(val2 - maxDiff, 0.0))
+        }
+      }
+
+      // function to add 0 values between peaks which are not close enough
+      def checkAndAdd(b:List[(Double, Double)], a:(Double, Double), maxDiff:Double):List[(Double, Double)] = {
+        if(b.last._1 + rtTolerance <  a._1){
+          b ++ addZeroValues(b.last._1, a._1, maxDiff) :+ a
+        } else b :+ a
+      }
+
+      val addedMissingRts = sortedSums.drop(1).foldLeft(List(sortedSums(0)))((b,a) => checkAndAdd(b,a, rtTolerance))
+
+       val aux = addedMissingRts.unzip
       Json.obj("rt" ->aux._1, "intensities" -> aux._2)
     })
   }
+
 
   /**
    * remove all Ms1Entry for a given run

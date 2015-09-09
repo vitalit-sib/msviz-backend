@@ -134,15 +134,17 @@ object ExperimentalController extends CommonController {
     notes = """Returns only list of retention times and intensities""",
     httpMethod = "GET")
   @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "tolerance", value = "tolerance", required = false, dataType = "Double", paramType = "query")
+    new ApiImplicitParam(name = "tolerance", value = "tolerance", required = false, dataType = "Double", paramType = "query"),
+    new ApiImplicitParam(name = "rtTolerance", value = "rtTolerance", required = false, dataType = "Double", paramType = "query")
   ))
   def findXic(@ApiParam(value = """run id""", defaultValue = "") @PathParam("runId") runId: String,
               @ApiParam(value = """m/z""", defaultValue = "") @PathParam("moz") moz: Double,
-              tolerance: Option[Double]=None
+              tolerance: Option[Double]=None,
+             rtTolerance: Option[Double]=None
                ) =
     Action.async {
      val futureList= ExpMs1MongoDBService().findMs1ByRunID_MozAndTol(RunId(runId),Moz(moz),tolerance.getOrElse(0.01))
-      ExpMs1MongoDBService().extract2Lists(futureList)
+      ExpMs1MongoDBService().extract2Lists(futureList, rtTolerance.getOrElse(1.0))
       .map { case sphList: JsObject => Ok(sphList) }
         .recover {
         case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
