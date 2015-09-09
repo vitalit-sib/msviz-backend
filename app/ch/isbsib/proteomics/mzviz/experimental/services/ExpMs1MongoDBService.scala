@@ -98,8 +98,6 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
       // sort by rt separate the lists and make a Json-object
       val sortedSums = summedMap.toSeq.sortBy(_._1)
 
-      sortedSums.foreach(println)
-
       // helper function to add 0 values
       def addZeroValues(val1:Double, val2:Double, maxDiff:Double):List[(Double,Double)] = {
         if(val1 + maxDiff > val2 - maxDiff){
