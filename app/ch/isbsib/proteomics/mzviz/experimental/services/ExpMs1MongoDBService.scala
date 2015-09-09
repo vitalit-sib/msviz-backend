@@ -98,6 +98,13 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
       // sort by rt separate the lists and make a Json-object
       val sortedSums = summedMap.toSeq.sortBy(_._1)
 
+      // function to add 0 values between peaks which are not close enough
+      def checkAndAdd(b:List[(Double, Double)], a:(Double, Double), maxDiff:Double, f:(Double,Double,Double)=>List[(Double,Double)]):List[(Double, Double)] = {
+        if(b.last._1 + rtTolerance <  a._1){
+          b ++ f(b.last._1, a._1, maxDiff) :+ a
+        } else b :+ a
+      }
+
       // helper function to add 0 values
       def addZeroValues(val1:Double, val2:Double, maxDiff:Double):List[(Double,Double)] = {
         if(val1 + maxDiff > val2 - maxDiff){
@@ -107,14 +114,7 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
         }
       }
 
-      // function to add 0 values between peaks which are not close enough
-      def checkAndAdd(b:List[(Double, Double)], a:(Double, Double), maxDiff:Double):List[(Double, Double)] = {
-        if(b.last._1 + rtTolerance <  a._1){
-          b ++ addZeroValues(b.last._1, a._1, maxDiff) :+ a
-        } else b :+ a
-      }
-
-      val addedMissingRts = sortedSums.drop(1).foldLeft(List(sortedSums(0)))((b,a) => checkAndAdd(b,a, rtTolerance))
+      val addedMissingRts = sortedSums.drop(1).foldLeft(List(sortedSums(0)))((b,a) => checkAndAdd(b,a, rtTolerance, addZeroValues))
 
        val aux = addedMissingRts.unzip
       Json.obj("rt" ->aux._1, "intensities" -> aux._2)

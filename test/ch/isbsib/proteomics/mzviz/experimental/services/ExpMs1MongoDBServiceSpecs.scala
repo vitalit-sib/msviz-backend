@@ -55,7 +55,6 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
     "remove 8 " in new TempMongoDBService {
 
       service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzXML"), RunId("wewe")))
-
       Thread.sleep(3000)
       service.delete(RunId("wewe"))
       Thread.sleep(3000)
