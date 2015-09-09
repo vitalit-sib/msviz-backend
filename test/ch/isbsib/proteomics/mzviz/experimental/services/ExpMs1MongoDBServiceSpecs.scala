@@ -9,6 +9,8 @@ import ch.isbsib.proteomics.mzviz.experimental.models.Ms1Entry
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.specs2.mutable.Specification
+import org.scalatest.MustMatchers
+import play.api.libs.json.JsValue
 
 import scala.concurrent.Future
 
@@ -43,7 +45,7 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
     "return 8 entries " in new TempMongoDBService {
       service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzXML"), RunId("wewe")))
 
-      Thread.sleep(3000)
+      Thread.sleep(5000)
       service.findMs1ByRunId(RunId("wewe")).futureValue.size mustEqual (31771)
 
     }
@@ -67,8 +69,9 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
 
       service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzXML"), RunId("small")))
       Thread.sleep(3000)
-      service.findMs1ByRunID_MozAndTol(RunId("small"), Moz(519.14), 0.5).futureValue.size mustEqual(892)
+      val ms1List = service.findMs1ByRunID_MozAndTol(RunId("small"), Moz(519.14), 0.5).futureValue
 
+      ms1List.size mustEqual(892)
     }
   }
 
@@ -76,10 +79,31 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
     "return 2 scan and 8 entries " in new TempMongoDBService {
 
       val n=LoaderMzXML.parseFile(new File("test/resources/ms1/tiny1_mzXML.mzXML"), RunId("tiny"))
-      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/tiny1_mzXML.mzXML"), RunId("tiny")))
-        .futureValue mustEqual(8)
+      val scanList = service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/tiny1_mzXML.mzXML"), RunId("tiny")))
+        .futureValue
+
+      scanList mustEqual(8)
 
       n.size mustEqual(2)
+    }
+  }
+
+  "extract to list of Json objects" should {
+    "extract to lists" in new TempMongoDBService {
+
+      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzXML"), RunId("small")))
+      Thread.sleep(3000)
+      val ms1List = service.findMs1ByRunID_MozAndTol(RunId("small"), Moz(519.14), 0.5)
+
+      val json = service.extract2Lists(ms1List).futureValue
+
+
+      val rts = (json \ "rt").as[List[JsValue]]
+      rts(20).as[Double] mustEqual(5.97779)
+
+      val ints = (json \ "intensities").as[List[JsValue]]
+      ints(20).as[Double] mustEqual(21424504.84375)
+
     }
   }
 

@@ -66,7 +66,7 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
   }
 
   /**
-   * retrieves  by moz and tolerance
+   * retrieve a list of Ms1Entries by moz and tolerance. The list is unsorted.
    * @param moz
    * @param tolerance
    * @return seq of entries
@@ -78,17 +78,25 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
   }
 
   /**
-   * extract list of intensities and list of moz from list of MS1Entries
+   * extract list of intensities and list of moz from list of MS1Entries. Group by retentionTimes and sum the intensities.
+   * Then sort by retentionTimes.
    * @param ms1List
    * @return list of intensities and list of moz
    */
 
   def extract2Lists(ms1List:Future[List[Ms1Entry]]): Future[JsObject] = {
 
-
+    // we're in a Future
     ms1List.map(m => {
-      val aux = m.map(a =>
-      (a.rt.value, a.intensity.value)).unzip
+
+      // group by retentionTimes
+      val rtGroups = m.groupBy(_.rt.value)
+
+      // sum the groups => Map(rt, sum(intensities))
+      val summedMap = rtGroups.map({case(k, v) => (k, v.map(_.intensity.value).sum)})
+
+      // sort by rt separate the lists and make a Json-object
+      val aux = summedMap.toSeq.sortBy(_._1).unzip
       Json.obj("rt" ->aux._1, "intensities" -> aux._2)
     })
   }
