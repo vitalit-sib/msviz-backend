@@ -6,9 +6,11 @@
 GET           /                                                      ch.isbsib.proteomics.mzviz.controllers.UtilsController.hello
 
 GET           /api-docs/exp                                          controllers.ApiHelpController.getResource(path = "/exp")
+GET           /exp/cats                                              ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.listCats
+GET           /exp/setupCats                                         ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.setupCatTables
 GET           /exp                                                   ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.stats
-GET           /exp/xic/:runId/:moz                                   ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findXic(runId,moz:Double,tolerance:Option[Double], rtTolerance:Option[Double])
-POST          /exp/xic/:runId                                        ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.loadMS1Data(runId)
+GET           /exp/xic/:runId/:moz                                   ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findXicMySql(runId,moz:Double,tolerance:Option[Double], rtTolerance:Option[Double])
+POST          /exp/xic/:runId                                        ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.loadMS1MySql(runId)
 GET           /exp/msruns                                            ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.listMSRunIds
 POST          /exp/msrun/:runId                                      ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.loadMSRun(runId)
 DELETE        /exp/msrun/:runId                                      ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.deleteMSRun(runId)

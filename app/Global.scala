@@ -6,6 +6,7 @@ import play.api._
 import play.api.mvc.{EssentialAction, EssentialFilter, RequestHeader, WithFilters}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+
 object Global extends WithFilters(new CorsFilter) with GlobalSettings {
 
   override def onStart(app: Application) = {

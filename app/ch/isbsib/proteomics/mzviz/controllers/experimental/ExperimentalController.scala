@@ -7,8 +7,8 @@ import ch.isbsib.proteomics.mzviz.controllers.CommonController
 import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
 import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.experimental.importer.{LoaderMzXML, LoaderMGF}
-import ch.isbsib.proteomics.mzviz.experimental.models.{Ms1Entry, ExpMs1Spectrum, ExpMSnSpectrum, SpectrumRef}
-import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMs1MongoDBService, ExpMongoDBService}
+import ch.isbsib.proteomics.mzviz.experimental.models._
+import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMs1MySqlDBService, ExpMs1MongoDBService, ExpMongoDBService}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import ch.isbsib.proteomics.mzviz.theoretical.services.SequenceMongoDBService
 import com.wordnik.swagger.annotations._
@@ -19,6 +19,18 @@ import play.api.mvc.Action
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
+import play.api._
+import play.api.db.slick._
+import play.api.db.slick.Config.driver.simple._
+import play.api.data._
+import play.api.data.Forms._
+import play.api.mvc._
+import play.api.Play.current
+import play.api.libs.json.Json
+import play.api.libs.json.Json._
+
+import scala.slick.jdbc.meta.MTable
+
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
@@ -27,8 +39,90 @@ import scala.util.{Failure, Success}
 @Api(value = "/exp", description = "experimental data access")
 object ExperimentalController extends CommonController {
 
-  def stats = Action.async {
+  implicit val ms1Format = Json.format[Ms1Peak]
+  val Ms1Dao = TableQuery[ExpMs1MySqlDBService]
 
+  def setupCatTables = DBAction { implicit rs =>
+    if(MTable.getTables("MS").list.isEmpty) {
+      Ms1Dao.ddl.create
+      Ok("table MS was created")
+    }else{
+      Ok("table MS already existed")
+    }
+  }
+
+  def listCats = DBAction { implicit rs =>
+    //Ok(toJson(Ms1Dao.list))
+    //val hoho = ExpMs1MySqlDBService().filter(ms => ms.ref === "hoho" && ms.rt < 34.0).list
+    val hoho = ExpMs1MySqlDBService().filter(ms => ms.ref === "hoho").list.map({ a =>
+      a.ref
+    })
+    Ok(toJson(hoho))
+    //Ok(toJson(ExpMs1MySqlDBService.getXic("hoho").list))
+    //Ok(toJson(Ms1Connection.filter(_.ref like "hoho")))
+  }
+
+
+  @ApiOperation(nickname = "findXicMySql",
+    value = "find all ms1 for a given run id and moz in the MySQL database",
+    notes = """Returns only list of retention times and intensities""",
+    httpMethod = "GET")
+  @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "tolerance", value = "tolerance", required = false, dataType = "Double", paramType = "query"),
+    new ApiImplicitParam(name = "rtTolerance", value = "rtTolerance", required = false, dataType = "Double", paramType = "query")
+  ))
+  def findXicMySql(@ApiParam(value = """run id""", defaultValue = "") @PathParam("runId") runId: String,
+              @ApiParam(value = """m/z""", defaultValue = "") @PathParam("moz") moz: Double,
+              tolerance: Option[Double]=None,
+              rtTolerance: Option[Double]=None
+               ) =
+    DBAction { implicit rs =>
+
+      val myTolerance = tolerance.getOrElse(0.01)
+
+      val ms1List = ExpMs1MySqlDBService().filter(ms => (ms.ref === runId)
+        && (ms.moz <= moz+myTolerance)
+        && ms.moz >= moz-myTolerance).list
+
+      Ok(toJson(ms1List))
+
+//      val futureList= ExpMs1MongoDBService().findMs1ByRunID_MozAndTol(RunId(runId),Moz(moz),tolerance.getOrElse(0.01))
+//      ExpMs1MongoDBService().extract2Lists(futureList, rtTolerance.getOrElse(1.0))
+//        .map { case sphList: JsObject => Ok(sphList) }
+//        .recover {
+//        case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
+//      }
+    }
+
+
+  @ApiOperation(nickname = "loadMS1MySql",
+    value = "Loads a mzxml file to mysql database",
+    notes = """ source will be a unique descriptor on the source""",
+    httpMethod = "POST")
+  @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "body", value = "mzxml", required = true, dataType = "text/plain", paramType = "body")
+  ))
+  def loadMS1MySql(@ApiParam(name = "runId", value = "a string id with run identifier", required = true) @PathParam("runId") runId: String) =
+    DBAction(parse.temporaryFile) { implicit rs =>
+        val entries = LoaderMzXML.parseFile(rs.request.body.file, RunId(runId))
+
+        var nrInserted = 0
+
+        while (entries.hasNext) {
+          val current = entries.next()
+          val runID = current.spId.runId.value
+          val rt = current.retentionTime.value
+          current.peaks.foreach {
+            peak => val ms1 = Ms1Peak(runID, rt, peak.moz.value, peak.intensity.value)
+              Ms1Dao.insert(ms1)
+              nrInserted += 1
+          }
+        }
+      Ok(Json.obj("inserted" -> nrInserted.toString))
+    }
+
+
+  def stats = Action.async {
     ExpMongoDBService().stats.map { st =>
       Ok(jsonWritesMap.writes(st))
     }
@@ -167,19 +261,7 @@ object ExperimentalController extends CommonController {
         }.recover {
           case e => BadRequest(Json.toJson(e))
         }
-
-      /*
-              LoaderMzXML.parseFile(request.body.file, RunId(runId)) match {
-                case Success(iter) => ExpMs1MongoDBService().insertListMS1(iter)
-                  .map { n => Ok(Json.obj("inserted" -> n))
-                }.recover {
-                  case e => BadRequest(e.getMessage)
-                }
-                case Failure(e) => Future {
-                  BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
-                }
-              }
-              */
     }
+
 
 }
