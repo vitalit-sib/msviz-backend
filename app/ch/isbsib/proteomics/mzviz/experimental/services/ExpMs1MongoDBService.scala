@@ -33,8 +33,6 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
     name = Some("ref")
   )
 
-
-
   /**
    * insert every entry with RunId, rt, intensity and moz
    * @param listMS1, iterator of MS1
@@ -56,7 +54,7 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
       peak => val ms1Entry: Ms1Entry = Ms1Entry(runID, rt, peak.intensity, peak.moz)
         itEntry= itEntry :+ ms1Entry
       }
-      // inset into db
+      // insert into db
       val enum=Enumerator.enumerate(itEntry)
       inserted = inserted :+ collection.bulkInsert(enum)
     }

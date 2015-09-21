@@ -12,4 +12,8 @@ import ch.isbsib.proteomics.mzviz.experimental.RunId
  * @param moz m/z
  */
 
-case class Ms1Entry(ref:RunId, rt: RetentionTime,intensity: Intensity, moz:Moz )
+case class Ms1Entry(ref:RunId, rt: RetentionTime, intensity: Intensity, moz:Moz )
+
+// this is essentially the same class as Ms1Entry without the wrappers
+// @TODO use Ms1Entry instead of Ms1Peak
+case class Ms1Peak(ref: String, rt: Double, moz: Double, int:Double)
