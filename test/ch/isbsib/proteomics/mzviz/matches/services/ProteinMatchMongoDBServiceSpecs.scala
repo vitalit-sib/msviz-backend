@@ -84,6 +84,9 @@ class ProteinMatchMongoDBServiceSpecs extends Specification with ScalaFutures {
       val proteinListAll = service.findAllProteinsBySearchIds(Set(SearchId("F001644"), SearchId("M_100"))).futureValue
       proteinListAll.size mustEqual(51)
 
+      val proteinListBySearchAndAc = service.findAllProteinsBySearchIdsAndACs(Set(SearchId("M_100")), Set(AccessionCode("AHNK_HUMAN"), AccessionCode("VIME_HUMAN"))).futureValue
+      proteinListBySearchAndAc.size mustEqual(2)
+
     }
 
   }

@@ -4,6 +4,7 @@ import ch.isbsib.proteomics.mzviz.commons.services.{MongoNotFoundException, Mong
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models.{ProteinIdentInfo, ProteinIdent, PepSpectraMatch}
+import ch.isbsib.proteomics.mzviz.modifications.ModifName
 import ch.isbsib.proteomics.mzviz.theoretical.AccessionCode
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
 import play.api.libs.iteratee.Enumerator
@@ -87,12 +88,24 @@ class ProteinMatchMongoDBService (val db: DefaultDB) extends MongoDBService {
   }
 
   /**
-   * retrieves all entries for a list of sources
+   * retrieves all entries for a list of sources and optional given modification
    * @param searchIds list of search ids
    * @return
    */
   def findAllProteinsBySearchIds(searchIds: Set[SearchId]): Future[Seq[ProteinIdent]] = {
     val query = Json.obj("searchId" -> Json.obj("$in" -> searchIds.toList))
+
+    collection.find(query).cursor[ProteinIdent].collect[List]()
+  }
+
+  /**
+   * retrieves all entries for a list of ACs and SearchIds
+   * @param ACs list of search ACs
+   * @return
+   */
+  def findAllProteinsBySearchIdsAndACs(searchIds:Set[SearchId],ACs: Set[AccessionCode]): Future[Seq[ProteinIdent]] = {
+    val query = Json.obj("mainProt.proteinAC" ->Json.obj("$in" -> ACs.toList)) ++ Json.obj("searchId" -> Json.obj("$in" -> searchIds.toList))
+
     collection.find(query).cursor[ProteinIdent].collect[List]()
   }
 
