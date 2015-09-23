@@ -68,7 +68,7 @@ object ExperimentalController extends CommonController {
         && ms.moz >= moz-myTolerance).list.map(m => Ms1Entry(RunId(m.ref), RetentionTime(m.rt), Intensity(m.int), Moz(m.moz))
       )
 
-      val sphList = ExpMs1MongoDBService().extract2Lists(ms1List, rtTolerance.getOrElse(1.0))
+      val sphList = ExpMs1MongoDBService().extract2Lists(ms1List, rtTolerance.getOrElse(10.0))
 
       Ok(sphList)
     }
