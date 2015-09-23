@@ -40,7 +40,7 @@ GET           /search                                                ch.isbsib.p
 POST          /search/:searchId                                      ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.loadMzId(searchId:String, runId:Option[String])
 DELETE        /search/:searchIds                                     ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.delete(searchIds)
 
-GET           /compare/:searchIds                                    ch.isbsib.proteomics.mzviz.controllers.matches.ProteinMatchMultipleSearchesController.findAllProteinsForMultipleSearchIds(searchIds)
+GET           /compare/:searchIds                                    ch.isbsib.proteomics.mzviz.controllers.matches.ProteinMatchMultipleSearchesController.findAllProteinsForMultipleSearchIds(searchIds, withModif:Option[String])
 
 POST          /qc/summary                                            ch.isbsib.proteomics.mzviz.controllers.qc.QcController.loadQcSummary()
 GET           /qc/summary                                            ch.isbsib.proteomics.mzviz.controllers.qc.QcController.listAll
