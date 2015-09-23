@@ -272,16 +272,7 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
    */
 
   def listProteinRefsBySearchIds(searchIds: Set[SearchId], withModification: Option[ModifName] = None): Future[Seq[ProteinRef]] = {
-    Logger.info(s"listProteinRefsBySearchIds($searchIds, $withModification")
     val qMatch = qFilter(searchIds)++ qFilter(withModification)
-
-    println("listProteins")
-    println(qMatch.toString())
-    //If modification is empty
-/*
-    if (!withModification.isEmpty){
-      qMatch = qFilter(searchIds) ++ qFilter(withModification)
-    }*/
 
     val command = RawCommand(BSONDocument(
       "aggregate" -> collectionName,
