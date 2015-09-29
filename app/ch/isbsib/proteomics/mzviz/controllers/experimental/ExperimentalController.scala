@@ -61,11 +61,12 @@ object ExperimentalController extends CommonController {
                ) =
     DBAction { implicit rs =>
 
-      val myTolerance = tolerance.getOrElse(0.01)
+      val ppmTolerance = tolerance.getOrElse(10.0)
+      val daltonTolerance = moz / 1000000 * ppmTolerance
 
       val ms1List = ExpMs1MySqlDBService().filter(ms => (ms.ref === runId)
-        && (ms.moz <= moz+myTolerance)
-        && ms.moz >= moz-myTolerance).list.map(m => Ms1Entry(RunId(m.ref), RetentionTime(m.rt), Intensity(m.int), Moz(m.moz))
+        && (ms.moz <= moz+daltonTolerance)
+        && ms.moz >= moz-daltonTolerance).list.map(m => Ms1Entry(RunId(m.ref), RetentionTime(m.rt), Intensity(m.int), Moz(m.moz))
       )
 
       val sphList = ExpMs1MongoDBService().extract2Lists(ms1List, rtTolerance.getOrElse(10.0))
