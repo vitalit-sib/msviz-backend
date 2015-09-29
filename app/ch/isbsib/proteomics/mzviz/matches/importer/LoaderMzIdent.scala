@@ -32,12 +32,19 @@ object LoaderMzIdent {
 
 
   def parse(file: File, searchId: SearchId, runId: RunId): Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = {
-    val unimodPath = Play.application().configuration().getString("unimod.xml")
 
-    if(Files.exists(Paths.get(unimodPath))){
-      UnimodManager.setUnimodPath(unimodPath)
-    }else{
-      Logger.warn("could not load UniMod file from :[" + unimodPath + "]")
+    val confMap = Play.application().configuration().asMap()
+
+    val unimodConfigTag = "unimod"
+
+    if(confMap.containsKey(unimodConfigTag)) {
+      val unimodPath = confMap.get(unimodConfigTag).toString
+
+      if (Files.exists(Paths.get(unimodPath))) {
+        UnimodManager.setUnimodPath(unimodPath)
+      } else {
+        Logger.warn("could not load UniMod file from :[" + unimodPath + "]")
+      }
     }
 
     // load MzIdentML as scala xml elem
