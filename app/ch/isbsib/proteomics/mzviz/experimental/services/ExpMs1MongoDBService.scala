@@ -33,8 +33,6 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
     name = Some("ref")
   )
 
-
-
   /**
    * insert every entry with RunId, rt, intensity and moz
    * @param listMS1, iterator of MS1
@@ -56,7 +54,7 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
       peak => val ms1Entry: Ms1Entry = Ms1Entry(runID, rt, peak.intensity, peak.moz)
         itEntry= itEntry :+ ms1Entry
       }
-      // inset into db
+      // insert into db
       val enum=Enumerator.enumerate(itEntry)
       inserted = inserted :+ collection.bulkInsert(enum)
     }
@@ -77,6 +75,9 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
     collection.find(query).cursor[Ms1Entry].collect[List]()
   }
 
+
+
+
   /**
    * extract list of intensities and list of moz from list of MS1Entries. Group by retentionTimes and sum the intensities.
    * Then sort by retentionTimes and add 0 values between points which have distances > rtTolerance.
@@ -84,13 +85,20 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
    * @return list of intensities and list of moz
    */
 
-  def extract2Lists(ms1List:Future[List[Ms1Entry]], rtTolerance: Double): Future[JsObject] = {
+  def extract2FutureLists(ms1List:Future[List[Ms1Entry]], rtTolerance: Double): Future[JsObject] = {
 
     // we're in a Future
     ms1List.map(m => {
 
+     extract2Lists(m, rtTolerance)
+
+    })
+  }
+
+  def extract2Lists(ms1List:List[Ms1Entry], rtTolerance: Double): JsObject = {
+
       // group by retentionTimes
-      val rtGroups = m.groupBy(_.rt.value)
+      val rtGroups = ms1List.groupBy(_.rt.value)
 
       // sum the groups => Map(rt, sum(intensities))
       val summedMap = rtGroups.map({case(k, v) => (k, v.map(_.intensity.value).sum)})
@@ -118,7 +126,6 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
 
        val aux = addedMissingRts.unzip
       Json.obj("rt" ->aux._1, "intensities" -> aux._2)
-    })
   }
 
 
