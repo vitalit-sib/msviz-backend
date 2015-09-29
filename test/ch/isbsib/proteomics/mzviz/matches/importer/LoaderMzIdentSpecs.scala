@@ -10,6 +10,9 @@ import ch.isbsib.proteomics.mzviz.modifications.ModifName
 import ch.isbsib.proteomics.mzviz.theoretical.{ProteinIdentifier, AccessionCode, NumDatabaseSequences, SequenceSource}
 import org.specs2.mutable.Specification
 
+import play.api.test._
+import play.api.test.Helpers._
+
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
  * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
@@ -53,142 +56,152 @@ class LoaderMzIdentSpecs extends Specification {
   }
 
     "parse M_100" should {
-      val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/M_100.mzid"), SearchId("M_100"), RunId("M_100.mgf"))
-      val psm = psmAndProtLists._1
-      val prots = psmAndProtLists._2
+      running(FakeApplication()) {
+        val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/M_100.mzid"), SearchId("M_100"), RunId("M_100.mgf"))
+        val psm = psmAndProtLists._1
+        val prots = psmAndProtLists._2
 
-      "check size PSMs" in {
-        psm.size must equalTo(62)
-      }
 
-      "check size Proteins" in {
-        prots.size must equalTo(27)
-      }
+        "check size PSMs" in {
+          psm.size must equalTo(62)
+        }
 
-      "check first peptide" in {
-        psm(0).pep.sequence must equalTo("TYTWLK")
-        //psm(0).pep.dbSequenceRef must equalTo("hiho")
-        psm(0).pep.molMass must equalTo(Some(810.427590116))
-      }
+        "check size Proteins" in {
+          prots.size must equalTo(27)
+        }
 
-      "check first peptide score" in {
-        psm(0).matchInfo.score.mainScore must equalTo(31.41)
-        psm(0).matchInfo.score.scoreMap("Mascot:expectation value") must equalTo(0.0356686898077671)
-      }
+        "check first peptide" in {
+          psm(0).pep.sequence must equalTo("TYTWLK")
+          //psm(0).pep.dbSequenceRef must equalTo("hiho")
+          psm(0).pep.molMass must equalTo(Some(810.427590116))
+        }
 
-      "check peptide match info" in {
-        psm(0).matchInfo.isRejected must equalTo(Some(false))
-        psm(0).matchInfo.chargeState must equalTo(Some(2))
-        // psm(0).matchInfo.massDiff must equalTo(99.99)
-        // psm(0).matchInfo.numMissedCleavages must equalTo(999)
-        psm(0).matchInfo.rank must equalTo(Some(1))
-        // psm(0).matchInfo.totalNumIons must equalTo(999)
-      }
+        "check first peptide score" in {
+          psm(0).matchInfo.score.mainScore must equalTo(31.41)
+          psm(0).matchInfo.score.scoreMap("Mascot:expectation value") must equalTo(0.0356686898077671)
+        }
 
-      "check first spectrum identifier" in {
-        psm(0).spectrumId must equalTo(
-          SpectrumId(SpectrumUniqueId("File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 50.227 min, Period: 1, Cycle(s): 2033 (Experiment 4)"),
-            RunId("M_100.mgf"))
-        )
-        psm(0).spectrumId.runId must equalTo(RunId("M_100.mgf"))
-      }
+        "check peptide match info" in {
+          psm(0).matchInfo.isRejected must equalTo(Some(false))
+          psm(0).matchInfo.chargeState must equalTo(Some(2))
+          // psm(0).matchInfo.massDiff must equalTo(99.99)
+          // psm(0).matchInfo.numMissedCleavages must equalTo(999)
+          psm(0).matchInfo.rank must equalTo(Some(1))
+          // psm(0).matchInfo.totalNumIons must equalTo(999)
+        }
 
-      "check protein size" in {
-        psm(0).proteinList.size must equalTo(1)
-      }
+        "check first spectrum identifier" in {
+          psm(0).spectrumId must equalTo(
+            SpectrumId(SpectrumUniqueId("File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 50.227 min, Period: 1, Cycle(s): 2033 (Experiment 4)"),
+              RunId("M_100.mgf"))
+          )
+          psm(0).spectrumId.runId must equalTo(RunId("M_100.mgf"))
+        }
 
-      "check first protein content" in {
-        psm(0).proteinList(0).proteinRef must equalTo(ProteinRef(AC = AccessionCode("CD109_HUMAN"), source = Some(SequenceSource("SwissProt_2014_08.fasta"))))
-        psm(0).proteinList(0).startPos must equalTo(1013)
-        psm(0).proteinList(0).endPos must equalTo(1018)
-        psm(0).proteinList(0).previousAA must equalTo(Some("R"))
-        psm(0).proteinList(0).nextAA must equalTo(Some("G"))
-      }
+        "check protein size" in {
+          psm(0).proteinList.size must equalTo(1)
+        }
 
-      "check false decoy hit" in {
-        psm(0).proteinList(0).isDecoy must equalTo(Some(false))
-        psm.last.proteinList.last.isDecoy must equalTo(Some(true))
-      }
+        "check first protein content" in {
+          psm(0).proteinList(0).proteinRef must equalTo(ProteinRef(AC = AccessionCode("CD109_HUMAN"), source = Some(SequenceSource("SwissProt_2014_08.fasta"))))
+          psm(0).proteinList(0).startPos must equalTo(1013)
+          psm(0).proteinList(0).endPos must equalTo(1018)
+          psm(0).proteinList(0).previousAA must equalTo(Some("R"))
+          psm(0).proteinList(0).nextAA must equalTo(Some("G"))
+        }
 
-      "check modifications in pep 29" in {
-        psm(29).pep.modificationNames.size must equalTo(psm(29).pep.sequence.length + 2)
-        psm(29).pep.modificationNames(8).size must equalTo(1)
-        psm(29).pep.modificationNames(8)(0) must equalTo(ModifName("Carbamidomethyl"))
-        psm(29).pep.modificationNames(0) must equalTo(Nil)
+        "check false decoy hit" in {
+          psm(0).proteinList(0).isDecoy must equalTo(Some(false))
+          psm.last.proteinList.last.isDecoy must equalTo(Some(true))
+        }
 
-      }
+        "check modifications in pep 29" in {
+          psm(29).pep.modificationNames.size must equalTo(psm(29).pep.sequence.length + 2)
+          psm(29).pep.modificationNames(8).size must equalTo(1)
+          psm(29).pep.modificationNames(8)(0) must equalTo(ModifName("Carbamidomethyl"))
+          psm(29).pep.modificationNames(0) must equalTo(Nil)
 
-      "check modifications in pep 29" in {
-        psm(30).pep.modificationNames.size must equalTo(psm(30).pep.sequence.length + 2)
+        }
 
-        psm(30).pep.modificationNames(0).size must equalTo(1)
-        psm(30).pep.modificationNames(0)(0) must equalTo(ModifName("Acetyl"))
+        "check modifications in pep 29" in {
+          psm(30).pep.modificationNames.size must equalTo(psm(30).pep.sequence.length + 2)
 
-        psm(30).pep.modificationNames(8).size must equalTo(2)
-        psm(30).pep.modificationNames(8)(0) must (equalTo(ModifName("Cys->ethylaminoAla")) or equalTo(ModifName("Carbamidomethyl")))
-        psm(30).pep.modificationNames(8)(0) must (equalTo(ModifName("Cys->ethylaminoAla")) or equalTo(ModifName("Carbamidomethyl")))
+          psm(30).pep.modificationNames(0).size must equalTo(1)
+          psm(30).pep.modificationNames(0)(0) must equalTo(ModifName("Acetyl"))
 
-        psm(30).pep.modificationNames(10).size must equalTo(1)
-        psm(30).pep.modificationNames(10)(0) must equalTo(ModifName("GPIanchor"))
+          psm(30).pep.modificationNames(8).size must equalTo(2)
+          psm(30).pep.modificationNames(8)(0) must (equalTo(ModifName("Cys->ethylaminoAla")) or equalTo(ModifName("Carbamidomethyl")))
+          psm(30).pep.modificationNames(8)(0) must (equalTo(ModifName("Cys->ethylaminoAla")) or equalTo(ModifName("Carbamidomethyl")))
+
+          psm(30).pep.modificationNames(10).size must equalTo(1)
+          psm(30).pep.modificationNames(10)(0) must equalTo(ModifName("GPIanchor"))
+
+        }
 
       }
 
     }
 
     "parse F001644" should {
-      val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/F001644.mzid"), SearchId("F001644"), RunId("F001644.mgf"))
-      val psms = psmAndProtLists._1
-      val prots = psmAndProtLists._2
+      running(FakeApplication()) {
+        val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/F001644.mzid"), SearchId("F001644"), RunId("F001644.mgf"))
+        val psms = psmAndProtLists._1
+        val prots = psmAndProtLists._2
 
-      "check PSMs size" in {
-        psms.size must equalTo(437)
-      }
+        "check PSMs size" in {
+          psms.size must equalTo(437)
+        }
 
-      "check Proteins size" in {
-        prots.size must equalTo(24)
-      }
+        "check Proteins size" in {
+          prots.size must equalTo(24)
+        }
 
-      "check psm content" in {
-        val psmsFlt = psms.filter({ psm =>
-          psm.spectrumId.id == SpectrumUniqueId("20141008_BSA_25cm_column2.8507.8507.2")
-        })
+        "check psm content" in {
+          val psmsFlt = psms.filter({ psm =>
+            psm.spectrumId.id == SpectrumUniqueId("20141008_BSA_25cm_column2.8507.8507.2")
+          })
 
-        psmsFlt.size must equalTo(2)
+          psmsFlt.size must equalTo(2)
+        }
       }
 
     }
 
   "parse M_100_with_X" should {
-    val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/M_100_with_X.mzid"), SearchId("with_X"), RunId("M_100.mgf"))
-    val psm = psmAndProtLists._1
+    running(FakeApplication()) {
+      val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/M_100_with_X.mzid"), SearchId("with_X"), RunId("M_100.mgf"))
+      val psm = psmAndProtLists._1
 
-    "check first peptide" in {
-      psm(0).pep.sequence must equalTo("TYTXLK")
-      psm(0).pep.molMass must equalTo(None)
+      "check first peptide" in {
+        psm(0).pep.sequence must equalTo("TYTXLK")
+        psm(0).pep.molMass must equalTo(None)
+      }
     }
 
   }
 
   "parse modification scores" should {
-    val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/F002687_acetylation.mzid"), SearchId("modif"), RunId("M_100.mgf"))
-    val psms = psmAndProtLists._1
+    running(FakeApplication()) {
+      val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/F002687_acetylation.mzid"), SearchId("modif"), RunId("M_100.mgf"))
+      val psms = psmAndProtLists._1
 
-    "check modif position score" in {
-      val psmsFlt = psms.filter({ psm =>
-        psm.spectrumId.id == SpectrumUniqueId("2012_12_20_OT_ALH_103_HSA+20ASA_1pmol_Acetylation.2329.2")
-      })
+      "check modif position score" in {
+        val psmsFlt = psms.filter({ psm =>
+          psm.spectrumId.id == SpectrumUniqueId("2012_12_20_OT_ALH_103_HSA+20ASA_1pmol_Acetylation.2329.2")
+        })
 
-      psmsFlt(0).matchInfo.score.scoreMap("Mascot:delta score") mustEqual(97.87)
-      psmsFlt(1).matchInfo.score.scoreMap("Mascot:delta score") mustEqual(2.11)
-    }
+        psmsFlt(0).matchInfo.score.scoreMap("Mascot:delta score") mustEqual (97.87)
+        psmsFlt(1).matchInfo.score.scoreMap("Mascot:delta score") mustEqual (2.11)
+      }
 
-    "check another modif position score" in {
-      val psmsFlt = psms.filter({ psm =>
-        psm.spectrumId.id == SpectrumUniqueId("2012_12_20_OT_ALH_102_HSA+20ASA_1pmol_Acetylation.2098.2")
-      })
+      "check another modif position score" in {
+        val psmsFlt = psms.filter({ psm =>
+          psm.spectrumId.id == SpectrumUniqueId("2012_12_20_OT_ALH_102_HSA+20ASA_1pmol_Acetylation.2098.2")
+        })
 
-      psmsFlt(0).matchInfo.score.scoreMap("Mascot:delta score") mustEqual(90.46)
-      psmsFlt(1).matchInfo.score.scoreMap("Mascot:delta score") mustEqual(9.21)
+        psmsFlt(0).matchInfo.score.scoreMap("Mascot:delta score") mustEqual (90.46)
+        psmsFlt(1).matchInfo.score.scoreMap("Mascot:delta score") mustEqual (9.21)
+      }
     }
 
 
@@ -196,73 +209,78 @@ class LoaderMzIdentSpecs extends Specification {
 
 
   "parse protein positions" should {
-    val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/F001303.mzid"), SearchId("modif"), RunId("M_100.mgf"))
-    val psms = psmAndProtLists._1
+    running(FakeApplication()) {
+      val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/F001303.mzid"), SearchId("modif"), RunId("M_100.mgf"))
+      val psms = psmAndProtLists._1
 
-    "check position 1" in {
-      val psmsFlt = psms.filter({ psm =>
-        psm.spectrumId.id == SpectrumUniqueId("20140811_REFERENCESAMPLE_RFamp_switch_1.9071.9071.2")
-      })
+      "check position 1" in {
+        val psmsFlt = psms.filter({ psm =>
+          psm.spectrumId.id == SpectrumUniqueId("20140811_REFERENCESAMPLE_RFamp_switch_1.9071.9071.2")
+        })
 
-      psmsFlt.size mustEqual(1)
+        psmsFlt.size mustEqual (1)
 
-      psmsFlt(0).proteinList.size mustEqual(3)
+        psmsFlt(0).proteinList.size mustEqual (3)
 
-      // verify first protein
-      psmsFlt(0).proteinList(0).startPos mustEqual(769)
-      psmsFlt(0).proteinList(0).endPos mustEqual(773)
-      psmsFlt(0).proteinList(0).proteinRef.AC mustEqual(AccessionCode("APAF_MOUSE"))
-      psmsFlt(0).proteinList(0).proteinRef.source.get mustEqual(SequenceSource("SwissProt_2013_12.fasta"))
+        // verify first protein
+        psmsFlt(0).proteinList(0).startPos mustEqual (769)
+        psmsFlt(0).proteinList(0).endPos mustEqual (773)
+        psmsFlt(0).proteinList(0).proteinRef.AC mustEqual (AccessionCode("APAF_MOUSE"))
+        psmsFlt(0).proteinList(0).proteinRef.source.get mustEqual (SequenceSource("SwissProt_2013_12.fasta"))
 
-      // verify last protein
-      psmsFlt(0).proteinList(2).startPos mustEqual(210)
-      psmsFlt(0).proteinList(2).endPos mustEqual(214)
-      psmsFlt(0).proteinList(2).proteinRef.AC mustEqual(AccessionCode("GBB2_MOUSE"))
-      psmsFlt(0).proteinList(2).proteinRef.source.get mustEqual(SequenceSource("SwissProt_2013_12.fasta"))
+        // verify last protein
+        psmsFlt(0).proteinList(2).startPos mustEqual (210)
+        psmsFlt(0).proteinList(2).endPos mustEqual (214)
+        psmsFlt(0).proteinList(2).proteinRef.AC mustEqual (AccessionCode("GBB2_MOUSE"))
+        psmsFlt(0).proteinList(2).proteinRef.source.get mustEqual (SequenceSource("SwissProt_2013_12.fasta"))
 
-    }
+      }
 
-    "check position 2" in {
-      val psmsFlt = psms.filter({ psm =>
-        psm.spectrumId.id == SpectrumUniqueId("20140811_REFERENCESAMPLE_RFamp_switch_1.10716.10716.2")
-      })
+      "check position 2" in {
+        val psmsFlt = psms.filter({ psm =>
+          psm.spectrumId.id == SpectrumUniqueId("20140811_REFERENCESAMPLE_RFamp_switch_1.10716.10716.2")
+        })
 
-      psmsFlt.size mustEqual(1)
+        psmsFlt.size mustEqual (1)
 
-      psmsFlt(0).proteinList.size mustEqual(2)
+        psmsFlt(0).proteinList.size mustEqual (2)
 
-      // verify first protein
-      psmsFlt(0).proteinList(0).startPos mustEqual(180)
-      psmsFlt(0).proteinList(0).endPos mustEqual(185)
-      psmsFlt(0).proteinList(0).proteinRef.AC mustEqual(AccessionCode("HNRPF_MOUSE"))
-      psmsFlt(0).proteinList(0).proteinRef.source.get mustEqual(SequenceSource("SwissProt_2013_12.fasta"))
+        // verify first protein
+        psmsFlt(0).proteinList(0).startPos mustEqual (180)
+        psmsFlt(0).proteinList(0).endPos mustEqual (185)
+        psmsFlt(0).proteinList(0).proteinRef.AC mustEqual (AccessionCode("HNRPF_MOUSE"))
+        psmsFlt(0).proteinList(0).proteinRef.source.get mustEqual (SequenceSource("SwissProt_2013_12.fasta"))
 
-      // verify last protein
-      psmsFlt(0).proteinList(1).startPos mustEqual(82)
-      psmsFlt(0).proteinList(1).endPos mustEqual(87)
-      psmsFlt(0).proteinList(1).proteinRef.AC mustEqual(AccessionCode("HNRPF_MOUSE"))
-      psmsFlt(0).proteinList(1).proteinRef.source.get mustEqual(SequenceSource("SwissProt_2013_12.fasta"))
+        // verify last protein
+        psmsFlt(0).proteinList(1).startPos mustEqual (82)
+        psmsFlt(0).proteinList(1).endPos mustEqual (87)
+        psmsFlt(0).proteinList(1).proteinRef.AC mustEqual (AccessionCode("HNRPF_MOUSE"))
+        psmsFlt(0).proteinList(1).proteinRef.source.get mustEqual (SequenceSource("SwissProt_2013_12.fasta"))
 
+      }
     }
 
   }
 
   "parse passThresholds" should {
-    val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/F001303.mzid"), SearchId("modif"), RunId("M_100.mgf"))
-    val psms = psmAndProtLists._1
+    running(FakeApplication()) {
+      val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/F001303.mzid"), SearchId("modif"), RunId("M_100.mgf"))
+      val psms = psmAndProtLists._1
 
-    "check first" in {
-      val psmsFlt = psms.filter({ psm =>
-        psm.spectrumId.id == SpectrumUniqueId("20140811_REFERENCESAMPLE_RFamp_switch_1.11315.11315.2")
-      })
+      "check first" in {
+        val psmsFlt = psms.filter({ psm =>
+          psm.spectrumId.id == SpectrumUniqueId("20140811_REFERENCESAMPLE_RFamp_switch_1.11315.11315.2")
+        })
 
-      psmsFlt.size mustEqual (4)
+        psmsFlt.size mustEqual (4)
 
-      psmsFlt(0).matchInfo.isRejected mustEqual(Option(false))
-      psmsFlt(1).matchInfo.isRejected mustEqual(Option(false))
-      psmsFlt(2).matchInfo.isRejected mustEqual(Option(false))
-      psmsFlt(3).matchInfo.isRejected mustEqual(Option(true))
+        psmsFlt(0).matchInfo.isRejected mustEqual (Option(false))
+        psmsFlt(1).matchInfo.isRejected mustEqual (Option(false))
+        psmsFlt(2).matchInfo.isRejected mustEqual (Option(false))
+        psmsFlt(3).matchInfo.isRejected mustEqual (Option(true))
+      }
     }
+
   }
 
 

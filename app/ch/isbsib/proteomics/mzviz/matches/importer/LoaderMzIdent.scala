@@ -17,6 +17,7 @@ import org.expasy.mzjava.proteomics.mol.modification.ModAttachment
 import org.expasy.mzjava.proteomics.mol.modification.unimod.UnimodManager
 import org.expasy.mzjava.proteomics.ms.ident.{ModificationMatch, PeptideMatch, PeptideProteinMatch, SpectrumIdentifier}
 import play.{Logger, Play}
+import java.nio.file.{Paths, Files}
 import com.google.common.base.Optional
 
 import scala.collection.JavaConverters._
@@ -31,11 +32,13 @@ object LoaderMzIdent {
 
 
   def parse(file: File, searchId: SearchId, runId: RunId): Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = {
-    // @TODO set the unimodXMLPath in the controller? Currently we only take the Unimod.XML provided by MzJava into account
-    // set the unimodXmlPath for MzJavaunimodXmlPath
-    //val s = Play.application().configuration().getString("unimod.xml")
-    //println("unimod location: " + s)
-    //UnimodManager.setUnimodPath(s)
+    val unimodPath = Play.application().configuration().getString("unimod.xml")
+
+    if(Files.exists(Paths.get(unimodPath))){
+      UnimodManager.setUnimodPath(unimodPath)
+    }else{
+      Logger.warn("could not load UniMod file from :[" + unimodPath + "]")
+    }
 
     // load MzIdentML as scala xml elem
     val mzidXml = scala.xml.XML.loadFile(file)
