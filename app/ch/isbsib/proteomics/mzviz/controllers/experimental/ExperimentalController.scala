@@ -168,18 +168,6 @@ object ExperimentalController extends CommonController {
           case e => BadRequest(Json.toJson(e))
         }
 
-      /*
-              LoaderMzXML.parseFile(request.body.file, RunId(runId)) match {
-                case Success(iter) => ExpMs1MongoDBService().insertListMS1(iter)
-                  .map { n => Ok(Json.obj("inserted" -> n))
-                }.recover {
-                  case e => BadRequest(e.getMessage)
-                }
-                case Failure(e) => Future {
-                  BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
-                }
-              }
-              */
     }
 
 }
