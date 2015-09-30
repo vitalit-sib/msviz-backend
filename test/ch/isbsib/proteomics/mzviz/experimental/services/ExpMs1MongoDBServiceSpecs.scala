@@ -94,9 +94,9 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
 
       service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzXML"), RunId("small")))
       Thread.sleep(3000)
-      val ms1List = service.findMs1ByRunID_MozAndTol(RunId("small"), Moz(519.14), 0.3)
+      val ms1List = service.findMs1ByRunID_MozAndTol(RunId("small"), Moz(519.14), 0.3).futureValue
 
-      val json = service.extract2Lists(ms1List, rtTolerance).futureValue
+      val json = service.extract2Lists(ms1List, rtTolerance)
 
 
       val rts = (json \ "rt").as[List[JsValue]]
