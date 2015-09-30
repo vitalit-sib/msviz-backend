@@ -30,7 +30,9 @@ class ProteinMatchMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "empty service" should {
     "counts are 0" in new TempMongoDBService {
-      service.countEntries.futureValue must equalTo(0)
+      running(FakeApplication()) {
+        service.countEntries.futureValue must equalTo(0)
+      }
     }
   }
 
@@ -58,11 +60,11 @@ class ProteinMatchMongoDBServiceSpecs extends Specification with ScalaFutures {
     "get 2 , remove 1 " in new TempMongoDBService {
       running(FakeApplication()) {
         service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("1"))._2).futureValue
-        Thread.sleep(1000)
+        Thread.sleep(200)
         val psmList = service.findAllProteinsBySearchId(SearchId("M_100")).futureValue
         psmList.size must equalTo(27)
         service.deleteAllBySearchId(SearchId("M_100")).futureValue
-        Thread.sleep(1000)
+        Thread.sleep(200)
         service.countEntries.futureValue must equalTo(0)
       }
     }
