@@ -30,7 +30,9 @@ class ProteinMatchMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "empty service" should {
     "counts are 0" in new TempMongoDBService {
-      service.countEntries.futureValue must equalTo(0)
+      running(FakeApplication()) {
+        service.countEntries.futureValue must equalTo(0)
+      }
     }
   }
 
@@ -94,9 +96,7 @@ class ProteinMatchMongoDBServiceSpecs extends Specification with ScalaFutures {
         proteinListBySearchAndAc.size mustEqual (2)
       }
     }
-
   }
-
 
   "delete multiple sources" should {
 
@@ -118,7 +118,6 @@ class ProteinMatchMongoDBServiceSpecs extends Specification with ScalaFutures {
         service.countEntries.futureValue must equalTo(0)
       }
     }
-
   }
 
 }
