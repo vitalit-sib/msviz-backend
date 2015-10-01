@@ -15,6 +15,7 @@ import play.api.mvc.Action
 import play.api.Play.current
 import scala.concurrent.ExecutionContext.Implicits.global
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
+import play.api.Logger
 
 
 /**
@@ -36,7 +37,8 @@ object ProteinMatchMultipleSearchesController extends MatchController {
   def findAllProteinsForMultipleSearchIds(
                                            @ApiParam(value = """searchIds""") @PathParam("searchIds") searchIds: String,
                                            withModif: Option[String]
-                                           ) = Cached(req => req.uri) {
+//Fast enough without cache, and it keeps the erros   ) = Cached(req => req.uri) {
+                                           )={
     Action.async {
       val sids = queryParamSearchIds(searchIds)
 
@@ -52,7 +54,6 @@ object ProteinMatchMultipleSearchesController extends MatchController {
         case Some(name) => {
           // get the list of valid AC's
           val validACs = MatchMongoDBService().listProteinRefsBySearchIds(queryParamSearchIds(searchIds), queryParamOModifName(withModif)).map(protRef => protRef.map(_.AC.value))
-
           val filteredProts = validACs.flatMap({ acs =>
             // get the intersection of ACs
             val filterdFutureProts = proteinMultiList.map({ prot =>
