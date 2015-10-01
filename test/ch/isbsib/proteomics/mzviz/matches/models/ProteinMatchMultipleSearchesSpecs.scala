@@ -7,6 +7,8 @@ import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
 import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 import org.specs2.mutable.Specification
+import play.api.test.FakeApplication
+import play.api.test.Helpers._
 
 
 /**
@@ -59,34 +61,34 @@ class ProteinMatchMultipleSearchesSpecs extends Specification {
   }
 
   "proteinMatchMultipleSearches from files" should {
+    running(FakeApplication()) {
+      val psmAndProtLists1: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/M_100.mzid"), SearchId("M_100"), RunId("M_100"))
+      val psmAndProtLists4: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/F002687_acetylation.mzid"), SearchId("F002687"), RunId("F002687"))
 
-    val psmAndProtLists1: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/M_100.mzid"), SearchId("M_100"), RunId("M_100"))
-    val psmAndProtLists4: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/F002687_acetylation.mzid"), SearchId("F002687"), RunId("F002687"))
+      "add proteinInfos M_100" in {
+        val proteinInfo_M_100 = psmAndProtLists1._2.foldLeft(ProteinMatchMultipleSearches(Map()))((r, c) => r.add(psmAndProtLists1._3.searchId, c))
+        proteinInfo_M_100.dict.size mustEqual psmAndProtLists1._2.size
+      }
 
-    "add proteinInfos M_100" in {
-      val proteinInfo_M_100 = psmAndProtLists1._2.foldLeft(ProteinMatchMultipleSearches(Map()))((r, c) => r.add(psmAndProtLists1._3.searchId, c))
-      proteinInfo_M_100.dict.size mustEqual psmAndProtLists1._2.size
+      "add proteinInfos M_100 twice" in {
+        val proteinInfo_M_100 = psmAndProtLists1._2.foldLeft(ProteinMatchMultipleSearches(Map()))((r, c) => r.add(psmAndProtLists1._3.searchId, c))
+        val proteinInfo_M_100_2 = psmAndProtLists1._2.foldLeft(proteinInfo_M_100)((r, c) => r.add(psmAndProtLists1._3.searchId, c))
+        proteinInfo_M_100_2.dict.size mustEqual psmAndProtLists1._2.size
+      }
+
+      "add proteinInfos M_100 and F002687" in {
+        val proteinInfo_1 = psmAndProtLists1._2.foldLeft(ProteinMatchMultipleSearches(Map()))((r, c) => r.add(psmAndProtLists1._3.searchId, c))
+        val proteinInfo_2 = psmAndProtLists4._2.foldLeft(proteinInfo_1)((r, c) => r.add(psmAndProtLists4._3.searchId, c))
+
+        val albu_human = proteinInfo_2.dict.filter(_._2.size > 1)
+        albu_human.get(AccessionCode("ALBU_HUMAN")).get.size mustEqual (2)
+
+        // ALBU_HUMAN should be in both runs
+        proteinInfo_2.dict.size mustEqual (psmAndProtLists1._2.size + psmAndProtLists4._2.size - 1)
+
+
+      }
     }
-
-    "add proteinInfos M_100 twice" in {
-      val proteinInfo_M_100 = psmAndProtLists1._2.foldLeft(ProteinMatchMultipleSearches(Map()))((r, c) => r.add(psmAndProtLists1._3.searchId, c))
-      val proteinInfo_M_100_2 = psmAndProtLists1._2.foldLeft(proteinInfo_M_100)((r, c) => r.add(psmAndProtLists1._3.searchId, c))
-      proteinInfo_M_100_2.dict.size mustEqual psmAndProtLists1._2.size
-    }
-
-    "add proteinInfos M_100 and F002687" in {
-      val proteinInfo_1 = psmAndProtLists1._2.foldLeft(ProteinMatchMultipleSearches(Map()))((r, c) => r.add(psmAndProtLists1._3.searchId, c))
-      val proteinInfo_2 = psmAndProtLists4._2.foldLeft(proteinInfo_1)((r, c) => r.add(psmAndProtLists4._3.searchId, c))
-
-      val albu_human = proteinInfo_2.dict.filter(_._2.size > 1)
-      albu_human.get(AccessionCode("ALBU_HUMAN")).get.size mustEqual(2)
-
-      // ALBU_HUMAN should be in both runs
-      proteinInfo_2.dict.size mustEqual (psmAndProtLists1._2.size + psmAndProtLists4._2.size - 1)
-
-
-    }
-
 
   }
 
