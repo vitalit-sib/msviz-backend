@@ -5,7 +5,7 @@ import javax.ws.rs.PathParam
 import ch.isbsib.proteomics.mzviz.commons.{Intensity, RetentionTime, Moz}
 import ch.isbsib.proteomics.mzviz.controllers.CommonController
 import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
-import ch.isbsib.proteomics.mzviz.experimental.RunId
+import ch.isbsib.proteomics.mzviz.experimental.{MSRun, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.importer.{LoaderMzXML, LoaderMGF}
 import ch.isbsib.proteomics.mzviz.experimental.models._
 import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMs1MySqlDBService, ExpMs1MongoDBService, ExpMongoDBService}
@@ -130,9 +130,16 @@ object ExperimentalController extends CommonController {
   def loadMSRun(@ApiParam(name = "runId", value = "a string id with run identifier", required = true) @PathParam("runId") runId: String) = Action.async(parse.temporaryFile) {
     request =>
 
+      val BUFFER_SIZE = 2000
+
       LoaderMGF.load(request.body.file, RunId(runId)) match {
-        case Success(msRun) => ExpMongoDBService().insert(msRun)
-          .map { n => Ok(Json.obj("inserted" -> n))
+        case Success(it) =>{
+          val nrInserted= it.toSeq.grouped(BUFFER_SIZE).map({spList =>
+            val msnRun= new MSRun(RunId(runId),spList)
+            ExpMongoDBService().insert(msnRun)
+          }).toSeq
+
+          Future.sequence(nrInserted).map(res => Ok(Json.obj("inserted" -> res.sum)))
         }.recover {
           case e => BadRequest(e.getMessage)
         }

@@ -4,6 +4,7 @@ import java.io.File
 
 import ch.isbsib.proteomics.mzviz.commons._
 import ch.isbsib.proteomics.mzviz.experimental._
+import ch.isbsib.proteomics.mzviz.experimental.models.ExpMSnSpectrum
 import org.specs2.mutable.Specification
 
 import scala.util.Success
@@ -87,12 +88,13 @@ class LoaderMGFSpecs extends Specification {
   }
 
   "load" should {
-    val run = LoaderMGF.load(new File("test/resources/mascot/F001644.mgf"), RunId("pipo"))
-    "get runId out of filename" in {
-      run.get.id must equalTo(RunId("pipo"))
-    }
+    Thread.sleep(2000)
+    val run: Iterator[ExpMSnSpectrum] = LoaderMGF.load(new File("test/resources/mascot/F001644.mgf"), RunId("pipo")).get
+    print(run)
+
+    Thread.sleep(2000)
     "count the msms" in {
-      run.get.msnSpectra.size must equalTo(1822)
+      run.size must equalTo(1822)
     }
     "check a guy" in {
       /*
@@ -105,7 +107,7 @@ class LoaderMGFSpecs extends Specification {
             287.006805 4.126e+04
             325.211578 5.535e+04
       */
-      val sp = run.get.msnSpectra(3)
+      val sp = run.toSeq(3)
       sp.ref.precursor.charge must equalTo(Charge(2))
       sp.ref.precursor.moz must equalTo(Moz(357.235892))
       sp.ref.precursor.intensity must equalTo(Intensity(538655.5))
@@ -114,20 +116,17 @@ class LoaderMGFSpecs extends Specification {
       sp.ref.scanNumber must equalTo(ScanNumber(10823))
     }
     "m/z are increasing order" in {
-      val mozs = run.get.msnSpectra(0).peaks.map(_.moz).toList
+      val mozs = run.toSeq(0).peaks.map(_.moz).toList
       val mDelta = mozs.drop(1).zip(mozs.dropRight(1)).map (p => p._1.value - p._2.value).filter(_<0)
       mDelta must have size(0)
     }
   }
 
   "loading wiff" should {
-    val run = LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("pipo"))
+    val run = LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("pipo")).get
 
-    "get runId out of filename" in {
-      run.get.id must equalTo(RunId("pipo"))
-    }
     "count the msms" in {
-      run.get.msnSpectra.size must equalTo(123)
+      run.toSeq.size must equalTo(123)
     }
     "check a guy" in {
       /*
@@ -140,7 +139,7 @@ class LoaderMGFSpecs extends Specification {
         409.147600 3.974
         476.238900 1.148
       */
-      val sp = run.get.msnSpectra(3)
+      val sp = run.toSeq(3)
       sp.ref.precursor.charge must equalTo(Charge(2))
       sp.ref.precursor.moz must equalTo(Moz(407.717649))
       sp.ref.precursor.intensity must equalTo(Intensity(0))
