@@ -134,12 +134,20 @@ object ExperimentalController extends CommonController {
 
       LoaderMGF.load(request.body.file, RunId(runId)) match {
         case Success(it) =>{
-          val nrInserted= it.toSeq.grouped(BUFFER_SIZE).map({spList =>
+          val nrInsertedIterator = it.toSeq.grouped(BUFFER_SIZE).map({spList =>
             val msnRun= new MSRun(RunId(runId),spList)
             ExpMongoDBService().insert(msnRun)
-          }).toSeq
+          })
 
-          Future.sequence(nrInserted).map(res => Ok(Json.obj("inserted" -> res.sum)))
+          val nrInserted:Future[Int] = nrInsertedIterator.foldLeft(Future(0)) {
+            (previousFuture, nextFuture) =>
+              for {
+                previousResults ← previousFuture
+                next ← nextFuture
+              } yield previousResults + next
+          }
+
+          nrInserted.map(res => Ok(Json.obj("inserted" -> res)))
         }.recover {
           case e => BadRequest(e.getMessage)
         }
