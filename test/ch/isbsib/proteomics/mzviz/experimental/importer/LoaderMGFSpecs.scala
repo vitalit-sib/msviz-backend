@@ -88,25 +88,15 @@ class LoaderMGFSpecs extends Specification {
   }
 
   "load" should {
-    Thread.sleep(2000)
-    val run: Iterator[ExpMSnSpectrum] = LoaderMGF.load(new File("test/resources/mascot/F001644.mgf"), RunId("pipo")).get
-    print(run)
 
-    Thread.sleep(2000)
     "count the msms" in {
+      val run: Iterator[ExpMSnSpectrum] = LoaderMGF.load(new File("test/resources/mascot/F001644.mgf"), RunId("pipo")).get
       run.size must equalTo(1822)
     }
     "check a guy" in {
-      /*
-            BEGIN IONS
-              CHARGE=2+
-              PEPMASS=357.235892 538655.5
-            RTINSECONDS[0]=2999.76954
-            TITLE=20141008_BSA_25cm_column2.10823.10823.2
-            133.085892 8.902e+04
-            287.006805 4.126e+04
-            325.211578 5.535e+04
-      */
+
+      val run: Iterator[ExpMSnSpectrum] = LoaderMGF.load(new File("test/resources/mascot/F001644.mgf"), RunId("pipo")).get
+
       val sp = run.toSeq(3)
       sp.ref.precursor.charge must equalTo(Charge(2))
       sp.ref.precursor.moz must equalTo(Moz(357.235892))
@@ -116,6 +106,7 @@ class LoaderMGFSpecs extends Specification {
       sp.ref.scanNumber must equalTo(ScanNumber(10823))
     }
     "m/z are increasing order" in {
+      val run: Iterator[ExpMSnSpectrum] = LoaderMGF.load(new File("test/resources/mascot/F001644.mgf"), RunId("pipo")).get
       val mozs = run.toSeq(0).peaks.map(_.moz).toList
       val mDelta = mozs.drop(1).zip(mozs.dropRight(1)).map (p => p._1.value - p._2.value).filter(_<0)
       mDelta must have size(0)
@@ -123,22 +114,13 @@ class LoaderMGFSpecs extends Specification {
   }
 
   "loading wiff" should {
-    val run = LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("pipo")).get
 
     "count the msms" in {
+      val run = LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("pipo")).get
       run.toSeq.size must equalTo(123)
     }
     "check a guy" in {
-      /*
-        BEGIN IONS
-        CHARGE=2+
-        PEPMASS=407.717649
-        TITLE=File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 49.866 min, Period: 1, Cycle(s): 2030 (Experiment 4)
-        196.114300 2.518
-        287.136800 1.85
-        409.147600 3.974
-        476.238900 1.148
-      */
+      val run = LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("pipo")).get
       val sp = run.toSeq(3)
       sp.ref.precursor.charge must equalTo(Charge(2))
       sp.ref.precursor.moz must equalTo(Moz(407.717649))

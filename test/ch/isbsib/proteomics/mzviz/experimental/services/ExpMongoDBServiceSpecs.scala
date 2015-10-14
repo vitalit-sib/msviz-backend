@@ -70,7 +70,7 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
   "findSpectrumByRunIdwithEmptySpectra" should {
     "find eight" in new TempMongoDBService {
 
-      val msnRun1= new MSRun(RunId("test-empty"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("test-empty")).get.toSeq)
+      val msnRun1= new MSRun(RunId("test-empty"),LoaderMGF.load(new File("test/resources/mascot/F003077.mgf"), RunId("test-empty")).get.toSeq)
 
       val n= service.insert(msnRun1).futureValue
       val sp = service.findSpectrumByRunId(RunId("test-empty")).futureValue.toList
