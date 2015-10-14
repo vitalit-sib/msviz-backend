@@ -5,7 +5,7 @@ import javax.ws.rs.PathParam
 import ch.isbsib.proteomics.mzviz.commons.{Intensity, RetentionTime, Moz}
 import ch.isbsib.proteomics.mzviz.controllers.CommonController
 import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
-import ch.isbsib.proteomics.mzviz.experimental.RunId
+import ch.isbsib.proteomics.mzviz.experimental.{MSRun, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.importer.{LoaderMzXML, LoaderMGF}
 import ch.isbsib.proteomics.mzviz.experimental.models._
 import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMs1MySqlDBService, ExpMs1MongoDBService, ExpMongoDBService}
@@ -131,8 +131,20 @@ object ExperimentalController extends CommonController {
     request =>
 
       LoaderMGF.load(request.body.file, RunId(runId)) match {
-        case Success(msRun) => ExpMongoDBService().insert(msRun)
-          .map { n => Ok(Json.obj("inserted" -> n))
+        case Success(it) =>{
+
+          var i = 0;
+
+          while(it.hasNext){
+            val msnRun= new MSRun(RunId(runId), Seq(it.next))
+            ExpMongoDBService().insert(msnRun)
+            i += 1
+          }
+
+          Future {
+            Ok(Json.obj("inserted" -> i))
+          }
+
         }.recover {
           case e => BadRequest(e.getMessage)
         }

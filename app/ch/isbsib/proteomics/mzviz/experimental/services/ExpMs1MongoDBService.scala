@@ -100,8 +100,8 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
       // group by retentionTimes
       val rtGroups = ms1List.groupBy(_.rt.value)
 
-      // sum the groups => Map(rt, sum(intensities))
-      val summedMap = rtGroups.map({case(k, v) => (k, v.map(_.intensity.value).sum)})
+      // sum the groups => Map(rt, max(intensities))
+      val summedMap = rtGroups.map({case(k, v) => (k, v.map(_.intensity.value).max)})
 
       // sort by rt separate the lists and make a Json-object
       val sortedSums = summedMap.toSeq.sortBy(_._1)
