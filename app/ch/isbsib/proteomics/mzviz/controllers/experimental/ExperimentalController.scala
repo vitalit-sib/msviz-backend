@@ -130,24 +130,21 @@ object ExperimentalController extends CommonController {
   def loadMSRun(@ApiParam(name = "runId", value = "a string id with run identifier", required = true) @PathParam("runId") runId: String) = Action.async(parse.temporaryFile) {
     request =>
 
-      val BUFFER_SIZE = 2000
-
       LoaderMGF.load(request.body.file, RunId(runId)) match {
         case Success(it) =>{
-          val nrInsertedIterator = it.toSeq.grouped(BUFFER_SIZE).map({spList =>
-            val msnRun= new MSRun(RunId(runId),spList)
-            ExpMongoDBService().insert(msnRun)
-          })
 
-          val nrInserted:Future[Int] = nrInsertedIterator.foldLeft(Future(0)) {
-            (previousFuture, nextFuture) =>
-              for {
-                previousResults ← previousFuture
-                next ← nextFuture
-              } yield previousResults + next
+          var i = 0;
+
+          while(it.hasNext){
+            val msnRun= new MSRun(RunId(runId), Seq(it.next))
+            ExpMongoDBService().insert(msnRun)
+            i += 1
           }
 
-          nrInserted.map(res => Ok(Json.obj("inserted" -> res)))
+          Future {
+            Ok(Json.obj("inserted" -> i))
+          }
+
         }.recover {
           case e => BadRequest(e.getMessage)
         }
