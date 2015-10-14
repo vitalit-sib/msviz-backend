@@ -55,9 +55,9 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
     "remove 8 " in new TempMongoDBService {
 
       service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzXML"), RunId("wewe")))
-      Thread.sleep(3000)
+      Thread.sleep(10000)
       service.delete(RunId("wewe"))
-      Thread.sleep(3000)
+      Thread.sleep(10000)
       service.findMs1ByRunId(RunId("wewe")).futureValue.size mustEqual(0)
     }
   }
@@ -103,7 +103,7 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
       rts(20).as[Double] mustEqual(5.97779)
 
       val ints = (json \ "intensities").as[List[JsValue]]
-      ints(20).as[Double] mustEqual(21424504.84375)
+      ints(20).as[Double] mustEqual(5459280.5)
 
     }
   }
