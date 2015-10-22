@@ -69,7 +69,7 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
       service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzXML"), RunId("small")))
       Thread.sleep(3000)
       val ms1List = service.findMs1ByRunID_MozAndTol(RunId("small"), Moz(519.14), 0.5).futureValue
-      Thread.sleep(1000)
+      Thread.sleep(3000)
       ms1List.size mustEqual(892)
     }
   }
@@ -98,7 +98,6 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
 
       val json = service.extract2Lists(ms1List, rtTolerance)
 
-
       val rts = (json \ "rt").as[List[JsValue]]
       rts(20).as[Double] mustEqual(5.97779)
 
@@ -106,6 +105,25 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
       ints(20).as[Double] mustEqual(5459280.5)
 
     }
+
+    "extract to empty lists" in new TempMongoDBService {
+
+      val rtTolerance = 0.5
+
+      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzXML"), RunId("small")))
+      Thread.sleep(3000)
+      val ms1List = service.findMs1ByRunID_MozAndTol(RunId("small"), Moz(10000.99), 0.0003).futureValue
+
+      val json = service.extract2Lists(ms1List, rtTolerance)
+
+      val rts = (json \ "rt").as[List[JsValue]]
+      rts.length mustEqual(0)
+
+      val ints = (json \ "intensities").as[List[JsValue]]
+      ints.length mustEqual(0)
+
+    }
+
   }
 
 

@@ -96,36 +96,40 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
   }
 
   def extract2Lists(ms1List:List[Ms1Entry], rtTolerance: Double): JsObject = {
+      if(ms1List.length > 0) {
+        // group by retentionTimes
+        val rtGroups = ms1List.groupBy(_.rt.value)
 
-      // group by retentionTimes
-      val rtGroups = ms1List.groupBy(_.rt.value)
+        // sum the groups => Map(rt, max(intensities))
+        val summedMap = rtGroups.map({ case (k, v) => (k, v.map(_.intensity.value).max) })
 
-      // sum the groups => Map(rt, max(intensities))
-      val summedMap = rtGroups.map({case(k, v) => (k, v.map(_.intensity.value).max)})
+        // sort by rt separate the lists and make a Json-object
+        val sortedSums = summedMap.toSeq.sortBy(_._1)
 
-      // sort by rt separate the lists and make a Json-object
-      val sortedSums = summedMap.toSeq.sortBy(_._1)
-
-      // function to add 0 values between peaks which are not close enough
-      def checkAndAdd(b:List[(Double, Double)], a:(Double, Double), maxDiff:Double, f:(Double,Double,Double)=>List[(Double,Double)]):List[(Double, Double)] = {
-        if(b.last._1 + rtTolerance <  a._1){
-          b ++ f(b.last._1, a._1, maxDiff) :+ a
-        } else b :+ a
-      }
-
-      // helper function to add 0 values
-      def addZeroValues(val1:Double, val2:Double, maxDiff:Double):List[(Double,Double)] = {
-        if(val1 + maxDiff > val2 - maxDiff){
-          List(Tuple2((val1+val2)/2, 0.0))
-        }else{
-          List(Tuple2(val1 + maxDiff, 0.0), Tuple2(val2 - maxDiff, 0.0))
+        // function to add 0 values between peaks which are not close enough
+        def checkAndAdd(b: List[(Double, Double)], a: (Double, Double), maxDiff: Double, f: (Double, Double, Double) => List[(Double, Double)]): List[(Double, Double)] = {
+          if (b.last._1 + rtTolerance < a._1) {
+            b ++ f(b.last._1, a._1, maxDiff) :+ a
+          } else b :+ a
         }
+
+        // helper function to add 0 values
+        def addZeroValues(val1: Double, val2: Double, maxDiff: Double): List[(Double, Double)] = {
+          if (val1 + maxDiff > val2 - maxDiff) {
+            List(Tuple2((val1 + val2) / 2, 0.0))
+          } else {
+            List(Tuple2(val1 + maxDiff, 0.0), Tuple2(val2 - maxDiff, 0.0))
+          }
+        }
+
+        val addedMissingRts = sortedSums.drop(1).foldLeft(List(sortedSums(0)))((b, a) => checkAndAdd(b, a, rtTolerance, addZeroValues))
+
+        val aux = addedMissingRts.unzip
+        return Json.obj("rt" -> aux._1, "intensities" -> aux._2)
+      }else{
+        val emptyList:List[Ms1Entry] = List()
+        return Json.obj("rt" -> emptyList, "intensities" -> emptyList)
       }
-
-      val addedMissingRts = sortedSums.drop(1).foldLeft(List(sortedSums(0)))((b,a) => checkAndAdd(b,a, rtTolerance, addZeroValues))
-
-       val aux = addedMissingRts.unzip
-      Json.obj("rt" ->aux._1, "intensities" -> aux._2)
   }
 
 
