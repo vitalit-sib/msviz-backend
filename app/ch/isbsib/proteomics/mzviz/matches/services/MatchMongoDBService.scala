@@ -258,9 +258,8 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
     case x :: Nil => BSONDocument("searchId" -> x.value)
     case xs => BSONDocument("searchId" -> BSONDocument("$in" -> BSONArray(xs.map(id => BSONString(id.value)))))
   }
-
   def qFilter(withModification: Option[ModifName]) = withModification match {
-    case Some(name) => BSONDocument("pep.modificationNames" -> BSONArray(BSONString(name.value)))
+    case Some(name) => BSONDocument("pep.modificationNames" -> BSONArray(BSONString(name.value)), "matchInfo.rank" -> 1)
     case None => BSONDocument()
   }
 
