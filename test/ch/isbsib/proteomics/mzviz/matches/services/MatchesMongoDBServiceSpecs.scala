@@ -7,6 +7,7 @@ import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
+import ch.isbsib.proteomics.mzviz.modifications.ModifName
 import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
@@ -151,6 +152,27 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
           Thread.sleep(200)
           protRefList.size must equalTo(27)
           protRefList(0).AC mustEqual AccessionCode("CD109_HUMAN")
+          protRefList(0).source mustEqual Some(SequenceSource("SwissProt_2014_08.fasta"))
+        }
+      }
+
+    }
+
+  }
+
+  "listProteinRefsBySearchIdWithModification" should {
+
+    running(FakeApplication()) {
+
+      val file_1 = new File("test/resources/mascot/M_100.mzid")
+
+      "list all" in new TempMongoDBService {
+        running(FakeApplication()) {
+          service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"))._1).futureValue
+          val protRefList = service.listProteinRefsBySearchIds(Set(SearchId("M_100")), Option(ModifName("Acetyl"))).futureValue
+          Thread.sleep(200)
+          protRefList.size must equalTo(1)
+          protRefList(0).AC mustEqual AccessionCode("ANXA2_HUMAN")
           protRefList(0).source mustEqual Some(SequenceSource("SwissProt_2014_08.fasta"))
         }
       }

@@ -23,7 +23,7 @@ trait MatchController extends CommonController {
    * @param withModif
    * @return
    */
-  def queryParamOModifName(withModif: Option[String]): Option[ModifName] = withModif.map(ModifName.apply)
+  def queryParamOModifName(withModif: Option[String]): Option[ModifName] =withModif.map(ModifName.apply)
 
 
 }

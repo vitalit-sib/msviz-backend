@@ -53,11 +53,13 @@ object ProteinMatchMultipleSearchesController extends MatchController {
 
         case Some(name) => {
           // get the list of valid AC's
-          val validACs = MatchMongoDBService().listProteinRefsBySearchIds(queryParamSearchIds(searchIds), queryParamOModifName(withModif)).map(protRef => protRef.map(_.AC.value))
+          val validACs = MatchMongoDBService().listProteinRefsBySearchIds(queryParamSearchIds(searchIds), queryParamOModifName(withModif))
+            .map(protRef => protRef.map(_.AC.value))
           val filteredProts = validACs.flatMap({ acs =>
             // get the intersection of ACs
             val filterdFutureProts = proteinMultiList.map({ prot =>
               val protACs = prot.dict.filter({case(k,v) => acs.contains(k.value)})
+              //Update dict
               ProteinMatchMultipleSearches(protACs)
             })
             filterdFutureProts
