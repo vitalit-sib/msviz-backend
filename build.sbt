@@ -36,3 +36,5 @@ libraryDependencies ++= Seq(
 //ScoverageSbtPlugin.ScoverageKeys.coverageExcludedPackages := ".*Reverse.*;.*Filter.*"
 
 //parallelExecution in Test := false
+
+javaOptions in Test += "-Dconfig.file=conf/application.test.conf"
