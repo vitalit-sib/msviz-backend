@@ -34,11 +34,11 @@ import scala.slick.jdbc.meta.MTable
 object ExperimentalController extends CommonController {
 
   implicit val ms1Format = Json.format[Ms1Peak]
-  val Ms1Dao = TableQuery[ExpMs1MySqlDBService]
+  val ms1Dao = TableQuery[ExpMs1MySqlDBService]
 
   def setupMySqlTables = DBAction { implicit rs =>
     if(MTable.getTables("MS").list.isEmpty) {
-      Ms1Dao.ddl.create
+      ms1Dao.ddl.create
       Ok("table MS was created")
     }else{
       Ok("table MS already existed")
@@ -64,7 +64,7 @@ object ExperimentalController extends CommonController {
       val ppmTolerance = tolerance.getOrElse(10.0)
       val daltonTolerance = moz / 1000000 * ppmTolerance
 
-      val ms1List = ExpMs1MySqlDBService().filter(ms => (ms.ref === runId)
+      val ms1List = ms1Dao.filter(ms => (ms.ref === runId)
         && (ms.moz <= moz+daltonTolerance)
         && ms.moz >= moz-daltonTolerance).list.map(m => Ms1Entry(RunId(m.ref), RetentionTime(m.rt), Intensity(m.int), Moz(m.moz))
       )
@@ -94,7 +94,7 @@ object ExperimentalController extends CommonController {
           val rt = current.retentionTime.value
           current.peaks.foreach {
             peak => val ms1 = Ms1Peak(runID, rt, peak.moz.value, peak.intensity.value)
-              Ms1Dao.insert(ms1)
+              ms1Dao.insert(ms1)
               nrInserted += 1
           }
         }

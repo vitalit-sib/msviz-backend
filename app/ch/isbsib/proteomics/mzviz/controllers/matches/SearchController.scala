@@ -7,7 +7,7 @@ import ch.isbsib.proteomics.mzviz.controllers.matches.PSMController._
 import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
-import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
+import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMs1MySqlDBService, ExpMongoDBService}
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models.SearchInfo
 import ch.isbsib.proteomics.mzviz.matches.services.{ProteinMatchMongoDBService, MatchMongoDBService, SearchInfoDBService}
@@ -17,8 +17,12 @@ import play.api.cache.Cached
 import play.api.libs.json._
 import play.api.mvc.Action
 import play.api.Play.current
+import play.mvc.Result
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import play.api.db.slick._
+import play.api.db.slick.Config.driver.simple._
+import scala.util.{Success, Failure}
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
@@ -26,7 +30,6 @@ import scala.concurrent.Future
  */
 @Api(value = "/searches", description = "searches")
 object SearchController extends MatchController {
-
 
   def stats = Action.async {
     ExpMongoDBService().stats.map { st =>
@@ -56,7 +59,6 @@ object SearchController extends MatchController {
         searchInfos => Ok(Json.toJson(searchInfos))
       }
     }
-
 
   @ApiOperation(nickname = "get",
     value = "find all SearchInfo object for a given searchId",
@@ -113,22 +115,33 @@ object SearchController extends MatchController {
         }
     }
 
+  val ms1Dao = TableQuery[ExpMs1MySqlDBService]
+
   @ApiOperation(nickname = "delete",
     value = "delete PSMs, Proteins & searchInfo for a given list of searchIds (or one), seperated by comma",
     notes = """No double check is done. Use with caution""",
     response = classOf[String],
     httpMethod = "DELETE")
-  def delete(@ApiParam(value = """searchIds""", defaultValue = "") @PathParam("searchIds") searchIds: String) = Action.async {
-    for {
-      dPsms <- MatchMongoDBService().deleteAllBySearchIds(queryParamSearchIds(searchIds))
-      dProt <- ProteinMatchMongoDBService().deleteAllBySearchIds(queryParamSearchIds(searchIds))
-      dSearchInfo <- SearchInfoDBService().deleteAllBySearchIds(queryParamSearchIds(searchIds))
-    } yield {
-      Ok (Json.obj(
-        "psms" -> dPsms,
-        "proteinMatches" -> dProt,
-        "searchInfos" -> dSearchInfo
-      ))
-    }
+  def delete(@ApiParam(value = """searchIds""", defaultValue = "") @PathParam("searchIds") searchIds: String) =
+    Action.async {
+
+      val dMs1:Int = DB.withSession { implicit session =>
+         searchIds.split(",").map({ searchId =>
+          ms1Dao.filter(ms => (ms.ref === searchId)).delete
+        }).sum
+      }
+
+      for {
+        dPsms <- MatchMongoDBService().deleteAllBySearchIds(queryParamSearchIds(searchIds))
+        dProt <- ProteinMatchMongoDBService().deleteAllBySearchIds(queryParamSearchIds(searchIds))
+        dSearchInfo <- SearchInfoDBService().deleteAllBySearchIds(queryParamSearchIds(searchIds))
+      } yield {
+        Ok(Json.obj(
+          "psms" -> dPsms,
+          "proteinMatches" -> dProt,
+          "searchInfos" -> dSearchInfo,
+          "ms1" -> dMs1
+        ))
+      }
   }
 }
