@@ -19,6 +19,9 @@ class ExpMs1MySqlDBService(tag: Tag) extends Table[Ms1Peak](tag, "MS") {
   def moz = column[Double]("moz", O.NotNull)
 
   def * = (ref, rt, moz, int) <> (Ms1Peak.tupled, Ms1Peak.unapply _)
+
+  def mozIndex = index("moz", moz, unique = false)
+  def refIndex = index("ref", ref, unique = false)
 }
 
 

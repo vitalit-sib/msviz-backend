@@ -40,33 +40,11 @@ class ExpMs1MySqlDBServiceSpecs extends mutable.Specification{
   // setup table and database
   step(Play.start(AppWithTestDb2))
 
-//    trait _Session extends specification.Scope with mutable.After {
-//      println("Opening session")
-//      val tableName = s"test${util.Random.nextInt}"
-//      implicit val session = Database.forURL(s"jdbc:h2:mem:$tableName", driver = "org.h2.Driver").createSession()
-//      println(s"...session: $session")
-//
-//      println("Creating schema")
-//      createSchema(session)
-//
-//      def after = {
-//        println("Closing session")
-//        session.close()
-//      }
-//    }
-//
-//    def createSchema(implicit session: Session) = {
-//      if (MTable.getTables("MS").list.isEmpty) {
-//        println("empty")
-//      }
-//    }
-
-
     val ms1Dao = TableQuery[ExpMs1MySqlDBService]
 
     def createSchema(implicit session: Session) = {
       if(MTable.getTables("MS").list.isEmpty) {
-        Ms1Dao.ddl.create
+        ms1Dao.ddl.create
         println("table MS was created")
       }else{
         println("table MS already existed")
