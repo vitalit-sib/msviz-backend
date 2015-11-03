@@ -3,7 +3,6 @@ package ch.isbsib.proteomics.mzviz.results.basket.models
 import ch.isbsib.proteomics.mzviz.commons.{Intensity, RetentionTime}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
-import ch.isbsib.proteomics.mzviz.matches.models.Peptide
 import ch.isbsib.proteomics.mzviz.theoretical.AccessionCode
 
 /**
@@ -16,14 +15,16 @@ import ch.isbsib.proteomics.mzviz.theoretical.AccessionCode
  * A BasketEntry contains all the result information needed.
  *
  * @param proteinAC
- * @param peptide
+ * @param peptideSeq annotated peptide sequence
+ * @param startPos
+ * @param endPos
  * @param searchIds comma separated searchIds
  * @param spectrumId
  * @param ppmTolerance
  * @param rtZoom
  * @param rtSelected
  */
-case class BasketEntry (proteinAC: AccessionCode, peptide: Peptide, searchIds: String,
+case class BasketEntry (proteinAC: AccessionCode, peptideSeq: String, startPos: Int, endPos: Int, searchIds: String,
                         spectrumId: SpectrumId, ppmTolerance: Double, rtZoom: RtRange,
                         rtSelected: RtRange, xicPeaks: Seq[XicPeak])
 

@@ -4,7 +4,6 @@ import ch.isbsib.proteomics.mzviz.commons.services.MongoDBService
 import ch.isbsib.proteomics.mzviz.results.basket.models.BasketEntry
 import ch.isbsib.proteomics.mzviz.theoretical.AccessionCode
 import play.api.libs.iteratee.Enumerator
-import play.api.libs.json.{JsObject, Json}
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
 import ch.isbsib.proteomics.mzviz.results.basket.services.JsonBasketFormats._
