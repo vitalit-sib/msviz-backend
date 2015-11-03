@@ -4,8 +4,6 @@ import ch.isbsib.proteomics.mzviz.commons.{RetentionTime, Intensity, TempMongoDB
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.matches.SearchId
-import ch.isbsib.proteomics.mzviz.matches.models.Peptide
-import ch.isbsib.proteomics.mzviz.modifications.ModifName
 import ch.isbsib.proteomics.mzviz.results.basket.models.{XicPeak, RtRange, BasketEntry}
 import ch.isbsib.proteomics.mzviz.theoretical.AccessionCode
 import org.scalatest.concurrent.ScalaFutures
@@ -79,6 +77,18 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     xicPeaks = Seq(XicPeak(SearchId("F002453"),RetentionTime(30.51),Intensity(95400)), XicPeak(SearchId("F002453"),RetentionTime(30.30),Intensity(3620000)))
   )
 
+  val entry5 = new BasketEntry(proteinAC = AccessionCode("K2C1_HUMAN"),
+    peptideSeq = "MS{Phospho}GEC{Carbamidomethyl}APN{Deamidated}VSVSVSTSHTTISGGGSR",
+    startPos = 493,
+    endPos = 518,
+    searchIds = "F009998,F009999",
+    spectrumId = SpectrumId(id = SpectrumUniqueId("20150318_Petricevic_7374A.6984.6984.3"), runId = RunId("F009999")),
+    ppmTolerance = 10.0,
+    rtZoom = RtRange(lowerRt = 29.5, upperRt = 31.5),
+    rtSelected = RtRange(lowerRt = 30.0, upperRt = 30.5),
+    xicPeaks = Seq(XicPeak(SearchId("F009998"),RetentionTime(30.51),Intensity(95400)), XicPeak(SearchId("F009999"),RetentionTime(30.30),Intensity(3620000)))
+  )
+
   /**
   tests
     */
@@ -90,15 +100,25 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     }
   }
 
-  "create 4 basket entries" should {
-    "get them up " in new TempMongoDBService {
-      service.insert(Seq(entry1, entry2, entry3, entry4)).futureValue must equalTo(4)
-      service.countBasketEntries.futureValue must equalTo(4)
+  "create basket entries" should {
+    "create 4 and count" in new TempMongoDBService {
+      service.insert(Seq(entry1, entry2, entry3, entry4, entry5)).futureValue must equalTo(5)
+      service.countBasketEntries.futureValue must equalTo(5)
       service.listProteins("1,2").futureValue.length must equalTo(0)
       val proteinList = service.listProteins("F002453,F002454").futureValue
       proteinList.length mustEqual(2)
       proteinList(0) must equalTo(AccessionCode("OSBL8_HUMAN"))
     }
   }
+
+  "create and delete" should {
+    "create 4 and delete all" in new TempMongoDBService {
+      service.insert(Seq(entry1, entry2, entry3, entry4, entry5)).futureValue must equalTo(5)
+      service.countBasketEntries.futureValue must equalTo(5)
+      service.deleteBySearchId("F002453")
+      service.countBasketEntries.futureValue must equalTo(1)
+    }
+  }
+
 
 }

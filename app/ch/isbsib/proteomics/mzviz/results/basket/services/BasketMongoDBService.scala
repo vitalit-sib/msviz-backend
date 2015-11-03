@@ -1,16 +1,17 @@
 package ch.isbsib.proteomics.mzviz.results.basket.services
 
-import ch.isbsib.proteomics.mzviz.commons.services.MongoDBService
+import ch.isbsib.proteomics.mzviz.commons.services.{MongoNotFoundException, MongoDBService}
 import ch.isbsib.proteomics.mzviz.results.basket.models.BasketEntry
 import ch.isbsib.proteomics.mzviz.theoretical.AccessionCode
 import play.api.libs.iteratee.Enumerator
+import play.api.libs.json._
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
 import ch.isbsib.proteomics.mzviz.results.basket.services.JsonBasketFormats._
-import reactivemongo.bson.BSONDocument
-import reactivemongo.core.commands.Count
+import reactivemongo.bson.{BSON, BSONDocument}
+import reactivemongo.core.commands.{LastError, Count, RawCommand}
 import scala.concurrent.ExecutionContext.Implicits.global
-import reactivemongo.core.commands.RawCommand
+import scala.util.{Failure, Success}
 
 
 import scala.concurrent.Future
@@ -26,7 +27,7 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
 
   setIndexes(List(
     new Index(
-      Seq("searchIds" -> IndexType.Ascending),
+      Seq("searchIds" -> IndexType.Text),
       name = Some("searchIds")
     )
   ))
@@ -68,5 +69,18 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
     db.command(Count(collectionName))
   }
 
+  /**
+   * delete all entries which use this searchId
+   * @return a Future of number of deleted entries
+   */
+  def deleteBySearchId(searchId: String): Future[Boolean] = {
+
+    val query = Json.obj("$text" -> Json.obj("$search" -> searchId))
+
+    collection.remove(query).map {
+      case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
+      case _ => true
+    }
+  }
 
 }
