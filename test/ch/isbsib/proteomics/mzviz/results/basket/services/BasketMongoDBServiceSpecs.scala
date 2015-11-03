@@ -101,7 +101,7 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
   }
 
   "create basket entries" should {
-    "create 4 and count" in new TempMongoDBService {
+    "create 5 and count" in new TempMongoDBService {
       service.insert(Seq(entry1, entry2, entry3, entry4, entry5)).futureValue must equalTo(5)
       service.countBasketEntries.futureValue must equalTo(5)
       service.listProteins("1,2").futureValue.length must equalTo(0)
@@ -112,12 +112,28 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
   }
 
   "create and delete" should {
-    "create 4 and delete all" in new TempMongoDBService {
+    "create 5 and delete all" in new TempMongoDBService {
       service.insert(Seq(entry1, entry2, entry3, entry4, entry5)).futureValue must equalTo(5)
       service.countBasketEntries.futureValue must equalTo(5)
       service.deleteBySearchId("F002453")
       service.countBasketEntries.futureValue must equalTo(1)
     }
+  }
+
+  "list and find entries" should {
+    "list searchIds" in new TempMongoDBService {
+      service.insert(Seq(entry1, entry2, entry3, entry4, entry5)).futureValue must equalTo(5)
+      val searchIdsList = service.listSearchIds.futureValue
+      searchIdsList.length mustEqual(2)
+      searchIdsList(0) mustEqual("F002453,F002454")
+    }
+    "find" in new TempMongoDBService {
+      service.insert(Seq(entry1, entry2, entry3, entry4, entry5)).futureValue must equalTo(5)
+      val basketEntries = service.findByProtein("F002453,F002454", AccessionCode("OSBL8_HUMAN")).futureValue
+      basketEntries.length mustEqual(3)
+      basketEntries(0).peptideSeq mustEqual("SLIWTLLK")
+    }
+
   }
 
 

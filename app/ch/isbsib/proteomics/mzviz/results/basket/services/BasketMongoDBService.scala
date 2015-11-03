@@ -44,6 +44,25 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
   }
 
   /**
+   * find all entries for a certain protein
+   * @param searchIds
+   * @param proteinAC
+   * @return
+   */
+  def findByProtein(searchIds: String, proteinAC: AccessionCode): Future[Seq[BasketEntry]] ={
+    val query = Json.obj("searchIds" -> searchIds, "proteinAC" -> proteinAC.value)
+
+    collection.find(query)
+      .cursor[JsObject]
+      .collect[List]()
+      .map(lo => lo.map({ o =>
+        Json.fromJson[BasketEntry](o).asOpt.get
+      }))
+  }
+
+
+
+  /**
    * list for given searchIds all proteins
    * @param searchIds
    * @return
@@ -58,6 +77,21 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
             .map {
               i => AccessionCode(i)
             }
+      })
+  }
+
+  /**
+   * list of searchIds in the basket
+   *
+   * @return
+   */
+  def listSearchIds: Future[Seq[String]] ={
+
+    val command = RawCommand(BSONDocument("distinct" -> collectionName, "key" -> "searchIds"))
+    db.command(command)
+      .map({
+        doc =>
+          doc.getAs[List[String]]("values").get
       })
   }
 
