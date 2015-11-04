@@ -89,6 +89,7 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     xicPeaks = Seq(XicPeak(SearchId("F009998"),RetentionTime(30.51),Intensity(95400)), XicPeak(SearchId("F009999"),RetentionTime(30.30),Intensity(3620000)))
   )
 
+
   /**
   tests
     */
@@ -102,7 +103,7 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "create basket entries" should {
     "create 5 and count" in new TempMongoDBService {
-      service.insert(Seq(entry1, entry2, entry3, entry4, entry5)).futureValue must equalTo(5)
+      service.insertOrUpdate(Seq(entry1, entry2, entry3, entry4, entry5)).futureValue must equalTo(5)
       service.countBasketEntries.futureValue must equalTo(5)
       service.listProteins("1,2").futureValue.length must equalTo(0)
       val proteinList = service.listProteins("F002453,F002454").futureValue
@@ -113,7 +114,7 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "create and delete" should {
     "create 5 and delete all" in new TempMongoDBService {
-      service.insert(Seq(entry1, entry2, entry3, entry4, entry5)).futureValue must equalTo(5)
+      service.insertOrUpdate(Seq(entry1, entry2, entry3, entry4, entry5)).futureValue must equalTo(5)
       service.countBasketEntries.futureValue must equalTo(5)
       service.deleteBySearchId("F002453")
       service.countBasketEntries.futureValue must equalTo(1)
@@ -122,18 +123,29 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "list and find entries" should {
     "list searchIds" in new TempMongoDBService {
-      service.insert(Seq(entry1, entry2, entry3, entry4, entry5)).futureValue must equalTo(5)
+      service.insertOrUpdate(Seq(entry1, entry2, entry3, entry4, entry5)).futureValue must equalTo(5)
       val searchIdsList = service.listSearchIds.futureValue
       searchIdsList.length mustEqual(2)
       searchIdsList(0) mustEqual("F002453,F002454")
     }
     "find" in new TempMongoDBService {
-      service.insert(Seq(entry1, entry2, entry3, entry4, entry5)).futureValue must equalTo(5)
+      service.insertOrUpdate(Seq(entry1, entry2, entry3, entry4, entry5)).futureValue must equalTo(5)
       val basketEntries = service.findByProtein("F002453,F002454", AccessionCode("OSBL8_HUMAN")).futureValue
       basketEntries.length mustEqual(3)
-      basketEntries(0).peptideSeq mustEqual("SLIWTLLK")
+      basketEntries.find(_.peptideSeq == "SLIWTLLK").get.spectrumId.id.value mustEqual("20150318_Petricevic_7371A.8585.8585.2")
     }
+  }
 
+  "create and update" should {
+    "update rtZoom" in new TempMongoDBService {
+      service.insertOrUpdate(Seq(entry1, entry2, entry3, entry4, entry5)).futureValue must equalTo(5)
+      val entry5_changed = entry5.copy(rtZoom = RtRange(20, 50))
+      service.insertOrUpdate(Seq(entry5_changed)).futureValue must equalTo(1)
+      service.countBasketEntries.futureValue must equalTo(5)
+      val basketEntries = service.findByProtein("F009998,F009999", AccessionCode("K2C1_HUMAN")).futureValue
+      basketEntries.length mustEqual(1)
+      basketEntries(0).rtZoom mustEqual(RtRange(20, 50))
+    }
   }
 
 

@@ -37,10 +37,28 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
    * @param newEntries
    * @return a Future of the number of entries loaded
    */
-  def insert(newEntries: Seq[BasketEntry]): Future[Int] = {
-    for {
-      n <- collection.bulkInsert(Enumerator(newEntries: _*))
-    } yield n
+  def insertOrUpdate(newEntries: Seq[BasketEntry]): Future[Int] = {
+
+    val inserted: Seq[Future[Int]] = newEntries.map({ entry =>
+      val selector = Json.obj(
+        "proteinAC" -> entry.proteinAC.value,
+        "peptideSeq" -> entry.peptideSeq,
+        "startPos" -> entry.startPos,
+        "searchIds" -> entry.searchIds,
+        "spectrumId.id" -> entry.spectrumId.id.value)
+
+
+      val answer = collection.update(selector, entry, upsert = true)
+
+      answer.map({
+        case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
+        case _ => 1
+      })
+    })
+
+    // sum of all inserted or updated
+    Future.sequence(inserted).map(res => res.sum)
+
   }
 
   /**
