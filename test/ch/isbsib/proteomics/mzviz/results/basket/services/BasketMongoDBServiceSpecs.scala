@@ -1,10 +1,11 @@
 package ch.isbsib.proteomics.mzviz.results.basket.services
 
-import ch.isbsib.proteomics.mzviz.commons.{RetentionTime, Intensity, TempMongoDBForSpecs}
+import ch.isbsib.proteomics.mzviz.commons.{Intensity, RetentionTime, TempMongoDBForSpecs}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
-import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
+import ch.isbsib.proteomics.mzviz.experimental.{RunId, SpectrumUniqueId}
 import ch.isbsib.proteomics.mzviz.matches.SearchId
-import ch.isbsib.proteomics.mzviz.results.basket.models.{XicPeak, RtRange, BasketEntry}
+import ch.isbsib.proteomics.mzviz.results.basket.BasketMongoDBService
+import ch.isbsib.proteomics.mzviz.results.basket.models.{BasketEntry, RtRange, XicPeak}
 import ch.isbsib.proteomics.mzviz.theoretical.AccessionCode
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
@@ -38,7 +39,7 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     ppmTolerance = 10.0,
     rtZoom = RtRange(lowerRt = 35, upperRt = 39),
     rtSelected = RtRange(lowerRt = 36, upperRt = 37),
-    xicPeaks = Seq(XicPeak(SearchId("F002453"),RetentionTime(36.48),Intensity(198000)), XicPeak(SearchId("F002453"),RetentionTime(36.55),Intensity(621000)))
+    xicPeaks = Seq(XicPeak(SearchId("F002453"),Some(RetentionTime(36.48)),Some(Intensity(198000))), XicPeak(SearchId("F002453"), None, None))
   )
 
   val entry2 = new BasketEntry(proteinAC = AccessionCode("OSBL8_HUMAN"),
@@ -50,7 +51,7 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     ppmTolerance = 10.0,
     rtZoom = RtRange(lowerRt = 47.5, upperRt = 48.5),
     rtSelected = RtRange(lowerRt = 47.8, upperRt = 48.2),
-    xicPeaks = Seq(XicPeak(SearchId("F002453"),RetentionTime(47.93),Intensity(472000)), XicPeak(SearchId("F002453"),RetentionTime(47.94),Intensity(1470000)))
+    xicPeaks = Seq(XicPeak(SearchId("F002453"), Some(RetentionTime(47.93)), Some(Intensity(472000))), XicPeak(SearchId("F002453"), Some(RetentionTime(47.94)), Some(Intensity(1470000))))
   )
 
   val entry3 = new BasketEntry(proteinAC = AccessionCode("OSBL8_HUMAN"),
@@ -62,7 +63,7 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     ppmTolerance = 10.0,
     rtZoom = RtRange(lowerRt = 36.5, upperRt = 39.5),
     rtSelected = RtRange(lowerRt = 37.5, upperRt = 38.0),
-    xicPeaks = Seq(XicPeak(SearchId("F002453"),RetentionTime(37.74),Intensity(139000)), XicPeak(SearchId("F002453"),RetentionTime(37.82),Intensity(634000)))
+    xicPeaks = Seq(XicPeak(SearchId("F002453"), Some(RetentionTime(37.74)), Some(Intensity(139000))), XicPeak(SearchId("F002453"), Some(RetentionTime(37.82)), Some(Intensity(634000))))
   )
 
   val entry4 = new BasketEntry(proteinAC = AccessionCode("K2C1_HUMAN"),
@@ -74,7 +75,7 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     ppmTolerance = 10.0,
     rtZoom = RtRange(lowerRt = 29.5, upperRt = 31.5),
     rtSelected = RtRange(lowerRt = 30.0, upperRt = 30.5),
-    xicPeaks = Seq(XicPeak(SearchId("F002453"),RetentionTime(30.51),Intensity(95400)), XicPeak(SearchId("F002453"),RetentionTime(30.30),Intensity(3620000)))
+    xicPeaks = Seq(XicPeak(SearchId("F002453"), Some(RetentionTime(30.51)), Some(Intensity(95400))), XicPeak(SearchId("F002453"), Some(RetentionTime(30.30)), Some(Intensity(3620000))))
   )
 
   val entry5 = new BasketEntry(proteinAC = AccessionCode("K2C1_HUMAN"),
@@ -86,7 +87,7 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     ppmTolerance = 10.0,
     rtZoom = RtRange(lowerRt = 29.5, upperRt = 31.5),
     rtSelected = RtRange(lowerRt = 30.0, upperRt = 30.5),
-    xicPeaks = Seq(XicPeak(SearchId("F009998"),RetentionTime(30.51),Intensity(95400)), XicPeak(SearchId("F009999"),RetentionTime(30.30),Intensity(3620000)))
+    xicPeaks = Seq(XicPeak(SearchId("F009998"), Some(RetentionTime(30.51)), Some(Intensity(95400))), XicPeak(SearchId("F009999"), Some(RetentionTime(30.30)), Some(Intensity(3620000))))
   )
 
 
@@ -148,5 +149,47 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     }
   }
 
+
+  import ch.isbsib.proteomics.mzviz.results.basket.JsonBasketFormats._
+  import play.api.libs.json._
+
+  val entryJson = """{"proteinAC":"OSBL8_HUMAN","peptideSeq":"Q{Deamidated}DDSYIEPEPVEPLKETTYTEQ{Deamidated}SHEELGEAGEASQTETVSEENK","startPos":361,"endPos":404,"searchIds":"mascot:F002453,mascot:F002454","spectrumId":{"id":"20150318_Petricevic_7371A.10015.10015.4","runId":"mascot:F002453"},"ppmTolerance":10,"rtZoom":{"lowerRt":10,"upperRt":30},"rtSelected":{"lowerRt":10,"upperRt":30},"xicPeaks":[]}"""
+  val entryJsonPeaks = """{"proteinAC":"OSBL8_HUMAN","peptideSeq":"Q{Deamidated}DDSYIEPEPVEPLKETTYTEQ{Deamidated}SHEELGEAGEASQTETVSEENK","startPos":361,"endPos":404,"searchIds":"mascot:F0024532,mascot:F0024542","spectrumId":{"id":"20150318_Petricevic_7371A.10015.10015.4","runId":"mascot:F002453"},"ppmTolerance":10,"rtZoom":{"lowerRt":10,"upperRt":30},"rtSelected":{"lowerRt":10,"upperRt":30},"xicPeaks":[{"searchId":"mascot:F002453","rt":37.95,"intensity":6340000},{"searchId":"mascot:F002454","rt":37.97,"intensity":744000}]}"""
+  val entryJsonNullPeak = """{"proteinAC":"OSBL8_HUMAN","peptideSeq":"Q{Deamidated}DDSYIEPEPVEPLKETTYTEQ{Deamidated}SHEELGEAGEASQTETVSEENK","startPos":361,"endPos":404,"searchIds":"mascot:F0024533,mascot:F0024543","spectrumId":{"id":"20150318_Petricevic_7371A.10015.10015.4","runId":"mascot:F002453"},"ppmTolerance":10,"rtZoom":{"lowerRt":10,"upperRt":30},"rtSelected":{"lowerRt":10,"upperRt":30},"xicPeaks":[{"searchId":"mascot:F002453","rt":41.55,"intensity":238000},{"searchId":"mascot:F002454","rt":null,"intensity":null}]}"""
+
+
+  "insert json" should {
+    "insert OSBL8_HUMAN no peaks" in new TempMongoDBService {
+
+      val basketEntry:BasketEntry = Json.parse(entryJson).as[BasketEntry]
+      service.insertOrUpdate(Seq(basketEntry)).futureValue must equalTo(1)
+      service.countBasketEntries.futureValue must equalTo(1)
+      val basketEntries = service.findByProtein("mascot:F002453,mascot:F002454", AccessionCode("OSBL8_HUMAN")).futureValue
+      basketEntries.length mustEqual(1)
+      basketEntries(0).xicPeaks.length mustEqual(0)
+    }
+
+    "insert OSBL8_HUMAN with peaks" in new TempMongoDBService {
+
+      val basketEntry:BasketEntry = Json.parse(entryJsonPeaks).as[BasketEntry]
+      service.insertOrUpdate(Seq(basketEntry)).futureValue must equalTo(1)
+      service.countBasketEntries.futureValue must equalTo(1)
+      val basketEntries = service.findByProtein("mascot:F0024532,mascot:F0024542", AccessionCode("OSBL8_HUMAN")).futureValue
+      basketEntries.length mustEqual(1)
+      basketEntries(0).xicPeaks.length mustEqual(2)
+    }
+
+
+    "insert OSBL8_HUMAN with null peaks" in new TempMongoDBService {
+
+      val basketEntry:BasketEntry = Json.parse(entryJsonNullPeak).as[BasketEntry]
+      service.insertOrUpdate(Seq(basketEntry)).futureValue must equalTo(1)
+      service.countBasketEntries.futureValue must equalTo(1)
+      val basketEntries = service.findByProtein("mascot:F0024533,mascot:F0024543", AccessionCode("OSBL8_HUMAN")).futureValue
+      basketEntries.length mustEqual(1)
+      basketEntries(0).xicPeaks.length mustEqual(2)
+    }
+
+  }
 
 }

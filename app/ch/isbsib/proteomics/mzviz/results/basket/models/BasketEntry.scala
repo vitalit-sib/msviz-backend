@@ -46,7 +46,7 @@ case class RtRange(lowerRt: Double, upperRt: Double)
  * @param rt
  * @param intensity
  */
-case class XicPeak(searchId: SearchId, rt: RetentionTime, intensity: Intensity)
+case class XicPeak(searchId: SearchId, rt: Option[RetentionTime], intensity: Option[Intensity])
 
 
 

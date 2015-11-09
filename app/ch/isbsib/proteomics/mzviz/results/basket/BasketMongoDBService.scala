@@ -1,17 +1,17 @@
-package ch.isbsib.proteomics.mzviz.results.basket.services
+package ch.isbsib.proteomics.mzviz.results.basket
 
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoNotFoundException, MongoDBService}
 import ch.isbsib.proteomics.mzviz.results.basket.models.BasketEntry
 import ch.isbsib.proteomics.mzviz.theoretical.AccessionCode
-import play.api.libs.iteratee.Enumerator
 import play.api.libs.json._
+import play.api.mvc.Controller
+import play.modules.reactivemongo.MongoController
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
-import ch.isbsib.proteomics.mzviz.results.basket.services.JsonBasketFormats._
-import reactivemongo.bson.{BSON, BSONDocument}
+import JsonBasketFormats._
+import reactivemongo.bson.BSONDocument
 import reactivemongo.core.commands.{LastError, Count, RawCommand}
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.{Failure, Success}
 
 
 import scala.concurrent.Future
@@ -134,5 +134,17 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
       case _ => true
     }
   }
+
+}
+
+
+object BasketMongoDBService extends Controller with MongoController {
+  val default = new BasketMongoDBService(db)
+
+  /**
+   * get the default database
+   * @return
+   */
+  def apply() = default
 
 }

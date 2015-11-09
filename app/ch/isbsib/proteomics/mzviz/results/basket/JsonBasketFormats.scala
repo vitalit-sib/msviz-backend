@@ -1,4 +1,4 @@
-package ch.isbsib.proteomics.mzviz.results.basket.services
+package ch.isbsib.proteomics.mzviz.results.basket
 
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
 import ch.isbsib.proteomics.mzviz.results.basket.models.{XicPeak, RtRange, BasketEntry}
