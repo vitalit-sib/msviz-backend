@@ -44,6 +44,7 @@ GET           /compare/:searchIds                                    ch.isbsib.p
 
 PUT           /basket                                                ch.isbsib.proteomics.mzviz.controllers.results.BasketController.put
 OPTIONS       /basket                                                ch.isbsib.proteomics.mzviz.controllers.results.BasketController.options
+GET           /basket                                                ch.isbsib.proteomics.mzviz.controllers.results.BasketController.listSearchIds
 
 POST          /qc/summary                                            ch.isbsib.proteomics.mzviz.controllers.qc.QcController.loadQcSummary()
 GET           /qc/summary                                            ch.isbsib.proteomics.mzviz.controllers.qc.QcController.listAll

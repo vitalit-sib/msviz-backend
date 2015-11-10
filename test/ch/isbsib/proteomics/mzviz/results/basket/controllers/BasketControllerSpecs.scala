@@ -8,7 +8,6 @@ import ch.isbsib.proteomics.mzviz.results.basket.BasketMongoDBService
 import ch.isbsib.proteomics.mzviz.results.basket.models.{XicPeak, RtRange, BasketEntry}
 import ch.isbsib.proteomics.mzviz.theoretical.AccessionCode
 import play.api.test.FakeRequest
-import ch.isbsib.proteomics.mzviz.controllers.results.BasketController
 import org.scalatest.concurrent.ScalaFutures
 import org.specs2.mutable.Specification
 import play.api.libs.json._

@@ -8,7 +8,6 @@ import play.api.libs.json.Json
 import play.api.mvc.Action
 import play.api.libs.concurrent.Execution.Implicits._
 import ch.isbsib.proteomics.mzviz.results.basket.JsonBasketFormats._
-import play.api.Logger
 
 /**
  * @author Roman Mylonas & Trinidad Martin
@@ -28,8 +27,6 @@ object BasketController {
   def put =
     Action.async {
       request =>
-        Logger.error("hoho")
-        Logger.error(request.body.asText.get)
         val newElement: Seq[BasketEntry] = request.body.asText match {
           case Some(s) => Seq(Json.parse(s).as[BasketEntry])
           case None => Seq()
@@ -46,4 +43,19 @@ object BasketController {
     Action {
       Ok("Ok")
     }
+
+  @ApiOperation(nickname = "list-searchIds",
+    value = "list the available searchIds",
+    notes = """returns the list of searchIds""",
+    response = classOf[Seq[String]],
+    httpMethod = "GET")
+  def listSearchIds =
+    Action.async {
+      for {
+        searchIds <- BasketMongoDBService().listSearchIds
+      } yield {
+        Ok(Json.toJson(searchIds))
+      }
+    }
+
 }
