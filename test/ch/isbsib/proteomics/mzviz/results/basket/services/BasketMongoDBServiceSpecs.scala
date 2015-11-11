@@ -36,6 +36,8 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     endPos = 412,
     searchIds = "F002453,F002454",
     spectrumId = SpectrumId(id = SpectrumUniqueId("20150318_Petricevic_7371A.8585.8585.2"), runId = RunId("F002453")),
+    score = 87.5,
+    localizationScore = Some(100),
     ppmTolerance = 10.0,
     rtZoom = RtRange(lowerRt = 35, upperRt = 39),
     rtSelected = RtRange(lowerRt = 36, upperRt = 37),
@@ -48,6 +50,8 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     endPos = 412,
     searchIds = "F002453,F002454",
     spectrumId = SpectrumId(id = SpectrumUniqueId("20150318_Petricevic_7371A.12161.12161.2"), runId = RunId("F002453")),
+    score = 87.5,
+    localizationScore = Some(100),
     ppmTolerance = 10.0,
     rtZoom = RtRange(lowerRt = 47.5, upperRt = 48.5),
     rtSelected = RtRange(lowerRt = 47.8, upperRt = 48.2),
@@ -60,6 +64,8 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     endPos = 318,
     searchIds = "F002453,F002454",
     spectrumId = SpectrumId(id = SpectrumUniqueId("20150318_Petricevic_7374A.9189.9189.3"), runId = RunId("F002454")),
+    score = 87.5,
+    localizationScore = Some(100),
     ppmTolerance = 10.0,
     rtZoom = RtRange(lowerRt = 36.5, upperRt = 39.5),
     rtSelected = RtRange(lowerRt = 37.5, upperRt = 38.0),
@@ -72,6 +78,8 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     endPos = 518,
     searchIds = "F002453,F002454",
     spectrumId = SpectrumId(id = SpectrumUniqueId("20150318_Petricevic_7374A.6984.6984.3"), runId = RunId("F002454")),
+    score = 87.5,
+    localizationScore = Some(100),
     ppmTolerance = 10.0,
     rtZoom = RtRange(lowerRt = 29.5, upperRt = 31.5),
     rtSelected = RtRange(lowerRt = 30.0, upperRt = 30.5),
@@ -84,6 +92,8 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     endPos = 518,
     searchIds = "F009998,F009999",
     spectrumId = SpectrumId(id = SpectrumUniqueId("20150318_Petricevic_7374A.6984.6984.3"), runId = RunId("F009999")),
+    score = 87.5,
+    localizationScore = Some(100),
     ppmTolerance = 10.0,
     rtZoom = RtRange(lowerRt = 29.5, upperRt = 31.5),
     rtSelected = RtRange(lowerRt = 30.0, upperRt = 30.5),
@@ -153,9 +163,9 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
   import ch.isbsib.proteomics.mzviz.results.basket.JsonBasketFormats._
   import play.api.libs.json._
 
-  val entryJson = """{"proteinAC":"OSBL8_HUMAN","peptideSeq":"Q{Deamidated}DDSYIEPEPVEPLKETTYTEQ{Deamidated}SHEELGEAGEASQTETVSEENK","startPos":361,"endPos":404,"searchIds":"mascot:F002453,mascot:F002454","spectrumId":{"id":"20150318_Petricevic_7371A.10015.10015.4","runId":"mascot:F002453"},"ppmTolerance":10,"rtZoom":{"lowerRt":10,"upperRt":30},"rtSelected":{"lowerRt":10,"upperRt":30},"xicPeaks":[]}"""
-  val entryJsonPeaks = """{"proteinAC":"OSBL8_HUMAN","peptideSeq":"Q{Deamidated}DDSYIEPEPVEPLKETTYTEQ{Deamidated}SHEELGEAGEASQTETVSEENK","startPos":361,"endPos":404,"searchIds":"mascot:F0024532,mascot:F0024542","spectrumId":{"id":"20150318_Petricevic_7371A.10015.10015.4","runId":"mascot:F002453"},"ppmTolerance":10,"rtZoom":{"lowerRt":10,"upperRt":30},"rtSelected":{"lowerRt":10,"upperRt":30},"xicPeaks":[{"searchId":"mascot:F002453","rt":37.95,"intensity":6340000},{"searchId":"mascot:F002454","rt":37.97,"intensity":744000}]}"""
-  val entryJsonNullPeak = """{"proteinAC":"OSBL8_HUMAN","peptideSeq":"Q{Deamidated}DDSYIEPEPVEPLKETTYTEQ{Deamidated}SHEELGEAGEASQTETVSEENK","startPos":361,"endPos":404,"searchIds":"mascot:F0024533,mascot:F0024543","spectrumId":{"id":"20150318_Petricevic_7371A.10015.10015.4","runId":"mascot:F002453"},"ppmTolerance":10,"rtZoom":{"lowerRt":10,"upperRt":30},"rtSelected":{"lowerRt":10,"upperRt":30},"xicPeaks":[{"searchId":"mascot:F002453","rt":41.55,"intensity":238000},{"searchId":"mascot:F002454","rt":null,"intensity":null}]}"""
+  val entryJson = """{"proteinAC":"OSBL8_HUMAN","peptideSeq":"Q{Deamidated}DDSYIEPEPVEPLKETTYTEQ{Deamidated}SHEELGEAGEASQTETVSEENK","startPos":361,"endPos":404,"searchIds":"mascot:F002453,mascot:F002454","spectrumId":{"id":"20150318_Petricevic_7371A.10015.10015.4","runId":"mascot:F002453"},"score":88.5, "localizationScore": 90, "ppmTolerance":10,"rtZoom":{"lowerRt":10,"upperRt":30},"rtSelected":{"lowerRt":10,"upperRt":30},"xicPeaks":[]}"""
+  val entryJsonPeaks = """{"proteinAC":"OSBL8_HUMAN","peptideSeq":"Q{Deamidated}DDSYIEPEPVEPLKETTYTEQ{Deamidated}SHEELGEAGEASQTETVSEENK","startPos":361,"endPos":404,"searchIds":"mascot:F0024532,mascot:F0024542","spectrumId":{"id":"20150318_Petricevic_7371A.10015.10015.4","runId":"mascot:F002453"},"score":88.5, "localizationScore": null,"ppmTolerance":10,"rtZoom":{"lowerRt":10,"upperRt":30},"rtSelected":{"lowerRt":10,"upperRt":30},"xicPeaks":[{"searchId":"mascot:F002453","rt":37.95,"intensity":6340000},{"searchId":"mascot:F002454","rt":37.97,"intensity":744000}]}"""
+  val entryJsonNullPeak = """{"proteinAC":"OSBL8_HUMAN","peptideSeq":"Q{Deamidated}DDSYIEPEPVEPLKETTYTEQ{Deamidated}SHEELGEAGEASQTETVSEENK","startPos":361,"endPos":404,"searchIds":"mascot:F0024533,mascot:F0024543","spectrumId":{"id":"20150318_Petricevic_7371A.10015.10015.4","runId":"mascot:F002453"},"score":88.5, "localizationScore": 90,"ppmTolerance":10,"rtZoom":{"lowerRt":10,"upperRt":30},"rtSelected":{"lowerRt":10,"upperRt":30},"xicPeaks":[{"searchId":"mascot:F002453","rt":41.55,"intensity":238000},{"searchId":"mascot:F002454","rt":null,"intensity":null}]}"""
 
 
   "insert json" should {

@@ -1,7 +1,10 @@
 package ch.isbsib.proteomics.mzviz.results.basket
 
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoNotFoundException, MongoDBService}
-import ch.isbsib.proteomics.mzviz.results.basket.models.BasketEntry
+import ch.isbsib.proteomics.mzviz.experimental.{RunId, SpectrumUniqueId}
+import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
+import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
+import ch.isbsib.proteomics.mzviz.results.basket.models.{BasketEntryWithSpInfo, BasketEntry}
 import ch.isbsib.proteomics.mzviz.theoretical.AccessionCode
 import play.api.libs.json._
 import play.api.mvc.Controller
@@ -62,7 +65,7 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
   }
 
   /**
-   * find all entries for a certain protein
+   * find all entries for a certain protein and searchId
    * @param searchIds
    * @param proteinAC
    * @return
@@ -78,7 +81,48 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
       }))
   }
 
+  /**
+   * find all entries of a searchId
+   * @param searchIds
+   * @return
+   */
+  def findBySearchId(searchIds: String): Future[Seq[BasketEntry]] ={
+    val query = Json.obj("searchIds" -> searchIds)
 
+    collection.find(query)
+      .cursor[JsObject]
+      .collect[List]()
+      .map(lo => lo.map({ o =>
+        Json.fromJson[BasketEntry](o).asOpt.get
+      }))
+  }
+
+  /**
+   * find all entries of a searchId with spectra info
+   * @param searchIds
+   * @return
+   */
+
+  def findBySearchIdWithSpInfo(searchId: String, runId: String): Future[Seq[BasketEntryWithSpInfo]] ={
+    val basketEntries = findBySearchId(searchId)
+
+    basketEntries.flatMap({ l =>
+      val flf = l.map({ e =>
+        val spFut = ExpMongoDBService().findSpectrumBySpId(new SpectrumId(SpectrumUniqueId(searchId), RunId(runId)))
+
+        spFut.map({ sp =>
+          new BasketEntryWithSpInfo(e.proteinAC, e.peptideSeq, e.startPos, e.endPos, e.searchIds, e.spectrumId,
+            sp.ref.scanNumber.value, sp.ref.precursor.retentionTime.value, sp.ref.precursor.charge.value, sp.ref.precursor.moz.value,
+            e.score, e.localizationScore, e.ppmTolerance, e.rtZoom, e.rtSelected, e.xicPeaks)
+        })
+
+      })
+
+      Future.sequence(flf)
+
+    })
+
+  }
 
   /**
    * list for given searchIds all proteins

@@ -27,6 +27,8 @@ class BasketControllerSpecs extends Specification with ScalaFutures{
     endPos = 412,
     searchIds = "F002453X,F002454X",
     spectrumId = SpectrumId(id = SpectrumUniqueId("20150318_Petricevic_7371A.8585.8585.2"), runId = RunId("F002453")),
+    score = 87.5,
+    localizationScore = Some(100),
     ppmTolerance = 10.0,
     rtZoom = RtRange(lowerRt = 35, upperRt = 39),
     rtSelected = RtRange(lowerRt = 36, upperRt = 37),

@@ -1,5 +1,7 @@
 package ch.isbsib.proteomics.mzviz.controllers.results
 
+import javax.ws.rs.PathParam
+
 import ch.isbsib.proteomics.mzviz.controllers.matches.SearchController._
 import ch.isbsib.proteomics.mzviz.results.basket.BasketMongoDBService
 import ch.isbsib.proteomics.mzviz.results.basket.models.BasketEntry
@@ -57,5 +59,20 @@ object BasketController {
         Ok(Json.toJson(searchIds))
       }
     }
+
+  @ApiOperation(nickname = "find-by-searchId",
+    value = "get all entries corresponding to a certain searchId",
+    notes = """returns the list of BasketEntries""",
+    response = classOf[Seq[BasketEntry]],
+    httpMethod = "GET")
+  def findBySearchId(@ApiParam(value = """searchId""") @PathParam("searchId") searchId: String) =
+    Action.async {
+      for {
+        basketEntries <- BasketMongoDBService().findBySearchId(searchId)
+      } yield {
+        Ok(Json.toJson(basketEntries))
+      }
+    }
+
 
 }
