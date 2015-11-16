@@ -99,16 +99,16 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
 
   /**
    * find all entries of a searchId with spectra info
-   * @param searchIds
+   * @param runId
    * @return
    */
 
-  def findBySearchIdWithSpInfo(searchId: String, runId: String): Future[Seq[BasketEntryWithSpInfo]] ={
-    val basketEntries = findBySearchId(searchId)
+  def findBySearchIdWithSpInfo(runId: String): Future[Seq[BasketEntryWithSpInfo]] ={
+    val basketEntries = findBySearchId(runId)
 
     basketEntries.flatMap({ l =>
       val flf = l.map({ e =>
-        val spFut = ExpMongoDBService().findSpectrumBySpId(new SpectrumId(SpectrumUniqueId(searchId), RunId(runId)))
+        val spFut = ExpMongoDBService().findSpectrumBySpId(e.spectrumId)
 
         spFut.map({ sp =>
           new BasketEntryWithSpInfo(e.proteinAC, e.peptideSeq, e.startPos, e.endPos, e.searchIds, e.spectrumId,
