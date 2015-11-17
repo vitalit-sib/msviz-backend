@@ -109,7 +109,6 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
 
       val sp = service.findSpectrumByRunId(RunId("test-1")).futureValue.toList
 
-      sp(10).ref.spectrumId.id.value mustEqual("File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 52.948 min, Period: 1, Cycle(s): 2056 (Experiment 3)")
       sp.length must equalTo(123)
 
     }
