@@ -128,6 +128,7 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
       service.insertOrUpdate(Seq(entry1, entry2, entry3, entry4, entry5)).futureValue must equalTo(5)
       service.countBasketEntries.futureValue must equalTo(5)
       service.deleteBySearchId("F002453")
+      Thread.sleep(200)
       service.countBasketEntries.futureValue must equalTo(1)
     }
   }
