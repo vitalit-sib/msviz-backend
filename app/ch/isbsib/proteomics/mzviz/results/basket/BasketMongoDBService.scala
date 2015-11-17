@@ -112,7 +112,7 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
 
         spFut.map({ sp =>
           new BasketEntryWithSpInfo(e.proteinAC, e.peptideSeq, e.startPos, e.endPos, e.searchIds, e.spectrumId,
-            sp.ref.scanNumber.value, sp.ref.precursor.retentionTime.value, sp.ref.precursor.charge.value, sp.ref.precursor.moz.value,
+            sp.ref.scanNumber.value, sp.ref.precursor.retentionTime.value/60, sp.ref.precursor.charge.value, sp.ref.precursor.moz.value,
             e.score, e.localizationScore, e.ppmTolerance, e.rtZoom, e.rtSelected, e.xicPeaks)
         })
 
