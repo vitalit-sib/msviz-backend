@@ -184,75 +184,10 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
       dict <- futRunId2speRefDict
     } yield {
       psms.map({ psm =>
-        //println (s"DICT = $dict)
-        //println(s"DICT= $dict(psm.searchId)(psm.spectrumId)")
         PepSpectraMatchWithSpectrumRef(psm, dict(psm.searchId)(psm.spectrumId))
       })
     }
   }
-
-  //    val command = RawCommand(BSONDocument(
-  //      "aggregate" -> collectionName,
-  //      "pipeline" -> BSONArray(
-  //        BSONDocument("$match" ->
-  //          BSONDocument(
-  //            //            "searchId" -> searchIds.value,
-  //            //            "proteinList.proteinRef.source" -> source.value,
-  //            "proteinList.proteinRef.AC" -> accessionCode.value)
-  //        ),
-  //        BSONDocument("$unwind" -> "$proteinList"),
-  //        BSONDocument("$match" ->
-  //          BSONDocument(
-  //            //            "proteinList.proteinRef.source" -> source.value,
-  //            "proteinList.proteinRef.AC" -> accessionCode.value)
-  //        ),
-  //        BSONDocument("$project" ->
-  //          BSONDocument(
-  //            "proteinPosition" -> "$proteinList",
-  //            "spectrumId" -> 1,
-  //            "pep" -> 1,
-  //            "matchInfo" -> 1,
-  //            "searchId" -> 1,
-  //            "_id" -> 0))
-  //      )
-  //    ))
-  //    db.command(command).map({
-  //      doc =>
-  //        JsArray(doc.getAs[List[BSONDocument]]("result").get.map(o => toJSON(o).asInstanceOf[JsObject])) //=>Json.toJson(o))
-  //    })
-  //  }
-  //  def findPSMByProtein(accessionCode: AccessionCode, source: Option[SequenceSource]=None, searchIds: Option[Set[SearchId]]=None): Future[JsArray] = {
-  //    val command = RawCommand(BSONDocument(
-  //      "aggregate" -> collectionName,
-  //      "pipeline" -> BSONArray(
-  //        BSONDocument("$match" ->
-  //          BSONDocument(
-  ////            "searchId" -> searchIds.value,
-  ////            "proteinList.proteinRef.source" -> source.value,
-  //            "proteinList.proteinRef.AC" -> accessionCode.value)
-  //        ),
-  //        BSONDocument("$unwind" -> "$proteinList"),
-  //        BSONDocument("$match" ->
-  //          BSONDocument(
-  ////            "proteinList.proteinRef.source" -> source.value,
-  //            "proteinList.proteinRef.AC" -> accessionCode.value)
-  //        ),
-  //        BSONDocument("$project" ->
-  //          BSONDocument(
-  //            "proteinPosition" -> "$proteinList",
-  //            "spectrumId" -> 1,
-  //            "pep" -> 1,
-  //            "matchInfo" -> 1,
-  //            "searchId" -> 1,
-  //            "_id" -> 0))
-  //      )
-  //    ))
-  //    db.command(command).map({
-  //      doc =>
-  //        JsArray(doc.getAs[List[BSONDocument]]("result").get.map(o => toJSON(o).asInstanceOf[JsObject])) //=>Json.toJson(o))
-  //    })
-  //  }
-
 
   def qFilter(searchIds: Set[SearchId]) = searchIds.toList match {
     case x :: Nil => BSONDocument("searchId" -> x.value)

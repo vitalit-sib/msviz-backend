@@ -42,6 +42,11 @@ DELETE        /search/:searchIds                                     ch.isbsib.p
 
 GET           /compare/:searchIds                                    ch.isbsib.proteomics.mzviz.controllers.matches.ProteinMatchMultipleSearchesController.findAllProteinsForMultipleSearchIds(searchIds, withModif:Option[String])
 
+PUT           /basket                                                ch.isbsib.proteomics.mzviz.controllers.results.BasketController.put
+OPTIONS       /basket                                                ch.isbsib.proteomics.mzviz.controllers.results.BasketController.options
+GET           /basket                                                ch.isbsib.proteomics.mzviz.controllers.results.BasketController.listSearchIds
+GET           /basket/:searchId                                      ch.isbsib.proteomics.mzviz.controllers.results.BasketController.findBySearchId(searchId)
+
 POST          /qc/summary                                            ch.isbsib.proteomics.mzviz.controllers.qc.QcController.loadQcSummary()
 GET           /qc/summary                                            ch.isbsib.proteomics.mzviz.controllers.qc.QcController.listAll
 GET           /qc/summary/:qcDate                                    ch.isbsib.proteomics.mzviz.controllers.qc.QcController.findQcSummaryEntryByDate(qcDate)

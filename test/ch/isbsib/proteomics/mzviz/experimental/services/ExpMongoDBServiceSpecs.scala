@@ -3,9 +3,9 @@ package ch.isbsib.proteomics.mzviz.experimental.services
 import java.io.File
 
 import ch.isbsib.proteomics.mzviz.commons._
-import ch.isbsib.proteomics.mzviz.experimental.{MSRun, RunId}
+import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, MSRun, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.importer._
-import ch.isbsib.proteomics.mzviz.experimental.models.ExpPeakMSn
+import ch.isbsib.proteomics.mzviz.experimental.models.{SpectrumId, ExpPeakMSn}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.specs2.mutable.Specification
@@ -100,6 +100,7 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
 
     }
   }
+
   "findSpectrumByRunId" should {
     "find one" in new TempMongoDBService {
       val msnRun1= new MSRun(RunId("test-1"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("test-1")).get.toSeq)
@@ -108,7 +109,23 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
 
       val sp = service.findSpectrumByRunId(RunId("test-1")).futureValue.toList
 
+      sp(10).ref.spectrumId.id.value mustEqual("hihohoho")
       sp.length must equalTo(123)
+
+    }
+  }
+
+
+  "findSpectrumBySpId" should {
+    "find one" in new TempMongoDBService {
+      val msnRun1= new MSRun(RunId("test-1"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("test-1")).get.toSeq)
+
+      val n= service.insert(msnRun1).futureValue
+
+      val spId = new SpectrumId(SpectrumUniqueId("File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 52.948 min, Period: 1, Cycle(s): 2056 (Experiment 3)"), RunId("test-1"))
+      val sp = service.findSpectrumBySpId(spId).futureValue
+
+      sp.ref.title mustEqual("hoho")
 
     }
   }
