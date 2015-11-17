@@ -7,16 +7,19 @@ import ch.isbsib.proteomics.mzviz.results.basket.BasketMongoDBService
 import ch.isbsib.proteomics.mzviz.results.basket.models.{BasketEntryWithSpInfo, BasketEntry}
 import com.wordnik.swagger.annotations._
 import play.api.libs.json.Json
-import play.api.mvc.Action
+import play.api.mvc.{Accepting, Action}
 import play.api.libs.concurrent.Execution.Implicits._
 import ch.isbsib.proteomics.mzviz.results.basket.JsonBasketFormats._
+import play.api.mvc._
+import ch.isbsib.proteomics.mzviz.controllers.CommonController
+import ch.isbsib.proteomics.mzviz.results.basket.BasketTsvFormat
 
 /**
  * @author Roman Mylonas & Trinidad Martin
  *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 @Api(value = "/basket", description = "basket")
-object BasketController {
+object BasketController extends CommonController{
 
   @ApiOperation(nickname = "put",
     value = "put basket entry",
@@ -64,14 +67,21 @@ object BasketController {
     value = "get all entries corresponding to a certain searchId",
     notes = """returns the list of BasketEntries""",
     response = classOf[Seq[BasketEntryWithSpInfo]],
+    produces = "application/json, application/tsv",
     httpMethod = "GET")
   def findBySearchId(@ApiParam(value = """searchId""") @PathParam("searchId") searchId: String) =
-    Action.async {
-      for {
-        basketEntries <- BasketMongoDBService().findBySearchIdWithSpInfo(searchId)
-      } yield {
-        Ok(Json.toJson(basketEntries))
-      }
+    Action.async { implicit request =>
+      BasketMongoDBService().findBySearchIdWithSpInfo(searchId)
+        .map { case basketEntries =>
+          render {
+            case Accepts.Json() => Ok(Json.toJson(basketEntries))
+            case acceptsTsv() => Ok(BasketTsvFormat.toTsv(basketEntries))
+          }
+        }
+        .recover {
+          case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
+        }
+
     }
 
 
