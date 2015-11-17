@@ -127,8 +127,7 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     "create 5 and delete all" in new TempMongoDBService {
       service.insertOrUpdate(Seq(entry1, entry2, entry3, entry4, entry5)).futureValue must equalTo(5)
       service.countBasketEntries.futureValue must equalTo(5)
-      service.deleteBySearchId("F002453")
-      Thread.sleep(2000)
+      service.deleteBySearchId("F002453").futureValue mustEqual(true)
       service.countBasketEntries.futureValue must equalTo(1)
     }
   }
