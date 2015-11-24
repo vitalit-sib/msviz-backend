@@ -5,7 +5,7 @@ import java.io.File
 import ch.isbsib.proteomics.mzviz.commons.{Intensity, RetentionTime, Moz, TempMongoDBForSpecs}
 import ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController._
 import ch.isbsib.proteomics.mzviz.experimental.RunId
-import ch.isbsib.proteomics.mzviz.experimental.importer.LoaderMzXML
+import ch.isbsib.proteomics.mzviz.experimental.importer.{FastLoaderMzXML, LoaderMzXML}
 import ch.isbsib.proteomics.mzviz.experimental.models.{Ms1Entry, Ms1Peak}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
@@ -87,6 +87,26 @@ class ExpMs1MySqlDBServiceSpecs extends mutable.Specification{
     nrInserted
   }
 
+  def insertDataFast(implicit session: Session, file: File, runId: RunId) = {
+    val entries = FastLoaderMzXML.parseFile(file, runId)
+
+    val nrInserted = entries.map({ e =>
+      val rt = e.retentionTime.value
+      val runId = e.spId.runId.value
+
+      val ms1Peaks = e.peaks.map({ peak =>
+        Ms1Peak(runId, rt, peak.moz.value, peak.intensity.value)
+      })
+
+      // insert peaks into MySql
+      ms1Dao ++= ms1Peaks
+      ms1Peaks.length
+    }).sum
+
+    nrInserted
+  }
+
+
     "create tables" should {
 
         "create schema" in new _Session{
@@ -105,6 +125,39 @@ class ExpMs1MySqlDBServiceSpecs extends mutable.Specification{
 
     "insert and find" in new _Session{
       val nrInserted = insertData(session, new File ("test/resources/ms1/F001644_small.mzXML"), RunId("hoho"))
+
+      val rtTol = 0.5
+      val moz = 519.14
+      val daltonTolerance = 0.3
+
+      val ms1List = ms1Dao.filter(ms => (ms.ref === "hoho")
+        && (ms.moz <= moz+daltonTolerance)
+        && ms.moz >= moz-daltonTolerance).list.map(m => Ms1Entry(RunId(m.ref), RetentionTime(m.rt), Intensity(m.int), Moz(m.moz))
+      )
+
+      val json = ExpMs1MongoDBService().extract2Lists(ms1List, rtTol)
+
+      val rts = (json \ "rt").as[List[JsValue]]
+      rts.length mustEqual(98)
+      rts(20).as[Double] mustEqual(5.97779)
+
+      val ints = (json \ "intensities").as[List[JsValue]]
+      ints(20).as[Double] mustEqual(5459280.5)
+    }
+
+  }
+
+  "insert Ms1 fast" should {
+
+    "insert F001644_small fast" in new _Session{
+      val nrInserted = insertDataFast(session, new File ("test/resources/ms1/F001644_small.mzXML"), RunId("hoho"))
+
+      nrInserted mustEqual(31771)
+      ms1Dao.length.run mustEqual(31771)
+    }
+
+    "insert and find fast" in new _Session{
+      val nrInserted = insertDataFast(session, new File ("test/resources/ms1/F001644_small.mzXML"), RunId("hoho"))
 
       val rtTol = 0.5
       val moz = 519.14
