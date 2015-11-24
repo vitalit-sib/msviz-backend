@@ -6,7 +6,7 @@ import ch.isbsib.proteomics.mzviz.commons.{Intensity, RetentionTime, Moz}
 import ch.isbsib.proteomics.mzviz.controllers.CommonController
 import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
 import ch.isbsib.proteomics.mzviz.experimental.{MSRun, RunId}
-import ch.isbsib.proteomics.mzviz.experimental.importer.{LoaderMzXML, LoaderMGF}
+import ch.isbsib.proteomics.mzviz.experimental.importer.{FastLoaderMzXML, LoaderMzXML, LoaderMGF}
 import ch.isbsib.proteomics.mzviz.experimental.models._
 import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMs1MySqlDBService, ExpMs1MongoDBService, ExpMongoDBService}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
@@ -84,20 +84,21 @@ object ExperimentalController extends CommonController {
   ))
   def loadMS1MySql(@ApiParam(name = "runId", value = "a string id with run identifier", required = true) @PathParam("runId") runId: String) =
     DBAction(parse.temporaryFile) { implicit rs =>
-        val entries = LoaderMzXML.parseFile(rs.request.body.file, RunId(runId))
+        val entries = FastLoaderMzXML.parseFile(rs.request.body.file, RunId(runId))
 
-        var nrInserted = 0
+        val nrInserted = entries.map({ e =>
+          val rt = e.retentionTime.value
+          val runId = e.spId.runId.value
 
-        while (entries.hasNext) {
-          val current = entries.next()
-          val runID = current.spId.runId.value
-          val rt = current.retentionTime.value
-          current.peaks.foreach {
-            peak => val ms1 = Ms1Peak(runID, rt, peak.moz.value, peak.intensity.value)
-              ms1Dao.insert(ms1)
-              nrInserted += 1
-          }
-        }
+          val ms1Peaks = e.peaks.map({ peak =>
+            Ms1Peak(runId, rt, peak.moz.value, peak.intensity.value)
+          })
+
+          // insert peaks into MySql
+          ms1Dao ++= ms1Peaks
+          ms1Peaks.length
+        }).sum
+
       Ok(Json.obj("inserted" -> nrInserted.toString))
     }
 

@@ -50,7 +50,6 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
         "searchIds" -> entry.searchIds,
         "spectrumId.id" -> entry.spectrumId.id.value)
 
-
       val answer = collection.update(selector, entry, upsert = true)
 
       answer.map({

@@ -47,11 +47,49 @@ class LoaderMzXMLspecs extends Specification {
       var total = 0
       val ms1Iterator2 = LoaderMzXML.parseFile(mzXmlFile, RunId("hoho"))
       while(ms1Iterator2.hasNext){
-        total += ms1Iterator2.next.peaks.length
+        val sp = ms1Iterator2.next
+        total += sp.peaks.length
       }
       total mustEqual 31771
     }
 
   }
+
+  "load MzXML2" should {
+
+    val mzXmlFile = new File("test/resources/ms1/F001644_small.mzXML")
+    val ms1Sps = FastLoaderMzXML.parseFile(mzXmlFile, RunId("hoho"))
+
+    """check size""" in {
+      ms1Sps.size mustEqual 98
+    }
+
+    """check scanNumber""" in {
+      ms1Sps(0).spId.id mustEqual SpectrumUniqueId("1")
+    }
+
+    """check retentionTime""" in {
+      ms1Sps(0).retentionTime mustEqual RetentionTime(0.176703)
+    }
+
+    """check peaks""" in {
+      ms1Sps(0).peaks.length mustEqual 388
+    }
+
+    """check base peak""" in {
+      val basePeak = ms1Sps(0).peaks.maxBy(_.intensity.value)
+      basePeak.intensity mustEqual(Intensity(6809045.0))
+      basePeak.moz mustEqual(Moz(519.1379352044135))
+    }
+
+    """check total #peaks""" in {
+      val ms1Sps = FastLoaderMzXML.parseFile(mzXmlFile, RunId("hoho"))
+      val totalPeaks = ms1Sps.map(_.peaks.length).sum
+      totalPeaks mustEqual 31771
+    }
+
+  }
+
+
 
 }
