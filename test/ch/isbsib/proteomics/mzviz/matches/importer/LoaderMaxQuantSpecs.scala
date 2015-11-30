@@ -79,4 +79,18 @@ class LoaderMaxQuantSpecs extends Specification {
 
   }
 
-}//end class
+
+  "load ProteinIdents" in {
+
+    val proteinIdMap:Map[RunId,List[ProteinIdent]] = LoaderMaxQuant.loadProtIdent("test/resources/maxquant/")
+
+    // should have 2 runIds
+    proteinIdMap.keys.size mustEqual(2)
+
+    proteinIdMap(RunId("F002454")).size mustEqual(87)
+    proteinIdMap(RunId("F002453")).size mustEqual(63)
+
+  }
+
+
+}

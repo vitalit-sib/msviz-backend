@@ -16,10 +16,10 @@ import scala.io.Source._
  */
 object LoaderMaxQuant {
 
-  val file_prot = new File("/Users/tmartinc/Documents/msViz/2/msviz-backend/test/resources/maxquant/proteinGroups.txt")
-  val file_params = new File("/Users/tmartinc/Documents/msViz/2/msviz-backend/test/resources/maxquant/parameters.txt")
-  val file_msms = new File("/Users/tmartinc/Documents/msViz/2/msviz-backend/test/resources/maxquant/msms.txt")
-  val file_summary = new File("/Users/tmartinc/Documents/msViz/2/msviz-backend/test/resources/maxquant/summary.txt")
+  val filename_prot = "proteinGroups.txt"
+  val filename_params = "parameters.txt"
+  val filename_msms = "msms.txt"
+  val filename_summary = "summary.txt"
 
 
   def parseCommonLines(file:File): Tuple2[List[List[String]],Map[String, Int]] ={
@@ -27,16 +27,14 @@ object LoaderMaxQuant {
     val header = lines.take(1).next.split("\t").toList
     val range = 0 until header.length
     val headerMap: Map[String, Int] = (header zip range).toMap
-    //val mProteinsList: List[List[String]] = linesProt.toList.map(s => (s.split("\t")).toList)
     Tuple2(lines.toList.map(s => (s.split("\t")).toList),headerMap)
   }
 
   def parseProteinGroupTable(file: File, runIds: List[RunId]): List[ProteinGroupsTableEntry] = {
 
     //From proteinGroups.txt
-    //Obtein position for unique peptides, best MS/MS,Majority proteinIDs and MS Count for runiD
-    val mProteinsList=parseCommonLines(file)._1
-    val headerProtMap=parseCommonLines(file)._2
+    //Obtain position for unique peptides, best MS/MS,Majority proteinIDs and MS Count for runId
+    val (mProteinsList, headerProtMap) = parseCommonLines(file)
     val msmsPos: Int = headerProtMap("Best MS/MS")
     val mainProts: Int = headerProtMap("Majority protein IDs")
 
@@ -93,19 +91,21 @@ object LoaderMaxQuant {
 
   def obtainMsMsScoreById(listIds:List[Int], msmsHash:Map[Int,MsMsTableEntry]):Map[RunId,Double]={
 
-
-    val filterByIdMsMsEntryList=msmsHash.filterKeys(listIds.toSet).values.toList
-    val filterByIdMsMsEntryMapGrouped=filterByIdMsMsEntryList.groupBy(_.runId)
-    val msmsEntryScores:Map[RunId,Double]= filterByIdMsMsEntryMapGrouped.mapValues(list => list.map(_.score).sum)
+    val filterByIdMsMsEntryList = msmsHash.filterKeys(listIds.toSet).values.toList
+    val filterByIdMsMsEntryMapGrouped = filterByIdMsMsEntryList.groupBy(_.runId)
+    val msmsEntryScores:Map[RunId,Double] = filterByIdMsMsEntryMapGrouped.mapValues(list => list.map(_.score).sum)
 
     //return map of RunId and sum of Scores
     msmsEntryScores
   }
 
-  def loadProtMaxQuant(file: File, searchId: SearchId): Map[RunId,List[ProteinIdent]] = {
+  def loadProtIdent(maxQuantDir: String): Map[RunId,List[ProteinIdent]] = {
 
-    //TOCHANGE
-    //Seq[Seq[ProteinIdent]]
+    // load files
+    val file_params = new File(maxQuantDir + filename_params)
+    val file_summary = new File(maxQuantDir + filename_summary)
+    val file_prot = new File(maxQuantDir + filename_prot)
+    val file_msms = new File(maxQuantDir + filename_msms)
 
     //From parameters.txt
     val source=parseMaxquantSource(file_params)
@@ -113,77 +113,48 @@ object LoaderMaxQuant {
     //From proteinGroups.txt
     val linesSummary: Iterator[String] = fromFile(file_summary).getLines()
     val headerSummary = linesSummary.take(1).next.split("\t").toList
-    val rangeSummary= 0 until headerSummary.length
-    val headerSummaryMap: Map[String, Int]= (headerSummary zip rangeSummary).toMap
+    val rangeSummary = 0 until headerSummary.length
+    val headerSummaryMap: Map[String, Int] = (headerSummary zip rangeSummary).toMap
     val mSummaryList:List[List[String]]  = linesSummary.toList.map(s => (s.split("\t")).toList)
+
     //Obtain list of runIDs
-    val runIdsList1: List[RunId] = mSummaryList.map(row=>RunId(row(headerSummaryMap("Experiment"))))
+    val runIdsList1: List[RunId] = mSummaryList.map(row=>row(headerSummaryMap("Experiment"))).filter(_ != "").map(RunId(_))
 
     //Remove empty runIds
-    val proteinGroupEntry=parseProteinGroupTable(file_prot, runIdsList1)
-    val runIdsList=runIdsList1.filter(_.value.nonEmpty)
+    val proteinGroupEntry = parseProteinGroupTable(file_prot, runIdsList1)
+    val runIdsList = runIdsList1.filter(_.value.nonEmpty)
 
-    val msmsHash= parseMaxquantMsMs(file_msms)
-        //Create ProteinIdent for each entry in proteinGroupEntry
-    val runIdToProtIdentList=proteinGroupEntry.flatMap({
-          entry=>
-            runIdsList.map({
-              runId =>
-              val ac:String= entry.majorityProtein(0)
-              val scoreHash=obtainMsMsScoreById(entry.bestMsMs, msmsHash)
-              val subset=entry.majorityProtein.drop(1).map({
-                protein:String =>
-                ProteinIdentInfo(AccessionCode(protein),SequenceSource(source),IdentScore(scoreHash(runId),Map()), entry.uniquePeptides(runId),entry.msCount(runId),true)
-            })
-            val protInfo=ProteinIdentInfo(AccessionCode(ac),SequenceSource(source),IdentScore(scoreHash(runId),Map()), entry.uniquePeptides(runId),entry.msCount(runId),true)
-                Tuple2(runId,ProteinIdent(searchId,protInfo,subset))
-        })
+    val msmsHash = parseMaxquantMsMs(file_msms)
+
+    //Create ProteinIdent for each entry in proteinGroupEntry
+    val runIdToProtIdentList:List[(RunId, ProteinIdent)] = proteinGroupEntry.flatMap({ entry =>
+
+      runIdsList.map({ runId =>
+
+        val ac:String = entry.majorityProtein(0)
+        val scoreHash = obtainMsMsScoreById(entry.bestMsMs, msmsHash)
+
+        // get scores of current runId (make it -1 if there is none for this RunId)
+        val identScore = IdentScore(scoreHash.getOrElse(runId, -1),Map())
+
+        val subset = entry.majorityProtein.drop(1).map({ protein:String =>
+            ProteinIdentInfo(AccessionCode(protein),SequenceSource(source),identScore, entry.uniquePeptides(runId),entry.msCount(runId), true)
+          })
+
+        val protInfo = ProteinIdentInfo(AccessionCode(ac),SequenceSource(source),identScore, entry.uniquePeptides(runId),entry.msCount(runId), true)
+
+        Tuple2(runId,ProteinIdent(SearchId(runId.value),protInfo,subset))
+      })
     })
+
+    // keep only results which do have a MSMS score
+    val filteredRunIdToProtIdentList = runIdToProtIdentList.filter(e => e._2.mainProt.score.mainScore > 0)
+
+    //runIdToProtIdentList.filter(e => e._2.mainProt.score.mainScore < 0).foreach(a => println(a._1.value + a._2.mainProt.proteinAC))
 
     // Group the list by RunId to create a Map[RunId, List[RunId,ProteinIdent]] and then mapValues to create Map[RunId,List[ProteinIdent]]
-    runIdToProtIdentList.groupBy(_._1).mapValues(list=>list.map(_._2))
+    filteredRunIdToProtIdentList.groupBy(_._1).mapValues(list=>list.map(_._2))
 
   }
 }
-/*
-    //println(mProteinsList)
 
-
-    runIdsList.map ({
-      runId=>
-        mProteinsList.map {
-          m => {
-            //Obtain ACs
-            val acsList: List[String]= m(mainProts).split(";").toList
-
-            //Unique peptides
-            val nSeq: Int = m(uniquePeptidesPos).toInt
-
-
-            //As score we first select the best MS/MS and then we go for the msmsScans.txt to extract the corresponding score
-            val bestMsMsFiles= m(msmsPos).split(";").toList(0) //we select the first id in the list
-
-            //Find id in msms table to obtain score
-            val idLineMsMsTable: List[String]= mScanMap(bestMsMsFiles)
-            val score= idLineMsMsTable(scorePos).toDouble
-
-            //Number of PSMs using MsMsCount in ProteinGroups / runId
-            val msmsCountRunIdPos:Int= headerScansMap("MS/MS Count " ++ runId)
-            val nPSMs= m(msmsCountRunIdPos).toInt
-
-            //Create MaxQuant entry
-            //We take the fisrt protein as main and the others as subset of proteins
-            val subsetProts=acsList.drop(0).map(
-              acs=>ProteinIdentInfo(AccessionCode(acs),SequenceSource(source),IdentScore(score,Map()), nSeq, nPSMs, true)
-            ).toSeq
-            val protInfo=ProteinIdentInfo(AccessionCode(acsList(0)),SequenceSource(source),IdentScore(score,Map()), nSeq, nPSMs, true)
-            ProteinIdent(searchId,protInfo,subsetProts)
-
-          }
-        }
-
-    })
-  }
-
-}
-*/
