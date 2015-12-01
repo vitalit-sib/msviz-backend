@@ -33,9 +33,9 @@ object LoaderMaxQuant {
   def parseProteinGroupTable(file: File, runIds: List[RunId]): List[ProteinGroupsTableEntry] = {
 
     //From proteinGroups.txt
-    //Obtain position for unique peptides, best MS/MS,Majority proteinIDs and MS Count for runId
+    //Obtain position for unique peptides, MS/MS IDs, Majority proteinIDs and MS Count for runId
     val (mProteinsList, headerProtMap) = parseCommonLines(file)
-    val msmsPos: Int = headerProtMap("Best MS/MS")
+    val msmsPos: Int = headerProtMap("MS/MS IDs")
     val mainProts: Int = headerProtMap("Majority protein IDs")
 
     val countPosHash:Map[RunId,Int]=runIds.map(runId=>Tuple2(runId, headerProtMap("MS/MS Count " + runId.value))).toMap
@@ -150,7 +150,7 @@ object LoaderMaxQuant {
     // keep only results which do have a MSMS score
     val filteredRunIdToProtIdentList = runIdToProtIdentList.filter(e => e._2.mainProt.score.mainScore > 0)
 
-    //runIdToProtIdentList.filter(e => e._2.mainProt.score.mainScore < 0).foreach(a => println(a._1.value + a._2.mainProt.proteinAC))
+    // runIdToProtIdentList.filter(e => e._2.mainProt.score.mainScore < 0).foreach(a => println(s"${a._1.value} - ${a._2.mainProt.proteinAC}"))
 
     // Group the list by RunId to create a Map[RunId, List[RunId,ProteinIdent]] and then mapValues to create Map[RunId,List[ProteinIdent]]
     filteredRunIdToProtIdentList.groupBy(_._1).mapValues(list=>list.map(_._2))

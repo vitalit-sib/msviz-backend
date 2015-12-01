@@ -87,8 +87,14 @@ class LoaderMaxQuantSpecs extends Specification {
     // should have 2 runIds
     proteinIdMap.keys.size mustEqual(2)
 
-    proteinIdMap(RunId("F002454")).size mustEqual(87)
-    proteinIdMap(RunId("F002453")).size mustEqual(63)
+    proteinIdMap(RunId("F002454")).size mustEqual(101)
+    proteinIdMap(RunId("F002453")).size mustEqual(78)
+
+    val oneProt53 = proteinIdMap(RunId("F002453")).filter(p => p.mainProt.proteinAC.value == "H0Y8T4")
+    val oneProt54 = proteinIdMap(RunId("F002454")).filter(p => p.mainProt.proteinAC.value == "H0Y8T4")
+
+    oneProt53.head.mainProt.score.mainScore mustEqual(85.813)
+    oneProt54.head.mainProt.score.mainScore mustEqual(286.389)
 
   }
 
