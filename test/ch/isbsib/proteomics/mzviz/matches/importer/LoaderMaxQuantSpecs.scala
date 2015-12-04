@@ -16,9 +16,14 @@ import org.specs2.mutable.Specification
  */
 class LoaderMaxQuantSpecs extends Specification {
 
+  //parse summary.txt to obtain List(RunId)
+  val runIdsWithEmpty:Seq[RunId]=LoaderMaxQuant.getRunIds(new File("test/resources/maxquant/summary.txt"))
+  val runIds=runIdsWithEmpty.filter(_.value.nonEmpty)
+  println(runIds)
+
   "parse protein groups" in {
 
-    val listProteinGroups = LoaderMaxQuant.parseProteinGroupTable(new File("test/resources/maxquant/proteinGroups.txt"), List(RunId("F002453"), RunId("F002454")))
+    val listProteinGroups = LoaderMaxQuant.parseProteinGroupTable(new File("test/resources/maxquant/proteinGroups.txt"), runIds)
 
     listProteinGroups.size mustEqual (139)
 
@@ -82,7 +87,7 @@ class LoaderMaxQuantSpecs extends Specification {
 
   "load ProteinIdents" in {
 
-    val proteinIdMap:Map[RunId,List[ProteinIdent]] = LoaderMaxQuant.loadProtIdent("test/resources/maxquant/")
+    val proteinIdMap:Map[RunId,List[ProteinIdent]] = LoaderMaxQuant.loadProtIdent("test/resources/maxquant/",runIds)
 
     // should have 2 runIds
     proteinIdMap.keys.size mustEqual(2)

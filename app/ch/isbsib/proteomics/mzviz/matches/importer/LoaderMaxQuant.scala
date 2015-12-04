@@ -2,10 +2,12 @@ package ch.isbsib.proteomics.mzviz.matches.importer
 
 import java.io.File
 
-import ch.isbsib.proteomics.mzviz.experimental.RunId
+import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
+import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models._
-import ch.isbsib.proteomics.mzviz.matches.models.maxquant.{MsMsTableEntry, ProteinGroupsTableEntry}
+import ch.isbsib.proteomics.mzviz.matches.models.maxquant.{PeptidesTableEntry, EvidenceTableEntry, MsMsTableEntry, ProteinGroupsTableEntry}
+import ch.isbsib.proteomics.mzviz.modifications.ModifName
 import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 
 import scala.io.Source._
@@ -20,6 +22,8 @@ object LoaderMaxQuant {
   val filename_params = "parameters.txt"
   val filename_msms = "msms.txt"
   val filename_summary = "summary.txt"
+  val filename_evidence = "evidence.txt"
+  val filename_peptides = "peptides.txt"
 
 
   def parseCommonLines(file:File): Tuple2[List[List[String]],Map[String, Int]] ={
@@ -30,7 +34,12 @@ object LoaderMaxQuant {
     Tuple2(lines.toList.map(s => (s.split("\t")).toList),headerMap)
   }
 
-  def parseProteinGroupTable(file: File, runIds: List[RunId]): List[ProteinGroupsTableEntry] = {
+  def getRunIds(file:File): Seq[RunId]  ={
+    val(mLines,headerMap)=parseCommonLines(file)
+    mLines.map(row=>RunId(row(headerMap("Experiment"))))
+  }
+
+  def parseProteinGroupTable(file: File, runIds: Seq[RunId]): List[ProteinGroupsTableEntry] = {
 
     //From proteinGroups.txt
     //Obtain position for unique peptides, MS/MS IDs, Majority proteinIDs and MS Count for runId
@@ -99,30 +108,17 @@ object LoaderMaxQuant {
     msmsEntryScores
   }
 
-  def loadProtIdent(maxQuantDir: String): Map[RunId,List[ProteinIdent]] = {
+  def loadProtIdent(maxQuantDir: String, runIdsList:Seq[RunId]): Map[RunId,List[ProteinIdent]] = {
 
     // load files
     val file_params = new File(maxQuantDir + filename_params)
-    val file_summary = new File(maxQuantDir + filename_summary)
     val file_prot = new File(maxQuantDir + filename_prot)
     val file_msms = new File(maxQuantDir + filename_msms)
 
     //From parameters.txt
     val source=parseMaxquantSource(file_params)
 
-    //From proteinGroups.txt
-    val linesSummary: Iterator[String] = fromFile(file_summary).getLines()
-    val headerSummary = linesSummary.take(1).next.split("\t").toList
-    val rangeSummary = 0 until headerSummary.length
-    val headerSummaryMap: Map[String, Int] = (headerSummary zip rangeSummary).toMap
-    val mSummaryList:List[List[String]]  = linesSummary.toList.map(s => (s.split("\t")).toList)
-
-    //Obtain list of runIDs
-    val runIdsList1: List[RunId] = mSummaryList.map(row=>row(headerSummaryMap("Experiment"))).filter(_ != "").map(RunId(_))
-
-    //Remove empty runIds
-    val proteinGroupEntry = parseProteinGroupTable(file_prot, runIdsList1)
-    val runIdsList = runIdsList1.filter(_.value.nonEmpty)
+    val proteinGroupEntry = parseProteinGroupTable(file_prot, runIdsList)
 
     val msmsHash = parseMaxquantMsMs(file_msms)
 
@@ -156,5 +152,71 @@ object LoaderMaxQuant {
     filteredRunIdToProtIdentList.groupBy(_._1).mapValues(list=>list.map(_._2))
 
   }
+
+  //PepSpectraMatch object
+  def parseEvidenceTable(file: File, runIds: Seq[RunId]): List[EvidenceTableEntry] = {
+    val (mEvidenceList, headerEvidenceMap) = parseCommonLines(file)
+    val idPos: Int = headerEvidenceMap("id")
+    val sequencePos: Int = headerEvidenceMap("Sequence")
+    val experimentPos: Int = headerEvidenceMap("Experiment")
+    val molMassPos: Int = headerEvidenceMap("Mass")
+    val scorePos: Int = headerEvidenceMap("Score")
+    val missedCleavagesPos: Int = headerEvidenceMap("Missed cleavages")
+    val massDiffPos: Int = headerEvidenceMap("Mass Error [ppm]")
+    val chargePos: Int = headerEvidenceMap("Charge")
+
+    mEvidenceList.map({
+      m => {
+        val id: String = m(idPos)
+        val sequence:String = m(sequencePos)
+        val experiment:String= m(experimentPos)
+        val molMass:Option[Double] = Option(m(molMassPos).toDouble)
+        val score:Double=m(scorePos).toDouble
+        val missCleavages: Option[Int]=Option(m(missedCleavagesPos).toInt)
+        val massDiff:Double=m(massDiffPos).toDouble
+        val charge: Option[Int]=Option(m(chargePos).toInt)
+        EvidenceTableEntry(id,sequence,experiment,molMass,score,missCleavages,massDiff,charge)
+      }
+    })
+
+  }
+
+  def parsePeptidesTable(file: File, runIds: Seq[RunId]): Map[Int,PeptidesTableEntry]  = {
+    val (mPeptidesList, headerPeptidesMap) = parseCommonLines(file)
+    val idPos: Int = headerPeptidesMap("id")
+    val previousAAPos: Int = headerPeptidesMap("Amino acid before")
+    val nextAAPos: Int = headerPeptidesMap("Amino acid after")
+    val startPos: Int = headerPeptidesMap("Start position")
+    val endPos: Int = headerPeptidesMap("End position")
+    val isDecoyPos: Int = headerPeptidesMap("Reverse")
+
+    //map from id -> info
+    val peptidesMap=mPeptidesList.map({
+      row=>
+        val peptidesEntry=PeptidesTableEntry(row(idPos),Option(row(previousAAPos)),Option(row(nextAAPos)),row(startPos).toInt,
+          row(endPos).toInt,Option(row(isDecoyPos).toBoolean))
+        Tuple2(row(idPos).toInt,peptidesEntry)
+    }).toMap
+    peptidesMap
+
+  }
+
+  def loadPepSpectraMatch(maxQuantDir: String,runIds:Seq[RunId]): Map[RunId,List[PepSpectraMatch]] = {
+    //load files
+    val file_evidence = new File(maxQuantDir + filename_evidence)
+    val file_peptides = new File(maxQuantDir + filename_peptides)
+
+    val evidenceEntry = parseEvidenceTable(file_evidence, runIds)
+    val peptidesHash = parsePeptidesTable(file_peptides,runIds)
+
+    //Create PepSpectraMatch for each entry in evidenceEntry
+    val runIdToPepSpectraMatchList:List[(RunId, PepSpectraMatch)] = evidenceEntry.map({ entry =>
+        val pep=Peptide(entry.sequence,entry.molMass, Vector(Seq(ModifName(""))))
+        val spectrumId= SpectrumId(SpectrumUniqueId(entry.id),RunId(entry.experiment))
+        val matchInfo= PepMatchInfo(entry.score,entry.missedCleavages,entry.massDiff,entry.chargeState)
+        Tuple2(runId, PepSpectraMatch(SearchId(runId.value), protInfo, subset))
+    })
+  }
+
 }
 
