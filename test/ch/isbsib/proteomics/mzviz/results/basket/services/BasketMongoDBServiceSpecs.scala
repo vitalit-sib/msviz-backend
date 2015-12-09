@@ -154,7 +154,6 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
       service.insertOrUpdate(Seq(entry1, entry2, entry3, entry4, entry5)).futureValue must equalTo(5)
       val searchIdsList = service.listSearchIds.futureValue
       searchIdsList.length mustEqual(2)
-      searchIdsList(0) mustEqual("F002453,F002454")
     }
     "find" in new TempMongoDBService {
       service.insertOrUpdate(Seq(entry1, entry2, entry3, entry4, entry5)).futureValue must equalTo(5)
