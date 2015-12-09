@@ -4,6 +4,7 @@ import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
 import ch.isbsib.proteomics.mzviz.results.basket.models.{BasketEntryWithSpInfo, XicPeak, RtRange, BasketEntry}
 import play.api.libs.json._
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
+import ch.isbsib.proteomics.mzviz.commons.services.MongoId
 
 /**
  * @author Roman Mylonas & Trinidad Martin
@@ -11,7 +12,7 @@ import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
  */
 object JsonBasketFormats {
 
-
+  implicit val formatMongoId = Json.format[MongoId]
   implicit val formatRtRange = Json.format[RtRange]
   implicit val formatXicPeak = Json.format[XicPeak]
 

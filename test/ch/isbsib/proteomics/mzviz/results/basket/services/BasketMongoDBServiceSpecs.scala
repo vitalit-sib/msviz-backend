@@ -1,5 +1,6 @@
 package ch.isbsib.proteomics.mzviz.results.basket.services
 
+import ch.isbsib.proteomics.mzviz.commons.services.MongoId
 import ch.isbsib.proteomics.mzviz.commons.{Intensity, RetentionTime, TempMongoDBForSpecs}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.experimental.{RunId, SpectrumUniqueId}
@@ -30,7 +31,7 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     test data
     */
 
-  val entry1 = new BasketEntry(proteinAC = AccessionCode("OSBL8_HUMAN"),
+  val entry1 = new BasketEntry(None, proteinAC = AccessionCode("OSBL8_HUMAN"),
     peptideSeq = "SLIWTLLK",
     startPos = 405,
     endPos = 412,
@@ -44,7 +45,7 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     xicPeaks = Seq(XicPeak(SearchId("F002453"),Some(RetentionTime(36.48)),Some(Intensity(198000))), XicPeak(SearchId("F002453"), None, None))
   )
 
-  val entry2 = new BasketEntry(proteinAC = AccessionCode("OSBL8_HUMAN"),
+  val entry2 = new BasketEntry(None, proteinAC = AccessionCode("OSBL8_HUMAN"),
     peptideSeq = "SLIWT{Phospho}LLK",
     startPos = 405,
     endPos = 412,
@@ -58,7 +59,7 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     xicPeaks = Seq(XicPeak(SearchId("F002453"), Some(RetentionTime(47.93)), Some(Intensity(472000))), XicPeak(SearchId("F002453"), Some(RetentionTime(47.94)), Some(Intensity(1470000))))
   )
 
-  val entry3 = new BasketEntry(proteinAC = AccessionCode("OSBL8_HUMAN"),
+  val entry3 = new BasketEntry(_id=None, proteinAC = AccessionCode("OSBL8_HUMAN"),
     peptideSeq = "ANNLHSGDN{Deamidated}FQLNDS{Phospho}EIER",
     startPos = 300,
     endPos = 318,
@@ -72,7 +73,7 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     xicPeaks = Seq(XicPeak(SearchId("F002453"), Some(RetentionTime(37.74)), Some(Intensity(139000))), XicPeak(SearchId("F002453"), Some(RetentionTime(37.82)), Some(Intensity(634000))))
   )
 
-  val entry4 = new BasketEntry(proteinAC = AccessionCode("K2C1_HUMAN"),
+  val entry4 = new BasketEntry(_id=None, proteinAC = AccessionCode("K2C1_HUMAN"),
     peptideSeq = "MS{Phospho}GEC{Carbamidomethyl}APN{Deamidated}VSVSVSTSHTTISGGGSR",
     startPos = 493,
     endPos = 518,
@@ -86,7 +87,7 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     xicPeaks = Seq(XicPeak(SearchId("F002453"), Some(RetentionTime(30.51)), Some(Intensity(95400))), XicPeak(SearchId("F002453"), Some(RetentionTime(30.30)), Some(Intensity(3620000))))
   )
 
-  val entry5 = new BasketEntry(proteinAC = AccessionCode("K2C1_HUMAN"),
+  val entry5 = new BasketEntry(_id=None, proteinAC = AccessionCode("K2C1_HUMAN"),
     peptideSeq = "MS{Phospho}GEC{Carbamidomethyl}APN{Deamidated}VSVSVSTSHTTISGGGSR",
     startPos = 493,
     endPos = 518,
@@ -131,6 +132,22 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
 //      service.countBasketEntries.futureValue must equalTo(1)
 //    }
 //  }
+
+    "create and delete by MongoId" should {
+      "create 5 and delete one" in new TempMongoDBService {
+        service.insertOrUpdate(Seq(entry1, entry2, entry3, entry4, entry5)).futureValue must equalTo(5)
+        service.countBasketEntries.futureValue must equalTo(5)
+        val basketEntries = service.findByProtein("F002453,F002454", AccessionCode("OSBL8_HUMAN")).futureValue
+        basketEntries.length mustEqual(3)
+        val mongoId = basketEntries(0)._id
+        mongoId.isEmpty mustEqual(false)
+        service.deleteByMongoId(mongoId.get).futureValue mustEqual(true)
+        val basketEntriesAfterDelete = service.findByProtein("F002453,F002454", AccessionCode("OSBL8_HUMAN")).futureValue
+        basketEntriesAfterDelete.length mustEqual(2)
+        service.countBasketEntries.futureValue must equalTo(4)
+      }
+    }
+
 
   "list and find entries" should {
     "list searchIds" in new TempMongoDBService {
@@ -197,6 +214,8 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
       service.countBasketEntries.futureValue must equalTo(1)
       val basketEntries = service.findByProtein("mascot:F0024533,mascot:F0024543", AccessionCode("OSBL8_HUMAN")).futureValue
       basketEntries.length mustEqual(1)
+      basketEntries(0)._id.isEmpty mustEqual(false)
+      println(basketEntries(0)._id)
       basketEntries(0).xicPeaks.length mustEqual(2)
     }
 

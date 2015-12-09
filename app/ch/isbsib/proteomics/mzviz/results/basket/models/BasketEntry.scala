@@ -4,6 +4,7 @@ import ch.isbsib.proteomics.mzviz.commons.{Intensity, RetentionTime}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.theoretical.AccessionCode
+import ch.isbsib.proteomics.mzviz.commons.services.MongoId
 
 /**
  * @author Roman Mylonas & Trinidad Martin
@@ -12,6 +13,7 @@ import ch.isbsib.proteomics.mzviz.theoretical.AccessionCode
 
 
 trait BasketEntryBase {
+  def _id: Option[MongoId]
   def proteinAC: AccessionCode
   def peptideSeq: String
   def startPos: Int
@@ -41,7 +43,7 @@ trait BasketEntryBase {
  * @param rtZoom
  * @param rtSelected
  */
-case class BasketEntry (proteinAC: AccessionCode, peptideSeq: String, startPos: Int, endPos: Int, searchIds: String,
+case class BasketEntry (_id: Option[MongoId], proteinAC: AccessionCode, peptideSeq: String, startPos: Int, endPos: Int, searchIds: String,
                         spectrumId: SpectrumId, score: Double, localizationScore: Option[Double], ppmTolerance: Double, rtZoom: RtRange,
                         rtSelected: RtRange, xicPeaks: Seq[XicPeak]) extends BasketEntryBase
 
@@ -60,7 +62,7 @@ case class BasketEntry (proteinAC: AccessionCode, peptideSeq: String, startPos: 
  * @param rtZoom
  * @param rtSelected
  */
-case class BasketEntryWithSpInfo (proteinAC: AccessionCode, peptideSeq: String, startPos: Int, endPos: Int, searchIds: String,
+case class BasketEntryWithSpInfo (_id: Option[MongoId], proteinAC: AccessionCode, peptideSeq: String, startPos: Int, endPos: Int, searchIds: String,
                         spectrumId: SpectrumId, scanNr:Int, precRt: Double, precCharge: Int, precMoz: Double, score: Double, localizationScore: Option[Double], ppmTolerance: Double, rtZoom: RtRange,
                         rtSelected: RtRange, xicPeaks: Seq[XicPeak]) extends BasketEntryBase
 

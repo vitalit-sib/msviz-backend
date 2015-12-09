@@ -4,6 +4,7 @@ import play.api.Logger
 import play.api.libs.json.{JsObject, Json}
 import play.modules.reactivemongo.json.collection.JSONCollection
 import reactivemongo.api._
+import reactivemongo.api.collections.default.BSONCollection
 import reactivemongo.api.indexes.Index
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -21,6 +22,7 @@ trait MongoDBService {
 
   def collection: JSONCollection = db.collection[JSONCollection](collectionName)
 
+  def bsonCollection: BSONCollection = db.collection(collectionName)
 
   /**
    * Ensure we have the correct indexes

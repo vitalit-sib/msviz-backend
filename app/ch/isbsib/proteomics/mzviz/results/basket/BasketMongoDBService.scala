@@ -12,9 +12,10 @@ import play.modules.reactivemongo.MongoController
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
 import JsonBasketFormats._
-import reactivemongo.bson.BSONDocument
+import reactivemongo.bson.{BSONObjectID, BSONDocument}
 import reactivemongo.core.commands.{LastError, Count, RawCommand}
 import scala.concurrent.ExecutionContext.Implicits.global
+import ch.isbsib.proteomics.mzviz.commons.services.MongoId
 
 
 import scala.concurrent.Future
@@ -110,7 +111,7 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
         val spFut = ExpMongoDBService().findSpectrumBySpId(e.spectrumId)
 
         spFut.map({ sp =>
-          new BasketEntryWithSpInfo(e.proteinAC, e.peptideSeq, e.startPos, e.endPos, e.searchIds, e.spectrumId,
+          new BasketEntryWithSpInfo(e._id, e.proteinAC, e.peptideSeq, e.startPos, e.endPos, e.searchIds, e.spectrumId,
             sp.ref.scanNumber.value, sp.ref.precursor.retentionTime.value/60, sp.ref.precursor.charge.value, sp.ref.precursor.moz.value,
             e.score, e.localizationScore, e.ppmTolerance, e.rtZoom, e.rtSelected, e.xicPeaks)
         })
@@ -166,13 +167,27 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
 
   /**
    * delete all entries which use this searchId
-   * @return a Future of number of deleted entries
+   * @return a Future of boolean
    */
   def deleteBySearchId(searchId: String): Future[Boolean] = {
 
     val query = Json.obj("$text" -> Json.obj("$search" -> searchId))
 
     collection.remove(query).map {
+      case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
+      case _ => true
+    }
+  }
+
+
+  /**
+   * delete entry by given MongoDB $oid (MongId)
+   * @return a Future of boolean
+   */
+  def deleteByMongoId(id: MongoId): Future[Boolean] = {
+    val selector = BSONDocument("_id" -> BSONObjectID(id.$oid))
+
+    bsonCollection.remove(selector).map {
       case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
       case _ => true
     }

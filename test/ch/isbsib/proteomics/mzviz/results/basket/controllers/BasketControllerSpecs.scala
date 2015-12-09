@@ -1,5 +1,6 @@
 package ch.isbsib.proteomics.mzviz.results.basket.controllers
 
+import ch.isbsib.proteomics.mzviz.commons.services.MongoId
 import ch.isbsib.proteomics.mzviz.commons.{Intensity, RetentionTime}
 import ch.isbsib.proteomics.mzviz.experimental.{RunId, SpectrumUniqueId}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
@@ -21,7 +22,7 @@ import ch.isbsib.proteomics.mzviz.results.basket.JsonBasketFormats._
  */
 class BasketControllerSpecs extends Specification with ScalaFutures{
 
-  val entry1 = new BasketEntry(proteinAC = AccessionCode("OSBL8_HUMAN"),
+  val entry1 = new BasketEntry(None, proteinAC = AccessionCode("OSBL8_HUMAN"),
     peptideSeq = "SLIWTLLK",
     startPos = 405,
     endPos = 412,
