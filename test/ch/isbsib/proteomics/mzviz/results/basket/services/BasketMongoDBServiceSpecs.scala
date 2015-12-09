@@ -141,7 +141,7 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
         basketEntries.length mustEqual(3)
         val mongoId = basketEntries(0)._id
         mongoId.isEmpty mustEqual(false)
-        service.deleteByMongoId(mongoId.get).futureValue mustEqual(true)
+        service.deleteByMongoId(mongoId.get.$oid).futureValue mustEqual(true)
         val basketEntriesAfterDelete = service.findByProtein("F002453,F002454", AccessionCode("OSBL8_HUMAN")).futureValue
         basketEntriesAfterDelete.length mustEqual(2)
         service.countBasketEntries.futureValue must equalTo(4)

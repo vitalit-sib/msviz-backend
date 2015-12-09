@@ -49,6 +49,17 @@ object BasketController extends CommonController{
       Ok("Ok")
     }
 
+
+  @ApiOperation(nickname = "optionsId",
+    value = "empty options method",
+    notes = """returns Ok to fulfill the pre-flight OPTIONS request""",
+    response = classOf[String],
+    httpMethod = "OPTIONS")
+  def optionsId(@ApiParam(value = """id""") @PathParam("id") id: String) =
+    Action {
+      Ok("Ok")
+    }
+
   @ApiOperation(nickname = "list-searchIds",
     value = "list the available searchIds",
     notes = """returns the list of searchIds""",
@@ -84,5 +95,21 @@ object BasketController extends CommonController{
 
     }
 
+  @ApiOperation(nickname = "delete",
+    value = "delete a basket entry by MongoId",
+    notes = """No double check is done. Use with caution""",
+    response = classOf[String],
+    httpMethod = "DELETE")
+  def delete(@ApiParam(value = """mongoId""", defaultValue = "") @PathParam("mongoId") mongoId: String) =
+    Action.async { implicit request =>
+      BasketMongoDBService().deleteByMongoId(mongoId).map {case basketEntries =>
+        render {
+          case Accepts.Json() => Ok(Json.toJson(basketEntries))
+        }
+      }.recover {
+          case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
+      }
+
+    }
 
 }

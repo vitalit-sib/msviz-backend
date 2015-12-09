@@ -42,8 +42,10 @@ DELETE        /search/:searchIds                                     ch.isbsib.p
 
 GET           /compare/:searchIds                                    ch.isbsib.proteomics.mzviz.controllers.matches.ProteinMatchMultipleSearchesController.findAllProteinsForMultipleSearchIds(searchIds, withModif:Option[String])
 
+DELETE        /basket/:mongoId                                       ch.isbsib.proteomics.mzviz.controllers.results.BasketController.delete(mongoId)
 PUT           /basket                                                ch.isbsib.proteomics.mzviz.controllers.results.BasketController.put
 OPTIONS       /basket                                                ch.isbsib.proteomics.mzviz.controllers.results.BasketController.options
+OPTIONS       /basket/:id                                            ch.isbsib.proteomics.mzviz.controllers.results.BasketController.optionsId(id)
 GET           /basket                                                ch.isbsib.proteomics.mzviz.controllers.results.BasketController.listSearchIds
 GET           /basket/:searchId                                      ch.isbsib.proteomics.mzviz.controllers.results.BasketController.findBySearchId(searchId)
 

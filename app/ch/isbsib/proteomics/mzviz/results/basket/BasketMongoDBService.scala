@@ -184,8 +184,8 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
    * delete entry by given MongoDB $oid (MongId)
    * @return a Future of boolean
    */
-  def deleteByMongoId(id: MongoId): Future[Boolean] = {
-    val selector = BSONDocument("_id" -> BSONObjectID(id.$oid))
+  def deleteByMongoId(id: String): Future[Boolean] = {
+    val selector = BSONDocument("_id" -> BSONObjectID(id))
 
     bsonCollection.remove(selector).map {
       case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
