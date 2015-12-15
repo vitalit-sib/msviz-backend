@@ -4,8 +4,8 @@ import java.io.File
 
 import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
-import ch.isbsib.proteomics.mzviz.matches.models.ProteinIdent
-import ch.isbsib.proteomics.mzviz.matches.models.maxquant.ProteinGroupsTableEntry
+import ch.isbsib.proteomics.mzviz.matches.models.{PepSpectraMatch, ProteinIdent}
+import ch.isbsib.proteomics.mzviz.matches.models.maxquant.{EvidenceTableEntry, ProteinGroupsTableEntry}
 import net.sf.ehcache.search.expression.EqualTo
 import org.specs2.mutable.Specification
 
@@ -19,7 +19,6 @@ class LoaderMaxQuantSpecs extends Specification {
   //parse summary.txt to obtain List(RunId)
   val runIdsWithEmpty:Seq[RunId]=LoaderMaxQuant.getRunIds(new File("test/resources/maxquant/summary.txt"))
   val runIds=runIdsWithEmpty.filter(_.value.nonEmpty)
-  println(runIds)
 
   "parse protein groups" in {
 
@@ -103,5 +102,49 @@ class LoaderMaxQuantSpecs extends Specification {
 
   }
 
+  "parse evidence table" in {
 
+    val listEvidence = LoaderMaxQuant.parseEvidenceTable(new File("test/resources/maxquant/evidence.txt"))
+
+    listEvidence.size mustEqual (363)
+
+    //Select first row
+    val entry:EvidenceTableEntry=listEvidence(0)
+
+    entry.id mustEqual(0)
+    entry.sequence mustEqual("AAAPQAWAGPMEEPPQAQAPPR")
+    entry.experiment mustEqual("F002454")
+    entry.molMass.get mustEqual(2286.08515)
+    entry.score mustEqual(78.456)
+    entry.missedCleavages.get mustEqual(0)
+    entry.massDiff.get mustEqual(0.73369)
+    entry.chargeState.get mustEqual(3)
+    entry.ac mustEqual("Q16643")
+  }
+
+  "parse peptides table" in {
+    val mapPeptides = LoaderMaxQuant.parsePeptidesTable(new File("test/resources/maxquant/peptides.txt"),runIds)
+
+    //TOCHECK without duplications
+    //mapPeptides.size mustEqual(237)
+    mapPeptides.size mustEqual(471)
+
+    //Failing because of entries 269;270;271, removed by the filtering because of decoy entry without start and end position
+
+    //Select second row id=2
+    mapPeptides(2).evidenceId  mustEqual(2)
+    mapPeptides(2).previousAA.get mustEqual("R")
+    mapPeptides(2).nextAA.get mustEqual("Y")
+    mapPeptides(2).startPos mustEqual(85)
+    mapPeptides(2).endPos mustEqual(94)
+    mapPeptides(2).isDecoy.get mustEqual(false)
+  }
+
+  "load PepSpectraMatch" in {
+
+    val pepSpectraMap:Map[RunId,List[PepSpectraMatch]] = LoaderMaxQuant.loadPepSpectraMatch("test/resources/maxquant/",runIds)
+
+    // should have 2 runIds
+    pepSpectraMap.keys.size mustEqual(2)
+  }
 }
