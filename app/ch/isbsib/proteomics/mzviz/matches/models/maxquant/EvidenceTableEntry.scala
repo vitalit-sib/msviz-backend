@@ -12,4 +12,5 @@ case class EvidenceTableEntry ( id:Int,
                                 missedCleavages:Option[Int],
                                 massDiff: Option[Double],
                                 chargeState: Option[Int],
-                                ac:String)
+                                ac:String,
+                                pepId:Int)

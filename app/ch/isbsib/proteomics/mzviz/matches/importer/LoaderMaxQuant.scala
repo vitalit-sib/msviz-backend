@@ -164,7 +164,8 @@ object LoaderMaxQuant {
     val missedCleavagesPos: Int = headerEvidenceMap("Missed cleavages")
     val massDiffPos: Int = headerEvidenceMap("Mass Error [ppm]")
     val chargePos: Int = headerEvidenceMap("Charge")
-    val acPos: Int= headerEvidenceMap("Leading Proteins")
+    val acPos: Int= headerEvidenceMap("Leading Razor Protein")
+    val pepIdPos: Int = headerEvidenceMap("Peptide ID")
 
     //Filter table, remove rows with no score, taking care about "." in the score which are not digits
     val mEvidenceListFiltered=mEvidenceList.filter({l => l(scorePos).filter(_.isDigit).length >0})
@@ -180,7 +181,8 @@ object LoaderMaxQuant {
         val massDiff:Option[Double]= if (m(massDiffPos).filter(elem => (elem.isDigit)).length>0)Option(m(massDiffPos).toDouble) else None
         val charge: Option[Int]=Option(m(chargePos).toInt)
         val ac: String = m(acPos)
-        EvidenceTableEntry(id,sequence,experiment,molMass,score,missCleavages,massDiff,charge,ac)
+        val pepId: Int = m(pepIdPos).toInt
+        EvidenceTableEntry(id,sequence,experiment,molMass,score,missCleavages,massDiff,charge,ac, pepId)
       }
     })
   }
@@ -224,10 +226,16 @@ object LoaderMaxQuant {
 
     //Create PepSpectraMatch for each entry in evidenceEntry
     val runIdToPepSpectraMatchList:List[(RunId, PepSpectraMatch)] = evidenceEntry.map({ entry =>
-        val pep=Peptide(entry.sequence,entry.molMass, Vector(Seq(ModifName(""))))
-        val spectrumId= SpectrumId(SpectrumUniqueId(entry.id.toString),RunId(entry.experiment))
-        val matchInfo= PepMatchInfo(IdentScore(entry.score,Map()),entry.missedCleavages,entry.massDiff,None,None,entry.chargeState,None)
-        val proteinList=Seq(ProteinMatch(ProteinRef(AccessionCode(entry.ac),Set(),None),peptidesHash(entry.id).previousAA,peptidesHash(entry.id).nextAA,peptidesHash(entry.id).startPos,peptidesHash(entry.id).endPos,peptidesHash(entry.id).isDecoy))
+        val pep = Peptide(entry.sequence,entry.molMass, Vector(Seq(ModifName(""))))
+        val spectrumId = SpectrumId(SpectrumUniqueId(entry.id.toString),RunId(entry.experiment))
+        val matchInfo = PepMatchInfo(IdentScore(entry.score,Map()),entry.missedCleavages,entry.massDiff,None,None,entry.chargeState,None)
+
+        // @TODO we will have to add the source somehow
+        val leadingProteinRef = ProteinRef(AccessionCode(entry.ac),Set(),None)
+        val pepEntry = peptidesHash(entry.pepId)
+
+        val proteinList = Seq(ProteinMatch(leadingProteinRef,pepEntry.previousAA,pepEntry.nextAA,pepEntry.startPos,pepEntry.endPos,pepEntry.isDecoy))
+
         Tuple2(RunId(entry.experiment), PepSpectraMatch(SearchId(entry.experiment),spectrumId,pep,matchInfo,proteinList))
     })
 
