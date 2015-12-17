@@ -54,9 +54,9 @@ object LoaderMzIdent {
     val searchDbSourceInfo = parseSearchDbSourceInfo(mzidXml)
 
     // parse PSM, Protein matches and searchInfo
-    def psmList = parsePsm(file, searchId, runId, searchDbSourceInfo)
-    def proteinList = ParseProteinMatches.parseProtList(mzidXml, searchId, searchDbSourceInfo)
-    def searchInfo = parseSearchInfo(mzidXml, searchId)
+    val psmList = parsePsm(file, searchId, runId, searchDbSourceInfo)
+    val proteinList = ParseProteinMatches.parseProtList(mzidXml, searchId, searchDbSourceInfo)
+    val searchInfo = parseSearchInfo(mzidXml, searchId)
 
     Tuple3(psmList, proteinList, searchInfo)
   }
@@ -178,7 +178,7 @@ object LoaderMzIdent {
    */
   def parseSearchDbSourceInfo(mzidXml: Elem):Seq[SearchDatabase] = {
     (mzidXml \\ "SearchDatabase").map { db =>
-      SearchDatabase((db \ "@id").text,((db \ "@version").text),((db \ "@numDatabaseSequences").text.toInt))
+      SearchDatabase((db \ "@id").text,Some(((db \ "@version").text)),Some(((db \ "@numDatabaseSequences").text.toInt)))
     }
   }
 
@@ -222,7 +222,7 @@ object LoaderMzIdent {
 
       val searchDb = searchDbSourceInfo.find(db =>
         db.id==pMatch.getSearchDatabase.get()).map(db =>
-          SequenceSource(db.version)
+          SequenceSource(db.version.get)
       )
 
       ProteinMatch(proteinRef = ProteinRef(AC = AccessionCode(pMatch.getAccession),

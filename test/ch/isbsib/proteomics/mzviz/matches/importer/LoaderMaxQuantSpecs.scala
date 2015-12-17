@@ -7,6 +7,8 @@ import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models.{PepSpectraMatch, ProteinIdent}
 import ch.isbsib.proteomics.mzviz.matches.models.maxquant.{EvidenceTableEntry, ProteinGroupsTableEntry}
 import ch.isbsib.proteomics.mzviz.modifications.ModifName
+import ch.isbsib.proteomics.mzviz.theoretical.AccessionCode
+import ch.isbsib.proteomics.mzviz.theoretical.models.SearchDatabase
 import net.sf.ehcache.search.expression.EqualTo
 import org.specs2.mutable.Specification
 
@@ -52,7 +54,7 @@ class LoaderMaxQuantSpecs extends Specification {
   }
 
   "parse source" in {
-    val source= LoaderMaxQuant.parseMaxquantSource(new File("test/resources/maxquant/parameters.txt"))
+    val source= LoaderMaxQuant.parseMaxquantParametersTable(new File("test/resources/maxquant/parameters.txt"))("Fasta file")
 
     source mustEqual("C:\\MaxQuant\\UniProt-ftp-fasta-10-2014\\HUMAN.fasta")
   }
@@ -87,7 +89,7 @@ class LoaderMaxQuantSpecs extends Specification {
 
   "load ProteinIdents" in {
 
-    val proteinIdMap:Map[RunId,List[ProteinIdent]] = LoaderMaxQuant.loadProtIdent("test/resources/maxquant/",runIds)
+    val proteinIdMap:Map[RunId,Seq[ProteinIdent]] = LoaderMaxQuant.loadProtIdent("test/resources/maxquant/",runIds)
 
     // should have 2 runIds
     proteinIdMap.keys.size mustEqual(2)
@@ -141,7 +143,7 @@ class LoaderMaxQuantSpecs extends Specification {
 
   "load PepSpectraMatch" in {
 
-    val pepSpectraMap:Map[RunId,List[PepSpectraMatch]] = LoaderMaxQuant.loadPepSpectraMatch("test/resources/maxquant/",runIds)
+    val pepSpectraMap:Map[RunId,Seq[PepSpectraMatch]] = LoaderMaxQuant.loadPepSpectraMatch("test/resources/maxquant/",runIds)
 
     // should have 2 runIds
     pepSpectraMap.keys.size mustEqual(2)
@@ -180,5 +182,38 @@ class LoaderMaxQuantSpecs extends Specification {
 
     pep11.head.matchInfo.massDiff.get mustEqual(-0.75583)
     pep11.head.proteinList(0).nextAA.get mustEqual ("K")
+  }
+
+  "parse Search Info" in {
+    val searchInfoMap= LoaderMaxQuant.parseSearchInfo("test/resources/maxquant/")
+
+    // should have 2 runIds
+    searchInfoMap.keys.size mustEqual(2)
+
+    val firstEntry=searchInfoMap(RunId("F002453"))
+
+    firstEntry.title mustEqual("F002453")
+    firstEntry.enzyme mustEqual("Trypsin/P")
+    firstEntry.fragmentTolerance mustEqual("20 ppm")
+    firstEntry.parentTolerance mustEqual("-1")
+    firstEntry.searchId.value mustEqual("F002453")
+    firstEntry.username mustEqual("user")
+    firstEntry.database(0).version mustEqual(None)
+    firstEntry.database(0).entries mustEqual(None)
+    firstEntry.database(0).id mustEqual("C:\\MaxQuant\\UniProt-ftp-fasta-10-2014\\HUMAN.fasta")
+  }
+
+  "parse" in {
+    val parseMaxQuant= LoaderMaxQuant.parse("test/resources/maxquant/")
+
+    parseMaxQuant.size mustEqual(2)
+
+    val list1=parseMaxQuant(0)
+    val list2=parseMaxQuant(1)
+
+    list1._1(0).pep.sequence mustEqual("AELIVQPELK")
+    list2._2(0).mainProt.proteinAC.value mustEqual("A2A3R7")
+    list2._1(1).matchInfo.score.mainScore mustEqual(4.9041)
+
   }
 }

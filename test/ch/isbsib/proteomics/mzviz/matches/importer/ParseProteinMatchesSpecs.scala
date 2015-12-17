@@ -33,8 +33,8 @@ class ParseProteinMatchesSpecs extends Specification {
 
   "convertDbSeqId" should {
 
-    val db1 = SearchDatabase(id = "SDB_contaminants_PAF", version="1.0", entries=999)
-    val db2 = SearchDatabase(id = "SDB_custom", version="2.0", entries=100)
+    val db1 = SearchDatabase(id = "SDB_contaminants_PAF", version=Some("1.0"), entries=Some(999))
+    val db2 = SearchDatabase(id = "SDB_custom", version=Some("2.0"), entries=Some(100))
     val searchDbs = Seq(db1, db2)
 
     "check convertion 1" in {
@@ -56,8 +56,8 @@ class ParseProteinMatchesSpecs extends Specification {
 
   "parse protein list" should {
 
-    val db1 = SearchDatabase(id = "SDB_contaminants_PAF", version="1.0", entries=999)
-    val db2 = SearchDatabase(id = "SDB_custom", version="2.0", entries=100)
+    val db1 = SearchDatabase(id = "SDB_contaminants_PAF", version=Some("1.0"), entries=Some(999))
+    val db2 = SearchDatabase(id = "SDB_custom", version=Some("2.0"), entries=Some(100))
     val searchDbs = Seq(db1, db2)
 
     val mzIdentML = scala.xml.XML.loadFile(new File("test/resources/mascot/F001644.mzid"))
