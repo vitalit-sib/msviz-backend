@@ -6,6 +6,7 @@ import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models.{PepSpectraMatch, ProteinIdent}
 import ch.isbsib.proteomics.mzviz.matches.models.maxquant.{EvidenceTableEntry, ProteinGroupsTableEntry}
+import ch.isbsib.proteomics.mzviz.modifications.ModifName
 import net.sf.ehcache.search.expression.EqualTo
 import org.specs2.mutable.Specification
 
@@ -125,9 +126,7 @@ class LoaderMaxQuantSpecs extends Specification {
   "parse peptides table" in {
     val mapPeptides = LoaderMaxQuant.parsePeptidesTable(new File("test/resources/maxquant/peptides.txt"),runIds)
 
-    //TOCHECK without duplications
-    //mapPeptides.size mustEqual(237)
-    mapPeptides.size mustEqual(471)
+    mapPeptides.size mustEqual(237)
 
     //Failing because of entries 269;270;271, removed by the filtering because of decoy entry without start and end position
 
@@ -146,5 +145,40 @@ class LoaderMaxQuantSpecs extends Specification {
 
     // should have 2 runIds
     pepSpectraMap.keys.size mustEqual(2)
+
+    pepSpectraMap(RunId("F002454")).size mustEqual(95)
+    pepSpectraMap(RunId("F002453")).size mustEqual(88)
+
+    val pep10 = pepSpectraMap(RunId("F002454")).filter(p => p.pep.sequence == "AIFQQPPVGVR")
+    val pep11 = pepSpectraMap(RunId("F002453")).filter(p => p.pep.sequence == "AIFQQPPVGVR")
+
+    pep10.head.searchId.value mustEqual("F002454")
+
+    pep10.head.spectrumId.id.value mustEqual("6")
+    pep10.head.spectrumId.runId.value mustEqual("F002454")
+
+    pep10.head.pep.molMass.get mustEqual(1210.68224)
+    pep10.head.pep.sequence mustEqual("AIFQQPPVGVR")
+    pep10.head.pep.modificationNames mustEqual(Vector(Seq(ModifName(""))))
+
+    pep10.head.matchInfo.chargeState.get mustEqual(2)
+    pep10.head.matchInfo.isRejected mustEqual(None)
+    pep10.head.matchInfo.massDiff.get mustEqual(0.42445)
+    pep10.head.matchInfo.numMissedCleavages.get mustEqual(0)
+    pep10.head.matchInfo.rank mustEqual(None)
+    pep10.head.matchInfo.score.mainScore mustEqual(67.113)
+    pep10.head.matchInfo.totalNumIons mustEqual(None)
+
+    pep10.head.proteinList(0).isDecoy.get mustEqual(false)
+    pep10.head.proteinList(0).endPos mustEqual(686)
+    pep10.head.proteinList(0).nextAA.get mustEqual("K")
+    pep10.head.proteinList(0).previousAA.get mustEqual("K")
+    pep10.head.proteinList(0).startPos mustEqual(676)
+    pep10.head.proteinList(0).proteinRef.AC.value mustEqual("Q7L2E3-3")
+    pep10.head.proteinList(0).proteinRef.identifiers mustEqual(Set())
+    pep10.head.proteinList(0).proteinRef.source mustEqual(None)
+
+    pep11.head.matchInfo.massDiff.get mustEqual(-0.75583)
+    pep11.head.proteinList(0).nextAA.get mustEqual ("K")
   }
 }

@@ -189,7 +189,8 @@ object LoaderMaxQuant {
 
   def parsePeptidesTable(file: File, runIds: Seq[RunId]): Map[Int,PeptidesTableEntry]  = {
     val (mPeptidesList, headerPeptidesMap) = parseCommonLines(file)
-    val evidenceIdPos: Int = headerPeptidesMap("Evidence IDs")
+    //val evidenceIdPos: Int = headerPeptidesMap("Evidence IDs")
+    val peptideIdPos:Int= headerPeptidesMap("id")
     val previousAAPos: Int = headerPeptidesMap("Amino acid before")
     val nextAAPos: Int = headerPeptidesMap("Amino acid after")
     val startPos: Int = headerPeptidesMap("Start position")
@@ -199,20 +200,15 @@ object LoaderMaxQuant {
     //Filter mPeptidesList, remove entries with no start or end position, coming from REV_
     val mPeptidesListFiltered=mPeptidesList.filter({l => !l(startPos).isEmpty() && !l(endPos).isEmpty()})
 
-    //map from id -> info
+    //map from pepId -> info
     val peptidesMap=mPeptidesListFiltered.map({
       row=>
-        val evidenceId: List[Int]=row(evidenceIdPos).split(";").map(_.toInt).toList
+        val pepId=row(peptideIdPos).toInt
         val isDecoy= if(row(isDecoyPos).isEmpty())Option(false)else Option(true)
-        //TOCHECK
-        val tuple:List[(Int,PeptidesTableEntry)]=evidenceId.map({
-          id=>
-            val peptidesEntry=PeptidesTableEntry(id,Option(row(previousAAPos)),Option(row(nextAAPos)),row(startPos).toInt,
-            row(endPos).toInt,isDecoy)
-            Tuple2(id,peptidesEntry)
-          })
-        tuple
-    }).flatten.toMap
+        val peptidesEntry=PeptidesTableEntry(pepId,Option(row(previousAAPos)),Option(row(nextAAPos)),row(startPos).toInt,
+          row(endPos).toInt,isDecoy)
+        Tuple2(pepId,peptidesEntry)
+    }).toMap
     peptidesMap
   }
 
@@ -221,13 +217,17 @@ object LoaderMaxQuant {
     val file_evidence = new File(maxQuantDir + filename_evidence)
     val file_peptides = new File(maxQuantDir + filename_peptides)
 
-    val evidenceEntry = parseEvidenceTable(file_evidence)
     val peptidesHash = parsePeptidesTable(file_peptides,runIds)
+    val evidenceEntryAux:List[EvidenceTableEntry] = parseEvidenceTable(file_evidence)
+    //Filter evidenceEntryAux, remove rows where id doesn't correspond to any key in PeptidesHash
+    val evidenceEntry:List[EvidenceTableEntry]= evidenceEntryAux.filter({entry=> peptidesHash.keySet.exists(_ == entry.id)})
+
+
 
     //Create PepSpectraMatch for each entry in evidenceEntry
     val runIdToPepSpectraMatchList:List[(RunId, PepSpectraMatch)] = evidenceEntry.map({ entry =>
         val pep = Peptide(entry.sequence,entry.molMass, Vector(Seq(ModifName(""))))
-        val spectrumId = SpectrumId(SpectrumUniqueId(entry.id.toString),RunId(entry.experiment))
+        val spectrumId = SpectrumId(SpectrumUniqueId(entry.pepId.toString),RunId(entry.experiment))
         val matchInfo = PepMatchInfo(IdentScore(entry.score,Map()),entry.missedCleavages,entry.massDiff,None,None,entry.chargeState,None)
 
         // @TODO we will have to add the source somehow
