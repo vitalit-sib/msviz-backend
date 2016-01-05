@@ -1,7 +1,8 @@
 package ch.isbsib.proteomics.mzviz.matches.importer
 
-import java.io.File
+import java.io.{IOException, File}
 
+import ch.isbsib.proteomics.mzviz.commons.helpers.Unzip
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
@@ -12,6 +13,7 @@ import ch.isbsib.proteomics.mzviz.theoretical.models.SearchDatabase
 import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 
 import scala.io.Source._
+
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
@@ -27,7 +29,7 @@ object LoaderMaxQuant {
   val filename_peptides = "peptides.txt"
 
 
-  def parseCommonLines(file: File): Tuple2[List[List[String]], Map[String, Int]] = {
+  def parseCommonLines(file: File): (List[List[String]], Map[String, Int]) = {
     val lines: Iterator[String] = fromFile(file).getLines()
     val header = lines.take(1).next.split("\t").toList
     val range = 0 until header.length
@@ -72,7 +74,7 @@ object LoaderMaxQuant {
   def parseMaxquantParametersTable(file: File): Map[String, String] = {
 
     val linesParam: Iterator[String] = fromFile(file).getLines()
-    val headerParam = linesParam.take(1).next.split("\t").toList
+    //val headerParam = linesParam.take(1).next.split("\t").toList
     val paramMap: Map[String, String] = linesParam.toList.map(s => Tuple2(s.split("\t")(0), s.split("\t")(1))).toMap
     //val source= ParamMap("Fasta file")
     paramMap
@@ -86,7 +88,7 @@ object LoaderMaxQuant {
   def parseMaxquantSummaryTable(file: File): Map[String, String] = {
 
     val linesParam: Iterator[String] = fromFile(file).getLines()
-    val headerParam = linesParam.take(1).next.split("\t").toList
+    //val headerParam = linesParam.take(1).next.split("\t").toList
 
     val (mSummaryList, headerSummaryMap) = parseCommonLines(file)
     val experimentPos: Int = headerSummaryMap("Experiment")
@@ -283,7 +285,7 @@ object LoaderMaxQuant {
 
 
     val username = paramsHash("User name")
-    //TOCHANGE
+    // @TODO make parent tolerance optional
     val parentTolerance = -1
     val fragmentTolerance = paramsHash("MS/MS tol. (FTMS)")
 
@@ -292,12 +294,11 @@ object LoaderMaxQuant {
     })
 
     val searchInfoHash= searchInfoHashAux.filter({entry=> entry._1.toString !="RunId()"})
-    println(searchInfoHash.keys)
     searchInfoHash
   }
 
 
-  def parse(maxQuantDir: String): Seq[Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo]] = {
+  def parse(maxQuantDir: String): Seq[(Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo)] = {
 
     //parse summary.txt to obtain List(RunId)
     val runIdsWithEmpty: Seq[RunId] = LoaderMaxQuant.getRunIds(new File("test/resources/maxquant/summary.txt"))
@@ -312,5 +313,21 @@ object LoaderMaxQuant {
     })
     tupleSeq
   }
+
+  def parseZip(maxQuantZip: File): Seq[(Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo)] = {
+    val tmpDir = Unzip.unzip(maxQuantZip)
+
+    val dirsInTmpDir = Unzip.getListOfDirs(tmpDir)
+    val txtDir = if(dirsInTmpDir.length == 1 && dirsInTmpDir(0).getName == "txt") tmpDir + "/txt/" else tmpDir + "/"
+
+    parse(txtDir)
+
+    // remove tmpDir once we finished parsing (we will have to add scala-io to do so)
+    //val tmpPath:Path = Path(tmpDir)
+    //Try(tmpPath.deleteRecursively(continueOnFailure = true))
+
+  }
+
+
 }
 
