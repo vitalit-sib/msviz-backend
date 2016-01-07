@@ -37,9 +37,11 @@ object LoaderMaxQuant {
     Tuple2(lines.toList.map(s => (s.split("\t")).toList), headerMap)
   }
 
-  def getRunIds(file: File): Seq[RunId] = {
+  def getRunIds(file: File): Seq[(RunId, String)] = {
     val (mLines, headerMap) = parseCommonLines(file)
-    mLines.map(row => RunId(row(headerMap("Experiment"))))
+    val runIdsAndRawfilesWithEmpties: Seq[(RunId, String)] = mLines.map(row => Tuple2(RunId(row(headerMap("Experiment"))), row(headerMap("Raw file"))))
+    // remove empty entries
+    runIdsAndRawfilesWithEmpties.filter(_._1.value.nonEmpty)
   }
 
   def parseProteinGroupTable(file: File, runIds: Seq[RunId]): List[ProteinGroupsTableEntry] = {
@@ -101,8 +103,7 @@ object LoaderMaxQuant {
     summaryMap
   }
 
-  def parseMaxquantMsMs(file: File): Map[Int, MsMsTableEntry] = {
-    //List[MsMsTableEntry]
+  def parseMaxquantMsMs(file: File, rawfilesRunIdMap: Map[String, RunId]): Map[Int, MsMsTableEntry] = {
 
     //From msms.txt
 
@@ -115,7 +116,7 @@ object LoaderMaxQuant {
     //map from id -> info
     val msmsMap = mScansList.map({
       row =>
-        val msmsEntry = MsMsTableEntry(RunId(row(rawFilePos)), row(msmsIdPos).toInt, row(scorePos).toDouble)
+        val msmsEntry = MsMsTableEntry(rawfilesRunIdMap(row(rawFilePos)), row(msmsIdPos).toInt, row(scorePos).toDouble)
         Tuple2(row(msmsIdPos).toInt, msmsEntry)
     }).toMap
 
@@ -132,7 +133,7 @@ object LoaderMaxQuant {
     msmsEntryScores
   }
 
-  def loadProtIdent(maxQuantDir: String, runIdsList: Seq[RunId]): Map[RunId, Seq[ProteinIdent]] = {
+  def loadProtIdent(maxQuantDir: String, runIdsAndRawfiles: Seq[(RunId, String)]): Map[RunId, Seq[ProteinIdent]] = {
 
     // load files
     val file_params = new File(maxQuantDir + filename_params)
@@ -142,9 +143,11 @@ object LoaderMaxQuant {
     //From parameters.txt
     val source = parseMaxquantParametersTable(file_params)("Fasta file")
 
+    val runIdsList = runIdsAndRawfiles.map(_._1)
     val proteinGroupEntry = parseProteinGroupTable(file_prot, runIdsList)
 
-    val msmsHash = parseMaxquantMsMs(file_msms)
+    val rawfilesRunIdMap: Map[String, RunId] = runIdsAndRawfiles.map(t => Tuple2(t._2, t._1)).toMap
+    val msmsHash = parseMaxquantMsMs(file_msms, rawfilesRunIdMap)
 
     //Create ProteinIdent for each entry in proteinGroupEntry
     val runIdToProtIdentList: List[(RunId, ProteinIdent)] = proteinGroupEntry.flatMap({ entry =>
@@ -167,10 +170,9 @@ object LoaderMaxQuant {
       })
     })
 
+
     // keep only results which do have a MSMS score
     val filteredRunIdToProtIdentList = runIdToProtIdentList.filter(e => e._2.mainProt.score.mainScore > 0)
-
-    // runIdToProtIdentList.filter(e => e._2.mainProt.score.mainScore < 0).foreach(a => println(s"${a._1.value} - ${a._2.mainProt.proteinAC}"))
 
     // Group the list by RunId to create a Map[RunId, List[RunId,ProteinIdent]] and then mapValues to create Map[RunId,List[ProteinIdent]]
     filteredRunIdToProtIdentList.groupBy(_._1).mapValues(list => list.map(_._2))
@@ -188,7 +190,7 @@ object LoaderMaxQuant {
     val missedCleavagesPos: Int = headerEvidenceMap("Missed cleavages")
     val massDiffPos: Int = headerEvidenceMap("Mass Error [ppm]")
     val chargePos: Int = headerEvidenceMap("Charge")
-    val acPos: Int = headerEvidenceMap("Leading Razor Protein")
+    val acPos: Int = if(headerEvidenceMap.contains("Leading Razor Protein")) headerEvidenceMap("Leading Razor Protein") else headerEvidenceMap("Leading razor protein")
     val pepIdPos: Int = headerEvidenceMap("Peptide ID")
 
     //Filter table, remove rows with no score, taking care about "." in the score which are not digits
@@ -211,7 +213,7 @@ object LoaderMaxQuant {
     })
   }
 
-  def parsePeptidesTable(file: File, runIds: Seq[RunId]): Map[Int, PeptidesTableEntry] = {
+  def parsePeptidesTable(file: File): Map[Int, PeptidesTableEntry] = {
     val (mPeptidesList, headerPeptidesMap) = parseCommonLines(file)
     //val evidenceIdPos: Int = headerPeptidesMap("Evidence IDs")
     val peptideIdPos: Int = headerPeptidesMap("id")
@@ -241,7 +243,7 @@ object LoaderMaxQuant {
     val file_evidence = new File(maxQuantDir + filename_evidence)
     val file_peptides = new File(maxQuantDir + filename_peptides)
 
-    val peptidesHash = parsePeptidesTable(file_peptides, runIds)
+    val peptidesHash = parsePeptidesTable(file_peptides)
     val evidenceEntryAux: List[EvidenceTableEntry] = parseEvidenceTable(file_evidence)
     //Filter evidenceEntryAux, remove rows where id doesn't correspond to any key in PeptidesHash
     val evidenceEntry: List[EvidenceTableEntry] = evidenceEntryAux.filter({ entry => peptidesHash.keySet.exists(_ == entry.id)})
@@ -301,18 +303,19 @@ object LoaderMaxQuant {
   def parse(maxQuantDir: String): Seq[(Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo)] = {
 
     //parse summary.txt to obtain List(RunId)
-    val runIdsWithEmpty: Seq[RunId] = LoaderMaxQuant.getRunIds(new File("test/resources/maxquant/summary.txt"))
-    val runIds = runIdsWithEmpty.filter(_.value.nonEmpty)
+    val runIdsAndRawfiles: Seq[(RunId, String)] = LoaderMaxQuant.getRunIds(new File(maxQuantDir + filename_summary))
+    val runIds = runIdsAndRawfiles.map(_._1)
 
-    val psmList:Map[RunId,Seq[PepSpectraMatch]] = loadPepSpectraMatch(maxQuantDir, runIds)
-    val proteinList = loadProtIdent(maxQuantDir, runIds)
-    val searchInfo = parseSearchInfo(maxQuantDir)
+    val psmList: Map[RunId,Seq[PepSpectraMatch]] = loadPepSpectraMatch(maxQuantDir, runIds)
+    val proteinList: Map[RunId, Seq[ProteinIdent]] = loadProtIdent(maxQuantDir, runIdsAndRawfiles)
+    val searchInfo: Map[RunId, SearchInfo] = parseSearchInfo(maxQuantDir)
 
     val tupleSeq= runIds.map({
-      runId=>  Tuple3(psmList(runId), proteinList(runId), searchInfo(runId))
+      runId =>  Tuple3(psmList(runId), proteinList(runId), searchInfo(runId))
     })
     tupleSeq
   }
+
 
   def parseZip(maxQuantZip: File): Seq[(Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo)] = {
     val tmpDir = Unzip.unzip(maxQuantZip)

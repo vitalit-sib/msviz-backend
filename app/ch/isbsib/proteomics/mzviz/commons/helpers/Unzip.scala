@@ -39,9 +39,8 @@ object Unzip {
   def unzip(zipFile: File): String = {
 
     val zip:ZipFile  = new ZipFile(zipFile)
-    println(zipFile.getAbsolutePath)
     val tmpDir = createTmpDir
-    println(tmpDir)
+
     zip.extractAll(tmpDir)
 
     tmpDir

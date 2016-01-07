@@ -126,7 +126,7 @@ class LoaderMaxQuantSpecs extends Specification {
   }
 
   "parse peptides table" in {
-    val mapPeptides = LoaderMaxQuant.parsePeptidesTable(new File("test/resources/maxquant/peptides.txt"),runIds)
+    val mapPeptides = LoaderMaxQuant.parsePeptidesTable(new File("test/resources/maxquant/peptides.txt"))
 
     mapPeptides.size mustEqual(237)
 
