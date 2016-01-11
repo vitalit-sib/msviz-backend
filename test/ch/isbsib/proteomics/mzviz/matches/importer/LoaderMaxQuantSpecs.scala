@@ -20,8 +20,10 @@ import org.specs2.mutable.Specification
 class LoaderMaxQuantSpecs extends Specification {
 
   //parse summary.txt to obtain List(RunId)
-  val runIdsWithEmpty:Seq[RunId]=LoaderMaxQuant.getRunIds(new File("test/resources/maxquant/summary.txt"))
-  val runIds=runIdsWithEmpty.filter(_.value.nonEmpty)
+  val runIdsWithEmpty:Seq[(RunId, String)]=LoaderMaxQuant.getRunIds(new File("test/resources/maxquant/summary.txt"))
+  val runIdsAndRawfiles=runIdsWithEmpty.filter(_._1.value.nonEmpty)
+  val runIds = runIdsAndRawfiles.map(_._1)
+  val rawfilesRunIdMap: Map[String, RunId] = runIdsAndRawfiles.map(t => Tuple2(t._2, t._1)).toMap
 
   "parse protein groups" in {
 
@@ -61,7 +63,7 @@ class LoaderMaxQuantSpecs extends Specification {
 
   "parse msms" in {
 
-    val msmsHash=LoaderMaxQuant.parseMaxquantMsMs(new File("test/resources/maxquant/msms.txt"))
+    val msmsHash=LoaderMaxQuant.parseMaxquantMsMs(new File("test/resources/maxquant/msms.txt"), rawfilesRunIdMap)
 
     msmsHash.size mustEqual(366)
 
@@ -73,7 +75,7 @@ class LoaderMaxQuantSpecs extends Specification {
 
   "obtain MsMsScore ByRunIdAndId" in {
 
-    val msmsHash=LoaderMaxQuant.parseMaxquantMsMs(new File("test/resources/maxquant/msms.txt"))
+    val msmsHash=LoaderMaxQuant.parseMaxquantMsMs(new File("test/resources/maxquant/msms.txt"), rawfilesRunIdMap)
     val listIds=List(1)
 
     val scoreHash= LoaderMaxQuant.obtainMsMsScoreById(listIds, msmsHash)
@@ -89,7 +91,7 @@ class LoaderMaxQuantSpecs extends Specification {
 
   "load ProteinIdents" in {
 
-    val proteinIdMap:Map[RunId,Seq[ProteinIdent]] = LoaderMaxQuant.loadProtIdent("test/resources/maxquant/",runIds)
+    val proteinIdMap:Map[RunId,Seq[ProteinIdent]] = LoaderMaxQuant.loadProtIdent("test/resources/maxquant/", runIdsAndRawfiles)
 
     // should have 2 runIds
     proteinIdMap.keys.size mustEqual(2)
