@@ -1,9 +1,9 @@
 Parameter	Value
-Version	1.5.1.2
+Version	1.5.3.30
 User name	user
 Machine name	USER-PC
-Date of writing	11/20/2015 15:02:19
-Fixed modifications	Carbamidomethyl (C); Phospho (STY)
+Date of writing	01/06/2016 18:10:21
+Fixed modifications	Carbamidomethyl (C)
 Decoy mode	revert
 Special AAs	KR
 Include contaminants	True
@@ -32,31 +32,27 @@ Min. unique peptides	0
 Min. razor peptides	1
 Min. peptides	1
 Use only unmodified peptides and	True
-Modifications included in protein quantification	Acetyl (Protein N-term);Oxidation (M);Phospho (STY)
+Modifications included in protein quantification	Oxidation (M);Acetyl (Protein N-term)
 Peptides used for protein quantification	Razor
 Discard unmodified counterpart peptides	True
 Min. ratio count	2
-Re-quantify	False
 Use delta score	False
 iBAQ	True
 iBAQ log fit	True
-Match between runs	True
-Matching time window [min]	0.7
-Alignment time window [min]	20
+Match between runs	False
 Find dependent peptides	False
-Fasta file	C:\MaxQuant\UniProt-ftp-fasta-10-2014\HUMAN.fasta
-Labeled amino acid filtering	True
-Site tables	Oxidation (M)Sites.txt;Phospho (STY)Sites.txt
+Fasta file	C:\MaxQuant 1.5.3.30\UniProt-fasta\Homo_sapiens_091215\UP000005640_9606.fasta
+Site tables	Oxidation (M)Sites.txt;Phospho (ST)Sites.txt
 Decoy mode	revert
 Special AAs	KR
 Include contaminants	True
 RT shift	False
 Advanced ratios	True
-AIF correlation	0.47
-First pass AIF correlation	0.8
-AIF topx	20
+AIF correlation	0
+First pass AIF correlation	0
+AIF topx	0
 AIF min mass	0
-AIF SIL weight	4
-AIF ISO weight	2
-AIF iterative	True
-AIF threshold FDR	0.01
+AIF SIL weight	0
+AIF ISO weight	0
+AIF iterative	False
+AIF threshold FDR	0

@@ -192,6 +192,9 @@ object LoaderMaxQuant {
     val chargePos: Int = headerEvidenceMap("Charge")
     val acPos: Int = if(headerEvidenceMap.contains("Leading Razor Protein")) headerEvidenceMap("Leading Razor Protein") else headerEvidenceMap("Leading razor protein")
     val pepIdPos: Int = headerEvidenceMap("Peptide ID")
+    val modifSeqPos: Int= headerEvidenceMap("Modified sequence")
+    val modifNamePos: Int= headerEvidenceMap("Modifications")
+    val lengthPos: Int = headerEvidenceMap("Length")
 
     //Filter table, remove rows with no score, taking care about "." in the score which are not digits
     val mEvidenceListFiltered = mEvidenceList.filter({ l => l(scorePos).filter(_.isDigit).length > 0})
@@ -208,11 +211,64 @@ object LoaderMaxQuant {
         val charge: Option[Int] = Option(m(chargePos).toInt)
         val ac: String = m(acPos)
         val pepId: Int = m(pepIdPos).toInt
-        EvidenceTableEntry(id, sequence, experiment, molMass, score, missCleavages, massDiff, charge, ac, pepId)
+        val modificationSeq: String = m(modifSeqPos)
+        val modificationsList: Seq[String] = m(modifNamePos).split(",")
+        val hashModMaxQuantUnimod: Map[String,String]= createHashModMaxQuantUnimod(modificationsList)
+        val modifNamesMaxQuant: List[String] = """\(.*\)""".r.findAllIn(modificationSeq).toList
+        val modifPosMaxQuant: List[Int] = findModificationPosRecursive(modifNamesMaxQuant,modificationSeq)
+        val hashPosModificationMaxQ= createHashPosModificationMaxQ(modifPosMaxQuant,modifNamesMaxQuant)
+        val hashPosModification= createHashPosModification(modifPosMaxQuant,hashPosModificationMaxQ,hashModMaxQuantUnimod)
+        val lenghtVector=(m(lengthPos).toInt)+2
+        val vectorNames= Vector.fill(lenghtVector)(Seq(ModifName("empty")))
+
+        val modifNamesVector: Vector[Seq[ModifName]]= hashPosModification.keys.map({
+          key=>
+            val changed = vectorNames.updated(key-1, Seq(ModifName(hashPosModification(key))))
+            changed
+        }).head
+        EvidenceTableEntry(id, sequence, experiment, molMass, score, missCleavages, massDiff, charge, ac, pepId,modifNamesVector)
       }
     })
   }
 
+  //Create a hash with the position and the modification with Unimod name
+  def createHashPosModification (modificationPosList: List[Int],hashPosModificationMaxQ:Map[Int, String] , hashModMaxQuantUnimod:Map[String,String]): Map[Int, String] = {
+    val hashPosModif= modificationPosList.map({
+      pos=>
+        Tuple2(pos, hashModMaxQuantUnimod(hashPosModificationMaxQ(pos)))
+    }).toMap
+    hashPosModif
+  }
+
+  //Create a hash with the position and the modification with MaxQuant name
+  def createHashPosModificationMaxQ (modificationPosList: List[Int],modifNamesMaxQuant: List[String]): Map[Int, String] = {
+    (modificationPosList zip modifNamesMaxQuant).toMap
+  }
+
+  //Create a hash with MaxQuant modification names and their correspondant name for Unimod, i.e ox-> Oxidation
+  def createHashModMaxQuantUnimod (modificationList: Seq[String]): Map[String,String] ={
+    val modifFiltered: Map[String,String]=modificationList.map({
+      name=>
+        println(name)
+        val filteredName= """[A-Z][a-z]*""".r.findFirstIn(name)
+        Tuple2(filteredName.get.toLowerCase().substring(0,2),filteredName.get)
+    }).toMap
+    modifFiltered
+  }
+
+  //Obtain position for every modification inside the sequence
+  def findModificationPosRecursive(modifList:List[String],sequence:String): List[Int] ={
+    def recur(modifList:List[String],sequence:String, indexList:List[Int]) :List[Int] = {
+      println(modifList)
+      modifList.length match{
+        case 0 => indexList
+        case length => {
+          recur(modifList.tail,sequence.replaceFirst("""\(""" + modifList(0) + """\)""",""), indexList :+ sequence.indexOf(modifList(0)))
+        }
+      }
+    }
+    recur(modifList,sequence,List())
+  }
   def parsePeptidesTable(file: File): Map[Int, PeptidesTableEntry] = {
     val (mPeptidesList, headerPeptidesMap) = parseCommonLines(file)
     //val evidenceIdPos: Int = headerPeptidesMap("Evidence IDs")
