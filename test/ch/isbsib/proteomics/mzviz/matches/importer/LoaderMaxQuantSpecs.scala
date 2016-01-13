@@ -106,20 +106,20 @@ class LoaderMaxQuantSpecs extends Specification {
 
     val listEvidence = LoaderMaxQuant.parseEvidenceTable(new File("test/resources/maxquant/evidence.txt"))
 
-    listEvidence.size mustEqual (363)
+    listEvidence.size mustEqual (2671)
 
     //Select first row
     val entry:EvidenceTableEntry=listEvidence(0)
 
     entry.id mustEqual(0)
-    entry.sequence mustEqual("AAAPQAWAGPMEEPPQAQAPPR")
+    entry.sequence mustEqual("AAAAAEQQQFYLLLGNLLSPDNVVR")
     entry.experiment mustEqual("4-Nocodazole")
-    entry.molMass.get mustEqual(2286.08515)
-    entry.score mustEqual(78.456)
+    entry.molMass.get mustEqual(2742.43408)
+    entry.score mustEqual(159.98)
     entry.missedCleavages.get mustEqual(0)
-    entry.massDiff.get mustEqual(0.73369)
+    entry.massDiff.get mustEqual(0.29854)
     entry.chargeState.get mustEqual(3)
-    entry.ac mustEqual("Q16643")
+    entry.ac mustEqual("O00410")
   }
 
   "parse peptides table" in {
@@ -145,16 +145,16 @@ class LoaderMaxQuantSpecs extends Specification {
     // should have 2 runIds
     pepSpectraMap.keys.size mustEqual(2)
 
-    pepSpectraMap(RunId("4-Nocodazole")).size mustEqual(95)
-    pepSpectraMap(RunId("F002453")).size mustEqual(88)
+    pepSpectraMap(RunId("4-Nocodazole")).size mustEqual(648)
+    pepSpectraMap(RunId("1-DMSO")).size mustEqual(652)
 
     val pep10 = pepSpectraMap(RunId("4-Nocodazole")).filter(p => p.pep.sequence == "AIFQQPPVGVR")
-    val pep11 = pepSpectraMap(RunId("F002453")).filter(p => p.pep.sequence == "AIFQQPPVGVR")
+    val pep11 = pepSpectraMap(RunId("1-DMSO")).filter(p => p.pep.sequence == "AIFQQPPVGVR")
 
     pep10.head.searchId.value mustEqual("4-Nocodazole")
 
-    pep10.head.spectrumId.id.value mustEqual("6")
-    pep10.head.spectrumId.runId.value mustEqual("F002454")
+    pep10.head.spectrumId.id.value mustEqual("40")
+    pep10.head.spectrumId.runId.value mustEqual("4-Nocodazole")
 
     pep10.head.pep.molMass.get mustEqual(1210.68224)
     pep10.head.pep.sequence mustEqual("AIFQQPPVGVR")
@@ -162,22 +162,22 @@ class LoaderMaxQuantSpecs extends Specification {
 
     pep10.head.matchInfo.chargeState.get mustEqual(2)
     pep10.head.matchInfo.isRejected mustEqual(None)
-    pep10.head.matchInfo.massDiff.get mustEqual(0.42445)
+    pep10.head.matchInfo.massDiff.get mustEqual(0.13029)
     pep10.head.matchInfo.numMissedCleavages.get mustEqual(0)
     pep10.head.matchInfo.rank mustEqual(None)
     pep10.head.matchInfo.score.mainScore mustEqual(67.113)
     pep10.head.matchInfo.totalNumIons mustEqual(None)
 
     pep10.head.proteinList(0).isDecoy.get mustEqual(false)
-    pep10.head.proteinList(0).endPos mustEqual(686)
+    pep10.head.proteinList(0).endPos mustEqual(725)
     pep10.head.proteinList(0).nextAA.get mustEqual("K")
     pep10.head.proteinList(0).previousAA.get mustEqual("K")
-    pep10.head.proteinList(0).startPos mustEqual(676)
-    pep10.head.proteinList(0).proteinRef.AC.value mustEqual("Q7L2E3-3")
+    pep10.head.proteinList(0).startPos mustEqual(715)
+    pep10.head.proteinList(0).proteinRef.AC.value mustEqual("Q7L2E3")
     pep10.head.proteinList(0).proteinRef.identifiers mustEqual(Set())
     pep10.head.proteinList(0).proteinRef.source mustEqual(None)
 
-    pep11.head.matchInfo.massDiff.get mustEqual(-0.75583)
+    pep11.head.matchInfo.massDiff.get mustEqual(-0.40905)
     pep11.head.proteinList(0).nextAA.get mustEqual ("K")
   }
 
@@ -208,9 +208,9 @@ class LoaderMaxQuantSpecs extends Specification {
     val list1=parseMaxQuant(0)
     val list2=parseMaxQuant(1)
 
-    list1._1(0).pep.sequence mustEqual("AELIVQPELK")
-    list2._2(0).mainProt.proteinAC.value mustEqual("A2A3R7")
-    list2._1(1).matchInfo.score.mainScore mustEqual(4.9041)
+    list1._1(0).pep.sequence mustEqual("AAQAPTPGLLQSPR")
+    list2._2(0).mainProt.proteinAC.value mustEqual("A0A0C4DH35")
+    list2._1(1).matchInfo.score.mainScore mustEqual(78.456)
 
   }
 }

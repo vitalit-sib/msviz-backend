@@ -214,25 +214,36 @@ object LoaderMaxQuant {
         val modificationSeq: String = m(modifSeqPos)
         val modificationsList: Seq[String] = m(modifNamePos).split(",")
         val hashModMaxQuantUnimod: Map[String,String]= createHashModMaxQuantUnimod(modificationsList)
-        val modifNamesMaxQuant: List[String] = """\(.*\)""".r.findAllIn(modificationSeq).toList
+        val modifNamesMaxQuant: List[String] = """\([a-z]*\)""".r.findAllIn(modificationSeq).toList
         val modifPosMaxQuant: List[Int] = findModificationPosRecursive(modifNamesMaxQuant,modificationSeq)
         val hashPosModificationMaxQ= createHashPosModificationMaxQ(modifPosMaxQuant,modifNamesMaxQuant)
         val hashPosModification= createHashPosModification(modifPosMaxQuant,hashPosModificationMaxQ,hashModMaxQuantUnimod)
         val lenghtVector=(m(lengthPos).toInt)+2
+        //println("Se crea vector con longitud igual a: " + lenghtVector)
         val vectorNames= Vector.fill(lenghtVector)(Seq(ModifName("empty")))
+        //println("Las posiciones modificadas son: " + hashPosModification.keys)
+        //println("El hash de modif es: " + hashPosModification )
 
-        val modifNamesVector: Vector[Seq[ModifName]]= hashPosModification.keys.map({
-          key=>
-            val changed = vectorNames.updated(key-1, Seq(ModifName(hashPosModification(key))))
-            changed
-        }).head
-        EvidenceTableEntry(id, sequence, experiment, molMass, score, missCleavages, massDiff, charge, ac, pepId,modifNamesVector)
+        //Check if there is any modification
+        if(hashPosModification.keys != Set()) {
+          val modifNamesVector: Vector[Seq[ModifName]] = hashPosModification.keys.map({
+            key =>
+              val changed = vectorNames.updated(key - 1, Seq(ModifName(hashPosModification(key))))
+              changed
+
+          }).head
+          EvidenceTableEntry(id, sequence, experiment, molMass, score, missCleavages, massDiff, charge, ac, pepId,modifNamesVector)
+        }
+        else EvidenceTableEntry(id, sequence, experiment, molMass, score, missCleavages, massDiff, charge, ac, pepId,vectorNames)
+
       }
     })
   }
 
   //Create a hash with the position and the modification with Unimod name
   def createHashPosModification (modificationPosList: List[Int], hashPosModificationMaxQ:Map[Int, String] , hashModMaxQuantUnimod:Map[String,String]): Map[Int, String] = {
+    //println("hash maxq es " + hashPosModificationMaxQ)
+    //println("hash final es" + hashModMaxQuantUnimod)
     val hashPosModif= modificationPosList.map({
       pos=>
         Tuple2(pos, hashModMaxQuantUnimod(hashPosModificationMaxQ(pos)))
@@ -242,14 +253,20 @@ object LoaderMaxQuant {
 
   //Create a hash with the position and the modification with MaxQuant name
   def createHashPosModificationMaxQ (modificationPosList: List[Int],modifNamesMaxQuant: List[String]): Map[Int, String] = {
-    (modificationPosList zip modifNamesMaxQuant).toMap
+
+    //First remove () for each modification
+    val modifNamesMaxQuantFinal: List[String] = modifNamesMaxQuant.map({
+      mod =>
+        val toRemove= "()".toSet
+        mod.filterNot(toRemove)
+    })
+    (modificationPosList zip modifNamesMaxQuantFinal).toMap
   }
 
   //Create a hash with MaxQuant modification names and their correspondant name for Unimod, i.e ox-> Oxidation
   def createHashModMaxQuantUnimod (modificationList: Seq[String]): Map[String,String] ={
     val modifFiltered: Map[String,String]=modificationList.map({
       name=>
-        println(name)
         val filteredName= """[A-Z][a-z]*""".r.findFirstIn(name)
         Tuple2(filteredName.get.toLowerCase().substring(0,2),filteredName.get)
     }).toMap
@@ -259,7 +276,6 @@ object LoaderMaxQuant {
   //Obtain position for every modification inside the sequence
   def findModificationPosRecursive(modifList:List[String],sequence:String): List[Int] ={
     def recur(modifList:List[String],sequence:String, indexList:List[Int]) :List[Int] = {
-      println(modifList)
       modifList.length match{
         case 0 => indexList
         case length => {
