@@ -232,7 +232,7 @@ object LoaderMaxQuant {
   }
 
   //Create a hash with the position and the modification with Unimod name
-  def createHashPosModification (modificationPosList: List[Int],hashPosModificationMaxQ:Map[Int, String] , hashModMaxQuantUnimod:Map[String,String]): Map[Int, String] = {
+  def createHashPosModification (modificationPosList: List[Int], hashPosModificationMaxQ:Map[Int, String] , hashModMaxQuantUnimod:Map[String,String]): Map[Int, String] = {
     val hashPosModif= modificationPosList.map({
       pos=>
         Tuple2(pos, hashModMaxQuantUnimod(hashPosModificationMaxQ(pos)))

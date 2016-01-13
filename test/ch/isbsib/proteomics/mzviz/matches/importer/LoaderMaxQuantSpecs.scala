@@ -29,48 +29,42 @@ class LoaderMaxQuantSpecs extends Specification {
 
     val listProteinGroups = LoaderMaxQuant.parseProteinGroupTable(new File("test/resources/maxquant/proteinGroups.txt"), runIds)
 
-    listProteinGroups.size mustEqual (139)
+    listProteinGroups.size mustEqual (165)
 
     //Select first row
-    val entry:ProteinGroupsTableEntry=listProteinGroups(0)
-    val listBestMsMs=List(205)
-    val listMajority= List("A2A3R7","P62753")
-    val keysNSeqMsCount=List(RunId("F002453"), RunId("F002454"))
-    val valuesNSeqList=List(0,1)
-    val valuesMsCountList=List(0,1)
+    val entry:ProteinGroupsTableEntry=listProteinGroups(1)
 
-    listBestMsMs.zip(entry.bestMsMs).forall { case (x, y) => x == y } mustEqual(true)
-    listMajority.zip(entry.majorityProtein).forall { case (x, y) => x == y } mustEqual(true)
-    keysNSeqMsCount.zip(entry.uniquePeptides.keys.toList).forall { case (x, y) => x == y } mustEqual(true)
-    keysNSeqMsCount.zip(entry.msCount.keys.toList).forall { case (x, y) => x == y } mustEqual(true)
-    valuesNSeqList.zip(entry.msCount.values.toList).forall { case (x, y) => x == y } mustEqual(true)
-    valuesMsCountList.zip(entry.msCount.values.toList).forall { case (x, y) => x == y } mustEqual(true)
+    entry.bestMsMs mustEqual(List(220, 221, 466, 467, 2415))
+    entry.majorityProtein mustEqual(List("Q99613","B5ME19"))
+    entry.uniquePeptides.keys.toList mustEqual(List(RunId("1-DMSO"), RunId("4-Nocodazole")))
+    entry.msCount.keys.toList mustEqual(List(RunId("1-DMSO"), RunId("4-Nocodazole")))
+    entry.msCount.values.toList mustEqual(List(3,1))
 
     //total amount of nSequences for F002453
     val nSeqTotal=listProteinGroups.map({
-      entry => entry.msCount(RunId("F002454"))
+      entry => entry.msCount(RunId("4-Nocodazole"))
     }).sum
 
-    nSeqTotal mustEqual(185)
+    nSeqTotal mustEqual(1349)
 
   }
 
   "parse source" in {
     val source= LoaderMaxQuant.parseMaxquantParametersTable(new File("test/resources/maxquant/parameters.txt"))("Fasta file")
 
-    source mustEqual("C:\\MaxQuant\\UniProt-ftp-fasta-10-2014\\HUMAN.fasta")
+    source mustEqual("C:\\MaxQuant 1.5.3.30\\UniProt-fasta\\Homo_sapiens_091215\\UP000005640_9606.fasta")
   }
 
   "parse msms" in {
 
     val msmsHash=LoaderMaxQuant.parseMaxquantMsMs(new File("test/resources/maxquant/msms.txt"), rawfilesRunIdMap)
 
-    msmsHash.size mustEqual(366)
+    msmsHash.size mustEqual(2885)
 
     //Select second row id=1
     msmsHash(1).id mustEqual(1)
-    msmsHash(1).runId mustEqual(RunId("F002454"))
-    msmsHash(1).score mustEqual(4.9041)
+    msmsHash(1).runId mustEqual(RunId("4-Nocodazole"))
+    msmsHash(1).score mustEqual(78.456)
   }
 
   "obtain MsMsScore ByRunIdAndId" in {
@@ -79,12 +73,13 @@ class LoaderMaxQuantSpecs extends Specification {
     val listIds=List(1)
 
     val scoreHash= LoaderMaxQuant.obtainMsMsScoreById(listIds, msmsHash)
-    scoreHash(RunId("F002454")) mustEqual(4.9041)
+    scoreHash(RunId("4-Nocodazole")) mustEqual(78.456)
 
-    val listIds2=List(0,1,2)
+    val listIds2=List(0,1,2, 3, 4, 5, 6)
     val scoreHash2= LoaderMaxQuant.obtainMsMsScoreById(listIds2, msmsHash)
-    scoreHash2(RunId("F002454")) mustEqual(83.3601)
-    scoreHash2(RunId("F002453")) mustEqual(70.942)
+    scoreHash2.size mustEqual(2)
+    scoreHash2(RunId("4-Nocodazole")) mustEqual(457.614)
+    scoreHash2(RunId("1-DMSO")) mustEqual(245.61)
 
   }
 
@@ -96,14 +91,14 @@ class LoaderMaxQuantSpecs extends Specification {
     // should have 2 runIds
     proteinIdMap.keys.size mustEqual(2)
 
-    proteinIdMap(RunId("F002454")).size mustEqual(101)
-    proteinIdMap(RunId("F002453")).size mustEqual(78)
+    proteinIdMap(RunId("4-Nocodazole")).size mustEqual(136)
+    proteinIdMap(RunId("1-DMSO")).size mustEqual(121)
 
-    val oneProt53 = proteinIdMap(RunId("F002453")).filter(p => p.mainProt.proteinAC.value == "H0Y8T4")
-    val oneProt54 = proteinIdMap(RunId("F002454")).filter(p => p.mainProt.proteinAC.value == "H0Y8T4")
+    val oneProt53 = proteinIdMap(RunId("1-DMSO")).filter(p => p.mainProt.proteinAC.value == "Q99613")
+    val oneProt54 = proteinIdMap(RunId("4-Nocodazole")).filter(p => p.mainProt.proteinAC.value == "Q99613")
 
-    oneProt53.head.mainProt.score.mainScore mustEqual(85.813)
-    oneProt54.head.mainProt.score.mainScore mustEqual(286.389)
+    oneProt53.head.mainProt.score.mainScore mustEqual(246.776)
+    oneProt54.head.mainProt.score.mainScore mustEqual(114.41499999999999)
 
   }
 
@@ -118,7 +113,7 @@ class LoaderMaxQuantSpecs extends Specification {
 
     entry.id mustEqual(0)
     entry.sequence mustEqual("AAAPQAWAGPMEEPPQAQAPPR")
-    entry.experiment mustEqual("F002454")
+    entry.experiment mustEqual("4-Nocodazole")
     entry.molMass.get mustEqual(2286.08515)
     entry.score mustEqual(78.456)
     entry.missedCleavages.get mustEqual(0)
@@ -130,16 +125,16 @@ class LoaderMaxQuantSpecs extends Specification {
   "parse peptides table" in {
     val mapPeptides = LoaderMaxQuant.parsePeptidesTable(new File("test/resources/maxquant/peptides.txt"))
 
-    mapPeptides.size mustEqual(237)
+    mapPeptides.size mustEqual(1300)
 
     //Failing because of entries 269;270;271, removed by the filtering because of decoy entry without start and end position
 
     //Select second row id=2
     mapPeptides(2).evidenceId  mustEqual(2)
     mapPeptides(2).previousAA.get mustEqual("R")
-    mapPeptides(2).nextAA.get mustEqual("Y")
-    mapPeptides(2).startPos mustEqual(85)
-    mapPeptides(2).endPos mustEqual(94)
+    mapPeptides(2).nextAA.get mustEqual("N")
+    mapPeptides(2).startPos mustEqual(660)
+    mapPeptides(2).endPos mustEqual(676)
     mapPeptides(2).isDecoy.get mustEqual(false)
   }
 
@@ -150,13 +145,13 @@ class LoaderMaxQuantSpecs extends Specification {
     // should have 2 runIds
     pepSpectraMap.keys.size mustEqual(2)
 
-    pepSpectraMap(RunId("F002454")).size mustEqual(95)
+    pepSpectraMap(RunId("4-Nocodazole")).size mustEqual(95)
     pepSpectraMap(RunId("F002453")).size mustEqual(88)
 
-    val pep10 = pepSpectraMap(RunId("F002454")).filter(p => p.pep.sequence == "AIFQQPPVGVR")
+    val pep10 = pepSpectraMap(RunId("4-Nocodazole")).filter(p => p.pep.sequence == "AIFQQPPVGVR")
     val pep11 = pepSpectraMap(RunId("F002453")).filter(p => p.pep.sequence == "AIFQQPPVGVR")
 
-    pep10.head.searchId.value mustEqual("F002454")
+    pep10.head.searchId.value mustEqual("4-Nocodazole")
 
     pep10.head.spectrumId.id.value mustEqual("6")
     pep10.head.spectrumId.runId.value mustEqual("F002454")
@@ -192,17 +187,17 @@ class LoaderMaxQuantSpecs extends Specification {
     // should have 2 runIds
     searchInfoMap.keys.size mustEqual(2)
 
-    val firstEntry=searchInfoMap(RunId("F002453"))
+    val firstEntry=searchInfoMap(RunId("1-DMSO"))
 
-    firstEntry.title mustEqual("F002453")
+    firstEntry.title mustEqual("1-DMSO")
     firstEntry.enzyme mustEqual("Trypsin/P")
     firstEntry.fragmentTolerance mustEqual("20 ppm")
     firstEntry.parentTolerance mustEqual("-1")
-    firstEntry.searchId.value mustEqual("F002453")
+    firstEntry.searchId.value mustEqual("1-DMSO")
     firstEntry.username mustEqual("user")
     firstEntry.database(0).version mustEqual(None)
     firstEntry.database(0).entries mustEqual(None)
-    firstEntry.database(0).id mustEqual("C:\\MaxQuant\\UniProt-ftp-fasta-10-2014\\HUMAN.fasta")
+    firstEntry.database(0).id mustEqual("C:\\MaxQuant 1.5.3.30\\UniProt-fasta\\Homo_sapiens_091215\\UP000005640_9606.fasta")
   }
 
   "parse" in {
