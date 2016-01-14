@@ -7,7 +7,7 @@ import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models.{PepSpectraMatch, ProteinIdent}
 import ch.isbsib.proteomics.mzviz.matches.models.maxquant.{EvidenceTableEntry, ProteinGroupsTableEntry}
 import ch.isbsib.proteomics.mzviz.modifications.ModifName
-import ch.isbsib.proteomics.mzviz.theoretical.AccessionCode
+import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 import ch.isbsib.proteomics.mzviz.theoretical.models.SearchDatabase
 import net.sf.ehcache.search.expression.EqualTo
 import org.specs2.mutable.Specification
@@ -88,7 +88,7 @@ class LoaderMaxQuantSpecs extends Specification {
 
   "load ProteinIdents" in {
 
-    val proteinIdMap:Map[RunId,Seq[ProteinIdent]] = LoaderMaxQuant.loadProtIdent("test/resources/maxquant/", runIdsAndRawfiles)
+    val proteinIdMap:Map[RunId,Seq[ProteinIdent]] = LoaderMaxQuant.loadProtIdent("test/resources/maxquant/", runIdsAndRawfiles, SequenceSource("SomeSource"))
 
     // should have 2 runIds
     proteinIdMap.keys.size mustEqual(2)
@@ -142,7 +142,7 @@ class LoaderMaxQuantSpecs extends Specification {
 
   "load PepSpectraMatch" in {
 
-    val pepSpectraMap:Map[RunId,Seq[PepSpectraMatch]] = LoaderMaxQuant.loadPepSpectraMatch("test/resources/maxquant/",runIds)
+    val pepSpectraMap:Map[RunId,Seq[PepSpectraMatch]] = LoaderMaxQuant.loadPepSpectraMatch("test/resources/maxquant/",runIds, SequenceSource("SomeSource"))
 
     // should have 2 runIds
     pepSpectraMap.keys.size mustEqual(2)
@@ -176,14 +176,14 @@ class LoaderMaxQuantSpecs extends Specification {
     pep10.head.proteinList(0).startPos mustEqual(715)
     pep10.head.proteinList(0).proteinRef.AC.value mustEqual("Q7L2E3")
     pep10.head.proteinList(0).proteinRef.identifiers mustEqual(Set())
-    pep10.head.proteinList(0).proteinRef.source mustEqual(None)
+    pep10.head.proteinList(0).proteinRef.source mustEqual(Some(SequenceSource("SomeSource")))
 
     pep11.head.matchInfo.massDiff.get mustEqual(-0.40905)
     pep11.head.proteinList(0).nextAA.get mustEqual ("K")
   }
 
   "parse Search Info" in {
-    val searchInfoMap= LoaderMaxQuant.parseSearchInfo("test/resources/maxquant/")
+    val searchInfoMap= LoaderMaxQuant.parseSearchInfo("test/resources/maxquant/", SequenceSource("SomeSource"))
 
     // should have 2 runIds
     searchInfoMap.keys.size mustEqual(2)
@@ -198,7 +198,7 @@ class LoaderMaxQuantSpecs extends Specification {
     firstEntry.username mustEqual("user")
     firstEntry.database(0).version mustEqual(None)
     firstEntry.database(0).entries mustEqual(None)
-    firstEntry.database(0).id mustEqual("C:\\MaxQuant 1.5.3.30\\UniProt-fasta\\Homo_sapiens_091215\\UP000005640_9606.fasta")
+    firstEntry.database(0).id mustEqual("SomeSource")
   }
 
   "parse" in {

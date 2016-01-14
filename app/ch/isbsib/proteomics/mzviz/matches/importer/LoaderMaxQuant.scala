@@ -73,6 +73,17 @@ object LoaderMaxQuant {
     })
   }
 
+  def parseFastaFilename(fastaFilename:String): String = {
+    val fastaFileNameRegx = """.+\\(.+).fasta""".r
+    val fileNameRegx = """.+\\(.+)""".r
+
+    fastaFilename match {
+      case fastaFileNameRegx(n) => n
+      case fileNameRegx(n) => n
+      case _ => fastaFilename
+    }
+  }
+
   def parseMaxquantParametersTable(file: File): Map[String, String] = {
 
     val linesParam: Iterator[String] = fromFile(file).getLines()
@@ -133,15 +144,11 @@ object LoaderMaxQuant {
     msmsEntryScores
   }
 
-  def loadProtIdent(maxQuantDir: String, runIdsAndRawfiles: Seq[(RunId, String)]): Map[RunId, Seq[ProteinIdent]] = {
+  def loadProtIdent(maxQuantDir: String, runIdsAndRawfiles: Seq[(RunId, String)], sequenceSource:SequenceSource): Map[RunId, Seq[ProteinIdent]] = {
 
     // load files
-    val file_params = new File(maxQuantDir + filename_params)
     val file_prot = new File(maxQuantDir + filename_prot)
     val file_msms = new File(maxQuantDir + filename_msms)
-
-    //From parameters.txt
-    val source = parseMaxquantParametersTable(file_params)("Fasta file")
 
     val runIdsList = runIdsAndRawfiles.map(_._1)
     val proteinGroupEntry = parseProteinGroupTable(file_prot, runIdsList)
@@ -161,10 +168,10 @@ object LoaderMaxQuant {
         val identScore = IdentScore(scoreHash.getOrElse(runId, -1), Map())
 
         val subset = entry.majorityProtein.drop(1).map({ protein: String =>
-          ProteinIdentInfo(AccessionCode(protein), SequenceSource(source), identScore, entry.uniquePeptides(runId), entry.msCount(runId), true)
+          ProteinIdentInfo(AccessionCode(protein), sequenceSource, identScore, entry.uniquePeptides(runId), entry.msCount(runId), true)
         })
 
-        val protInfo = ProteinIdentInfo(AccessionCode(ac), SequenceSource(source), identScore, entry.uniquePeptides(runId), entry.msCount(runId), true)
+        val protInfo = ProteinIdentInfo(AccessionCode(ac), sequenceSource, identScore, entry.uniquePeptides(runId), entry.msCount(runId), true)
 
         Tuple2(runId, ProteinIdent(SearchId(runId.value), protInfo, subset))
       })
@@ -310,7 +317,7 @@ object LoaderMaxQuant {
     peptidesMap
   }
 
-  def loadPepSpectraMatch(maxQuantDir: String, runIds: Seq[RunId]): Map[RunId, Seq[PepSpectraMatch]] = {
+  def loadPepSpectraMatch(maxQuantDir: String, runIds: Seq[RunId], sequenceSource:SequenceSource): Map[RunId, Seq[PepSpectraMatch]] = {
     //load files
     val file_evidence = new File(maxQuantDir + filename_evidence)
     val file_peptides = new File(maxQuantDir + filename_peptides)
@@ -328,8 +335,7 @@ object LoaderMaxQuant {
       val spectrumId = SpectrumId(SpectrumUniqueId(entry.pepId.toString), RunId(entry.experiment))
       val matchInfo = PepMatchInfo(IdentScore(entry.score, Map()), entry.missedCleavages, entry.massDiff, None, None, entry.chargeState, None)
 
-      // @TODO we will have to add the source somehow
-      val leadingProteinRef = ProteinRef(AccessionCode(entry.ac), Set(), None)
+      val leadingProteinRef = ProteinRef(AccessionCode(entry.ac), Set(), Some(sequenceSource))
       val pepEntry = peptidesHash(entry.pepId)
 
       val proteinList = Seq(ProteinMatch(leadingProteinRef, pepEntry.previousAA, pepEntry.nextAA, pepEntry.startPos, pepEntry.endPos, pepEntry.isDecoy))
@@ -346,7 +352,7 @@ object LoaderMaxQuant {
    * @param maxQuantDir
    * @return
    */
-  def parseSearchInfo(maxQuantDir: String): Map[RunId, SearchInfo] = {
+  def parseSearchInfo(maxQuantDir: String, sequenceSource:SequenceSource): Map[RunId, SearchInfo] = {
 
     // load files
     val file_params = new File(maxQuantDir + filename_params)
@@ -355,16 +361,12 @@ object LoaderMaxQuant {
     val paramsHash = parseMaxquantParametersTable(file_params)
     val summaryHash: Map[String, String] = parseMaxquantSummaryTable(file_summary)
 
-    val database = paramsHash("Fasta file")
-
-
     val username = paramsHash("User name")
-    // @TODO make parent tolerance optional
     val parentTolerance = None
     val fragmentTolerance = paramsHash("MS/MS tol. (FTMS)")
 
     val searchInfoHashAux: Map[RunId, SearchInfo] = summaryHash.map({
-      keyVal => Tuple2(RunId(keyVal._1), SearchInfo(SearchId(keyVal._1), keyVal._1, Seq(SearchDatabase(database, None, None)), username, keyVal._2, parentTolerance, fragmentTolerance))
+      keyVal => Tuple2(RunId(keyVal._1), SearchInfo(SearchId(keyVal._1), keyVal._1, Seq(SearchDatabase(sequenceSource.value, None, None)), username, keyVal._2, parentTolerance, fragmentTolerance))
     })
 
     val searchInfoHash= searchInfoHashAux.filter({entry=> entry._1.toString !="RunId()"})
@@ -374,13 +376,19 @@ object LoaderMaxQuant {
 
   def parse(maxQuantDir: String): Seq[(Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo)] = {
 
+    val file_params = new File(maxQuantDir + filename_params)
+
+    //From parameters.txt
+    val source = parseMaxquantParametersTable(file_params)("Fasta file")
+    val sequenceSource = SequenceSource(parseFastaFilename(source))
+
     //parse summary.txt to obtain List(RunId)
     val runIdsAndRawfiles: Seq[(RunId, String)] = LoaderMaxQuant.getRunIds(new File(maxQuantDir + filename_summary))
     val runIds = runIdsAndRawfiles.map(_._1)
 
-    val psmList: Map[RunId,Seq[PepSpectraMatch]] = loadPepSpectraMatch(maxQuantDir, runIds)
-    val proteinList: Map[RunId, Seq[ProteinIdent]] = loadProtIdent(maxQuantDir, runIdsAndRawfiles)
-    val searchInfo: Map[RunId, SearchInfo] = parseSearchInfo(maxQuantDir)
+    val psmList: Map[RunId,Seq[PepSpectraMatch]] = loadPepSpectraMatch(maxQuantDir, runIds, sequenceSource)
+    val proteinList: Map[RunId, Seq[ProteinIdent]] = loadProtIdent(maxQuantDir, runIdsAndRawfiles, sequenceSource)
+    val searchInfo: Map[RunId, SearchInfo] = parseSearchInfo(maxQuantDir, sequenceSource)
 
     val tupleSeq= runIds.map({
       runId =>  Tuple3(psmList(runId), proteinList(runId), searchInfo(runId))
