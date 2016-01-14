@@ -15,5 +15,5 @@ case class SearchInfo (searchId: SearchId,
                        database: Seq[SearchDatabase],
                        username:String,
                        enzyme: String,
-                       parentTolerance: String,
+                       parentTolerance: Option[String],
                        fragmentTolerance: String)

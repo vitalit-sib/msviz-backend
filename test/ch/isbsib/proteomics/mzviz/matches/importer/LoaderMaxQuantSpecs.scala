@@ -160,7 +160,6 @@ class LoaderMaxQuantSpecs extends Specification {
 
     pep10.head.pep.molMass.get mustEqual(1210.68224)
     pep10.head.pep.sequence mustEqual("AIFQQPPVGVR")
-    pep10.head.pep.modificationNames mustEqual(Vector(Seq(ModifName(""))))
 
     pep10.head.matchInfo.chargeState.get mustEqual(2)
     pep10.head.matchInfo.isRejected mustEqual(None)
@@ -194,7 +193,7 @@ class LoaderMaxQuantSpecs extends Specification {
     firstEntry.title mustEqual("1-DMSO")
     firstEntry.enzyme mustEqual("Trypsin/P")
     firstEntry.fragmentTolerance mustEqual("20 ppm")
-    firstEntry.parentTolerance mustEqual("-1")
+    firstEntry.parentTolerance mustEqual(None)
     firstEntry.searchId.value mustEqual("1-DMSO")
     firstEntry.username mustEqual("user")
     firstEntry.database(0).version mustEqual(None)

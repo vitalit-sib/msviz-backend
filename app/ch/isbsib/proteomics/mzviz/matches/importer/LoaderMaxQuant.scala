@@ -360,11 +360,11 @@ object LoaderMaxQuant {
 
     val username = paramsHash("User name")
     // @TODO make parent tolerance optional
-    val parentTolerance = -1
+    val parentTolerance = None
     val fragmentTolerance = paramsHash("MS/MS tol. (FTMS)")
 
     val searchInfoHashAux: Map[RunId, SearchInfo] = summaryHash.map({
-      keyVal => Tuple2(RunId(keyVal._1), SearchInfo(SearchId(keyVal._1), keyVal._1, Seq(SearchDatabase(database, None, None)), username, keyVal._2, parentTolerance.toString, fragmentTolerance))
+      keyVal => Tuple2(RunId(keyVal._1), SearchInfo(SearchId(keyVal._1), keyVal._1, Seq(SearchDatabase(database, None, None)), username, keyVal._2, parentTolerance, fragmentTolerance))
     })
 
     val searchInfoHash= searchInfoHashAux.filter({entry=> entry._1.toString !="RunId()"})

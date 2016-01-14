@@ -97,7 +97,7 @@ object LoaderMzIdent {
     val database= parseSearchDbSourceInfo(mzidXml)
     val username=parseUsernameFilename(mzidXml)
     val enzyme=parseEnzymeFilename(mzidXml)
-    val parentTolerance=parseParentToleranceFilename(mzidXml)
+    val parentTolerance=Option(parseParentToleranceFilename(mzidXml))
     val fragmentTolerance=parseFragmentToleranceFilename(mzidXml)
     SearchInfo(searchId,title,database,username, enzyme,parentTolerance,fragmentTolerance)
   }
