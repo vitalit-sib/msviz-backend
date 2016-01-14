@@ -213,4 +213,70 @@ class LoaderMaxQuantSpecs extends Specification {
     list2._1(1).matchInfo.score.mainScore mustEqual(78.456)
 
   }
+
+  "create Hash Pos Modification" in {
+    val modList=List("(ox)", "(ph)", "(ph)")
+    val posList=List(1,4,7)
+    val seqMod= Seq("Oxidation (M)", "2 Phospho (ST)")
+    val hashPosModificationMaxQ= LoaderMaxQuant.createHashPosModificationMaxQ(posList, modList)
+    val hashModMaxQuantUnimod= LoaderMaxQuant.createHashModMaxQuantUnimod(seqMod)
+    val hash = LoaderMaxQuant.createHashPosModification(posList,hashPosModificationMaxQ,hashModMaxQuantUnimod)
+
+    val hashExpected= Map(1 -> "Oxidation", 4 -> "Phospho", 7 -> "Phospho")
+    hash.size mustEqual(3)
+    hashExpected.mustEqual(hash)
+
+  }
+
+  "create Hash Pos Modification MaxQ" in {
+    val modList=List("(ox)", "(ph)", "(ph)")
+    val posList=List(1,4,7)
+    val hashPosModificationMaxQ= LoaderMaxQuant.createHashPosModificationMaxQ(posList, modList)
+    val hashExpected= Map(1 -> "ox", 4 -> "ph", 7 -> "ph")
+    hashPosModificationMaxQ.size mustEqual(3)
+    hashExpected.mustEqual(hashPosModificationMaxQ)
+  }
+
+  "create Hash Mod MaxQuant Unimod" in {
+    val seqMod= Seq("Oxidation (M)", "2 Phospho (ST)", "Oxidation (M)")
+    val hashModMaxQuantUnimod= LoaderMaxQuant.createHashModMaxQuantUnimod(seqMod)
+    val hashExpected= Map("ox" -> "Oxidation", "ph" -> "Phospho")
+
+    hashModMaxQuantUnimod.size mustEqual(2)
+    hashExpected.mustEqual(hashModMaxQuantUnimod)
+  }
+
+  "find Modification Pos Recursive" in {
+    val listExpected1=List(11, 24)
+    val sequence1="_ALYDAELSQM(ox)QTHISDTSVVLSM(ox)DNNR_"
+    val modifNamesMaxQuant1: List[String] = """\([a-z]*\)""".r.findAllIn(sequence1).toList
+    val list1= LoaderMaxQuant.findModificationPosRecursive(modifNamesMaxQuant1,sequence1)
+
+    val listExpected2=List(11, 17, 24)
+    val sequence2="_ALYDAELSQM(ox)QTHISD(ph)TSVVLSM(ox)DNNR_"
+    val modifNamesMaxQuant2: List[String] = """\([a-z]*\)""".r.findAllIn(sequence2).toList
+    val list2= LoaderMaxQuant.findModificationPosRecursive(modifNamesMaxQuant2,sequence2)
+
+    list1.size mustEqual(2)
+    listExpected1 mustEqual(list1)
+
+    list2.size mustEqual(3)
+    listExpected2 mustEqual(list2)
+  }
+
+  "update vector" in {
+
+    val hashModif= Map(2 -> "Oxidation", 3 -> "Phospho")
+    val finalVector= LoaderMaxQuant.updateVector(hashModif,5)
+
+    finalVector.length mustEqual(5)
+    finalVector mustEqual( Vector(Seq(),Seq(ModifName("Oxidation")),Seq(ModifName("Phospho")),Seq(),Seq()))
+
+    //Take first entry in evidence.txt
+    val evidenceTable= LoaderMaxQuant.parseEvidenceTable(new File("test/resources/maxquant/evidence.txt"))
+
+    val firstEntry= evidenceTable(0)
+    firstEntry.modificationVector mustEqual(Vector(Seq(ModifName("Acetyl")),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),
+      Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq()))
+  }
 }

@@ -219,19 +219,11 @@ object LoaderMaxQuant {
         val hashPosModificationMaxQ= createHashPosModificationMaxQ(modifPosMaxQuant,modifNamesMaxQuant)
         val hashPosModification= createHashPosModification(modifPosMaxQuant,hashPosModificationMaxQ,hashModMaxQuantUnimod)
         val lenghtVector=(m(lengthPos).toInt)+2
-        //println("Se crea vector con longitud igual a: " + lenghtVector)
-        val vectorNames= Vector.fill(lenghtVector)(Seq(ModifName("empty")))
-        //println("Las posiciones modificadas son: " + hashPosModification.keys)
-        //println("El hash de modif es: " + hashPosModification )
+        val vectorNames= Vector.fill(lenghtVector)(Seq())
 
         //Check if there is any modification
         if(hashPosModification.keys != Set()) {
-          val modifNamesVector: Vector[Seq[ModifName]] = hashPosModification.keys.map({
-            key =>
-              val changed = vectorNames.updated(key - 1, Seq(ModifName(hashPosModification(key))))
-              changed
-
-          }).head
+          val modifNamesVector = updateVector(hashPosModification,lenghtVector)
           EvidenceTableEntry(id, sequence, experiment, molMass, score, missCleavages, massDiff, charge, ac, pepId,modifNamesVector)
         }
         else EvidenceTableEntry(id, sequence, experiment, molMass, score, missCleavages, massDiff, charge, ac, pepId,vectorNames)
@@ -240,10 +232,18 @@ object LoaderMaxQuant {
     })
   }
 
+  def updateVector(modifPosHash: Map[Int, String], vectorLength: Int): Vector[Seq[ModifName]] = {
+    (1 to vectorLength).toVector.map({pos =>
+      if(modifPosHash.contains(pos)){
+        Seq(ModifName(modifPosHash(pos)))
+      }else{
+        Seq()
+      }
+    })
+  }
+
   //Create a hash with the position and the modification with Unimod name
   def createHashPosModification (modificationPosList: List[Int], hashPosModificationMaxQ:Map[Int, String] , hashModMaxQuantUnimod:Map[String,String]): Map[Int, String] = {
-    //println("hash maxq es " + hashPosModificationMaxQ)
-    //println("hash final es" + hashModMaxQuantUnimod)
     val hashPosModif= modificationPosList.map({
       pos=>
         Tuple2(pos, hashModMaxQuantUnimod(hashPosModificationMaxQ(pos)))
