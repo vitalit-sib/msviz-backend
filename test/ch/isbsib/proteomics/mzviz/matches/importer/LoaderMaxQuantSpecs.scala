@@ -25,6 +25,8 @@ class LoaderMaxQuantSpecs extends Specification {
   val runIds = runIdsAndRawfiles.map(_._1)
   val rawfilesRunIdMap: Map[String, RunId] = runIdsAndRawfiles.map(t => Tuple2(t._2, t._1)).toMap
 
+
+
   "parse protein groups" in {
 
     val listProteinGroups = LoaderMaxQuant.parseProteinGroupTable(new File("test/resources/maxquant/proteinGroups.txt"), runIds)
@@ -211,6 +213,9 @@ class LoaderMaxQuantSpecs extends Specification {
     list1._1(0).pep.sequence mustEqual("AAQAPTPGLLQSPR")
     list2._2(0).mainProt.proteinAC.value mustEqual("A0A0C4DH35")
     list2._1(1).matchInfo.score.mainScore mustEqual(78.456)
+    list2._1(0).pep.sequence mustEqual("AAAAAEQQQFYLLLGNLLSPDNVVR")
+    list2._1(0).pep.modificationNames mustEqual(Vector(Seq(ModifName("Acetyl")),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),
+    Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq()))
 
   }
 
@@ -279,4 +284,6 @@ class LoaderMaxQuantSpecs extends Specification {
     firstEntry.modificationVector mustEqual(Vector(Seq(ModifName("Acetyl")),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),
       Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq()))
   }
+
+
 }

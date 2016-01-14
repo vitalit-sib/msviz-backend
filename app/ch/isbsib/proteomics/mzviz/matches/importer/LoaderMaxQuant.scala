@@ -223,7 +223,7 @@ object LoaderMaxQuant {
 
         //Check if there is any modification
         if(hashPosModification.keys != Set()) {
-          val modifNamesVector = updateVector(hashPosModification,lenghtVector)
+          val modifNamesVector: Vector[Seq[ModifName]] = updateVector(hashPosModification,lenghtVector)
           EvidenceTableEntry(id, sequence, experiment, molMass, score, missCleavages, massDiff, charge, ac, pepId,modifNamesVector)
         }
         else EvidenceTableEntry(id, sequence, experiment, molMass, score, missCleavages, massDiff, charge, ac, pepId,vectorNames)
@@ -324,7 +324,7 @@ object LoaderMaxQuant {
 
     //Create PepSpectraMatch for each entry in evidenceEntry
     val runIdToPepSpectraMatchList: List[(RunId, PepSpectraMatch)] = evidenceEntry.map({ entry =>
-      val pep = Peptide(entry.sequence, entry.molMass, Vector(Seq(ModifName(""))))
+      val pep = Peptide(entry.sequence, entry.molMass, entry.modificationVector)
       val spectrumId = SpectrumId(SpectrumUniqueId(entry.pepId.toString), RunId(entry.experiment))
       val matchInfo = PepMatchInfo(IdentScore(entry.score, Map()), entry.missedCleavages, entry.massDiff, None, None, entry.chargeState, None)
 

@@ -254,6 +254,7 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
       )
     ))
 
+
     db.command(command).map({
       doc =>
         doc.getAs[List[BSONDocument]]("result").get.map({
@@ -261,6 +262,8 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
             (ModifName(elDoc.getAs[String]("_id").get), elDoc.getAs[Int]("count").get)
         }).toMap
     })
+
+
   }
 
   /**

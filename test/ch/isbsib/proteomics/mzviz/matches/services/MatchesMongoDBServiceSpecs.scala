@@ -6,7 +6,7 @@ import ch.isbsib.proteomics.mzviz.commons._
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.matches.SearchId
-import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
+import ch.isbsib.proteomics.mzviz.matches.importer.{LoaderMaxQuant, LoaderMzIdent}
 import ch.isbsib.proteomics.mzviz.modifications.ModifName
 import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 import org.scalatest.concurrent.ScalaFutures
@@ -212,7 +212,23 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
 
     }
   }
+/*
+  "find All Modifications By SearchIds" in new TempMongoDBService {
 
+    running(FakeApplication()) {
+
+     // val file_1 = new File("test/resources/mascot/M_100.mzid")
+      val loadMaxQ= LoaderMaxQuant.parse("test/resources/maxquant/")
+      val insertMQ= service.insert(loadMaxQ(0)._1)
+      //service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"))._1).futureValue
+      val setSearchIds= Set(SearchId("4-Nocodazole"))
+      Thread.sleep(20000)
+      val hashModif= service.findAllModificationsBySearchIds(setSearchIds)
+      hashModif.futureValue mustEqual(Map("Acetyl" -> 1))
+    }
+
+  }
+*/
 
 
 
