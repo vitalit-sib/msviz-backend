@@ -165,7 +165,7 @@ class LoaderMaxQuantSpecs extends Specification {
     pep10.head.matchInfo.isRejected mustEqual(None)
     pep10.head.matchInfo.massDiff.get mustEqual(0.13029)
     pep10.head.matchInfo.numMissedCleavages.get mustEqual(0)
-    pep10.head.matchInfo.rank mustEqual(None)
+    pep10.head.matchInfo.rank mustEqual(Some(1))
     pep10.head.matchInfo.score.mainScore mustEqual(67.113)
     pep10.head.matchInfo.totalNumIons mustEqual(None)
 
