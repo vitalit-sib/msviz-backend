@@ -77,7 +77,10 @@ object LoaderMzIdent {
       PepSpectraMatch(
         searchId = searchId,
         spectrumId = SpectrumId(
-          SpectrumUniqueId(t._1.getSpectrum),
+        //  SpectrumUniqueId(t._1.getSpectrum),
+        //to make it compatible with MaxQuant
+          //SpectrumUniqueId(t._1.getScanNumbers.getFirst.getValue.toString),
+          SpectrumUniqueId(t._1.getIndex.get().toString),
           runId = runId),
         pep = convertPeptide(t._2),
         matchInfo = convertPepMatch(t),
