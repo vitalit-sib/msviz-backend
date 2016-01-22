@@ -25,7 +25,7 @@ class LoaderMaxQuantSpecs extends Specification {
   val runIds = runIdsAndRawfiles.map(_._1)
   val rawfilesRunIdMap: Map[String, RunId] = runIdsAndRawfiles.map(t => Tuple2(t._2, t._1)).toMap
 
-
+/*
 
   "parse protein groups" in {
 
@@ -267,7 +267,7 @@ class LoaderMaxQuantSpecs extends Specification {
     list2.size mustEqual(3)
     listExpected2 mustEqual(list2)
   }
-
+*/
   "update vector" in {
 
     val hashModif= Map(2 -> "Oxidation", 3 -> "Phospho")

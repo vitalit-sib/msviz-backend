@@ -144,7 +144,7 @@ object LoaderMaxQuant {
     msmsEntryScores
   }
 
-  def loadProtIdent(maxQuantDir: String, runIdsAndRawfiles: Seq[(RunId, String)], sequenceSource:SequenceSource): Map[RunId, Seq[ProteinIdent]] = {
+  def loadProtIdent(maxQuantDir: String, runIdsAndRawfiles: Seq[(RunId, String)], sequenceSource:SequenceSource, idTitle:String): Map[RunId, Seq[ProteinIdent]] = {
 
     // load files
     val file_prot = new File(maxQuantDir + filename_prot)
@@ -173,7 +173,7 @@ object LoaderMaxQuant {
 
         val protInfo = ProteinIdentInfo(AccessionCode(ac), sequenceSource, identScore, entry.uniquePeptides(runId), entry.msCount(runId), true)
 
-        Tuple2(runId, ProteinIdent(SearchId(runId.value), protInfo, subset))
+        Tuple2(runId, ProteinIdent(SearchId(idTitle + ":" + runId.value), protInfo, subset))
       })
     })
 
@@ -317,7 +317,7 @@ object LoaderMaxQuant {
     peptidesMap
   }
 
-  def loadPepSpectraMatch(maxQuantDir: String, runIds: Seq[RunId], sequenceSource:SequenceSource): Map[RunId, Seq[PepSpectraMatch]] = {
+  def loadPepSpectraMatch(maxQuantDir: String, runIds: Seq[RunId], sequenceSource:SequenceSource, idTitle:String): Map[RunId, Seq[PepSpectraMatch]] = {
     //load files
     val file_evidence = new File(maxQuantDir + filename_evidence)
     val file_peptides = new File(maxQuantDir + filename_peptides)
@@ -341,7 +341,7 @@ object LoaderMaxQuant {
 
       val proteinList = Seq(ProteinMatch(leadingProteinRef, pepEntry.previousAA, pepEntry.nextAA, pepEntry.startPos, pepEntry.endPos, pepEntry.isDecoy))
 
-      Tuple2(RunId(entry.experiment), PepSpectraMatch(SearchId(entry.experiment), spectrumId, pep, matchInfo, proteinList))
+      Tuple2(RunId(entry.experiment), PepSpectraMatch(SearchId(idTitle + ":" + entry.experiment), spectrumId, pep, matchInfo, proteinList))
     })
 
     // Group the list by RunId to create a Map[RunId, List[RunId,PepSpectraMatch]] and then mapValues to create Map[RunId,List[PepSpectraMatch]]
@@ -353,7 +353,7 @@ object LoaderMaxQuant {
    * @param maxQuantDir
    * @return
    */
-  def parseSearchInfo(maxQuantDir: String, sequenceSource:SequenceSource): Map[RunId, SearchInfo] = {
+  def parseSearchInfo(maxQuantDir: String, sequenceSource:SequenceSource, idTitle: String): Map[RunId, SearchInfo] = {
 
     // load files
     val file_params = new File(maxQuantDir + filename_params)
@@ -367,7 +367,7 @@ object LoaderMaxQuant {
     val fragmentTolerance = paramsHash("MS/MS tol. (FTMS)")
 
     val searchInfoHashAux: Map[RunId, SearchInfo] = summaryHash.map({
-      keyVal => Tuple2(RunId(keyVal._1), SearchInfo(SearchId(keyVal._1), keyVal._1, Seq(SearchDatabase(sequenceSource.value, None, None)), username, keyVal._2, parentTolerance, fragmentTolerance))
+      keyVal => Tuple2(RunId(keyVal._1), SearchInfo(SearchId(idTitle + ":" + keyVal._1),  keyVal._1, Seq(SearchDatabase(sequenceSource.value, None, None)), username, keyVal._2, parentTolerance, fragmentTolerance))
     })
 
     val searchInfoHash= searchInfoHashAux.filter({entry=> entry._1.toString !="RunId()"})
@@ -375,7 +375,7 @@ object LoaderMaxQuant {
   }
 
 
-  def parse(maxQuantDir: String): Seq[(Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo)] = {
+  def parse(maxQuantDir: String, idTitle: String): Seq[(Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo)] = {
 
     val file_params = new File(maxQuantDir + filename_params)
 
@@ -387,9 +387,9 @@ object LoaderMaxQuant {
     val runIdsAndRawfiles: Seq[(RunId, String)] = LoaderMaxQuant.getRunIds(new File(maxQuantDir + filename_summary))
     val runIds = runIdsAndRawfiles.map(_._1)
 
-    val psmList: Map[RunId,Seq[PepSpectraMatch]] = loadPepSpectraMatch(maxQuantDir, runIds, sequenceSource)
-    val proteinList: Map[RunId, Seq[ProteinIdent]] = loadProtIdent(maxQuantDir, runIdsAndRawfiles, sequenceSource)
-    val searchInfo: Map[RunId, SearchInfo] = parseSearchInfo(maxQuantDir, sequenceSource)
+    val psmList: Map[RunId,Seq[PepSpectraMatch]] = loadPepSpectraMatch(maxQuantDir, runIds, sequenceSource, idTitle)
+    val proteinList: Map[RunId, Seq[ProteinIdent]] = loadProtIdent(maxQuantDir, runIdsAndRawfiles, sequenceSource, idTitle)
+    val searchInfo: Map[RunId, SearchInfo] = parseSearchInfo(maxQuantDir, sequenceSource, idTitle)
 
     val tupleSeq= runIds.map({
       runId =>  Tuple3(psmList(runId), proteinList(runId), searchInfo(runId))
@@ -398,13 +398,13 @@ object LoaderMaxQuant {
   }
 
 
-  def parseZip(maxQuantZip: File): Seq[(Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo)] = {
+  def parseZip(maxQuantZip: File, idTitle: String): Seq[(Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo)] = {
     val tmpDir = Unzip.unzip(maxQuantZip)
 
     val dirsInTmpDir = Unzip.getListOfDirs(tmpDir)
     val txtDir = if(dirsInTmpDir.length == 1 && dirsInTmpDir(0).getName == "txt") tmpDir + "/txt/" else tmpDir + "/"
 
-    parse(txtDir)
+    parse(txtDir, idTitle)
 
     // remove tmpDir once we finished parsing (we will have to add scala-io to do so)
     //val tmpPath:Path = Path(tmpDir)
