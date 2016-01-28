@@ -39,7 +39,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
       service.countRunIds.futureValue must equalTo(0)
     }
   }
-
+/*
   "import and insert q psm list" should {
 
     val file_1 = new File("test/resources/mascot/M_100.mzid")
@@ -95,7 +95,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
         idList.size must equalTo(62)
 
         //check JSON content
-        idList(0).id must equalTo(SpectrumUniqueId("File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 50.227 min, Period: 1, Cycle(s): 2033 (Experiment 4)"))
+        idList(0).id must equalTo(SpectrumUniqueId(27))
         idList(0).runId must equalTo(RunId("M_100.mgf"))
       }
     }
@@ -119,7 +119,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
   }
 
 
-
+*/
   "listProteinRefsBySearchId" should {
 
     running(FakeApplication()) {

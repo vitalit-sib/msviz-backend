@@ -141,6 +141,21 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
   }
 
   /**
+   * retrieves  by run & scanNumber (unique by index setup)
+   * @param runId the run id
+   * @param scanNumber the scan Number
+   * @return
+   */
+  def findSpectrumByRunIdAndScanNumber(runId: RunId, scanNumber: Int): Future[ExpMSnSpectrum] = {
+    val query = Json.obj("ref.spectrumId.runId" -> runId.value, "ref.spectrumId.id" -> scanNumber)
+    println(query)
+    collection.find(query).cursor[ExpMSnSpectrum].headOption map {
+      case Some(sp: ExpMSnSpectrum) => sp
+      case None => throw new MongoNotFoundException(s"${runId.value}/$scanNumber")
+    }
+  }
+
+  /**
    * retrieves all spectra by run
    * @param runId the run id
    * @return

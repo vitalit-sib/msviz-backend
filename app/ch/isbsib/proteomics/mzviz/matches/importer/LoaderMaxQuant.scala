@@ -3,7 +3,7 @@ package ch.isbsib.proteomics.mzviz.matches.importer
 import java.io.{IOException, File}
 
 import ch.isbsib.proteomics.mzviz.commons.helpers.Unzip
-import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
+import ch.isbsib.proteomics.mzviz.experimental.{ScanNumber, SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models._
@@ -332,7 +332,7 @@ object LoaderMaxQuant {
     //Create PepSpectraMatch for each entry in evidenceEntry
     val runIdToPepSpectraMatchList: List[(RunId, PepSpectraMatch)] = evidenceEntry.map({ entry =>
       val pep = Peptide(entry.sequence, entry.molMass, entry.modificationVector)
-      val spectrumId = SpectrumId(SpectrumUniqueId(entry.pepId.toString), RunId(entry.experiment))
+      val spectrumId = SpectrumId(SpectrumUniqueId(entry.pepId), RunId(entry.experiment))
       // we assume that PSM is always rank 1 @TODO does MQ really only indicate first ranks?
       val matchInfo = PepMatchInfo(IdentScore(entry.score, Map()), entry.missedCleavages, entry.massDiff, rank=Some(1), None, entry.chargeState, None)
 

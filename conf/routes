@@ -13,7 +13,7 @@ POST          /exp/xic/:runId                                        ch.isbsib.p
 GET           /exp/msruns                                            ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.listMSRunIds
 POST          /exp/msrun/:runId                                      ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.loadMSRun(runId)
 DELETE        /exp/msrun/:runId                                      ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.deleteMSRun(runId)
-GET           /exp/spectrum/:runId/:id                               ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findExpSpectrum(runId:String, id:String, sortByMoz:Option[Boolean], mostIntense:Option[Integer])
+GET           /exp/spectrum/:runId/:id                               ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findExpSpectrum(runId:String, id:Int, sortByMoz:Option[Boolean], mostIntense:Option[Integer])
 GET           /exp/spectra-ref/:runId                                ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findAllSpectraRefByRunId(runId)
 
 GET           /api-docs/sequences                                    controllers.ApiHelpController.getResource(path = "/sequences")

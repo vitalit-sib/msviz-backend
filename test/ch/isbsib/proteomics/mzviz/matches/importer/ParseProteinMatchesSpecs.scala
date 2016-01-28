@@ -23,7 +23,7 @@ class ParseProteinMatchesSpecs extends Specification {
       val mzIdentML = scala.xml.XML.loadFile(new File("test/resources/mascot/F001644.mzid"))
       val spIdTitleRelation = ParseProteinMatches.parseSpectrumIdAndTitleRelation(mzIdentML \\ "SpectrumIdentificationList")
 
-      spIdTitleRelation.get(SpectrumIdentifictionItem("SII_71_1")) must equalTo(Some(SpectrumUniqueId("20141008_BSA_25cm_column2.9985.9985.2")))
+      spIdTitleRelation.get(SpectrumIdentifictionItem("SII_71_1")) must equalTo(Some(SpectrumUniqueId(9985)))
 
       spIdTitleRelation.size must equalTo(437)
     }

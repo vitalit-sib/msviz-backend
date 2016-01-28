@@ -25,7 +25,7 @@ class LoaderMaxQuantSpecs extends Specification {
   val runIds = runIdsAndRawfiles.map(_._1)
   val rawfilesRunIdMap: Map[String, RunId] = runIdsAndRawfiles.map(t => Tuple2(t._2, t._1)).toMap
 
-/*
+
 
   "parse protein groups" in {
 
@@ -38,13 +38,13 @@ class LoaderMaxQuantSpecs extends Specification {
 
     entry.bestMsMs mustEqual(List(220, 221, 466, 467, 2415))
     entry.majorityProtein mustEqual(List("Q99613","B5ME19"))
-    entry.uniquePeptides.keys.toList mustEqual(List(RunId("1-DMSO"), RunId("4-Nocodazole")))
-    entry.msCount.keys.toList mustEqual(List(RunId("1-DMSO"), RunId("4-Nocodazole")))
+    entry.uniquePeptides.keys.toList mustEqual(List(RunId("DMSO"), RunId("Nocodazole")))
+    entry.msCount.keys.toList mustEqual(List(RunId("DMSO"), RunId("Nocodazole")))
     entry.msCount.values.toList mustEqual(List(3,1))
 
     //total amount of nSequences for F002453
     val nSeqTotal=listProteinGroups.map({
-      entry => entry.msCount(RunId("4-Nocodazole"))
+      entry => entry.msCount(RunId("Nocodazole"))
     }).sum
 
     nSeqTotal mustEqual(1349)
@@ -65,7 +65,7 @@ class LoaderMaxQuantSpecs extends Specification {
 
     //Select second row id=1
     msmsHash(1).id mustEqual(1)
-    msmsHash(1).runId mustEqual(RunId("4-Nocodazole"))
+    msmsHash(1).runId mustEqual(RunId("Nocodazole"))
     msmsHash(1).score mustEqual(78.456)
   }
 
@@ -75,29 +75,29 @@ class LoaderMaxQuantSpecs extends Specification {
     val listIds=List(1)
 
     val scoreHash= LoaderMaxQuant.obtainMsMsScoreById(listIds, msmsHash)
-    scoreHash(RunId("4-Nocodazole")) mustEqual(78.456)
+    scoreHash(RunId("Nocodazole")) mustEqual(78.456)
 
     val listIds2=List(0,1,2, 3, 4, 5, 6)
     val scoreHash2= LoaderMaxQuant.obtainMsMsScoreById(listIds2, msmsHash)
     scoreHash2.size mustEqual(2)
-    scoreHash2(RunId("4-Nocodazole")) mustEqual(457.614)
-    scoreHash2(RunId("1-DMSO")) mustEqual(245.61)
+    scoreHash2(RunId("Nocodazole")) mustEqual(457.614)
+    scoreHash2(RunId("DMSO")) mustEqual(245.61)
 
   }
 
 
   "load ProteinIdents" in {
 
-    val proteinIdMap:Map[RunId,Seq[ProteinIdent]] = LoaderMaxQuant.loadProtIdent("test/resources/maxquant/", runIdsAndRawfiles, SequenceSource("SomeSource"))
+    val proteinIdMap:Map[RunId,Seq[ProteinIdent]] = LoaderMaxQuant.loadProtIdent("test/resources/maxquant/", runIdsAndRawfiles, SequenceSource("SomeSource"), "hoho")
 
     // should have 2 runIds
     proteinIdMap.keys.size mustEqual(2)
 
-    proteinIdMap(RunId("4-Nocodazole")).size mustEqual(136)
-    proteinIdMap(RunId("1-DMSO")).size mustEqual(121)
+    proteinIdMap(RunId("Nocodazole")).size mustEqual(136)
+    proteinIdMap(RunId("DMSO")).size mustEqual(121)
 
-    val oneProt53 = proteinIdMap(RunId("1-DMSO")).filter(p => p.mainProt.proteinAC.value == "Q99613")
-    val oneProt54 = proteinIdMap(RunId("4-Nocodazole")).filter(p => p.mainProt.proteinAC.value == "Q99613")
+    val oneProt53 = proteinIdMap(RunId("DMSO")).filter(p => p.mainProt.proteinAC.value == "Q99613")
+    val oneProt54 = proteinIdMap(RunId("Nocodazole")).filter(p => p.mainProt.proteinAC.value == "Q99613")
 
     oneProt53.head.mainProt.score.mainScore mustEqual(246.776)
     oneProt54.head.mainProt.score.mainScore mustEqual(114.41499999999999)
@@ -115,7 +115,7 @@ class LoaderMaxQuantSpecs extends Specification {
 
     entry.id mustEqual(0)
     entry.sequence mustEqual("AAAAAEQQQFYLLLGNLLSPDNVVR")
-    entry.experiment mustEqual("4-Nocodazole")
+    entry.experiment mustEqual("Nocodazole")
     entry.molMass.get mustEqual(2742.43408)
     entry.score mustEqual(159.98)
     entry.missedCleavages.get mustEqual(0)
@@ -142,21 +142,21 @@ class LoaderMaxQuantSpecs extends Specification {
 
   "load PepSpectraMatch" in {
 
-    val pepSpectraMap:Map[RunId,Seq[PepSpectraMatch]] = LoaderMaxQuant.loadPepSpectraMatch("test/resources/maxquant/",runIds, SequenceSource("SomeSource"))
+    val pepSpectraMap:Map[RunId,Seq[PepSpectraMatch]] = LoaderMaxQuant.loadPepSpectraMatch("test/resources/maxquant/",runIds, SequenceSource("SomeSource"), "hoho")
 
     // should have 2 runIds
     pepSpectraMap.keys.size mustEqual(2)
 
-    pepSpectraMap(RunId("4-Nocodazole")).size mustEqual(648)
-    pepSpectraMap(RunId("1-DMSO")).size mustEqual(652)
+    pepSpectraMap(RunId("Nocodazole")).size mustEqual(648)
+    pepSpectraMap(RunId("DMSO")).size mustEqual(652)
 
-    val pep10 = pepSpectraMap(RunId("4-Nocodazole")).filter(p => p.pep.sequence == "AIFQQPPVGVR")
-    val pep11 = pepSpectraMap(RunId("1-DMSO")).filter(p => p.pep.sequence == "AIFQQPPVGVR")
+    val pep10 = pepSpectraMap(RunId("Nocodazole")).filter(p => p.pep.sequence == "AIFQQPPVGVR")
+    val pep11 = pepSpectraMap(RunId("DMSO")).filter(p => p.pep.sequence == "AIFQQPPVGVR")
 
-    pep10.head.searchId.value mustEqual("4-Nocodazole")
+    pep10.head.searchId.value mustEqual("hoho:Nocodazole")
 
-    pep10.head.spectrumId.id.value mustEqual("40")
-    pep10.head.spectrumId.runId.value mustEqual("4-Nocodazole")
+    pep10.head.spectrumId.id.value mustEqual(40)
+    pep10.head.spectrumId.runId.value mustEqual("Nocodazole")
 
     pep10.head.pep.molMass.get mustEqual(1210.68224)
     pep10.head.pep.sequence mustEqual("AIFQQPPVGVR")
@@ -183,18 +183,17 @@ class LoaderMaxQuantSpecs extends Specification {
   }
 
   "parse Search Info" in {
-    val searchInfoMap= LoaderMaxQuant.parseSearchInfo("test/resources/maxquant/", SequenceSource("SomeSource"))
+    val searchInfoMap= LoaderMaxQuant.parseSearchInfo("test/resources/maxquant/", SequenceSource("SomeSource"), "hoho")
 
     // should have 2 runIds
     searchInfoMap.keys.size mustEqual(2)
 
-    val firstEntry=searchInfoMap(RunId("1-DMSO"))
-
-    firstEntry.title mustEqual("1-DMSO")
+    val firstEntry=searchInfoMap(RunId("DMSO"))
+    firstEntry.title mustEqual("DMSO")
     firstEntry.enzyme mustEqual("Trypsin/P")
     firstEntry.fragmentTolerance mustEqual("20 ppm")
     firstEntry.parentTolerance mustEqual(None)
-    firstEntry.searchId.value mustEqual("1-DMSO")
+    firstEntry.searchId.value mustEqual("hoho:DMSO")
     firstEntry.username mustEqual("user")
     firstEntry.database(0).version mustEqual(None)
     firstEntry.database(0).entries mustEqual(None)
@@ -202,7 +201,7 @@ class LoaderMaxQuantSpecs extends Specification {
   }
 
   "parse" in {
-    val parseMaxQuant= LoaderMaxQuant.parse("test/resources/maxquant/")
+    val parseMaxQuant= LoaderMaxQuant.parse("test/resources/maxquant/", "hoho")
 
     parseMaxQuant.size mustEqual(2)
 
@@ -267,7 +266,7 @@ class LoaderMaxQuantSpecs extends Specification {
     list2.size mustEqual(3)
     listExpected2 mustEqual(list2)
   }
-*/
+
   "update vector" in {
 
     val hashModif= Map(2 -> "Oxidation", 3 -> "Phospho")

@@ -12,7 +12,7 @@ class SpectrumIdSpecs extends Specification {
   "case" should {
     "need no new" in {
       val spid = SpectrumRef(ScanNumber(12),
-        ExpPeakPrecursor(moz = Moz(123.45), intensity=Intensity(678), retentionTime=RetentionTime(123.45), charge=Charge(2)), "no title", SpectrumId(SpectrumUniqueId("no title"), RunId("Paf")))
+        ExpPeakPrecursor(moz = Moz(123.45), intensity=Intensity(678), retentionTime=RetentionTime(123.45), charge=Charge(2)), "no title", SpectrumId(SpectrumUniqueId(12), RunId("Paf")))
       spid.scanNumber must equalTo(ScanNumber(12))
     }
   }

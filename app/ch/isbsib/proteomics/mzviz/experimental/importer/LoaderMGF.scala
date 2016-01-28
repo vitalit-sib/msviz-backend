@@ -124,12 +124,11 @@ object LoaderMGF {
           case _ => "-1"
         }
       )
-
       SpectrumRef(
         scanNumber = ScanNumber(scanNumber.toInt),
         precursor = ExpPeakPrecursor(moz, intens, rt, Charge(z)),
         title = title,
-        SpectrumId(id = SpectrumUniqueId(scanNumber), runId = runId)
+        SpectrumId(id = SpectrumUniqueId(scanNumber.toInt), runId = runId)
       )
     }
   }

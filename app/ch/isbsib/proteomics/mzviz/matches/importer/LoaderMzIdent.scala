@@ -80,7 +80,7 @@ object LoaderMzIdent {
         //  SpectrumUniqueId(t._1.getSpectrum),
         //to make it compatible with MaxQuant
           //SpectrumUniqueId(t._1.getScanNumbers.getFirst.getValue.toString),
-          SpectrumUniqueId(t._1.getIndex.get().toString),
+          SpectrumUniqueId(t._1.getIndex.get().toInt),
           runId = runId),
         pep = convertPeptide(t._2),
         matchInfo = convertPepMatch(t),

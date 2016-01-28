@@ -165,12 +165,12 @@ object ExperimentalController extends CommonController {
     new ApiImplicitParam(name = "mostIntense", value = "take the n most intense peaks", required = false, dataType = "Integer", paramType = "query")
   ))
   def findExpSpectrum(@ApiParam(value = """run id""", defaultValue = "") @PathParam("runId") runId: String,
-                      @ApiParam(value = """spectrum title""", defaultValue = "") @PathParam("title") title: String,
+                      @ApiParam(value = """scan number""", defaultValue = "") @PathParam("scanN") scanN: Int,
                       sortByMoz: Option[Boolean]=None,
                       mostIntense: Option[Integer]=None
                        ) =
     Action.async {
-      ExpMongoDBService().findSpectrumByRunIdAndTitle(RunId(runId), title)
+      ExpMongoDBService().findSpectrumByRunIdAndScanNumber(RunId(runId),scanN)
         .map { case sp: ExpMSnSpectrum =>
         val peaks = (sortByMoz match {
           case Some(false) => sp.peaks

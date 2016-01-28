@@ -23,7 +23,7 @@ object JsonMatchFormats {
 
 
   implicit val formatSpectraId = new Format[SpectrumId] {
-    override def reads(json: JsValue): JsResult[SpectrumId] = JsSuccess(SpectrumId(SpectrumUniqueId((json \ "id").as[String]), RunId((json \ "runId").as[String])))
+    override def reads(json: JsValue): JsResult[SpectrumId] = JsSuccess(SpectrumId(SpectrumUniqueId((json \ "id").as[Int]), RunId((json \ "runId").as[String])))
 
     def writes(o: SpectrumId) = Json.obj("id" -> o.id.value, "runId" -> o.runId.value)
   }

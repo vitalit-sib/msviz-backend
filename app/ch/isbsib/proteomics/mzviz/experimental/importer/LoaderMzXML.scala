@@ -57,7 +57,7 @@ class MzXmlIterator(file: File, runId: RunId) extends Iterator[ExpMs1Spectrum] {
     }
 
   def msnSpectrum2ExpMs1Spectrum(sp: MsnSpectrum): ExpMs1Spectrum = {
-    val spId = new SpectrumId(SpectrumUniqueId(sp.getScanNumbers.getFirst.getValue.toString), runId)
+    val spId = new SpectrumId(SpectrumUniqueId(sp.getScanNumbers.getFirst.getValue), runId)
     val rt = new RetentionTime(sp.getRetentionTimes.getFirst.getTime)
     val peaks = sp.getMzs(null).zip(sp.getIntensities(null)).map { case (mz, int) => ExpPeakMS1(Moz(mz), Intensity(int)) }
 
