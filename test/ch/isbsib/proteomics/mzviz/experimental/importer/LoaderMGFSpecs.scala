@@ -143,4 +143,20 @@ class LoaderMGFSpecs extends Specification {
 
 
   }
+
+  "id should be scanNumber" in{
+    val runMascot = LoaderMGF.load(new File("test/resources/mascot/F001644.mgf"), RunId("pipo")).get
+    val firstSpectra=runMascot.next()
+
+    firstSpectra.ref.spectrumId.id.value mustEqual(firstSpectra.ref.scanNumber.value.toString)
+    firstSpectra.ref.spectrumId.id.value mustEqual("11150")
+
+    val runMaxQuant = LoaderMGF.load(new File("test/resources/maxquant/8077A.mgf"), RunId("pipoMax")).get
+
+    val firstSpectraMQ=runMaxQuant.next()
+
+    firstSpectraMQ.ref.spectrumId.id.value mustEqual(firstSpectraMQ.ref.scanNumber.value.toString)
+    firstSpectraMQ.ref.spectrumId.id.value mustEqual("4")
+
+  }
 }

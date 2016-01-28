@@ -129,7 +129,7 @@ object LoaderMGF {
         scanNumber = ScanNumber(scanNumber.toInt),
         precursor = ExpPeakPrecursor(moz, intens, rt, Charge(z)),
         title = title,
-        SpectrumId(id = SpectrumUniqueId(title), runId = runId)
+        SpectrumId(id = SpectrumUniqueId(scanNumber), runId = runId)
       )
     }
   }
