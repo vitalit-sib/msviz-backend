@@ -16,4 +16,5 @@ case class EvidenceTableEntry ( id:Int,
                                 chargeState: Option[Int],
                                 ac:String,
                                 pepId:Int,
-                                modificationVector: Vector[Seq[ModifName]])
+                                modificationVector: Vector[Seq[ModifName]],
+                                scanNumber: Int)

@@ -202,6 +202,7 @@ object LoaderMaxQuant {
     val modifSeqPos: Int= headerEvidenceMap("Modified sequence")
     val modifNamePos: Int= headerEvidenceMap("Modifications")
     val lengthPos: Int = headerEvidenceMap("Length")
+    val scanNumberPos: Int= headerEvidenceMap("MS/MS Scan Number")
 
     //Filter table, remove rows with no score, taking care about "." in the score which are not digits
     val mEvidenceListFiltered = mEvidenceList.filter({ l => l(scorePos).filter(_.isDigit).length > 0})
@@ -227,13 +228,14 @@ object LoaderMaxQuant {
         val hashPosModification= createHashPosModification(modifPosMaxQuant,hashPosModificationMaxQ,hashModMaxQuantUnimod)
         val lenghtVector=(m(lengthPos).toInt)+2
         val vectorNames= Vector.fill(lenghtVector)(Seq())
+        val scanNumber:Int= m(scanNumberPos).toInt
 
         //Check if there is any modification
         if(hashPosModification.keys != Set()) {
           val modifNamesVector: Vector[Seq[ModifName]] = updateVector(hashPosModification,lenghtVector)
-          EvidenceTableEntry(id, sequence, experiment, molMass, score, missCleavages, massDiff, charge, ac, pepId,modifNamesVector)
+          EvidenceTableEntry(id, sequence, experiment, molMass, score, missCleavages, massDiff, charge, ac, pepId,modifNamesVector,scanNumber)
         }
-        else EvidenceTableEntry(id, sequence, experiment, molMass, score, missCleavages, massDiff, charge, ac, pepId,vectorNames)
+        else EvidenceTableEntry(id, sequence, experiment, molMass, score, missCleavages, massDiff, charge, ac, pepId,vectorNames,scanNumber)
 
       }
     })
@@ -332,7 +334,9 @@ object LoaderMaxQuant {
     //Create PepSpectraMatch for each entry in evidenceEntry
     val runIdToPepSpectraMatchList: List[(RunId, PepSpectraMatch)] = evidenceEntry.map({ entry =>
       val pep = Peptide(entry.sequence, entry.molMass, entry.modificationVector)
-      val spectrumId = SpectrumId(SpectrumUniqueId(entry.pepId), RunId(entry.experiment))
+      println("titleeeee")
+      println(entry.scanNumber)
+      val spectrumId = SpectrumId(SpectrumUniqueId(entry.scanNumber), RunId(entry.experiment))
       // we assume that PSM is always rank 1 @TODO does MQ really only indicate first ranks?
       val matchInfo = PepMatchInfo(IdentScore(entry.score, Map()), entry.missedCleavages, entry.massDiff, rank=Some(1), None, entry.chargeState, None)
 

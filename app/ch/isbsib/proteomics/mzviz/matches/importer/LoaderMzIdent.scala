@@ -74,13 +74,25 @@ object LoaderMzIdent {
     
     // convert the resulting list into our proper object
     searchResults.map({ t =>
+
+      val spectrumTitle:String= t._1.getSpectrum
+      println("titleeeee")
+      println(spectrumTitle)
+      val reTitleScan = """.*\.(\d+)\.\d$""".r
+      val scanNumber = spectrumTitle match {
+          case reTitleScan(s) => s
+          case _ => throw new Exception("cannot parse title " + spectrumTitle )
+        }
       PepSpectraMatch(
         searchId = searchId,
         spectrumId = SpectrumId(
         //  SpectrumUniqueId(t._1.getSpectrum),
         //to make it compatible with MaxQuant
           //SpectrumUniqueId(t._1.getScanNumbers.getFirst.getValue.toString),
-          SpectrumUniqueId(t._1.getIndex.get().toInt),
+
+        //Not sure if index is not corresponding to scanNumber
+        //SpectrumUniqueId(t._1.getIndex.get().toInt),
+         SpectrumUniqueId(scanNumber.toInt),
           runId = runId),
         pep = convertPeptide(t._2),
         matchInfo = convertPepMatch(t),
