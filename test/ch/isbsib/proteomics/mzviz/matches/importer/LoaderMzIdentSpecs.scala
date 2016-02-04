@@ -92,7 +92,7 @@ class LoaderMzIdentSpecs extends Specification {
 
         "check first spectrum identifier" in {
           psm(0).spectrumId must equalTo(
-            SpectrumId(SpectrumUniqueId(SpectrumUniqueId(27).value),
+            SpectrumId(SpectrumUniqueId(SpectrumUniqueId(2033).value),
               RunId("M_100.mgf"))
           )
           psm(0).spectrumId.runId must equalTo(RunId("M_100.mgf"))
@@ -138,7 +138,7 @@ class LoaderMzIdentSpecs extends Specification {
 
         }
 
-      }
+     }
 
     }
 
@@ -158,10 +158,10 @@ class LoaderMzIdentSpecs extends Specification {
 
         "check psm content" in {
           val psmsFlt = psms.filter({ psm =>
-            psm.spectrumId.id == SpectrumUniqueId(758)
+            psm.spectrumId.id == SpectrumUniqueId(9985)
           })
 
-          psmsFlt.size must equalTo(2)
+          psmsFlt.size must equalTo(1)
         }
       }
 
@@ -269,7 +269,7 @@ class LoaderMzIdentSpecs extends Specification {
 
       "check first" in {
         val psmsFlt = psms.filter({ psm =>
-          psm.spectrumId.id == SpectrumUniqueId(7915)
+          psm.spectrumId.id == SpectrumUniqueId(11315)
         })
 
         psmsFlt.size mustEqual (4)

@@ -155,7 +155,7 @@ class LoaderMaxQuantSpecs extends Specification {
 
     pep10.head.searchId.value mustEqual("hoho:Nocodazole")
 
-    pep10.head.spectrumId.id.value mustEqual(40)
+    pep10.head.spectrumId.id.value mustEqual(8241)
     pep10.head.spectrumId.runId.value mustEqual("Nocodazole")
 
     pep10.head.pep.molMass.get mustEqual(1210.68224)

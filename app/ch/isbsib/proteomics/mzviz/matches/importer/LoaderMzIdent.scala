@@ -79,8 +79,10 @@ object LoaderMzIdent {
       println("titleeeee")
       println(spectrumTitle)
       val reTitleScan = """.*\.(\d+)\.\d$""".r
+      val reAlternativeTitle = """.*Cycle\(s\)\:\s+(\d+).*""".r
       val scanNumber = spectrumTitle match {
           case reTitleScan(s) => s
+          case reAlternativeTitle(s) => s
           case _ => throw new Exception("cannot parse title " + spectrumTitle )
         }
       PepSpectraMatch(
