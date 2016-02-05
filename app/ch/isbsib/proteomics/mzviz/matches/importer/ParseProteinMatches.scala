@@ -81,7 +81,7 @@ object ParseProteinMatches {
         case _ => throw new Exception("cannot parse scan number from " + title)
       }
 
-      val spTitle = SpectrumUniqueId(scanNumber.toInt)
+      val spTitle = SpectrumUniqueId(scanNumber)
 
       (spIdRes \\ "SpectrumIdentificationItem").map({spId =>
         //val hitRank = HitRank((spId \\ "@rank").text.toInt)

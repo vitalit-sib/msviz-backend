@@ -13,7 +13,7 @@ package object experimental {
    * should be unique across a run (scan number or title)s
    * @param value just a value class
    */
-  case class SpectrumUniqueId(value:Int) extends AnyVal
+  case class SpectrumUniqueId(value:String) extends AnyVal
 
   /**
    * the spectrum identifier from MzIdentML

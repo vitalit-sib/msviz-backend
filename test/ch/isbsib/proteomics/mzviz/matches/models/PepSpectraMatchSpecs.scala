@@ -42,8 +42,8 @@ class PepSpectraMatchSpecs extends Specification {
     }
 
     "create simple PepSpectraMatch" in {
-      val pepSpMatch = PepSpectraMatch(searchId = SearchId("a search result"), spectrumId = SpectrumId(SpectrumUniqueId(1), runId = RunId("blabla.mgf")), pep = pep, matchInfo = matching, proteinList = protMatch)
-      pepSpMatch.spectrumId.id must equalTo(SpectrumUniqueId(1))
+      val pepSpMatch = PepSpectraMatch(searchId = SearchId("a search result"), spectrumId = SpectrumId(SpectrumUniqueId("1"), runId = RunId("blabla.mgf")), pep = pep, matchInfo = matching, proteinList = protMatch)
+      pepSpMatch.spectrumId.id must equalTo(SpectrumUniqueId("1"))
       pepSpMatch.spectrumId.runId must equalTo(RunId("blabla.mgf"))
       pepSpMatch.matchInfo.massDiff must equalTo(Some(0.01))
       pepSpMatch.searchId must equalTo(SearchId("a search result"))

@@ -92,7 +92,7 @@ class LoaderMzIdentSpecs extends Specification {
 
         "check first spectrum identifier" in {
           psm(0).spectrumId must equalTo(
-            SpectrumId(SpectrumUniqueId(SpectrumUniqueId(2033).value),
+            SpectrumId(SpectrumUniqueId(SpectrumUniqueId("File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 50.227 min, Period: 1, Cycle(s): 2033 (Experiment 4)").value),
               RunId("M_100.mgf"))
           )
           psm(0).spectrumId.runId must equalTo(RunId("M_100.mgf"))
@@ -158,7 +158,7 @@ class LoaderMzIdentSpecs extends Specification {
 
         "check psm content" in {
           val psmsFlt = psms.filter({ psm =>
-            psm.spectrumId.id == SpectrumUniqueId(9985)
+            psm.spectrumId.id == SpectrumUniqueId("9985")
           })
 
           psmsFlt.size must equalTo(1)
@@ -179,16 +179,20 @@ class LoaderMzIdentSpecs extends Specification {
     }
 
   }
-/*
+
   "parse modification scores" should {
     running(FakeApplication()) {
       val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/F002687_acetylation.mzid"), SearchId("modif"), RunId("M_100.mgf"))
       val psms = psmAndProtLists._1
 
       "check modif position score" in {
+        println(psms(0).spectrumId.id.value)
+
         val psmsFlt = psms.filter({ psm =>
-          psm.spectrumId.id == SpectrumUniqueId("2012_12_20_OT_ALH_103_HSA+20ASA_1pmol_Acetylation.2329.2")
+          psm.spectrumId.id.value == "2329"
         })
+
+        psmsFlt.length mustEqual(2)
 
         psmsFlt(0).matchInfo.score.scoreMap("Mascot:delta score") mustEqual (97.87)
         psmsFlt(1).matchInfo.score.scoreMap("Mascot:delta score") mustEqual (2.11)
@@ -196,7 +200,7 @@ class LoaderMzIdentSpecs extends Specification {
 
       "check another modif position score" in {
         val psmsFlt = psms.filter({ psm =>
-          psm.spectrumId.id == SpectrumUniqueId("2012_12_20_OT_ALH_102_HSA+20ASA_1pmol_Acetylation.2098.2")
+          psm.spectrumId.id == SpectrumUniqueId("2098")
         })
 
         psmsFlt(0).matchInfo.score.scoreMap("Mascot:delta score") mustEqual (90.46)
@@ -207,7 +211,7 @@ class LoaderMzIdentSpecs extends Specification {
 
   }
 
-*/
+
   "parse protein positions" should {
     running(FakeApplication()) {
       val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/F001303.mzid"), SearchId("modif"), RunId("M_100.mgf"))
@@ -215,7 +219,7 @@ class LoaderMzIdentSpecs extends Specification {
 
       "check position 1" in {
         val psmsFlt = psms.filter({ psm =>
-          psm.spectrumId.id == SpectrumUniqueId(5812)
+          psm.spectrumId.id == SpectrumUniqueId("9071")
         })
 
         psmsFlt.size mustEqual (1)
@@ -238,7 +242,7 @@ class LoaderMzIdentSpecs extends Specification {
 
       "check position 2" in {
         val psmsFlt = psms.filter({ psm =>
-          psm.spectrumId.id == SpectrumUniqueId(7353)
+          psm.spectrumId.id == SpectrumUniqueId("10716")
         })
 
         psmsFlt.size mustEqual (1)
@@ -269,7 +273,7 @@ class LoaderMzIdentSpecs extends Specification {
 
       "check first" in {
         val psmsFlt = psms.filter({ psm =>
-          psm.spectrumId.id == SpectrumUniqueId(11315)
+          psm.spectrumId.id == SpectrumUniqueId("11315")
         })
 
         psmsFlt.size mustEqual (4)

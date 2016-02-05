@@ -86,9 +86,9 @@ object JsonExpFormats {
     def writes(o: RunId) = JsString(o.value)
   }
   implicit val formatSpectrumUniqueId = new Format[SpectrumUniqueId] {
-    override def reads(json: JsValue): JsResult[SpectrumUniqueId] = JsSuccess(SpectrumUniqueId(json.as[Int]))
+    override def reads(json: JsValue): JsResult[SpectrumUniqueId] = JsSuccess(SpectrumUniqueId(json.as[String]))
 
-    def writes(o: SpectrumUniqueId) = JsNumber(o.value)
+    def writes(o: SpectrumUniqueId) = JsString(o.value)
   }
 
 

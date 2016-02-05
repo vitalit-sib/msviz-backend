@@ -103,7 +103,7 @@ class LoaderMGFSpecs extends Specification {
       sp.ref.precursor.intensity must equalTo(Intensity(538655.5))
       sp.ref.precursor.retentionTime must equalTo(RetentionTime(2999.76954))
       sp.ref.title must equalTo("20141008_BSA_25cm_column2.10823.10823.2")
-      sp.ref.scanNumber must equalTo(ScanNumber(10823))
+      sp.ref.scanNumber must equalTo(Some(ScanNumber(10823)))
     }
     "m/z are increasing order" in {
       val run: Iterator[ExpMSnSpectrum] = LoaderMGF.load(new File("test/resources/mascot/F001644.mgf"), RunId("pipo")).get
@@ -127,7 +127,7 @@ class LoaderMGFSpecs extends Specification {
       sp.ref.precursor.intensity must equalTo(Intensity(0))
       sp.ref.precursor.retentionTime must equalTo(RetentionTime(49.866 * 60))
       sp.ref.title must equalTo("File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 49.866 min, Period: 1, Cycle(s): 2030 (Experiment 4)")
-      sp.ref.scanNumber must equalTo(ScanNumber(-1))
+      sp.ref.scanNumber must equalTo(None)
 
     }
     "args2RT in elution time point in TITLE" in {
@@ -148,15 +148,15 @@ class LoaderMGFSpecs extends Specification {
     val runMascot = LoaderMGF.load(new File("test/resources/mascot/F001644.mgf"), RunId("pipo")).get
     val firstSpectra=runMascot.next()
 
-    firstSpectra.ref.spectrumId.id.value mustEqual(firstSpectra.ref.scanNumber.value)
-    firstSpectra.ref.spectrumId.id.value mustEqual(11150)
+    firstSpectra.ref.spectrumId.id.value mustEqual(firstSpectra.ref.scanNumber.get.value.toString)
+    firstSpectra.ref.spectrumId.id mustEqual(SpectrumUniqueId("11150"))
 
     val runMaxQuant = LoaderMGF.load(new File("test/resources/maxquant/8077A.mgf"), RunId("pipoMax")).get
 
     val firstSpectraMQ=runMaxQuant.next()
 
-    firstSpectraMQ.ref.spectrumId.id.value mustEqual(firstSpectraMQ.ref.scanNumber.value)
-    firstSpectraMQ.ref.spectrumId.id.value mustEqual(4)
+    firstSpectraMQ.ref.spectrumId.id.value mustEqual(firstSpectraMQ.ref.scanNumber.get.value.toString)
+    firstSpectraMQ.ref.spectrumId.id mustEqual(SpectrumUniqueId("4"))
 
   }
 }

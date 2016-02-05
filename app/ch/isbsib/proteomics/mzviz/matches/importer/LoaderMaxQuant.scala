@@ -334,9 +334,7 @@ object LoaderMaxQuant {
     //Create PepSpectraMatch for each entry in evidenceEntry
     val runIdToPepSpectraMatchList: List[(RunId, PepSpectraMatch)] = evidenceEntry.map({ entry =>
       val pep = Peptide(entry.sequence, entry.molMass, entry.modificationVector)
-      println("titleeeee")
-      println(entry.scanNumber)
-      val spectrumId = SpectrumId(SpectrumUniqueId(entry.scanNumber), RunId(entry.experiment))
+      val spectrumId = SpectrumId(SpectrumUniqueId(entry.scanNumber.toString), RunId(entry.experiment))
       // we assume that PSM is always rank 1 @TODO does MQ really only indicate first ranks?
       val matchInfo = PepMatchInfo(IdentScore(entry.score, Map()), entry.missedCleavages, entry.massDiff, rank=Some(1), None, entry.chargeState, None)
 

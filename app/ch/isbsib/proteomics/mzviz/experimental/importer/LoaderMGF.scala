@@ -118,17 +118,22 @@ object LoaderMGF {
       val rt = args2RT(args).getOrElse(RetentionTime(-1))
       val title = args.getOrElse("TITLE", "")
 
-      val scanNumber = args.getOrElse("SCANNUMBER",
+
+      val scanNumberArgs = args.get("SCANNUMBER")
+      val scanNumber:Option[Int] = if(scanNumberArgs.isDefined) Some(scanNumberArgs.get.toInt) else {
         title match {
-          case reTitleScan(s) => s
-          case _ => "-1"
+          case reTitleScan(s) => Some(s.toInt)
+          case _ => None
         }
-      )
+      }
+
+      val spId = if(scanNumber.isDefined) scanNumber.get.toString else title
+
       SpectrumRef(
-        scanNumber = ScanNumber(scanNumber.toInt),
+        scanNumber = if(scanNumber.isDefined) Some(ScanNumber(scanNumber.get)) else None,
         precursor = ExpPeakPrecursor(moz, intens, rt, Charge(z)),
         title = title,
-        SpectrumId(id = SpectrumUniqueId(scanNumber.toInt), runId = runId)
+        SpectrumId(id = SpectrumUniqueId(spId), runId = runId)
       )
     }
   }

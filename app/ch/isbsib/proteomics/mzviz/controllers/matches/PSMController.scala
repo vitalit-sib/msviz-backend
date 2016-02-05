@@ -190,7 +190,7 @@ object PSMController extends MatchController {
       Action.async { implicit request =>
         MatchMongoDBService().findAllBySearchIdAndSpectrumId(
           SearchId(searchId),
-          SpectrumUniqueId(spectrumId.toInt)
+          SpectrumUniqueId(spectrumId)
         )
           .map { case psms =>
           render {

@@ -2,7 +2,7 @@ package ch.isbsib.proteomics.mzviz.matches.importer
 
 import java.io.File
 
-import ch.isbsib.proteomics.mzviz.experimental.RunId
+import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models.{PepSpectraMatch, ProteinIdent}
 import ch.isbsib.proteomics.mzviz.matches.models.maxquant.{EvidenceTableEntry, ProteinGroupsTableEntry}
@@ -155,7 +155,7 @@ class LoaderMaxQuantSpecs extends Specification {
 
     pep10.head.searchId.value mustEqual("hoho:Nocodazole")
 
-    pep10.head.spectrumId.id.value mustEqual(8241)
+    pep10.head.spectrumId.id mustEqual(SpectrumUniqueId("8241"))
     pep10.head.spectrumId.runId.value mustEqual("Nocodazole")
 
     pep10.head.pep.molMass.get mustEqual(1210.68224)

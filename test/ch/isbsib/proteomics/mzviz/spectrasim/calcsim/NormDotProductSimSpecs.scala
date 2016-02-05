@@ -27,8 +27,8 @@ class NormDotProductSimSpecs extends Specification {
     // prepare spectra
     def prepSp(mzs: List[Double], ints: List[Double]): ExpMSnSpectrum ={
       val prec1 = ExpPeakPrecursor(Moz(100.1), Intensity(1000), RetentionTime(10.0), Charge(1))
-      val spId1 = SpectrumId(SpectrumUniqueId(1), RunId("run1"))
-      val ref1 = SpectrumRef(ScanNumber(1), prec1, "sp1", spId1)
+      val spId1 = SpectrumId(SpectrumUniqueId("1"), RunId("run1"))
+      val ref1 = SpectrumRef(Some(ScanNumber(1)), prec1, "sp1", spId1)
       val peaks1 = (mzs zip ints).map(p => ExpPeakMSn(Moz(p._1), Intensity(p._2), IntensityRank(0), MSLevel(0)))
       ExpMSnSpectrum(ref1, peaks1)
     }

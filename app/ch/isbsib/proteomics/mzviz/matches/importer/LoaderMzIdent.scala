@@ -76,14 +76,10 @@ object LoaderMzIdent {
     searchResults.map({ t =>
 
       val spectrumTitle:String= t._1.getSpectrum
-      println("titleeeee")
-      println(spectrumTitle)
       val reTitleScan = """.*\.(\d+)\.\d$""".r
-      val reAlternativeTitle = """.*Cycle\(s\)\:\s+(\d+).*""".r
       val scanNumber = spectrumTitle match {
           case reTitleScan(s) => s
-          case reAlternativeTitle(s) => s
-          case _ => throw new Exception("cannot parse title " + spectrumTitle )
+          case _ => spectrumTitle
         }
       PepSpectraMatch(
         searchId = searchId,
@@ -94,7 +90,7 @@ object LoaderMzIdent {
 
         //Not sure if index is not corresponding to scanNumber
         //SpectrumUniqueId(t._1.getIndex.get().toInt),
-         SpectrumUniqueId(scanNumber.toInt),
+         SpectrumUniqueId(scanNumber),
           runId = runId),
         pep = convertPeptide(t._2),
         matchInfo = convertPepMatch(t),

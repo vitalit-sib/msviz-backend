@@ -26,7 +26,7 @@ class LoaderMzXMLspecs extends Specification {
     }
 
     """check scanNumber""" in {
-      sp.spId.id mustEqual SpectrumUniqueId(1)
+      sp.spId.id mustEqual SpectrumUniqueId("1")
     }
 
     """check retentionTime""" in {
