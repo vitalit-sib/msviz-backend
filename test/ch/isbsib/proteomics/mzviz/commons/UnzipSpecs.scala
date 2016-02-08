@@ -22,8 +22,6 @@ class UnzipSpecs extends Specification {
 
     val unzippedDir = Unzip.unzip(zipFile)
 
-    println(unzippedDir)
-
     val files = Unzip.getListOfDirs(unzippedDir)
 
     files.length mustEqual(1)

@@ -19,12 +19,12 @@ trait TempMongoDBForSpecs extends Around {
     val connection = driver.connection(List(host))
 
     val dbName = s"$dbNamePefix-${new Random().nextLong}"
-    println(s"creating a mongodb named $dbName")
+    //println(s"creating a mongodb named $dbName")
     connection.db(dbName)
   }
 
   def dropDB = {
-    println(s"dropping ${db.name}")
+    //println(s"dropping ${db.name}")
     db.drop()
   }
 

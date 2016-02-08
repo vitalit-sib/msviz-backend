@@ -186,7 +186,6 @@ class LoaderMzIdentSpecs extends Specification {
       val psms = psmAndProtLists._1
 
       "check modif position score" in {
-        println(psms(0).spectrumId.id.value)
 
         val psmsFlt = psms.filter({ psm =>
           psm.spectrumId.id.value == "2329"
