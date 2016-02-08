@@ -3,7 +3,7 @@ package ch.isbsib.proteomics.mzviz.experimental.services
 import ch.isbsib.proteomics.mzviz.commons.{IntensityRank, Intensity, Moz, MSLevel}
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoDBService, MongoNotFoundException}
 import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMs1Spectrum, ExpPeakMSn, ExpMSnSpectrum, SpectrumRef}
-import ch.isbsib.proteomics.mzviz.experimental.{ScanNumber, RunId, MSRun}
+import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, ScanNumber, RunId, MSRun}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import play.api.Logger
 import play.api.libs.iteratee.Enumerator
@@ -143,14 +143,14 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
   /**
    * retrieves  by run & scanNumber (unique by index setup)
    * @param runId the run id
-   * @param scanNumber the scan Number
+   * @param spId the spectrum id
    * @return
    */
-  def findSpectrumByRunIdAndScanNumber(runId: RunId, scanNumber: Int): Future[ExpMSnSpectrum] = {
-    val query = Json.obj("ref.spectrumId.runId" -> runId.value, "ref.spectrumId.id" -> scanNumber)
+  def findSpectrumByRunIdAndScanNumber(runId: RunId, spId: SpectrumUniqueId): Future[ExpMSnSpectrum] = {
+    val query = Json.obj("ref.spectrumId.runId" -> runId.value, "ref.spectrumId.id" -> spId.value)
     collection.find(query).cursor[ExpMSnSpectrum].headOption map {
       case Some(sp: ExpMSnSpectrum) => sp
-      case None => throw new MongoNotFoundException(s"${runId.value}/$scanNumber")
+      case None => throw new MongoNotFoundException(s"${runId.value}/$spId")
     }
   }
 
