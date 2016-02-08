@@ -13,7 +13,7 @@ POST          /exp/ms1/:runId                                        ch.isbsib.p
 GET           /exp/msruns                                            ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.listMSRunIds
 POST          /exp/msrun/:runId                                      ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.loadMSRun(runId)
 DELETE        /exp/msrun/:runId                                      ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.deleteMSRun(runId)
-GET           /exp/spectrum/:runId/:id                               ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findExpSpectrum(runId:String, id:String, sortByMoz:Option[Boolean], mostIntense:Option[Integer])
+GET           /exp/spectrum/:runId/:spId                               ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findExpSpectrum(runId:String, spId:String, sortByMoz:Option[Boolean], mostIntense:Option[Integer])
 GET           /exp/spectra-ref/:runId                                ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findAllSpectraRefByRunId(runId)
 
 GET           /api-docs/sequences                                    controllers.ApiHelpController.getResource(path = "/sequences")
@@ -37,7 +37,7 @@ GET           /match/sim/:runId/:title/:scoreThresh/:matchTol        ch.isbsib.p
 GET           /api-docs/search                                       controllers.ApiHelpController.getResource(path = "/search")
 GET           /search/:searchId                                      ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.get(searchId)
 GET           /search                                                ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.list
-POST          /search/:searchId                                      ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.loadMzId(searchId:String, runId:Option[String])
+POST          /search/:searchId                                      ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.loadResults(searchId:String, resultType:Option[String], runId:Option[String])
 DELETE        /search/:searchIds                                     ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.delete(searchIds)
 
 GET           /compare/:searchIds                                    ch.isbsib.proteomics.mzviz.controllers.matches.ProteinMatchMultipleSearchesController.findAllProteinsForMultipleSearchIds(searchIds, withModif:Option[String])

@@ -40,8 +40,8 @@ class LoaderMzIdentSpecs extends Specification {
       val dbInfo = LoaderMzIdent.parseSearchDbSourceInfo(mzidXml("test/resources/mascot/M_100.mzid"))
       dbInfo.size must equalTo(1)
       dbInfo(0).id must equalTo("SDB_SwissProt_ID")
-      dbInfo(0).version must equalTo("SwissProt_2014_08.fasta")
-      dbInfo(0).entries must equalTo(546238)
+      dbInfo(0).version.get must equalTo ("SwissProt_2014_08.fasta")
+      dbInfo(0).entries.get must equalTo(546238)
 
       //dbInfo("SDB_SwissProt_ID") must equalTo(Tuple2(SequenceSource("SwissProt_2014_08.fasta"), NumDatabaseSequences(546238)))
     }
@@ -92,7 +92,7 @@ class LoaderMzIdentSpecs extends Specification {
 
         "check first spectrum identifier" in {
           psm(0).spectrumId must equalTo(
-            SpectrumId(SpectrumUniqueId("File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 50.227 min, Period: 1, Cycle(s): 2033 (Experiment 4)"),
+            SpectrumId(SpectrumUniqueId(SpectrumUniqueId("File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 50.227 min, Period: 1, Cycle(s): 2033 (Experiment 4)").value),
               RunId("M_100.mgf"))
           )
           psm(0).spectrumId.runId must equalTo(RunId("M_100.mgf"))
@@ -138,7 +138,7 @@ class LoaderMzIdentSpecs extends Specification {
 
         }
 
-      }
+     }
 
     }
 
@@ -158,10 +158,10 @@ class LoaderMzIdentSpecs extends Specification {
 
         "check psm content" in {
           val psmsFlt = psms.filter({ psm =>
-            psm.spectrumId.id == SpectrumUniqueId("20141008_BSA_25cm_column2.8507.8507.2")
+            psm.spectrumId.id == SpectrumUniqueId("9985")
           })
 
-          psmsFlt.size must equalTo(2)
+          psmsFlt.size must equalTo(1)
         }
       }
 
@@ -186,9 +186,12 @@ class LoaderMzIdentSpecs extends Specification {
       val psms = psmAndProtLists._1
 
       "check modif position score" in {
+
         val psmsFlt = psms.filter({ psm =>
-          psm.spectrumId.id == SpectrumUniqueId("2012_12_20_OT_ALH_103_HSA+20ASA_1pmol_Acetylation.2329.2")
+          psm.spectrumId.id.value == "2329"
         })
+
+        psmsFlt.length mustEqual(2)
 
         psmsFlt(0).matchInfo.score.scoreMap("Mascot:delta score") mustEqual (97.87)
         psmsFlt(1).matchInfo.score.scoreMap("Mascot:delta score") mustEqual (2.11)
@@ -196,7 +199,7 @@ class LoaderMzIdentSpecs extends Specification {
 
       "check another modif position score" in {
         val psmsFlt = psms.filter({ psm =>
-          psm.spectrumId.id == SpectrumUniqueId("2012_12_20_OT_ALH_102_HSA+20ASA_1pmol_Acetylation.2098.2")
+          psm.spectrumId.id == SpectrumUniqueId("2098")
         })
 
         psmsFlt(0).matchInfo.score.scoreMap("Mascot:delta score") mustEqual (90.46)
@@ -215,7 +218,7 @@ class LoaderMzIdentSpecs extends Specification {
 
       "check position 1" in {
         val psmsFlt = psms.filter({ psm =>
-          psm.spectrumId.id == SpectrumUniqueId("20140811_REFERENCESAMPLE_RFamp_switch_1.9071.9071.2")
+          psm.spectrumId.id == SpectrumUniqueId("9071")
         })
 
         psmsFlt.size mustEqual (1)
@@ -238,7 +241,7 @@ class LoaderMzIdentSpecs extends Specification {
 
       "check position 2" in {
         val psmsFlt = psms.filter({ psm =>
-          psm.spectrumId.id == SpectrumUniqueId("20140811_REFERENCESAMPLE_RFamp_switch_1.10716.10716.2")
+          psm.spectrumId.id == SpectrumUniqueId("10716")
         })
 
         psmsFlt.size mustEqual (1)
@@ -269,7 +272,7 @@ class LoaderMzIdentSpecs extends Specification {
 
       "check first" in {
         val psmsFlt = psms.filter({ psm =>
-          psm.spectrumId.id == SpectrumUniqueId("20140811_REFERENCESAMPLE_RFamp_switch_1.11315.11315.2")
+          psm.spectrumId.id == SpectrumUniqueId("11315")
         })
 
         psmsFlt.size mustEqual (4)

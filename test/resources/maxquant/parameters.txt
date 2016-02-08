@@ -1,0 +1,58 @@
+Parameter	Value
+Version	1.5.3.30
+User name	user
+Machine name	USER-PC
+Date of writing	01/06/2016 18:10:21
+Fixed modifications	Carbamidomethyl (C)
+Decoy mode	revert
+Special AAs	KR
+Include contaminants	True
+MS/MS tol. (FTMS)	20 ppm
+Top MS/MS peaks per 100 Da. (FTMS)	12
+MS/MS deisotoping (FTMS)	True
+MS/MS tol. (ITMS)	0.5 Da
+Top MS/MS peaks per 100 Da. (ITMS)	8
+MS/MS deisotoping (ITMS)	False
+MS/MS tol. (TOF)	40 ppm
+Top MS/MS peaks per 100 Da. (TOF)	10
+MS/MS deisotoping (TOF)	True
+MS/MS tol. (Unknown)	0.5 Da
+Top MS/MS peaks per 100 Da. (Unknown)	8
+MS/MS deisotoping (Unknown)	False
+PSM FDR	0.01
+Protein FDR	0.01
+Site FDR	0.01
+Use Normalized Ratios For Occupancy	True
+Min. peptide Length	7
+Min. score for unmodified peptides	0
+Min. score for modified peptides	40
+Min. delta score for unmodified peptides	0
+Min. delta score for modified peptides	6
+Min. unique peptides	0
+Min. razor peptides	1
+Min. peptides	1
+Use only unmodified peptides and	True
+Modifications included in protein quantification	Oxidation (M);Acetyl (Protein N-term)
+Peptides used for protein quantification	Razor
+Discard unmodified counterpart peptides	True
+Min. ratio count	2
+Use delta score	False
+iBAQ	True
+iBAQ log fit	True
+Match between runs	False
+Find dependent peptides	False
+Fasta file	C:\MaxQuant 1.5.3.30\UniProt-fasta\Homo_sapiens_091215\UP000005640_9606.fasta
+Site tables	Oxidation (M)Sites.txt;Phospho (ST)Sites.txt
+Decoy mode	revert
+Special AAs	KR
+Include contaminants	True
+RT shift	False
+Advanced ratios	True
+AIF correlation	0
+First pass AIF correlation	0
+AIF topx	0
+AIF min mass	0
+AIF SIL weight	0
+AIF ISO weight	0
+AIF iterative	False
+AIF threshold FDR	0

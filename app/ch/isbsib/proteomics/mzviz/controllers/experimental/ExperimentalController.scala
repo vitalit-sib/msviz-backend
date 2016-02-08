@@ -5,8 +5,9 @@ import javax.ws.rs.PathParam
 import ch.isbsib.proteomics.mzviz.commons.{Intensity, RetentionTime, Moz}
 import ch.isbsib.proteomics.mzviz.controllers.CommonController
 import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
-import ch.isbsib.proteomics.mzviz.experimental.{MSRun, RunId}
-import ch.isbsib.proteomics.mzviz.experimental.importer.{FastLoaderMzXML, LoaderMzXML, LoaderMGF}
+import ch.isbsib.proteomics.mzviz.experimental.importer.{FastLoaderMzXML}
+import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, MSRun, RunId}
+import ch.isbsib.proteomics.mzviz.experimental.importer.{LoaderMzXML, LoaderMGF}
 import ch.isbsib.proteomics.mzviz.experimental.models._
 import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMs1MySqlDBService, ExpMs1MongoDBService, ExpMongoDBService}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
@@ -166,12 +167,12 @@ object ExperimentalController extends CommonController {
     new ApiImplicitParam(name = "mostIntense", value = "take the n most intense peaks", required = false, dataType = "Integer", paramType = "query")
   ))
   def findExpSpectrum(@ApiParam(value = """run id""", defaultValue = "") @PathParam("runId") runId: String,
-                      @ApiParam(value = """spectrum title""", defaultValue = "") @PathParam("title") title: String,
+                      @ApiParam(value = """spectrum id""", defaultValue = "") @PathParam("spId") spId: String,
                       sortByMoz: Option[Boolean]=None,
                       mostIntense: Option[Integer]=None
                        ) =
     Action.async {
-      ExpMongoDBService().findSpectrumByRunIdAndTitle(RunId(runId), title)
+      ExpMongoDBService().findSpectrumByRunIdAndScanNumber(RunId(runId),SpectrumUniqueId(spId))
         .map { case sp: ExpMSnSpectrum =>
         val peaks = (sortByMoz match {
           case Some(false) => sp.peaks

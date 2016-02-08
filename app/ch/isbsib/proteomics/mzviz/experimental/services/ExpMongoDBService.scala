@@ -2,10 +2,9 @@ package ch.isbsib.proteomics.mzviz.experimental.services
 
 import ch.isbsib.proteomics.mzviz.commons.{IntensityRank, Intensity, Moz, MSLevel}
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoDBService, MongoNotFoundException}
-import ch.isbsib.proteomics.mzviz.experimental.models._
-import ch.isbsib.proteomics.mzviz.experimental.{ScanNumber, RunId, MSRun}
+import ch.isbsib.proteomics.mzviz.experimental.models.{SpectrumId, ExpPeakMSn, ExpMSnSpectrum, SpectrumRef}
+import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId, MSRun}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
-import play.api.Logger
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json._
 import play.api.mvc.Controller
@@ -14,7 +13,7 @@ import play.modules.reactivemongo.json.collection.JSONCollection
 import reactivemongo.api._
 import reactivemongo.api.indexes.{IndexType, Index}
 import reactivemongo.bson._
-import reactivemongo.core.commands.{LastError, GetLastError, RawCommand, Count}
+import reactivemongo.core.commands.{LastError, RawCommand, Count}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Future
@@ -149,6 +148,20 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
     collection.find(query).cursor[ExpMSnSpectrum].headOption map {
       case Some(sp: ExpMSnSpectrum) => sp
       case None => throw new MongoNotFoundException(s"${spId.runId.value}/$spId.id.value")
+    }
+  }
+
+  /**
+   * retrieves  by run & scanNumber (unique by index setup)
+   * @param runId the run id
+   * @param spId the spectrum id
+   * @return
+   */
+  def findSpectrumByRunIdAndScanNumber(runId: RunId, spId: SpectrumUniqueId): Future[ExpMSnSpectrum] = {
+    val query = Json.obj("ref.spectrumId.runId" -> runId.value, "ref.spectrumId.id" -> spId.value)
+    collection.find(query).cursor[ExpMSnSpectrum].headOption map {
+      case Some(sp: ExpMSnSpectrum) => sp
+      case None => throw new MongoNotFoundException(s"${runId.value}/$spId")
     }
   }
 

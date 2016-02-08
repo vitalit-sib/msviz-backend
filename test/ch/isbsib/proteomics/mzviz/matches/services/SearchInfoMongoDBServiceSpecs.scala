@@ -53,7 +53,7 @@ class SearchInfoMongoDBServiceSpecs extends Specification with ScalaFutures {
       val oSearch = service.get(SearchId("M_100")).futureValue
       Thread.sleep(200)
       oSearch.isDefined must equalTo(true)
-      oSearch.get.toString() must equalTo("SearchInfo(SearchId(M_100),test rafts sample 123 spectra for Roman,List(SearchDatabase(SDB_SwissProt_ID,SwissProt_2014_08.fasta,546238)),roman,Trypsin,0.3 dalton,0.3 dalton)")
+      oSearch.get.toString() must equalTo("SearchInfo(SearchId(M_100),test rafts sample 123 spectra for Roman,List(SearchDatabase(SDB_SwissProt_ID,Some(SwissProt_2014_08.fasta),Some(546238))),roman,Trypsin,Some(0.3 dalton),0.3 dalton)")
     }
   }
 

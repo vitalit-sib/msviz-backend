@@ -36,11 +36,11 @@ class SearchInfoSpecs extends Specification with ScalaFutures {
       val databaseName = searchEntries.database
       val username= searchEntries.username
       val enzyme= searchEntries.enzyme
-      val parentTol= searchEntries.parentTolerance
+      val parentTol= searchEntries.parentTolerance.get
       val fragmentTol=searchEntries.fragmentTolerance
 
       title mustEqual("test rafts sample 123 spectra for Roman")
-      databaseName mustEqual List(SearchDatabase("SDB_SwissProt_ID","SwissProt_2014_08.fasta",546238))
+      databaseName mustEqual List(SearchDatabase("SDB_SwissProt_ID",Some("SwissProt_2014_08.fasta"),Some(546238)))
       username mustEqual("roman")
       enzyme mustEqual("Trypsin")
       parentTol mustEqual("0.3 dalton")

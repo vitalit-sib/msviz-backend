@@ -74,7 +74,14 @@ object ParseProteinMatches {
 
     (spIdList \\ "SpectrumIdentificationResult").flatMap({spIdRes =>
       val titleCv = (spIdRes \\ "cvParam").find(_.attributes.exists(_.value.text == CvParamSpectrumTitle))
-      val spTitle = SpectrumUniqueId((titleCv.get \\ "@value").text)
+      val title=(titleCv.get \\ "@value").text
+      val reTitleScan = """.*\.(\d+)\.\d$""".r
+      val scanNumber =title match {
+        case reTitleScan(s) => s
+        case _ => throw new Exception("cannot parse scan number from " + title)
+      }
+
+      val spTitle = SpectrumUniqueId(scanNumber)
 
       (spIdRes \\ "SpectrumIdentificationItem").map({spId =>
         //val hitRank = HitRank((spId \\ "@rank").text.toInt)

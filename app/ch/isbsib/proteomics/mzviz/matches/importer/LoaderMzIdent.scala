@@ -54,9 +54,9 @@ object LoaderMzIdent {
     val searchDbSourceInfo = parseSearchDbSourceInfo(mzidXml)
 
     // parse PSM, Protein matches and searchInfo
-    def psmList = parsePsm(file, searchId, runId, searchDbSourceInfo)
-    def proteinList = ParseProteinMatches.parseProtList(mzidXml, searchId, searchDbSourceInfo)
-    def searchInfo = parseSearchInfo(mzidXml, searchId)
+    val psmList = parsePsm(file, searchId, runId, searchDbSourceInfo)
+    val proteinList = ParseProteinMatches.parseProtList(mzidXml, searchId, searchDbSourceInfo)
+    val searchInfo = parseSearchInfo(mzidXml, searchId)
 
     Tuple3(psmList, proteinList, searchInfo)
   }
@@ -74,10 +74,23 @@ object LoaderMzIdent {
     
     // convert the resulting list into our proper object
     searchResults.map({ t =>
+
+      val spectrumTitle:String= t._1.getSpectrum
+      val reTitleScan = """.*\.(\d+)\.\d$""".r
+      val scanNumber = spectrumTitle match {
+          case reTitleScan(s) => s
+          case _ => spectrumTitle
+        }
       PepSpectraMatch(
         searchId = searchId,
         spectrumId = SpectrumId(
-          SpectrumUniqueId(t._1.getSpectrum),
+        //  SpectrumUniqueId(t._1.getSpectrum),
+        //to make it compatible with MaxQuant
+          //SpectrumUniqueId(t._1.getScanNumbers.getFirst.getValue.toString),
+
+        //Not sure if index is not corresponding to scanNumber
+        //SpectrumUniqueId(t._1.getIndex.get().toInt),
+         SpectrumUniqueId(scanNumber),
           runId = runId),
         pep = convertPeptide(t._2),
         matchInfo = convertPepMatch(t),
@@ -97,7 +110,7 @@ object LoaderMzIdent {
     val database= parseSearchDbSourceInfo(mzidXml)
     val username=parseUsernameFilename(mzidXml)
     val enzyme=parseEnzymeFilename(mzidXml)
-    val parentTolerance=parseParentToleranceFilename(mzidXml)
+    val parentTolerance=Option(parseParentToleranceFilename(mzidXml))
     val fragmentTolerance=parseFragmentToleranceFilename(mzidXml)
     SearchInfo(searchId,title,database,username, enzyme,parentTolerance,fragmentTolerance)
   }
@@ -178,7 +191,7 @@ object LoaderMzIdent {
    */
   def parseSearchDbSourceInfo(mzidXml: Elem):Seq[SearchDatabase] = {
     (mzidXml \\ "SearchDatabase").map { db =>
-      SearchDatabase((db \ "@id").text,((db \ "@version").text),((db \ "@numDatabaseSequences").text.toInt))
+      SearchDatabase((db \ "@id").text,Some(((db \ "@version").text)),Some(((db \ "@numDatabaseSequences").text.toInt)))
     }
   }
 
@@ -222,7 +235,7 @@ object LoaderMzIdent {
 
       val searchDb = searchDbSourceInfo.find(db =>
         db.id==pMatch.getSearchDatabase.get()).map(db =>
-          SequenceSource(db.version)
+          SequenceSource(db.version.get)
       )
 
       ProteinMatch(proteinRef = ProteinRef(AC = AccessionCode(pMatch.getAccession),

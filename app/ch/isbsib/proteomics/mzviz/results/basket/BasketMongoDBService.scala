@@ -103,7 +103,7 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
    * @return
    */
 
-  def findBySearchIdWithSpInfo(runId: String): Future[Seq[BasketEntryWithSpInfo]] ={
+  def findBySearchIdWithSpInfo(runId: String): Future[Seq[BasketEntryWithSpInfo]] = {
     val basketEntries = findBySearchId(runId)
 
     basketEntries.flatMap({ l =>
@@ -112,7 +112,7 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
 
         spFut.map({ sp =>
           new BasketEntryWithSpInfo(e._id, e.proteinAC, e.peptideSeq, e.startPos, e.endPos, e.searchIds, e.spectrumId,
-            sp.ref.scanNumber.value, sp.ref.precursor.retentionTime.value/60, sp.ref.precursor.charge.value, sp.ref.precursor.moz.value,
+            sp.ref.scanNumber, sp.ref.precursor.retentionTime.value/60, sp.ref.precursor.charge.value, sp.ref.precursor.moz.value,
             e.score, e.localizationScore, e.ppmTolerance, e.rtZoom, e.rtSelected, e.xicPeaks)
         })
 
