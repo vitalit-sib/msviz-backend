@@ -153,8 +153,8 @@ object LoaderMzIdent {
    * @return enzyme
    */
   def parseEnzymeFilename(mzidXml: Elem): String = {
-    val enzymeLocation =mzidXml \\ "EnzymeName" \\ "@name"
-    FilenameUtils.getBaseName(enzymeLocation.text)
+    val enzymeLocation =mzidXml \\ "EnzymeName" \ "cvParam" \ "@name"
+    enzymeLocation.text
   }
 
   /**

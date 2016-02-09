@@ -287,4 +287,19 @@ class LoaderMzIdentSpecs extends Specification {
   }
 
 
+  "parse Enzyme title" should {
+
+    val xmlString = "      <Enzymes>\n        <Enzyme id=\"ENZ_0\" cTermGain=\"OH\" nTermGain=\"H\" missedCleavages=\"3\" semiSpecific=\"0\">\n          <SiteRegexp><![CDATA[(?<=[KR])]]></SiteRegexp>\n          <EnzymeName>\n            <cvParam accession=\"MS:1001313\" name=\"Trypsin/P\" cvRef=\"PSI-MS\" />\n          </EnzymeName>\n        </Enzyme>\n      </Enzymes>"
+    val xmlEl = scala.xml.XML.loadString(xmlString)
+
+    "check Trypsin/P" in {
+
+      val enzyme = LoaderMzIdent.parseEnzymeFilename(xmlEl)
+      enzyme mustEqual("Trypsin/P")
+
+    }
+
+  }
+
+
   }
