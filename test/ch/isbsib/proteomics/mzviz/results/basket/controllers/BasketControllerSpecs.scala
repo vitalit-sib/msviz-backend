@@ -1,5 +1,7 @@
 package ch.isbsib.proteomics.mzviz.results.basket.controllers
 
+import java.util.Calendar
+
 import ch.isbsib.proteomics.mzviz.commons.services.MongoId
 import ch.isbsib.proteomics.mzviz.commons.{Intensity, RetentionTime}
 import ch.isbsib.proteomics.mzviz.experimental.{RunId, SpectrumUniqueId}
@@ -36,7 +38,8 @@ class BasketControllerSpecs extends Specification with ScalaFutures{
     ppmTolerance = 10.0,
     rtZoom = RtRange(lowerRt = 35, upperRt = 39),
     rtSelected = RtRange(lowerRt = 36, upperRt = 37),
-    xicPeaks = Seq(XicPeak(SearchId("F002453"),Some(RetentionTime(36.48)), Some(Intensity(198000))), XicPeak(SearchId("F002453"), Some(RetentionTime(36.55)), Some(Intensity(621000))))
+    xicPeaks = Seq(XicPeak(SearchId("F002453"),Some(RetentionTime(36.48)), Some(Intensity(198000))), XicPeak(SearchId("F002453"), Some(RetentionTime(36.55)), Some(Intensity(621000)))),
+    creationDate = Some(Calendar.getInstance().getTime())
   )
 
   "basket results" should {
@@ -50,6 +53,7 @@ class BasketControllerSpecs extends Specification with ScalaFutures{
 
           val basketEntries = BasketMongoDBService().findByProtein("F002453X,F002454X", AccessionCode("OSBL8_HUMAN")).futureValue
           basketEntries.length mustEqual(1)
+          basketEntries(0).creationDate.isDefined mustEqual(true)
 
       }
     }

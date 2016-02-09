@@ -1,5 +1,7 @@
 package ch.isbsib.proteomics.mzviz.results.basket.services
 
+import java.util.Calendar
+
 import ch.isbsib.proteomics.mzviz.commons.services.MongoId
 import ch.isbsib.proteomics.mzviz.commons.{Intensity, RetentionTime, TempMongoDBForSpecs}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
@@ -42,7 +44,8 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     ppmTolerance = 10.0,
     rtZoom = RtRange(lowerRt = 35, upperRt = 39),
     rtSelected = RtRange(lowerRt = 36, upperRt = 37),
-    xicPeaks = Seq(XicPeak(SearchId("F002453"),Some(RetentionTime(36.48)),Some(Intensity(198000))), XicPeak(SearchId("F002453"), None, None))
+    xicPeaks = Seq(XicPeak(SearchId("F002453"),Some(RetentionTime(36.48)),Some(Intensity(198000))), XicPeak(SearchId("F002453"), None, None)),
+    creationDate = Some(Calendar.getInstance().getTime())
   )
 
   val entry2 = new BasketEntry(None, proteinAC = AccessionCode("OSBL8_HUMAN"),
@@ -56,7 +59,8 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     ppmTolerance = 10.0,
     rtZoom = RtRange(lowerRt = 47.5, upperRt = 48.5),
     rtSelected = RtRange(lowerRt = 47.8, upperRt = 48.2),
-    xicPeaks = Seq(XicPeak(SearchId("F002453"), Some(RetentionTime(47.93)), Some(Intensity(472000))), XicPeak(SearchId("F002453"), Some(RetentionTime(47.94)), Some(Intensity(1470000))))
+    xicPeaks = Seq(XicPeak(SearchId("F002453"), Some(RetentionTime(47.93)), Some(Intensity(472000))), XicPeak(SearchId("F002453"), Some(RetentionTime(47.94)), Some(Intensity(1470000)))),
+    creationDate = Some(Calendar.getInstance().getTime())
   )
 
   val entry3 = new BasketEntry(_id=None, proteinAC = AccessionCode("OSBL8_HUMAN"),
@@ -70,7 +74,9 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     ppmTolerance = 10.0,
     rtZoom = RtRange(lowerRt = 36.5, upperRt = 39.5),
     rtSelected = RtRange(lowerRt = 37.5, upperRt = 38.0),
-    xicPeaks = Seq(XicPeak(SearchId("F002453"), Some(RetentionTime(37.74)), Some(Intensity(139000))), XicPeak(SearchId("F002453"), Some(RetentionTime(37.82)), Some(Intensity(634000))))
+    xicPeaks = Seq(XicPeak(SearchId("F002453"), Some(RetentionTime(37.74)), Some(Intensity(139000))), XicPeak(SearchId("F002453"), Some(RetentionTime(37.82)), Some(Intensity(634000)))),
+    creationDate = Some(Calendar.getInstance().getTime())
+
   )
 
   val entry4 = new BasketEntry(_id=None, proteinAC = AccessionCode("K2C1_HUMAN"),
@@ -84,7 +90,8 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     ppmTolerance = 10.0,
     rtZoom = RtRange(lowerRt = 29.5, upperRt = 31.5),
     rtSelected = RtRange(lowerRt = 30.0, upperRt = 30.5),
-    xicPeaks = Seq(XicPeak(SearchId("F002453"), Some(RetentionTime(30.51)), Some(Intensity(95400))), XicPeak(SearchId("F002453"), Some(RetentionTime(30.30)), Some(Intensity(3620000))))
+    xicPeaks = Seq(XicPeak(SearchId("F002453"), Some(RetentionTime(30.51)), Some(Intensity(95400))), XicPeak(SearchId("F002453"), Some(RetentionTime(30.30)), Some(Intensity(3620000)))),
+    creationDate = Some(Calendar.getInstance().getTime())
   )
 
   val entry5 = new BasketEntry(_id=None, proteinAC = AccessionCode("K2C1_HUMAN"),
@@ -98,7 +105,8 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     ppmTolerance = 10.0,
     rtZoom = RtRange(lowerRt = 29.5, upperRt = 31.5),
     rtSelected = RtRange(lowerRt = 30.0, upperRt = 30.5),
-    xicPeaks = Seq(XicPeak(SearchId("F009998"), Some(RetentionTime(30.51)), Some(Intensity(95400))), XicPeak(SearchId("F009999"), Some(RetentionTime(30.30)), Some(Intensity(3620000))))
+    xicPeaks = Seq(XicPeak(SearchId("F009998"), Some(RetentionTime(30.51)), Some(Intensity(95400))), XicPeak(SearchId("F009999"), Some(RetentionTime(30.30)), Some(Intensity(3620000)))),
+    creationDate = Some(Calendar.getInstance().getTime())
   )
 
 

@@ -1,8 +1,9 @@
 package ch.isbsib.proteomics.mzviz.results.basket
 
+import java.util.{Date, Calendar}
+
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoNotFoundException, MongoDBService}
 import ch.isbsib.proteomics.mzviz.experimental.{RunId, SpectrumUniqueId}
-import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.results.basket.models.{BasketEntryWithSpInfo, BasketEntry}
 import ch.isbsib.proteomics.mzviz.theoretical.AccessionCode
@@ -12,10 +13,9 @@ import play.modules.reactivemongo.MongoController
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
 import JsonBasketFormats._
-import reactivemongo.bson.{BSONObjectID, BSONDocument}
+import reactivemongo.bson.{BSONArray, BSONObjectID, BSONDocument}
 import reactivemongo.core.commands.{LastError, Count, RawCommand}
 import scala.concurrent.ExecutionContext.Implicits.global
-import ch.isbsib.proteomics.mzviz.commons.services.MongoId
 
 
 import scala.concurrent.Future
@@ -43,7 +43,11 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
    */
   def insertOrUpdate(newEntries: Seq[BasketEntry]): Future[Int] = {
 
+    // get current time
+    val currentTime:Date = Calendar.getInstance().getTime()
+
     val inserted: Seq[Future[Int]] = newEntries.map({ entry =>
+
       val selector = Json.obj(
         "proteinAC" -> entry.proteinAC.value,
         "peptideSeq" -> entry.peptideSeq,
@@ -51,7 +55,10 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
         "searchIds" -> entry.searchIds,
         "spectrumId.id" -> entry.spectrumId.id.value)
 
-      val answer = collection.update(selector, entry, upsert = true)
+      // copy the basket entry and add the time fields
+      val newEntry = entry.copy(creationDate=Some(currentTime))
+
+      val answer = collection.update(selector, newEntry, upsert = true)
 
       answer.map({
         case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
@@ -113,7 +120,7 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
         spFut.map({ sp =>
           new BasketEntryWithSpInfo(e._id, e.proteinAC, e.peptideSeq, e.startPos, e.endPos, e.searchIds, e.spectrumId,
             sp.ref.scanNumber, sp.ref.precursor.retentionTime.value/60, sp.ref.precursor.charge.value, sp.ref.precursor.moz.value,
-            e.score, e.localizationScore, e.ppmTolerance, e.rtZoom, e.rtSelected, e.xicPeaks)
+            e.score, e.localizationScore, e.ppmTolerance, e.rtZoom, e.rtSelected, e.xicPeaks, e.creationDate)
         })
 
       })
@@ -142,19 +149,29 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
       })
   }
 
+  import play.modules.reactivemongo.json.BSONFormats._
+
   /**
    * list of searchIds in the basket
    *
    * @return
    */
-  def listSearchIds: Future[Seq[String]] ={
+  def listSearchIds: Future[Seq[JsValue]] ={
 
-    val command = RawCommand(BSONDocument("distinct" -> collectionName, "key" -> "searchIds"))
-    db.command(command)
-      .map({
-        doc =>
-          doc.getAs[List[String]]("values").get
-      })
+    val command = RawCommand(BSONDocument("aggregate" -> collectionName,
+      "pipeline" -> BSONArray(
+        BSONDocument("$group" -> BSONDocument("_id" -> "$searchIds",
+          "lastModif" -> BSONDocument("$max" -> "$creationDate"),
+          "firstModif" -> BSONDocument("$min" -> "$creationDate")
+        ))
+    )))
+    db.command(command).map({
+      doc =>
+        doc.getAs[List[BSONDocument]]("result").get.map({
+          elDoc: BSONDocument =>
+          Json.toJson(elDoc)
+        })
+    })
   }
 
   /**

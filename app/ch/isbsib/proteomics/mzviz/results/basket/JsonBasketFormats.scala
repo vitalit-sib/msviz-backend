@@ -1,10 +1,12 @@
 package ch.isbsib.proteomics.mzviz.results.basket
 
+import ch.isbsib.proteomics.mzviz.commons.IntensityRank
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
 import ch.isbsib.proteomics.mzviz.results.basket.models.{BasketEntryWithSpInfo, XicPeak, RtRange, BasketEntry}
 import play.api.libs.json._
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import ch.isbsib.proteomics.mzviz.commons.services.MongoId
+import java.util.Date
 
 /**
  * @author Roman Mylonas & Trinidad Martin
