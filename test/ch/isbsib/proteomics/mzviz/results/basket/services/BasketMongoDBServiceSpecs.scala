@@ -156,6 +156,19 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
       }
     }
 
+  "create and delete by SearchId" should {
+    "create 5 and delete 4" in new TempMongoDBService {
+      service.insertOrUpdate(Seq(entry1, entry2, entry3, entry4, entry5)).futureValue must equalTo(5)
+      service.countBasketEntries.futureValue must equalTo(5)
+      val basketEntries = service.findByProtein("F002453,F002454", AccessionCode("OSBL8_HUMAN")).futureValue
+      basketEntries.length mustEqual(3)
+      service.deleteBasketBySearchId(SearchId("F002453")).futureValue mustEqual(true)
+      val basketEntriesAfterDelete1 = service.findByProtein("F002453,F002454", AccessionCode("OSBL8_HUMAN")).futureValue
+      basketEntriesAfterDelete1.length mustEqual(0)
+      service.countBasketEntries.futureValue must equalTo(1)
+    }
+  }
+
 
   "list and find entries" should {
     "list searchIds" in new TempMongoDBService {

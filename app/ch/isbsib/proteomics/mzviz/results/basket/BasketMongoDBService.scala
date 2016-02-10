@@ -5,6 +5,7 @@ import java.util.{Date, Calendar}
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoNotFoundException, MongoDBService}
 import ch.isbsib.proteomics.mzviz.experimental.{RunId, SpectrumUniqueId}
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
+import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.results.basket.models.{BasketEntryWithSpInfo, BasketEntry}
 import ch.isbsib.proteomics.mzviz.theoretical.AccessionCode
 import play.api.libs.json._
@@ -13,7 +14,7 @@ import play.modules.reactivemongo.MongoController
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
 import JsonBasketFormats._
-import reactivemongo.bson.{BSONArray, BSONObjectID, BSONDocument}
+import reactivemongo.bson.{BSONValue, BSONObjectID, BSONArray, BSONDocument}
 import reactivemongo.core.commands.{LastError, Count, RawCommand}
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -208,6 +209,21 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
       case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
       case _ => true
     }
+  }
+
+  /**
+   * delete all entries which contain the given SearchId
+   * @param id
+   * @return
+   */
+  def deleteBasketBySearchId(id: SearchId): Future[Boolean] = {
+    val selector = BSONDocument("xicPeaks.searchId" -> id.value)
+
+    bsonCollection.remove(selector).map {
+      case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
+      case _ => true
+    }
+
   }
 
 }
