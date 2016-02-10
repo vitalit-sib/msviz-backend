@@ -1,6 +1,7 @@
 package ch.isbsib.proteomics.mzviz.matches.importer
 
 import java.io.{File, FileInputStream, InputStream}
+import java.util.Calendar
 
 import ch.isbsib.proteomics.mzviz.commons.helpers.OptionConverter
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
@@ -112,7 +113,9 @@ object LoaderMzIdent {
     val enzyme=parseEnzymeFilename(mzidXml)
     val parentTolerance=Option(parseParentToleranceFilename(mzidXml))
     val fragmentTolerance=parseFragmentToleranceFilename(mzidXml)
-    SearchInfo(searchId,title,database,username, enzyme,parentTolerance,fragmentTolerance)
+    val nowDate = Some(Calendar.getInstance().getTime())
+
+    SearchInfo(searchId,title,database,username, enzyme,parentTolerance,fragmentTolerance,nowDate)
   }
 
   /**

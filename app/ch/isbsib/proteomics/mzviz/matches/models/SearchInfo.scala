@@ -3,8 +3,8 @@ package ch.isbsib.proteomics.mzviz.matches.models
 import java.text.SimpleDateFormat
 
 import ch.isbsib.proteomics.mzviz.matches.SearchId
-import ch.isbsib.proteomics.mzviz.theoretical.SequenceSource
 import ch.isbsib.proteomics.mzviz.theoretical.models.SearchDatabase
+import java.util.Date
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
@@ -16,4 +16,6 @@ case class SearchInfo (searchId: SearchId,
                        username:String,
                        enzyme: String,
                        parentTolerance: Option[String],
-                       fragmentTolerance: String)
+                       fragmentTolerance: String,
+                       creationDate: Option[Date]
+                        )

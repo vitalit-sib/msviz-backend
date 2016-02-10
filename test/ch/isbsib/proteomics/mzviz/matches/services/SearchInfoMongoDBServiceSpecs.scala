@@ -53,7 +53,16 @@ class SearchInfoMongoDBServiceSpecs extends Specification with ScalaFutures {
       val oSearch = service.get(SearchId("M_100")).futureValue
       Thread.sleep(200)
       oSearch.isDefined must equalTo(true)
-      oSearch.get.toString() must equalTo("SearchInfo(SearchId(M_100),test rafts sample 123 spectra for Roman,List(SearchDatabase(SDB_SwissProt_ID,Some(SwissProt_2014_08.fasta),Some(546238))),roman,Trypsin,Some(0.3 dalton),0.3 dalton)")
+
+      val si = oSearch.get
+      si.creationDate.isDefined mustEqual(true)
+      si.database(0).toString mustEqual("SearchDatabase(SDB_SwissProt_ID,Some(SwissProt_2014_08.fasta),Some(546238))")
+      si.enzyme mustEqual("Trypsin")
+      si.fragmentTolerance mustEqual("0.3 dalton")
+      si.parentTolerance mustEqual(Some("0.3 dalton"))
+      si.searchId.value mustEqual("M_100")
+      si.title mustEqual("test rafts sample 123 spectra for Roman")
+      si.username mustEqual("roman")
     }
   }
 
@@ -109,7 +118,6 @@ class SearchInfoMongoDBServiceSpecs extends Specification with ScalaFutures {
         val mzIdent = scala.xml.XML.loadFile(new File("test/resources/mascot/M_100.mzid"))
         service.insert(LoaderMzIdent.parseSearchInfo(mzIdent, SearchId("M_100"))).futureValue
         Thread.sleep(200)
-        //        Await.ready(service.insert(LoaderMzIdent.parse("test/resources/M_100.mzid", SearchId("M_100"), RunId("M_100.mgf"))), 300 milli)
         service.insert(LoaderMzIdent.parseSearchInfo(mzIdent, SearchId("M_100"))).futureValue
       } must throwA[Exception]
     }

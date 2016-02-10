@@ -1,6 +1,7 @@
 package ch.isbsib.proteomics.mzviz.matches.importer
 
 import java.io.{IOException, File}
+import java.util.Calendar
 
 import ch.isbsib.proteomics.mzviz.commons.helpers.Unzip
 import ch.isbsib.proteomics.mzviz.experimental.{ScanNumber, SpectrumUniqueId, RunId}
@@ -369,9 +370,18 @@ object LoaderMaxQuant {
     val fragmentTolerance = paramsHash("MS/MS tol. (FTMS)")
 
     val searchInfoHashAux: Map[RunId, SearchInfo] = summaryHash.map({
-      keyVal => Tuple2(RunId(keyVal._1), SearchInfo(SearchId(idTitle + ":" + keyVal._1),  keyVal._1, Seq(SearchDatabase(sequenceSource.value, None, None)), username, keyVal._2, parentTolerance, fragmentTolerance))
+      val nowDate = Some(Calendar.getInstance().getTime())
+      keyVal => Tuple2(
+        RunId(keyVal._1),
+        SearchInfo(searchId=SearchId(idTitle + ":" + keyVal._1),
+          title=keyVal._1, Seq(SearchDatabase(sequenceSource.value, None, None)),
+          username=username,
+          enzyme=keyVal._2,
+          parentTolerance=parentTolerance,
+          fragmentTolerance=fragmentTolerance,
+          creationDate=nowDate)
+        )
     })
-
     val searchInfoHash= searchInfoHashAux.filter({entry=> entry._1.toString !="RunId()"})
     searchInfoHash
   }

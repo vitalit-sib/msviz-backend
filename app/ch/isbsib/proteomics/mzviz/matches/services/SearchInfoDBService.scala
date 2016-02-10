@@ -1,5 +1,7 @@
 package ch.isbsib.proteomics.mzviz.matches.services
 
+import java.util.Calendar
+
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoDBService, MongoNotFoundException}
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models.SearchInfo
@@ -39,7 +41,11 @@ class SearchInfoDBService(val db: DefaultDB) extends MongoDBService {
    * @return true for succesful insert
    */
   def insert(entries: SearchInfo): Future[Boolean] = {
-    collection.insert(entries).map{
+
+    // add timestamp to the searchInfo
+    val newEntry = entries.copy(creationDate = Some(Calendar.getInstance().getTime()))
+
+    collection.insert(newEntry).map{
       case e: LastError if e.inError => false
       case _ => true
     }
