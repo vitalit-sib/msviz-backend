@@ -9,7 +9,7 @@ import ch.isbsib.proteomics.mzviz.experimental.importer.{FastLoaderMzXML}
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, MSRun, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.importer.{LoaderMzXML, LoaderMGF}
 import ch.isbsib.proteomics.mzviz.experimental.models._
-import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMs1MySqlDBService, ExpMs1MongoDBService, ExpMongoDBService}
+import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMongoDBService, ExpMs1MySqlDBService, ExpMs1MongoDBService}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import com.wordnik.swagger.annotations._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -62,6 +62,7 @@ object ExperimentalController extends CommonController {
                ) =
     DBAction { implicit rs =>
 
+      // set the default value to 10 ppm
       val ppmTolerance = tolerance.getOrElse(10.0)
       val daltonTolerance = moz / 1000000 * ppmTolerance
 
@@ -135,7 +136,7 @@ object ExperimentalController extends CommonController {
       LoaderMGF.load(request.body.file, RunId(runId)) match {
         case Success(it) =>{
 
-          var i = 0;
+          var i = 0
 
           while(it.hasNext){
             val msnRun= new MSRun(RunId(runId), Seq(it.next))
@@ -205,15 +206,32 @@ object ExperimentalController extends CommonController {
       }
     }
 
+  // val ms1Dao = TableQuery[ExpMs1MySqlDBService]
+
   @ApiOperation(nickname = "deleteMSRun",
-    value = "delete a run and all experimental data associated with it",
+    value = "delete all ms1 and ms2+ spectra",
     notes = """No double check is done. Use with caution""",
     response = classOf[String],
     httpMethod = "DELETE")
-  def deleteMSRun(runId: String) = Action.async {
-    ExpMongoDBService().delete(RunId(runId)).map { x =>
-      Ok("OK")
+  def deleteMSRun(runIds: String) = Action.async {
+
+    val runIdSet = runIds.split(",").map(RunId(_)).toSet
+
+
+    // delete ms1 spectra
+    val ms1Del: Int = DB.withSession { implicit session =>
+        runIdSet.map({ runId =>
+          ms1Dao.filter(ms => (ms.ref === runId.value)).delete
+        }).sum
+      }
+
+    for{
+    // delete ms2+ spectra
+      msnDel <- ExpMongoDBService().delete(runIdSet)
+    }yield{
+      Ok(Json.obj("msn" -> msnDel, "ms1" -> ms1Del))
     }
+
   }
 
 
@@ -258,5 +276,15 @@ object ExperimentalController extends CommonController {
 
     }
 
+
+  @ApiOperation(nickname = "options",
+    value = "empty options method",
+    notes = """returns Ok to fulfill the pre-flight OPTIONS request""",
+    response = classOf[String],
+    httpMethod = "OPTIONS")
+  def options(@ApiParam(name = "runId", value = "a string id with run identifier", required = true) @PathParam("runId") runId: String) =
+    Action {
+      Ok("Ok")
+    }
 
 }

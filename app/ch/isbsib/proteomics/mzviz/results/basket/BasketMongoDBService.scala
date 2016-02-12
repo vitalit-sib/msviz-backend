@@ -183,19 +183,22 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
     db.command(Count(collectionName))
   }
 
-  /**
-   * delete all entries which use this searchId
-   * @return a Future of boolean
-   */
-  def deleteBySearchId(searchId: String): Future[Boolean] = {
-
-    val query = Json.obj("$text" -> Json.obj("$search" -> searchId))
-
-    collection.remove(query).map {
-      case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
-      case _ => true
-    }
-  }
+//  /**
+//   * delete all entries which use this searchId
+//   * @return a Future of boolean
+//   */
+//  def deleteBySearchId(searchIds: Set[SearchId]): Future[Boolean] = {
+//
+//    searchIds.map({ searchId =>
+//
+//      val query = Json.obj("$text" -> Json.obj("$search" -> searchId.value))
+//
+//      collection.remove(query).map {
+//        case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
+//        case _ => true
+//      }
+//    }).sum
+//  }
 
 
   /**
@@ -213,17 +216,24 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
 
   /**
    * delete all entries which contain the given SearchId
-   * @param id
+   * @param searchIds Set of SearchIds
    * @return
    */
-  def deleteBasketBySearchId(id: SearchId): Future[Boolean] = {
-    val selector = BSONDocument("xicPeaks.searchId" -> id.value)
+  def deleteBySearchId(searchIds: Set[SearchId]): Future[Int] = {
 
-    bsonCollection.remove(selector).map {
-      case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
-      case _ => true
-    }
+    val resList = Future.sequence(searchIds.map({ searchId =>
 
+      val selector = BSONDocument("xicPeaks.searchId" -> searchId.value)
+
+      bsonCollection.remove(selector).map {
+        case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
+        case _ => true
+      }
+
+    }))
+
+    // get number of trues (nr of deleted searchIds)
+    resList.map(res => res.foldLeft(0)((a:Int,b:Boolean) => if(b) a+1 else a))
   }
 
 }

@@ -92,12 +92,12 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @param runId the run id
    * @return
    */
-  def delete(runId: RunId): Future[Boolean] = {
-    val query = Json.obj("ref.spectrumId.runId" -> runId.value)
-  collection.remove(query).map {
-    case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
-    case _ => true
-  }
+  def delete(runId: Set[RunId]): Future[Boolean] = {
+    val query = Json.obj("ref.spectrumId.runId" -> Json.obj("$in" -> runId.toList))
+    collection.remove(query).map {
+      case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
+      case _ => true
+    }
 }
 
   /**

@@ -11,6 +11,7 @@ import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMs1MySqlDBService, E
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models.{ProteinIdent, PepSpectraMatch, SearchInfo}
 import ch.isbsib.proteomics.mzviz.matches.services.{ProteinMatchMongoDBService, MatchMongoDBService, SearchInfoDBService}
+import ch.isbsib.proteomics.mzviz.results.basket.BasketMongoDBService
 import com.wordnik.swagger.annotations._
 import play.api.Logger
 import play.api.cache.Cached
@@ -135,23 +136,31 @@ object SearchController extends MatchController {
   def delete(@ApiParam(value = """searchIds""", defaultValue = "") @PathParam("searchIds") searchIds: String) =
     Action.async {
 
-      val dMs1:Int = DB.withSession { implicit session =>
-         searchIds.split(",").map({ searchId =>
-          ms1Dao.filter(ms => (ms.ref === searchId)).delete
-        }).sum
-      }
+      val searchIdList = queryParamSearchIds(searchIds)
 
       for {
-        dPsms <- MatchMongoDBService().deleteAllBySearchIds(queryParamSearchIds(searchIds))
-        dProt <- ProteinMatchMongoDBService().deleteAllBySearchIds(queryParamSearchIds(searchIds))
-        dSearchInfo <- SearchInfoDBService().deleteAllBySearchIds(queryParamSearchIds(searchIds))
+        dPsms <- MatchMongoDBService().deleteAllBySearchIds(searchIdList)
+        dProt <- ProteinMatchMongoDBService().deleteAllBySearchIds(searchIdList)
+        dSearchInfo <- SearchInfoDBService().deleteAllBySearchIds(searchIdList)
+        dBasket <- BasketMongoDBService().deleteBySearchId(searchIdList)
       } yield {
         Ok(Json.obj(
           "psms" -> dPsms,
           "proteinMatches" -> dProt,
           "searchInfos" -> dSearchInfo,
-          "ms1" -> dMs1
+          "basket" -> dBasket
         ))
       }
   }
+
+  @ApiOperation(nickname = "options",
+    value = "empty options method",
+    notes = """returns Ok to fulfill the pre-flight OPTIONS request""",
+    response = classOf[String],
+    httpMethod = "OPTIONS")
+  def options(@ApiParam(name = "searchIds", value = "a string id with run identifier", required = true) @PathParam("searchIds") searchIds: String) =
+    Action {
+      Ok("Ok")
+    }
+
 }

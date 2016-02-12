@@ -59,7 +59,7 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
       service.listMsRunIds.futureValue must equalTo(List(RunId("test-1"), RunId("test-2")))
 
       Thread.sleep(200)
-      service.delete(RunId("test-1")).futureValue
+      service.delete(Set(RunId("test-1"))).futureValue
       Thread.sleep(200)
       service.countMsRuns.futureValue must equalTo(1)
       service.listMsRunIds.futureValue must equalTo(List(RunId("test-2")))
