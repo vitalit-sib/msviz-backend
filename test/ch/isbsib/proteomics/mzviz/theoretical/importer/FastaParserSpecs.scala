@@ -25,7 +25,7 @@ class FastaParserSpecs extends Specification with ScalaFutures {
   "FastaExtractorACFromHeader.parse()" should {
     def check(header:String, ac:String, ids:String) = {
       s"$header -> AC($ac)" in {
-        FastaExtractorACFromHeader.parseAC(header) must equalTo(AccessionCode(ac))
+        FastaExtractorACFromHeader.parseAC(header, None) must equalTo(AccessionCode(ac))
       }
       s"$header -> identifiers($ac,$ids)" in {
         val rids = FastaExtractorACFromHeader.parseIdentifiers(header)
@@ -45,7 +45,7 @@ class FastaParserSpecs extends Specification with ScalaFutures {
   }
 
   "parse" should {
-    val entries = FastaParser("test/resources/sequences/M_100small.fasta", SequenceSource("pipo")).parse.toList
+    val entries = FastaParser("test/resources/sequences/M_100small.fasta", SequenceSource("pipo"), None).parse.toList
 
     val mapEntries: Map[AccessionCode, FastaEntry] = entries.map(e => (e.proteinRef.AC, e)).toMap
 
@@ -75,7 +75,7 @@ class FastaParserSpecs extends Specification with ScalaFutures {
   }
 
   "parse with a source" should {
-    val entries = FastaParser("test/resources/sequences/M_100small.fasta", SequenceSource("manon")).parse
+    val entries = FastaParser("test/resources/sequences/M_100small.fasta", SequenceSource("manon"), None).parse
 
     val mapEntries: Map[AccessionCode, FastaEntry] = entries.map(e => (e.proteinRef.AC, e)).toMap
 
@@ -89,10 +89,38 @@ class FastaParserSpecs extends Specification with ScalaFutures {
   }
 
   "parse trembl" should{
-    val entries = FastaParser("test/resources/sequences/tr.fasta", SequenceSource("tr")).parse
+    val entries = FastaParser("test/resources/sequences/tr.fasta", SequenceSource("tr"), None).parse
 
     "size" in {
       entries must have size 2
     }
   }
+
+
+  "parse SDB_custom" should{
+    val regexp = ">\\([^ ]*\\),(.*?)\\s+.*,(.*)"
+    val entries = FastaParser("test/resources/sequences/custom_20160212_0941.fasta", SequenceSource("SDB_custom"), Some(regexp)).parse.toSeq
+
+    "size" in {
+      entries must have size 972
+    }
+
+    "ID=ARBNEW_93" in {
+      entries(2).proteinRef.AC.value mustEqual("ID=ARBNEW_93")
+    }
+
+    "TF-SGN1" in {
+      entries.last.proteinRef.AC.value mustEqual("TF-SGN1")
+    }
+
+    "sp|P08238|HS90B_HUMAN" in {
+      entries.filter(_.proteinRef.AC.value == "sp|P08238|HS90B_HUMAN").length mustEqual(1)
+    }
+
+    "UBP15_HUMAN" in {
+      val ubp15 = entries.filter(_.proteinRef.AC.value.contains("UBP15_HUMAN"))
+      ubp15.length mustEqual(3)
+    }
+  }
+
 }

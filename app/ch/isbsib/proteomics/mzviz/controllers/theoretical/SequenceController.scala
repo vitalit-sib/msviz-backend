@@ -69,10 +69,11 @@ object SequenceController extends CommonController {
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name = "body", value = "fasta file", required = true, dataType = "text/plain", paramType = "body")
   ))
-  def loadFasta(@ApiParam(value = """sourceId""", defaultValue = "uniprot_sprot_20231224") @PathParam("sourceId") sourceId: String) =
+  def loadFasta(@ApiParam(value = """sourceId""", defaultValue = "uniprot_sprot_20231224") @PathParam("sourceId") sourceId: String,
+                 regexp:Option[String]=None) =
     Action.async(parse.temporaryFile) {
       request =>
-        val entries = FastaParser(request.body.file, SequenceSource(sourceId)).parse
+        val entries = FastaParser(request.body.file, SequenceSource(sourceId), regexp).parse
         SequenceMongoDBService().insert(entries).map { n => Ok(Json.obj("inserted" -> n))
         }.recover {
           case e => BadRequest(Json.toJson(e))

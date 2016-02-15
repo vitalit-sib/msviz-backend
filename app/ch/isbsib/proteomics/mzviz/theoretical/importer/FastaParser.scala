@@ -16,7 +16,7 @@ import scala.util.matching.Regex
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
  *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
-class FastaParser(file: File, source: SequenceSource) {
+class FastaParser(file: File, source: SequenceSource, regexp:Option[String]) {
 
 
   def parseOneProtBlock(protLines: String): FastaEntry = {
@@ -24,8 +24,8 @@ class FastaParser(file: File, source: SequenceSource) {
     val headline = protLines.substring(0, firstNewLineIndex)
     val seqLines = protLines.substring(firstNewLineIndex + 1)
 
-    //gett accession code and cleanup sequence
-    val ac = FastaExtractorACFromHeader.parseAC(headline)
+    //get accession code and cleanup sequence
+    val ac = FastaExtractorACFromHeader.parseAC(headline, regexp)
     val ids = FastaExtractorACFromHeader.parseIdentifiers(headline) + ProteinIdentifier(ac.value)
     val seq = seqLines.replaceAll( """\s+""", "")
 
@@ -59,9 +59,9 @@ class FastaParser(file: File, source: SequenceSource) {
  */
 object FastaParser {
 
-  def apply(filename: String, source: SequenceSource) = new FastaParser(new File(filename), source)
+  def apply(filename: String, source: SequenceSource, regexp:Option[String]) = new FastaParser(new File(filename), source, regexp)
 
-  def apply(file: File, source: SequenceSource) = new FastaParser(file, source)
+  def apply(file: File, source: SequenceSource, regexp:Option[String]) = new FastaParser(file, source, regexp)
 
 }
 
@@ -70,19 +70,20 @@ object FastaExtractorACFromHeader {
     """..\|(.+?)\|.*""",
     """..\|([\w\-]+).*""",
     """([\w\-:]+).*"""
-  )
-    .map(s => ("^>?" + s).r)
+  ).map(s => ("^>?" + s).r)
 
   val reIdentifiersList = List(
     """..\|.+?\|(\S+)\s*.*"""
-  )
-    .map(s => ("^>?" + s).r)
+  ).map(s => ("^>?" + s).r)
 
-  def parseAC(header: String): AccessionCode = reACList.find(_.findFirstMatchIn(header).isDefined) match {
-    case Some(re) =>
-      val re(ac) = header
-      AccessionCode(ac)
-    case None => throw new FastaParsingException(s"cannot parse AC from header: $header")
+  def parseAC(header: String, regexp:Option[String]): AccessionCode = {
+    val localReACList:List[Regex] = if(regexp.isDefined) regexp.get.split(",").map(_.r).toList else reACList
+    localReACList.find(_.findFirstMatchIn(header).isDefined) match {
+      case Some(re) =>
+        val re(ac) = header
+        AccessionCode(ac)
+      case None => throw new FastaParsingException(s"cannot parse AC from header: $header")
+    }
   }
 
   def parseIdentifiers(header: String): Set[ProteinIdentifier] = reIdentifiersList.find(_.findFirstMatchIn(header).isDefined) match {

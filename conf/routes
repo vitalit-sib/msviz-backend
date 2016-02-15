@@ -19,7 +19,7 @@ GET           /exp/spectra-ref/:runId                                ch.isbsib.p
 
 GET           /api-docs/sequences                                    controllers.ApiHelpController.getResource(path = "/sequences")
 GET           /sequences/list-sources                                ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.listSources
-POST          /sequences/:sourceId/fasta                             ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.loadFasta(sourceId)
+POST          /sequences/:sourceId/fasta                             ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.loadFasta(sourceId, regexp:Option[String])
 DELETE        /sequences/:sourceId                                   ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.deleteSource(sourceId)
 GET           /sequences/stats                                       ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.stats
 

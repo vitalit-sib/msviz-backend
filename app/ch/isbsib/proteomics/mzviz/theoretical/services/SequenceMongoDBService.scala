@@ -30,7 +30,7 @@ class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
 
   setIndexes(List(
     new Index(
-      Seq("proteinRef.identifiers" -> IndexType.Ascending, "proteinRef.source" -> IndexType.Ascending),
+      Seq("proteinRef.AC" -> IndexType.Ascending, "proteinRef.source" -> IndexType.Ascending),
       name = Some("proteinRef"),
       unique = true)
   ))
