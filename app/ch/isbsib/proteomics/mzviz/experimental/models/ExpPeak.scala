@@ -1,7 +1,7 @@
 package ch.isbsib.proteomics.mzviz.experimental.models
 
 import ch.isbsib.proteomics.mzviz.commons._
-
+import ch.isbsib.proteomics.mzviz.experimental.ScanNumber
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
@@ -18,6 +18,6 @@ case class ExpPeakMS1(moz: Moz, intensity: Intensity) extends ExpPeak
 
 case class ExpPeakMSn(moz: Moz, intensity: Intensity, intensityRank: IntensityRank, msLevel: MSLevel) extends ExpPeak
 
-case class ExpPeakPrecursor(moz: Moz, intensity: Intensity, retentionTime: RetentionTime, charge: Charge) extends ExpPeak{
+case class ExpPeakPrecursor(moz: Moz, intensity: Intensity, retentionTime: RetentionTime, charge: Charge, scanNumber:Option[ScanNumber]) extends ExpPeak{
   val msLevel=MSLevel(1)
 }

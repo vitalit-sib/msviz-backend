@@ -97,7 +97,7 @@ object FastLoaderMzXML {
 
     // create MS1 spectra
     val spId = new SpectrumId(SpectrumUniqueId(scanNumber), runId)
-    ExpMs1Spectrum(spId, RetentionTime(rt), extractedPeaks)
+    ExpMs1Spectrum(spId, RetentionTime(rt), None, extractedPeaks)
   }
 
 
