@@ -3,7 +3,7 @@ package ch.isbsib.proteomics.mzviz.experimental.services
 import ch.isbsib.proteomics.mzviz.commons.{Moz, Intensity, RetentionTime}
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoNotFoundException, MongoDBService}
 import ch.isbsib.proteomics.mzviz.experimental.RunId
-import ch.isbsib.proteomics.mzviz.experimental.models.{SpectrumRef, Ms1Entry, ExpMs1Spectrum}
+import ch.isbsib.proteomics.mzviz.experimental.models.{SpectrumRef, Ms1EntryWithRef, ExpMs1Spectrum}
 import org.specs2.execute.Success
 import play.api.libs.iteratee.Enumerator
 import play.api.mvc.Controller
@@ -25,7 +25,7 @@ import scala.util.Failure
  *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
-  val collectionName = "ms1Spectra"
+  val collectionName = "ms1Peaks"
   val mainKeyName = "ref"
 
   new Index(
@@ -39,29 +39,48 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
    * @return number of entries
    */
 
-  def insertListMS1(listMS1: Iterator[ExpMs1Spectrum]): Future[Int] ={
+  def insertListMS1(listMS1: Iterator[ExpMs1Spectrum], intensityThreshold: Double): Future[Int] ={
 
     var inserted: List[Future[Int]] = List()
 
     while (listMS1.hasNext) {
-      // store entries to insert in a list 
-      var itEntry: List[Ms1Entry]=List()
-
-      val current = listMS1.next()
-      val runID = current.spId.runId
-      val rt = current.retentionTime
-      current.peaks.foreach {
-      peak => val ms1Entry: Ms1Entry = Ms1Entry(runID, rt, peak.intensity, peak.moz)
-        itEntry= itEntry :+ ms1Entry
-      }
-      // insert into db
-      val enum=Enumerator.enumerate(itEntry)
-      inserted = inserted :+ collection.bulkInsert(enum)
+      val ms1 = listMS1.next()
+      inserted = inserted :+ insertMS1(ms1, intensityThreshold)._1
     }
 
     // give back the sum of all peaks entered
     Future.sequence(inserted).map(_.sum)
   }
+
+
+  def insertMS1(ms1: ExpMs1Spectrum, intensityThreshold: Double): (Future[Int], Double, Double) = {
+    // store entries to insert in a list 
+    var itEntry: List[Ms1EntryWithRef]=List()
+    var lowestMoz:Double = 9999999
+    var highestMoz:Double = 0
+
+    val runID = ms1.spId.runId
+    val rt = ms1.retentionTime
+    ms1.peaks.foreach {
+      peak =>
+        if(peak.intensity.value >= intensityThreshold) {
+          val ms1Entry: Ms1EntryWithRef = Ms1EntryWithRef(runID, rt, peak.intensity, peak.moz)
+          itEntry = itEntry :+ ms1Entry
+
+          // remember the highest and lowest Moz
+          val moz:Double = peak.moz.value
+          if(moz < lowestMoz) lowestMoz = moz
+          if(moz > highestMoz) highestMoz = moz
+        }
+    }
+    // insert into db
+    val enum=Enumerator.enumerate(itEntry)
+    val futureNumber:Future[Int] = collection.bulkInsert(enum)
+
+    (futureNumber, lowestMoz, highestMoz)
+
+  }
+
 
   /**
    * retrieve a list of Ms1Entries by moz and tolerance. The list is unsorted.
@@ -69,12 +88,23 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
    * @param tolerance
    * @return seq of entries
    */
-
-  def findMs1ByRunID_MozAndTol(runId: RunId, moz:Moz,tolerance: Double): Future[List[Ms1Entry]] = {
+  def findMs1ByRunID_MozAndTol(runId: RunId, moz:Moz,tolerance: Double): Future[List[Ms1EntryWithRef]] = {
     val query = Json.obj("moz"->Json.obj("$lte" ->(moz.value + tolerance),"$gte"-> (moz.value - tolerance)))
-    collection.find(query).cursor[Ms1Entry].collect[List]()
+    collection.find(query).cursor[Ms1EntryWithRef].collect[List]()
   }
 
+  /**
+   * retrieve all entries between a certain moz limit
+   *
+   * @param rundId
+   * @param lowerLimit
+   * @param upperLimit
+   * @return
+   */
+  def findMs1ByRunID_MozBorders(rundId: RunId, lowerLimit:Moz, upperLimit:Moz): Future[List[Ms1EntryWithRef]] = {
+    val query = Json.obj("moz"->Json.obj("$lte" -> upperLimit.value, "$gte"-> lowerLimit.value))
+    collection.find(query).cursor[Ms1EntryWithRef].collect[List]()
+  }
 
 
 
@@ -85,7 +115,7 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
    * @return list of intensities and list of moz
    */
 
-  def extract2FutureLists(ms1List:Future[List[Ms1Entry]], rtTolerance: Double): Future[JsObject] = {
+  def extract2FutureLists(ms1List:Future[List[Ms1EntryWithRef]], rtTolerance: Double): Future[JsObject] = {
 
     // we're in a Future
     ms1List.map(m => {
@@ -95,7 +125,7 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
     })
   }
 
-  def extract2Lists(ms1List:List[Ms1Entry], rtTolerance: Double): JsObject = {
+  def extract2Lists(ms1List:List[Ms1EntryWithRef], rtTolerance: Double): JsObject = {
       if(ms1List.length > 0) {
         // group by retentionTimes
         val rtGroups = ms1List.groupBy(_.rt.value)
@@ -127,7 +157,7 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
         val aux = addedMissingRts.unzip
         return Json.obj("rt" -> aux._1, "intensities" -> aux._2)
       }else{
-        val emptyList:List[Ms1Entry] = List()
+        val emptyList:List[Ms1EntryWithRef] = List()
         return Json.obj("rt" -> emptyList, "intensities" -> emptyList)
       }
   }
@@ -154,9 +184,9 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
    */
 
 
-  def findMs1ByRunId(runId: RunId): Future[Iterator[Ms1Entry]] = {
+  def findMs1ByRunId(runId: RunId): Future[Iterator[Ms1EntryWithRef]] = {
     val query = Json.obj("ref" -> runId.value)
-    collection.find(query).cursor[Ms1Entry].collect[Iterator]()
+    collection.find(query).cursor[Ms1EntryWithRef].collect[Iterator]()
   }
 
 

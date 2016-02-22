@@ -39,7 +39,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
       service.countRunIds.futureValue must equalTo(0)
     }
   }
-/*
+
   "import and insert q psm list" should {
 
     val file_1 = new File("test/resources/mascot/M_100.mzid")
@@ -95,7 +95,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
         idList.size must equalTo(62)
 
         //check JSON content
-        idList(0).id must equalTo(SpectrumUniqueId(27))
+        idList(0).id must equalTo(SpectrumUniqueId("27"))
         idList(0).runId must equalTo(RunId("M_100.mgf"))
       }
     }
@@ -119,7 +119,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
   }
 
 
-*/
+
   "listProteinRefsBySearchId" should {
 
     running(FakeApplication()) {
@@ -212,13 +212,13 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
 
     }
   }
-/*
+
   "find All Modifications By SearchIds" in new TempMongoDBService {
 
     running(FakeApplication()) {
 
      // val file_1 = new File("test/resources/mascot/M_100.mzid")
-      val loadMaxQ= LoaderMaxQuant.parse("test/resources/maxquant/")
+      val loadMaxQ= LoaderMaxQuant.parse("test/resources/maxquant/", "M_100")
       val insertMQ= service.insert(loadMaxQ(0)._1)
       //service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"))._1).futureValue
       val setSearchIds= Set(SearchId("4-Nocodazole"))
@@ -228,7 +228,6 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
     }
 
   }
-*/
 
 
 

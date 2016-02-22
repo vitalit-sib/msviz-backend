@@ -68,7 +68,7 @@ object ExperimentalController extends CommonController {
 
       val ms1List = ms1Dao.filter(ms => (ms.ref === runId)
         && (ms.moz <= moz+daltonTolerance)
-        && ms.moz >= moz-daltonTolerance).list.map(m => Ms1Entry(RunId(m.ref), RetentionTime(m.rt), Intensity(m.int), Moz(m.moz))
+        && ms.moz >= moz-daltonTolerance).list.map(m => Ms1EntryWithRef(RunId(m.ref), RetentionTime(m.rt), Intensity(m.int), Moz(m.moz))
       )
 
       val sphList = ExpMs1MongoDBService().extract2Lists(ms1List, rtTolerance.getOrElse(10.0))
@@ -265,11 +265,11 @@ object ExperimentalController extends CommonController {
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name = "body", value = "mzxml", required = true, dataType = "text/plain", paramType = "body")
   ))
-  def loadMS1Data(@ApiParam(name = "runId", value = "a string id with run identifier", required = true) @PathParam("runId") runId: String) =
+  def loadMS1Data(@ApiParam(name = "runId", value = "a string id with run identifier", required = true) @PathParam("runId") runId: String, intensityThreshold: Double = 1000) =
     Action.async(parse.temporaryFile) {
       request =>
         val entries = LoaderMzXML.parseFile(request.body.file, RunId(runId))
-        ExpMs1MongoDBService().insertListMS1(entries).map { n => Ok(Json.obj("inserted" -> n))
+        ExpMs1MongoDBService().insertListMS1(entries, intensityThreshold).map { n => Ok(Json.obj("inserted" -> n))
         }.recover {
           case e => BadRequest(Json.toJson(e))
         }

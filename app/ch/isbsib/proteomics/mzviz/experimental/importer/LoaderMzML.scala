@@ -51,7 +51,10 @@ class MzMLIterator(mzMLObjectIterator: MzMLObjectIterator[Nothing], runId: RunId
 
   val scanNumberPattern = """scan=(\d+)""".r
 
-
+  /**
+   * get the next element from the EBI parser and transform it to either a ms1 or msn spectrum
+   * @return
+   */
   def next(): Either[ExpMs1Spectrum, ExpMSnSpectrum] = {
     val sp:Spectrum = mzMLObjectIterator.next().asInstanceOf[Spectrum]
 
@@ -65,6 +68,10 @@ class MzMLIterator(mzMLObjectIterator: MzMLObjectIterator[Nothing], runId: RunId
 
   }
 
+  /**
+   * check if there is a next element
+   * @return
+   */
   def hasNext():Boolean = {
     mzMLObjectIterator.hasNext
   }
@@ -85,6 +92,11 @@ class MzMLIterator(mzMLObjectIterator: MzMLObjectIterator[Nothing], runId: RunId
   }
 
 
+  /**
+   * convert a binaryData to a list of peaks
+   * @param binaryData
+   * @return
+   */
   def parseBinaryData(binaryData: Seq[BinaryDataArray]):Array[(Moz, Intensity)] = {
     if(binaryData.size != 2) throw new IllegalStateException("There should be only 2 entries in list: one for moz and one for int")
 
@@ -95,6 +107,12 @@ class MzMLIterator(mzMLObjectIterator: MzMLObjectIterator[Nothing], runId: RunId
   }
 
 
+  /**
+   * transfrom a spectrum to a ExpMs1Spectrum (MS1 data)
+   * @param sp
+   * @param runId
+   * @return
+   */
   def parseMs1(sp:Spectrum, runId: RunId):ExpMs1Spectrum = {
     val cvParams = sp.getCvParam.asScala.toSeq
 
@@ -112,7 +130,12 @@ class MzMLIterator(mzMLObjectIterator: MzMLObjectIterator[Nothing], runId: RunId
     ExpMs1Spectrum(spId, rt, Some(scanNr), peaks)
   }
 
-
+  /**
+   * transform a spectrum to a ExpMSnSpectrum (MS2+ data)
+   * @param sp
+   * @param runId
+   * @return
+   */
   def parseMsN(sp:Spectrum, runId: RunId):ExpMSnSpectrum = {
     val spCvParams:Seq[CVParam] = sp.getCvParam.asScala.toSeq
 

@@ -4,8 +4,8 @@ import java.io.File
 
 import ch.isbsib.proteomics.mzviz.commons.{Moz, TempMongoDBForSpecs}
 import ch.isbsib.proteomics.mzviz.experimental.RunId
-import ch.isbsib.proteomics.mzviz.experimental.importer.LoaderMzXML
-import ch.isbsib.proteomics.mzviz.experimental.models.Ms1Entry
+import ch.isbsib.proteomics.mzviz.experimental.importer.{LoaderMzML, LoaderMzXML}
+import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMs1Spectrum, Ms1EntryWithRef}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.specs2.mutable.Specification
@@ -23,6 +23,8 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
   implicit val defaultPatience =
     PatienceConfig(timeout = Span(15, Seconds), interval = Span(5000, Millis))
 
+  val ms1peakIntensityThreshold = 0.0
+
   /**
    * extends the temp mngodatabase and add a exp service above it
    */
@@ -34,7 +36,7 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
     "return 98 entries " in new TempMongoDBService {
 
       val n=LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzXML"), RunId("wewe"))
-      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzXML"), RunId("wewe")))
+      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzXML"), RunId("wewe")), ms1peakIntensityThreshold)
         .futureValue mustEqual(31771)
 
       n.size mustEqual(98)
@@ -43,7 +45,7 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
 
   "find ms1" should {
     "return 8 entries " in new TempMongoDBService {
-      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzXML"), RunId("wewe")))
+      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzXML"), RunId("wewe")), ms1peakIntensityThreshold)
 
       Thread.sleep(5000)
       service.findMs1ByRunId(RunId("wewe")).futureValue.size mustEqual (31771)
@@ -54,7 +56,7 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
   "delete 8 ms1" should {
     "remove 8 " in new TempMongoDBService {
 
-      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzXML"), RunId("wewe")))
+      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzXML"), RunId("wewe")), ms1peakIntensityThreshold)
       Thread.sleep(10000)
       service.delete(RunId("wewe"))
       Thread.sleep(10000)
@@ -66,7 +68,7 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
   "find ms1 param real data" should {
     "with moz and tolerance " in new TempMongoDBService {
 
-      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzXML"), RunId("small")))
+      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzXML"), RunId("small")), ms1peakIntensityThreshold)
       Thread.sleep(4000)
       val ms1List = service.findMs1ByRunID_MozAndTol(RunId("small"), Moz(519.14), 0.5).futureValue
       Thread.sleep(4000)
@@ -78,7 +80,7 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
     "return 2 scan and 8 entries " in new TempMongoDBService {
 
       val n=LoaderMzXML.parseFile(new File("test/resources/ms1/tiny1_mzXML.mzXML"), RunId("tiny"))
-      val scanList = service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/tiny1_mzXML.mzXML"), RunId("tiny")))
+      val scanList = service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/tiny1_mzXML.mzXML"), RunId("tiny")), ms1peakIntensityThreshold)
         .futureValue
 
       scanList mustEqual(8)
@@ -92,7 +94,7 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
 
       val rtTolerance = 0.5
 
-      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzXML"), RunId("small")))
+      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzXML"), RunId("small")), ms1peakIntensityThreshold)
       Thread.sleep(3000)
       val ms1List = service.findMs1ByRunID_MozAndTol(RunId("small"), Moz(519.14), 0.3).futureValue
 
@@ -110,7 +112,7 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
 
       val rtTolerance = 0.5
 
-      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzXML"), RunId("small")))
+      service.insertListMS1(LoaderMzXML.parseFile(new File("test/resources/ms1/F001644_small.mzXML"), RunId("small")), ms1peakIntensityThreshold)
       Thread.sleep(3000)
       val ms1List = service.findMs1ByRunID_MozAndTol(RunId("small"), Moz(10000.99), 0.0003).futureValue
 
@@ -123,6 +125,28 @@ class ExpMs1MongoDBServiceSpecs extends Specification with ScalaFutures{
       ints.length mustEqual(0)
 
     }
+
+
+    "insert MzML file" in new TempMongoDBService {
+
+      val rtTolerance = 0.5
+
+      val ms1SpList: Iterator[ExpMs1Spectrum] = LoaderMzML().parse(new File("test/resources/ms2/20160215_Fujita_8133B_subset.mzML"), RunId("small")).filter(_.isLeft).map(_.left.get)
+
+      service.insertListMS1(ms1SpList, 1000)
+      Thread.sleep(3000)
+      val ms1List = service.findMs1ByRunID_MozAndTol(RunId("small"), Moz(425.73), 0.1).futureValue
+
+      val json = service.extract2Lists(ms1List, rtTolerance)
+
+      val rts = (json \ "rt").as[List[JsValue]]
+      rts.length mustEqual(25)
+
+      val ints = (json \ "intensities").as[List[JsValue]]
+      ints.length mustEqual(25)
+
+    }
+
 
   }
 
