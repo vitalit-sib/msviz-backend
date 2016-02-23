@@ -55,15 +55,17 @@ class ExpMs1BinMongoDBServiceSpecs extends Specification with ScalaFutures{
 
   }
 
+  // some test data
+  val entry1 = Ms1Entry(RetentionTime(3.455), Intensity(4000.6), Moz(445.54))
+  val entry2 = Ms1Entry(RetentionTime(5.6445), Intensity(8000.12), Moz(445.45))
+  val entry3 = Ms1Entry(RetentionTime(8.6445), Intensity(9000.12), Moz(445.90))
+  val ms1EntryList1: Ms1EntryList = Ms1EntryList(RunIdAndMozBin("hoho_445"), Seq(entry1, entry2, entry3))
+  val entry4 = Ms1Entry(RetentionTime(8.455), Intensity(3000.6), Moz(600.54))
+  val entry5 = Ms1Entry(RetentionTime(3.455), Intensity(4000.6), Moz(600.64))
+  val ms1EntryList2: Ms1EntryList = Ms1EntryList(RunIdAndMozBin("hoho_600"), Seq(entry4, entry5))
+
+
   "insert Ms1EntryList" should {
-
-    // some test data
-    val entry1 = Ms1Entry(RetentionTime(3.455), Intensity(4000.6), Moz(412.54))
-    val entry2 = Ms1Entry(RetentionTime(5.6445), Intensity(8000.12), Moz(445.45))
-    val entry3 = Ms1Entry(RetentionTime(8.6445), Intensity(9000.12), Moz(446.35))
-    val ms1EntryList1: Ms1EntryList = Ms1EntryList(RunIdAndMozBin("hoho_400"), Seq(entry1, entry2, entry3))
-    val ms1EntryList2: Ms1EntryList = Ms1EntryList(RunIdAndMozBin("hoho_600"), Seq(entry3, entry2))
-
 
     "check insertMs1EntryList" in new TempMongoDBService {
 
@@ -77,17 +79,17 @@ class ExpMs1BinMongoDBServiceSpecs extends Specification with ScalaFutures{
       val resInsert = service.insertMs1EntryList(ms1EntryList1)
       resInsert.futureValue mustEqual(true)
 
-      val resFind = service.findMs1EntryList(Set(RunIdAndMozBin("hoho_400")))
+      val resFind = service.findMs1EntryList(Set(RunIdAndMozBin("hoho_445")))
       val resList = resFind.futureValue
 
       resList.size mustEqual(1)
-      resList(0).ref.value mustEqual("hoho_400")
+      resList(0).ref.value mustEqual("hoho_445")
       resList(0).ms1EntryList.size mustEqual(3)
       resList(0).ms1EntryList(0).rt.value mustEqual(3.455)
 
     }
 
-    "insert and find not ms1Bins" in new TempMongoDBService {
+    "insert and dont find ms1Bins" in new TempMongoDBService {
 
       val resInsert = service.insertMs1EntryList(ms1EntryList1)
       resInsert.futureValue mustEqual(true)
@@ -104,7 +106,7 @@ class ExpMs1BinMongoDBServiceSpecs extends Specification with ScalaFutures{
       val resInsert2 = service.insertMs1EntryList(ms1EntryList2)
       resInsert2.futureValue mustEqual(true)
 
-      val resFind = service.findMs1EntryList(Set(RunIdAndMozBin("hoho_600"), RunIdAndMozBin("hoho_400")))
+      val resFind = service.findMs1EntryList(Set(RunIdAndMozBin("hoho_600"), RunIdAndMozBin("hoho_445")))
       val resList = resFind.futureValue
 
       resList.size mustEqual(2)
@@ -116,4 +118,34 @@ class ExpMs1BinMongoDBServiceSpecs extends Specification with ScalaFutures{
 
   }
 
-}
+
+  "find Ms1Entries" should {
+
+    "insert and find Ms1Entries" in new TempMongoDBService {
+
+      val res = service.insertMs1EntryList(ms1EntryList1)
+      res.futureValue mustEqual (true)
+
+      val resList = service.findMs1EntryWithMozTol(RunId("hoho"), Moz(445.50), 0.1).futureValue
+      resList.size mustEqual(2)
+
+      resList(0).moz.value mustEqual(445.54)
+      resList(1).moz.value mustEqual(445.45)
+
+    }
+
+    "insert and dont find Ms1Entries" in new TempMongoDBService {
+
+      val res = service.insertMs1EntryList(ms1EntryList1)
+      res.futureValue mustEqual (true)
+
+      val resList = service.findMs1EntryWithMozTol(RunId("hoho"), Moz(800.50), 0.1).futureValue
+      resList.size mustEqual(0)
+
+    }
+
+
+  }
+
+
+  }

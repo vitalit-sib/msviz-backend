@@ -123,20 +123,31 @@ class ExpMs1BinMongoDBService (val db: DefaultDB) extends MongoDBService {
     // the first part of the ref
     val runRef = runId.value + "_"
 
+    println("ref: " + runRef)
+
     // if the tolerance is at the border of a bin, we have to take the neighboring bin one as well
     val secondPart = if((mozBin - tolerance).toInt < mozBin){
-      runRef + (mozBin-1).toString :: Nil
+      RunIdAndMozBin(runRef + (mozBin-1).toString) :: Nil
     } else if((mozBin - tolerance).toInt < mozBin){
-      runRef + (mozBin-1).toString :: Nil
+      RunIdAndMozBin(runRef + (mozBin-1).toString) :: Nil
     }else{
       Nil
     }
 
-    val ref:Seq[String] = (runRef + mozBin) :: secondPart
+    val refSet:Set[RunIdAndMozBin] = (RunIdAndMozBin(runRef + mozBin) :: secondPart).toSet
 
+    refSet.foreach(a => println(a.value))
 
-    ???
+    // get list of Ms1Entries
+    val res = findMs1EntryList(refSet)
+    res.map(a => println(a.size))
 
+    val futureEntryList: Future[List[Ms1Entry]] = res.map(oneEntry => oneEntry.flatMap(_.ms1EntryList))
+
+    futureEntryList.map(a => println(a.size))
+
+    // filter entries on given moz and tolerance
+    futureEntryList.map(entryList => entryList.filter(a => a.moz.value <= moz.value+tolerance && a.moz.value >= moz.value-tolerance))
   }
 
   /**
@@ -172,6 +183,7 @@ class ExpMs1BinMongoDBService (val db: DefaultDB) extends MongoDBService {
       val futureEntries:Future[List[Ms1EntryWithRef]] = ExpMs1MongoDBService().findMs1ByRunID_MozBorders(runId, Moz(bin.toDouble), Moz((bin+1).toDouble))
 
       val ref = RunIdAndMozBin(runId + "_" + bin.toString)
+
       futureEntries.map({ entriesWithRef =>
         val entries = entriesWithRef.map(a => Ms1Entry(a.rt, a.intensity, a.moz))
         val ms1EntryList =  Ms1EntryList(ref, entries)
