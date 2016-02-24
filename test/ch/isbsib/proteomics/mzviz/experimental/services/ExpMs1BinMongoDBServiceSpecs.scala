@@ -39,21 +39,49 @@ class ExpMs1BinMongoDBServiceSpecs extends Specification with ScalaFutures{
 
           val ms1SpList: Iterator[ExpMs1Spectrum] = LoaderMzML().parse(new File("test/resources/ms2/20160215_Fujita_8133B_subset.mzML"), RunId("small")).filter(_.isLeft).map(_.left.get)
 
-          val res = service.insertMS1peaks(ms1SpList, 1000)
+          val res = service.insertMS1peaks(ms1SpList, 100000)
 
           // check lowest value
           res._1 mustEqual (395.4523269330307)
 
           // check highest value
-          res._2 mustEqual (1992.833661621151)
+          res._2 mustEqual (1923.7513626013747)
 
           // check number of inserts
-          res._3.futureValue mustEqual(53168)
+          res._3.futureValue mustEqual(41752)
       }
 
     }
 
   }
+
+
+  "insertMS1bins" should {
+
+    "insertMS1bins and find entries" in new TempMongoDBService {
+      running(FakeApplication()) {
+
+        val ms1SpList: Iterator[ExpMs1Spectrum] = LoaderMzML().parse(new File("test/resources/ms2/20160215_Fujita_8133B_subset.mzML"), RunId("small")).filter(_.isLeft).map(_.left.get).take(3)
+
+        val res = service.insertMS1peaks(ms1SpList, 1000)
+
+        // check number of inserts
+        res._3.futureValue mustEqual(5332)
+
+        val nrInserted = service.createMS1bins(RunId("small"), 400.12, 401.43).futureValue
+
+        nrInserted mustEqual(2)
+
+        val resList = service.findMs1EntryWithMozTol(RunId("small"), Moz(400.94), 0.0001).futureValue
+        resList.size mustEqual(92)
+        resList(0).rt.value mustEqual(35.211123)
+
+      }
+
+    }
+
+  }
+
 
   // some test data
   val entry1 = Ms1Entry(RetentionTime(3.455), Intensity(4000.6), Moz(445.54))
@@ -63,6 +91,9 @@ class ExpMs1BinMongoDBServiceSpecs extends Specification with ScalaFutures{
   val entry4 = Ms1Entry(RetentionTime(8.455), Intensity(3000.6), Moz(600.54))
   val entry5 = Ms1Entry(RetentionTime(3.455), Intensity(4000.6), Moz(600.64))
   val ms1EntryList2: Ms1EntryList = Ms1EntryList(RunIdAndMozBin("hoho_600"), Seq(entry4, entry5))
+  val entry6 = Ms1Entry(RetentionTime(8.455), Intensity(3000.6), Moz(444.98))
+  val entry7 = Ms1Entry(RetentionTime(8.455), Intensity(3000.6), Moz(444.58))
+  val ms1EntryList3: Ms1EntryList = Ms1EntryList(RunIdAndMozBin("hoho_444"), Seq(entry6, entry7))
 
 
   "insert Ms1EntryList" should {
@@ -141,6 +172,22 @@ class ExpMs1BinMongoDBServiceSpecs extends Specification with ScalaFutures{
 
       val resList = service.findMs1EntryWithMozTol(RunId("hoho"), Moz(800.50), 0.1).futureValue
       resList.size mustEqual(0)
+
+    }
+
+    "insert and find in overlapping bin" in new TempMongoDBService {
+
+      val res = service.insertMs1EntryList(ms1EntryList1)
+      val res2 = service.insertMs1EntryList(ms1EntryList3)
+      res.futureValue mustEqual (true)
+      res2.futureValue mustEqual (true)
+
+      val resList = service.findMs1EntryWithMozTol(RunId("hoho"), Moz(445.20), 0.25).futureValue
+      resList.size mustEqual(2)
+      val resfil1 = resList.filter(_.moz.value == 444.98)
+      resfil1.size mustEqual(1)
+      val resfil2 = resList.filter(_.moz.value == 445.45)
+      resfil2.size mustEqual(1)
 
     }
 

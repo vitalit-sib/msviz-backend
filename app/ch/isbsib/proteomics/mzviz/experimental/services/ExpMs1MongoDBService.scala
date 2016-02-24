@@ -69,6 +69,7 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
 
           // remember the highest and lowest Moz
           val moz:Double = peak.moz.value
+
           if(moz < lowestMoz) lowestMoz = moz
           if(moz > highestMoz) highestMoz = moz
         }

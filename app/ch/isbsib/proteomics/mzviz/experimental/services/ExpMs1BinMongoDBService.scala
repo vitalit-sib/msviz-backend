@@ -1,7 +1,7 @@
 package ch.isbsib.proteomics.mzviz.experimental.services
 
 import ch.isbsib.proteomics.mzviz.commons.{Intensity, Moz, RetentionTime}
-import ch.isbsib.proteomics.mzviz.commons.services.{MongoInsertException, MongoNotFoundException, MongoDBService}
+import ch.isbsib.proteomics.mzviz.commons.services.{MongoInsertException, MongoDBService}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import ch.isbsib.proteomics.mzviz.experimental.{RunIdAndMozBin, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.models._
@@ -9,12 +9,10 @@ import play.api.libs.json._
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
 import play.api.libs.concurrent.Execution.Implicits._
-import reactivemongo.bson.{BSONString, BSONArray, BSONDocument}
 import reactivemongo.core.commands.LastError
 
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Future
-import scala.util.{Success, Failure}
 
 /**
  * @author Roman Mylonas & Trinidad Martin
@@ -87,7 +85,7 @@ class ExpMs1BinMongoDBService (val db: DefaultDB) extends MongoDBService {
       val res = ExpMs1MongoDBService().insertMS1(ms1, intensityThreshold)
 
       if(res._2 < lowestMoz) lowestMoz = res._2
-      if(res._3 > lowestMoz) highestMoz = res._3
+      if(res._3 > highestMoz) highestMoz = res._3
 
       inserts += res._1
     }
@@ -115,6 +113,14 @@ class ExpMs1BinMongoDBService (val db: DefaultDB) extends MongoDBService {
   }
 
 
+  /**
+   * load the correct bin(s) and filter the entries by moz and tolerance
+   *
+   * @param runId
+   * @param moz
+   * @param tolerance
+   * @return
+   */
   def findMs1EntryWithMozTol(runId: RunId, moz: Moz, tolerance:Double): Future[Seq[Ms1Entry]] = {
 
     // the bin we're looking at
@@ -122,8 +128,6 @@ class ExpMs1BinMongoDBService (val db: DefaultDB) extends MongoDBService {
 
     // the first part of the ref
     val runRef = runId.value + "_"
-
-    println("ref: " + runRef)
 
     // if the tolerance is at the border of a bin, we have to take the neighboring bin one as well
     val secondPart = if((mozBin - tolerance).toInt < mozBin){
@@ -136,15 +140,9 @@ class ExpMs1BinMongoDBService (val db: DefaultDB) extends MongoDBService {
 
     val refSet:Set[RunIdAndMozBin] = (RunIdAndMozBin(runRef + mozBin) :: secondPart).toSet
 
-    refSet.foreach(a => println(a.value))
-
     // get list of Ms1Entries
     val res = findMs1EntryList(refSet)
-    res.map(a => println(a.size))
-
     val futureEntryList: Future[List[Ms1Entry]] = res.map(oneEntry => oneEntry.flatMap(_.ms1EntryList))
-
-    futureEntryList.map(a => println(a.size))
 
     // filter entries on given moz and tolerance
     futureEntryList.map(entryList => entryList.filter(a => a.moz.value <= moz.value+tolerance && a.moz.value >= moz.value-tolerance))
@@ -179,19 +177,30 @@ class ExpMs1BinMongoDBService (val db: DefaultDB) extends MongoDBService {
   def createMS1bins(runId: RunId, lowestMoz:Double, highestMoz: Double): Future[Int] = {
 
     // loop through all bins
-    for(bin <- lowestMoz.toInt to highestMoz.toInt){
+    val allInsertedNr: Future[Int] = Future.sequence((lowestMoz.toInt to highestMoz.toInt).map({ bin =>
       val futureEntries:Future[List[Ms1EntryWithRef]] = ExpMs1MongoDBService().findMs1ByRunID_MozBorders(runId, Moz(bin.toDouble), Moz((bin+1).toDouble))
 
-      val ref = RunIdAndMozBin(runId + "_" + bin.toString)
+      val futureNrInserted: Future[Int] = futureEntries.flatMap({ entriesWithRef =>
 
-      futureEntries.map({ entriesWithRef =>
-        val entries = entriesWithRef.map(a => Ms1Entry(a.rt, a.intensity, a.moz))
-        val ms1EntryList =  Ms1EntryList(ref, entries)
+        // if there are entries in this range we create a new bin
+        val insertedNr: Future[Int] = if(entriesWithRef.size > 0){
+          val entries = entriesWithRef.map(a => Ms1Entry(a.rt, a.intensity, a.moz))
+          val ref = RunIdAndMozBin(runId.value + "_" + bin.toString)
+          val ms1EntryList =  Ms1EntryList(ref, entries)
+
+          val insertedBoolean = insertMs1EntryList(ms1EntryList)
+          insertedBoolean.map(a => if(a) 1 else 0)
+        } else {
+          Future{0}
+        }
+
+        insertedNr
       })
 
-    }
+      futureNrInserted
+    })).map(_.sum)
 
-    Future{1}
+    allInsertedNr
   }
 
 

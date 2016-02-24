@@ -3,7 +3,7 @@ package ch.isbsib.proteomics.mzviz.matches.services
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoDBService, MongoNotFoundException}
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
-import ch.isbsib.proteomics.mzviz.experimental.models.{SpectrumRef, ExpMSnSpectrum, SpectrumId}
+import ch.isbsib.proteomics.mzviz.experimental.models.{SpectrumRef, SpectrumId}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import ch.isbsib.proteomics.mzviz.modifications.ModifName
 import ch.isbsib.proteomics.mzviz.modifications.services.JsonModificationFormats._
@@ -13,10 +13,9 @@ import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
 import ch.isbsib.proteomics.mzviz.theoretical.{ProteinIdentifier, AccessionCode, SequenceSource}
 import play.api.Logger
 import play.api.libs.iteratee.Enumerator
-import play.api.libs.json.{JsArray, JsObject, Json}
+import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
-import play.modules.reactivemongo.json.BSONFormats._
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.{BSONDocument, BSONString, BSONArray}
@@ -24,7 +23,6 @@ import reactivemongo.core.commands._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scalaz.std.java.util.map
 
 
 /**
