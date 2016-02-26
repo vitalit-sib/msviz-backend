@@ -1,13 +1,13 @@
 package ch.isbsib.proteomics.mzviz.controllers.experimental
 
+import java.io.File
 import javax.ws.rs.PathParam
 
 import ch.isbsib.proteomics.mzviz.commons.{Intensity, RetentionTime, Moz}
 import ch.isbsib.proteomics.mzviz.controllers.CommonController
 import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
-import ch.isbsib.proteomics.mzviz.experimental.importer.{FastLoaderMzXML}
+import ch.isbsib.proteomics.mzviz.experimental.importer._
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, MSRun, RunId}
-import ch.isbsib.proteomics.mzviz.experimental.importer.{LoaderMzXML, LoaderMGF}
 import ch.isbsib.proteomics.mzviz.experimental.models._
 import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMongoDBService, ExpMs1MySqlDBService, ExpMs1MongoDBService}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
@@ -15,6 +15,7 @@ import com.wordnik.swagger.annotations._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json._
 import play.api.mvc.Action
+import ch.isbsib.proteomics.mzviz.experimental.services.ExpMs1BinMongoDBService
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
@@ -47,34 +48,34 @@ object ExperimentalController extends CommonController {
   }
 
 
-  @ApiOperation(nickname = "findXicMySql",
-    value = "find all ms1 for a given run id and moz in the MySQL database",
-    notes = """Returns only list of retention times and intensities""",
-    httpMethod = "GET")
-  @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "tolerance", value = "tolerance", required = false, dataType = "Double", paramType = "query"),
-    new ApiImplicitParam(name = "rtTolerance", value = "rtTolerance", required = false, dataType = "Double", paramType = "query")
-  ))
-  def findXicMySql(@ApiParam(value = """run id""", defaultValue = "") @PathParam("runId") runId: String,
-              @ApiParam(value = """m/z""", defaultValue = "") @PathParam("moz") moz: Double,
-              tolerance: Option[Double]=None,
-              rtTolerance: Option[Double]=None
-               ) =
-    DBAction { implicit rs =>
-
-      // set the default value to 10 ppm
-      val ppmTolerance = tolerance.getOrElse(10.0)
-      val daltonTolerance = moz / 1000000 * ppmTolerance
-
-      val ms1List = ms1Dao.filter(ms => (ms.ref === runId)
-        && (ms.moz <= moz+daltonTolerance)
-        && ms.moz >= moz-daltonTolerance).list.map(m => Ms1EntryWithRef(RunId(m.ref), RetentionTime(m.rt), Intensity(m.int), Moz(m.moz))
-      )
-
-      val sphList = ExpMs1MongoDBService().extract2Lists(ms1List, rtTolerance.getOrElse(10.0))
-
-      Ok(sphList)
-    }
+//  @ApiOperation(nickname = "findXicMySql",
+//    value = "find all ms1 for a given run id and moz in the MySQL database",
+//    notes = """Returns only list of retention times and intensities""",
+//    httpMethod = "GET")
+//  @ApiImplicitParams(Array(
+//    new ApiImplicitParam(name = "tolerance", value = "tolerance", required = false, dataType = "Double", paramType = "query"),
+//    new ApiImplicitParam(name = "rtTolerance", value = "rtTolerance", required = false, dataType = "Double", paramType = "query")
+//  ))
+//  def findXicMySql(@ApiParam(value = """run id""", defaultValue = "") @PathParam("runId") runId: String,
+//              @ApiParam(value = """m/z""", defaultValue = "") @PathParam("moz") moz: Double,
+//              tolerance: Option[Double]=None,
+//              rtTolerance: Option[Double]=None
+//               ) =
+//    DBAction { implicit rs =>
+//
+//      // set the default value to 10 ppm
+//      val ppmTolerance = tolerance.getOrElse(10.0)
+//      val daltonTolerance = moz / 1000000 * ppmTolerance
+//
+//      val ms1List = ms1Dao.filter(ms => (ms.ref === runId)
+//        && (ms.moz <= moz+daltonTolerance)
+//        && ms.moz >= moz-daltonTolerance).list.map(m => Ms1EntryWithRef(RunId(m.ref), RetentionTime(m.rt), Intensity(m.int), Moz(m.moz))
+//      )
+//
+//      val sphList = ExpMs1MongoDBService().extract2Lists(ms1List, rtTolerance.getOrElse(10.0))
+//
+//      Ok(sphList)
+//    }
 
 
   @ApiOperation(nickname = "loadMS1MySql",
@@ -249,12 +250,18 @@ object ExperimentalController extends CommonController {
              rtTolerance: Option[Double]=None
                ) =
     Action.async {
-     val futureList= ExpMs1MongoDBService().findMs1ByRunID_MozAndTol(RunId(runId),Moz(moz),tolerance.getOrElse(0.01))
+
+      // set the default value to 10 ppm
+      val ppmTolerance = tolerance.getOrElse(10.0)
+      val daltonTolerance = moz / 1000000 * ppmTolerance
+
+      val futureList = ExpMs1BinMongoDBService().findMs1EntryWithMozTol(RunId(runId),Moz(moz),daltonTolerance)
+
       ExpMs1MongoDBService().extract2FutureLists(futureList, rtTolerance.getOrElse(1.0))
-      .map { case sphList: JsObject => Ok(sphList) }
-        .recover {
-        case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
-      }
+            .map { case sphList: JsObject => Ok(sphList) }
+              .recover {
+              case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
+            }
     }
 
 
@@ -265,14 +272,30 @@ object ExperimentalController extends CommonController {
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name = "body", value = "mzxml", required = true, dataType = "text/plain", paramType = "body")
   ))
-  def loadMS1Data(@ApiParam(name = "runId", value = "a string id with run identifier", required = true) @PathParam("runId") runId: String, intensityThreshold: Double = 1000) =
+  def loadMS1(@ApiParam(name = "runId", value = "a string id with run identifier", required = true) @PathParam("runId") runId: String, intensityThreshold: Double = 1000) =
     Action.async(parse.temporaryFile) {
       request =>
-        val entries = LoaderMzXML.parseFile(request.body.file, RunId(runId))
-        ExpMs1MongoDBService().insertListMS1(entries, intensityThreshold).map { n => Ok(Json.obj("inserted" -> n))
-        }.recover {
-          case e => BadRequest(Json.toJson(e))
+
+        val ms1SpIter: Iterator[Either[ExpMs1Spectrum, ExpMSnSpectrum]] = LoaderMzML().parse(request.body.file, RunId(runId)).filter(_.isLeft)
+
+        (for {
+          // insert all peaks above threshold into a temporary mongodb collection
+          resMs1Insertion <- ExpMs1BinMongoDBService().insertMS1peaks(ms1SpIter, intensityThreshold)
+
+          // create the bins from the mongodb Ms1 peaks and store them into mognodb
+          nrInserted <- ExpMs1BinMongoDBService().createMS1bins(RunId(runId), resMs1Insertion._1, resMs1Insertion._2)
+
+          // delete all peaks from temporary mongodb collection
+          //isDeleted <- ExpMs1MongoDBService().delete(RunId(runId))
+
+        } yield {
+           // Ok(Json.obj("totalMs1Peaks" -> resMs1Insertion._3, "createdBins" -> nrInserted, "peaksRemoved" -> isDeleted))
+            Ok(Json.obj("totalMs1Peaks" -> resMs1Insertion._3, "createdBins" -> nrInserted))
+
+        }).recover{
+            case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
         }
+
 
     }
 

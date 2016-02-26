@@ -5,7 +5,10 @@ import ch.isbsib.proteomics.mzviz.commons.services.{MongoInsertException, MongoD
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import ch.isbsib.proteomics.mzviz.experimental.{RunIdAndMozBin, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.models._
+import ch.isbsib.proteomics.mzviz.matches.services.MatchMongoDBService._
 import play.api.libs.json._
+import play.api.mvc.Controller
+import play.modules.reactivemongo.MongoController
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
 import play.api.libs.concurrent.Execution.Implicits._
@@ -70,29 +73,36 @@ class ExpMs1BinMongoDBService (val db: DefaultDB) extends MongoDBService {
    * insert MS1 peaks into the temporary collection "ms1Peaks"
    *
    * @param intensityThreshold all peaks below this threshold will be ignored
-   * @param ms1SpList list of ExpMs1Spectum's
+   * @param msIterator list of ExpMs1Spectum's
    * @return gives back the lowest (left) and highest (right) Moz value and number of entries inserted into the db
    */
-  def insertMS1peaks(ms1SpList: Iterator[ExpMs1Spectrum], intensityThreshold:Double): (Double, Double, Future[Int]) ={
+  def insertMS1peaks(msIterator: Iterator[Either[ExpMs1Spectrum, ExpMSnSpectrum]], intensityThreshold:Double): Future[(Double, Double, Int)] ={
 
     var lowestMoz:Double = 9999999
     var highestMoz:Double = 0
     var inserts: ListBuffer[Future[Int]] = ListBuffer()
 
     // insert all MS1 spectra and keep lowest and highest moz (we need that later for the bins)
-    while(ms1SpList.hasNext){
-      val ms1 = ms1SpList.next()
-      val res = ExpMs1MongoDBService().insertMS1(ms1, intensityThreshold)
+    while(msIterator.hasNext){
+      val msEither = msIterator.next()
 
-      if(res._2 < lowestMoz) lowestMoz = res._2
-      if(res._3 > highestMoz) highestMoz = res._3
+      if(msEither.isLeft) {
+        val ms1 = msEither.left.get
+        val res = ExpMs1MongoDBService().insertMS1(ms1, intensityThreshold)
 
-      inserts += res._1
+        if (res._2 < lowestMoz) lowestMoz = res._2
+        if (res._3 > highestMoz) highestMoz = res._3
+
+        inserts += res._1
+      }
     }
 
+    // sum all the inserts
     val totalInserts:Future[Int] = Future.sequence(inserts.toList).map(_.sum)
 
-    (lowestMoz, highestMoz, totalInserts)
+    // create final return Tuple3
+    val finalReturn:Future[(Double, Double, Int)] = totalInserts.map(a => (lowestMoz, highestMoz, a))
+    finalReturn
   }
 
   /**
@@ -121,7 +131,7 @@ class ExpMs1BinMongoDBService (val db: DefaultDB) extends MongoDBService {
    * @param tolerance
    * @return
    */
-  def findMs1EntryWithMozTol(runId: RunId, moz: Moz, tolerance:Double): Future[Seq[Ms1Entry]] = {
+  def findMs1EntryWithMozTol(runId: RunId, moz: Moz, tolerance:Double): Future[List[Ms1Entry]] = {
 
     // the bin we're looking at
     val mozBin = moz.value.toInt
@@ -144,8 +154,13 @@ class ExpMs1BinMongoDBService (val db: DefaultDB) extends MongoDBService {
     val res = findMs1EntryList(refSet)
     val futureEntryList: Future[List[Ms1Entry]] = res.map(oneEntry => oneEntry.flatMap(_.ms1EntryList))
 
+    println((moz.value+tolerance) + " => "  + (moz.value-tolerance))
+    futureEntryList.map(a => println(a.size))
+
     // filter entries on given moz and tolerance
-    futureEntryList.map(entryList => entryList.filter(a => a.moz.value <= moz.value+tolerance && a.moz.value >= moz.value-tolerance))
+    val filteredList = futureEntryList.map(entryList => entryList.filter(a => a.moz.value <= moz.value+tolerance && a.moz.value >= moz.value-tolerance))
+
+    filteredList
   }
 
   /**
@@ -203,5 +218,20 @@ class ExpMs1BinMongoDBService (val db: DefaultDB) extends MongoDBService {
     allInsertedNr
   }
 
+
+}
+
+
+/**
+ * the companion object
+ */
+object ExpMs1BinMongoDBService extends Controller with MongoController {
+  val default = new ExpMs1BinMongoDBService(db)
+
+  /**
+   * get the default db/collection
+   * @return
+   */
+  def apply() = default
 
 }

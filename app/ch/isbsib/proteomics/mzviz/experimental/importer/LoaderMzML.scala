@@ -158,7 +158,7 @@ class MzMLIterator(mzMLObjectIterator: MzMLObjectIterator[Nothing], runId: RunId
     // parse precursor CV
     val ebiPrecCvs:Seq[CVParam] = selIonList.get(0).getCvParam.asScala.toSeq
     val precMoz:Moz = Moz(parseCvEntry(ebiPrecCvs, "MS:1000744").get.toDouble)
-    val precIntensitiy:Intensity = Intensity(parseCvEntry(ebiPrecCvs, "MS:1000042").get.toDouble)
+    val precIntensitiy:Intensity = Intensity(parseCvEntry(ebiPrecCvs, "MS:1000042").getOrElse("0").toDouble)
     val precCharge = Charge(parseCvEntry(ebiPrecCvs, "MS:1000041").get.toInt)
     val precScanNr:ScanNumber = ScanNumber(scanNumberPattern.findFirstIn(ebiPrec.getSpectrumRef).get.split("=")(1).toInt)
 

@@ -14,6 +14,8 @@ import play.api.libs.json.JsValue
 import play.api.test._
 import play.api.test.Helpers._
 
+import scala.util.Random
+
 /**
  * @author Roman Mylonas & Trinidad Martin
  *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
@@ -21,7 +23,7 @@ import play.api.test.Helpers._
 class ExpMs1BinMongoDBServiceSpecs extends Specification with ScalaFutures{
 
   implicit val defaultPatience =
-    PatienceConfig(timeout = Span(15, Seconds), interval = Span(5000, Millis))
+    PatienceConfig(timeout = Span(15, Seconds), interval = Span(10000, Millis))
 
   val ms1peakIntensityThreshold = 0.0
 
@@ -37,18 +39,30 @@ class ExpMs1BinMongoDBServiceSpecs extends Specification with ScalaFutures{
       "insertMS1peaks check return" in new TempMongoDBService {
         running(FakeApplication()) {
 
-          val ms1SpList: Iterator[ExpMs1Spectrum] = LoaderMzML().parse(new File("test/resources/ms2/20160215_Fujita_8133B_subset.mzML"), RunId("small")).filter(_.isLeft).map(_.left.get)
+          val runId = RunId(new Random().alphanumeric.take(10).toArray.toString)
 
-          val res = service.insertMS1peaks(ms1SpList, 100000)
+          val (ms1It,ms2It) = LoaderMzML().parse(new File("test/resources/ms2/20160215_Fujita_8133B_subset.mzML"), runId).partition(_.isLeft)
+          val selIt = ms1It.slice(0, 1)
+
+          val res = service.insertMS1peaks(selIt, 10000).futureValue
 
           // check lowest value
-          res._1 mustEqual (395.4523269330307)
+          res._1 mustEqual (397.1984512049142)
 
           // check highest value
-          res._2 mustEqual (1923.7513626013747)
+          res._2 mustEqual (1980.9522705901293)
 
           // check number of inserts
-          res._3.futureValue mustEqual(41752)
+          res._3 mustEqual(2285)
+
+//          val nrInserted = service.createMS1bins(runId, 400.12, 401.43).futureValue
+//
+//                  nrInserted mustEqual(2)
+//
+//                  val hoho = service.findMs1EntryWithMozTol(runId, Moz(400.94), 0.001).futureValue
+//                  //hoho.foreach(println)
+//                  hoho.size mustEqual(114)
+//                  hoho(0).rt.value mustEqual(35.211123)
       }
 
     }
@@ -56,31 +70,32 @@ class ExpMs1BinMongoDBServiceSpecs extends Specification with ScalaFutures{
   }
 
 
-  "insertMS1bins" should {
-
-    "insertMS1bins and find entries" in new TempMongoDBService {
-      running(FakeApplication()) {
-
-        val ms1SpList: Iterator[ExpMs1Spectrum] = LoaderMzML().parse(new File("test/resources/ms2/20160215_Fujita_8133B_subset.mzML"), RunId("small")).filter(_.isLeft).map(_.left.get).take(3)
-
-        val res = service.insertMS1peaks(ms1SpList, 1000)
-
-        // check number of inserts
-        res._3.futureValue mustEqual(5332)
-
-        val nrInserted = service.createMS1bins(RunId("small"), 400.12, 401.43).futureValue
-
-        nrInserted mustEqual(2)
-
-        val resList = service.findMs1EntryWithMozTol(RunId("small"), Moz(400.94), 0.0001).futureValue
-        resList.size mustEqual(92)
-        resList(0).rt.value mustEqual(35.211123)
-
-      }
-
-    }
-
-  }
+//  "insertMS1bins" should {
+//
+//    "insertMS1bins and find entries" in new TempMongoDBService {
+//      running(FakeApplication()) {
+//
+//        val (ms1It,ms2It) = LoaderMzML().parse(new File("test/resources/ms2/20160215_Fujita_8133B_subset.mzML"), RunId("small")).partition(_.isLeft)
+//        val selIt = ms1It.slice(0, 1)
+//
+//        val res = service.insertMS1peaks(selIt, 10000).futureValue
+//
+//        // check number of inserts
+//        res._3 mustEqual(2285)
+//
+////        val nrInserted = service.createMS1bins(RunId("small"), 400.12, 401.43).futureValue
+////
+////        nrInserted mustEqual(2)
+////
+////        val resList = service.findMs1EntryWithMozTol(RunId("small"), Moz(400.94), 0.001).futureValue
+////        resList.size mustEqual(33)
+////        resList(0).rt.value mustEqual(35.211123)
+//
+//      }
+//
+//    }
+//
+//  }
 
 
   // some test data

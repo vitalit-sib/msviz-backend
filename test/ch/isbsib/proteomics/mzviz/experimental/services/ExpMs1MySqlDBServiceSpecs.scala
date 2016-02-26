@@ -6,7 +6,7 @@ import ch.isbsib.proteomics.mzviz.commons.{Intensity, RetentionTime, Moz, TempMo
 import ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController._
 import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.experimental.importer.{FastLoaderMzXML, LoaderMzXML}
-import ch.isbsib.proteomics.mzviz.experimental.models.{Ms1EntryWithRef, Ms1Peak}
+import ch.isbsib.proteomics.mzviz.experimental.models.{Ms1Entry, Ms1EntryWithRef, Ms1Peak}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.specs2._
@@ -132,7 +132,7 @@ class ExpMs1MySqlDBServiceSpecs extends mutable.Specification{
 
       val ms1List = ms1Dao.filter(ms => (ms.ref === "hoho")
         && (ms.moz <= moz+daltonTolerance)
-        && ms.moz >= moz-daltonTolerance).list.map(m => Ms1EntryWithRef(RunId(m.ref), RetentionTime(m.rt), Intensity(m.int), Moz(m.moz))
+        && ms.moz >= moz-daltonTolerance).list.map(m => Ms1Entry(RetentionTime(m.rt), Intensity(m.int), Moz(m.moz))
       )
 
       val json = ExpMs1MongoDBService().extract2Lists(ms1List, rtTol)
@@ -165,7 +165,7 @@ class ExpMs1MySqlDBServiceSpecs extends mutable.Specification{
 
       val ms1List = ms1Dao.filter(ms => (ms.ref === "hoho")
         && (ms.moz <= moz+daltonTolerance)
-        && ms.moz >= moz-daltonTolerance).list.map(m => Ms1EntryWithRef(RunId(m.ref), RetentionTime(m.rt), Intensity(m.int), Moz(m.moz))
+        && ms.moz >= moz-daltonTolerance).list.map(m => Ms1Entry(RetentionTime(m.rt), Intensity(m.int), Moz(m.moz))
       )
 
       val json = ExpMs1MongoDBService().extract2Lists(ms1List, rtTol)

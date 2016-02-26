@@ -3,7 +3,7 @@ package ch.isbsib.proteomics.mzviz.experimental.services
 import ch.isbsib.proteomics.mzviz.commons.{Moz, Intensity, RetentionTime}
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoNotFoundException, MongoDBService}
 import ch.isbsib.proteomics.mzviz.experimental.RunId
-import ch.isbsib.proteomics.mzviz.experimental.models.{SpectrumRef, Ms1EntryWithRef, ExpMs1Spectrum}
+import ch.isbsib.proteomics.mzviz.experimental.models.{Ms1Entry, SpectrumRef, Ms1EntryWithRef, ExpMs1Spectrum}
 import org.specs2.execute.Success
 import play.api.libs.iteratee.Enumerator
 import play.api.mvc.Controller
@@ -89,9 +89,10 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
    * @param tolerance
    * @return seq of entries
    */
-  def findMs1ByRunID_MozAndTol(runId: RunId, moz:Moz,tolerance: Double): Future[List[Ms1EntryWithRef]] = {
+  def findMs1ByRunID_MozAndTol(runId: RunId, moz:Moz,tolerance: Double): Future[List[Ms1Entry]] = {
     val query = Json.obj("moz"->Json.obj("$lte" ->(moz.value + tolerance),"$gte"-> (moz.value - tolerance)))
-    collection.find(query).cursor[Ms1EntryWithRef].collect[List]()
+    val ms1List = collection.find(query).cursor[Ms1EntryWithRef].collect[List]()
+    ms1List.map(uf => uf.map(a => Ms1Entry(a.rt, a.intensity, a.moz)))
   }
 
   /**
@@ -103,7 +104,7 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
    * @return
    */
   def findMs1ByRunID_MozBorders(rundId: RunId, lowerLimit:Moz, upperLimit:Moz): Future[List[Ms1EntryWithRef]] = {
-    val query = Json.obj("moz"->Json.obj("$lte" -> upperLimit.value, "$gte"-> lowerLimit.value))
+    val query = Json.obj("moz"->Json.obj("$lt" -> upperLimit.value, "$gte"-> lowerLimit.value))
     collection.find(query).cursor[Ms1EntryWithRef].collect[List]()
   }
 
@@ -116,7 +117,7 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
    * @return list of intensities and list of moz
    */
 
-  def extract2FutureLists(ms1List:Future[List[Ms1EntryWithRef]], rtTolerance: Double): Future[JsObject] = {
+  def extract2FutureLists(ms1List:Future[List[Ms1Entry]], rtTolerance: Double): Future[JsObject] = {
 
     // we're in a Future
     ms1List.map(m => {
@@ -126,7 +127,7 @@ class ExpMs1MongoDBService (val db: DefaultDB) extends MongoDBService {
     })
   }
 
-  def extract2Lists(ms1List:List[Ms1EntryWithRef], rtTolerance: Double): JsObject = {
+  def extract2Lists(ms1List:List[Ms1Entry], rtTolerance: Double): JsObject = {
       if(ms1List.length > 0) {
         // group by retentionTimes
         val rtGroups = ms1List.groupBy(_.rt.value)
