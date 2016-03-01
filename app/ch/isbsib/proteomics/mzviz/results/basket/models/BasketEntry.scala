@@ -68,7 +68,7 @@ case class BasketEntry (_id: Option[MongoId], proteinAC: AccessionCode, peptideS
  * @param creationDate
  */
 case class BasketEntryWithSpInfo (_id: Option[MongoId], proteinAC: AccessionCode, peptideSeq: String, startPos: Int, endPos: Int, searchIds: String,
-                        spectrumId: SpectrumId, scanNr:Option[ScanNumber], precRt: Double, precCharge: Int, precMoz: Double, score: Double, localizationScore: Option[Double], ppmTolerance: Double, rtZoom: RtRange,
+                        spectrumId: SpectrumId, scanNr:ScanNumber, precRt: Double, precCharge: Int, precMoz: Double, score: Double, localizationScore: Option[Double], ppmTolerance: Double, rtZoom: RtRange,
                         rtSelected: RtRange, xicPeaks: Seq[XicPeak], creationDate: Option[Date]) extends BasketEntryBase
 
 /**
