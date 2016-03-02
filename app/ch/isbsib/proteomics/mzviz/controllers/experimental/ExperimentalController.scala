@@ -15,7 +15,7 @@ import com.wordnik.swagger.annotations._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json._
 import play.api.mvc.Action
-import ch.isbsib.proteomics.mzviz.experimental.services.ExpMs1BinMongoDBService
+import ch.isbsib.proteomics.mzviz.experimental.services.ExpMs1TmpMongoDBService
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
@@ -255,13 +255,14 @@ object ExperimentalController extends CommonController {
       val ppmTolerance = tolerance.getOrElse(10.0)
       val daltonTolerance = moz / 1000000 * ppmTolerance
 
-      val futureList = ExpMs1BinMongoDBService().findMs1EntryWithMozTol(RunId(runId),Moz(moz),daltonTolerance)
-
-      ExpMs1MongoDBService().extract2FutureLists(futureList, rtTolerance.getOrElse(1.0))
-            .map { case sphList: JsObject => Ok(sphList) }
-              .recover {
-              case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
-            }
+      Future{Ok("hoho")}
+//      val futureList = ExpMs1BinMongoDBService().findMs1EntryWithMozTol(RunId(runId),Moz(moz),daltonTolerance)
+//
+//      ExpMs1MongoDBService().extract2FutureLists(futureList, rtTolerance.getOrElse(1.0))
+//            .map { case sphList: JsObject => Ok(sphList) }
+//              .recover {
+//              case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
+//            }
     }
 
 
@@ -276,26 +277,17 @@ object ExperimentalController extends CommonController {
     Action.async(parse.temporaryFile) {
       request =>
 
-        val ms1SpIter: Iterator[Either[ExpMs1Spectrum, ExpMSnSpectrum]] = LoaderMzML().parse(request.body.file, RunId(runId)).filter(_.isLeft)
+        val ms1SpIter: Iterator[ExpMs1Spectrum] = LoaderMzML().parse(request.body.file, RunId(runId)).filter(_.isLeft).map(_.left.get)
 
         (for {
           // insert all peaks above threshold into a temporary mongodb collection
-          resMs1Insertion <- ExpMs1BinMongoDBService().insertMS1peaks(ms1SpIter, intensityThreshold)
-
-          // create the bins from the mongodb Ms1 peaks and store them into mognodb
-          nrInserted <- ExpMs1BinMongoDBService().createMS1bins(RunId(runId), resMs1Insertion._1, resMs1Insertion._2)
-
-          // delete all peaks from temporary mongodb collection
-          //isDeleted <- ExpMs1MongoDBService().delete(RunId(runId))
-
+          resMs1Insertion <- ExpMs1TmpMongoDBService().insertMs1spectra(ms1SpIter, intensityThreshold)
         } yield {
-           // Ok(Json.obj("totalMs1Peaks" -> resMs1Insertion._3, "createdBins" -> nrInserted, "peaksRemoved" -> isDeleted))
-            Ok(Json.obj("totalMs1Peaks" -> resMs1Insertion._3, "createdBins" -> nrInserted))
+            Ok(Json.obj("nrMs1Peaks" -> resMs1Insertion))
 
         }).recover{
             case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
         }
-
 
     }
 
