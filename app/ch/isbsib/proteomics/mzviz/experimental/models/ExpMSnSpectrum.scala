@@ -1,6 +1,7 @@
 package ch.isbsib.proteomics.mzviz.experimental.models
 
 import ch.isbsib.proteomics.mzviz.commons.RetentionTime
+import ch.isbsib.proteomics.mzviz.experimental.ScanNumber
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
@@ -11,4 +12,4 @@ import ch.isbsib.proteomics.mzviz.commons.RetentionTime
 
 case class ExpMSnSpectrum (ref:SpectrumRef, peaks:List[ExpPeakMSn])
 
-case class ExpMs1Spectrum(spId:SpectrumId, retentionTime: RetentionTime, peaks:List[ExpPeakMS1])
+case class ExpMs1Spectrum(spId:SpectrumId, retentionTime: RetentionTime, scanNumber: Option[ScanNumber], peaks:List[ExpPeakMS1])

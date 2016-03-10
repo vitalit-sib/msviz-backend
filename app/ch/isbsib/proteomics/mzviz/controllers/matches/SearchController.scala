@@ -3,13 +3,12 @@ package ch.isbsib.proteomics.mzviz.controllers.matches
 import javax.ws.rs.PathParam
 
 import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
-import ch.isbsib.proteomics.mzviz.controllers.matches.PSMController._
 import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.matches.importer.{LoaderMaxQuant, LoaderMzIdent}
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
-import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMs1MySqlDBService, ExpMongoDBService}
+import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMongoDBService}
 import ch.isbsib.proteomics.mzviz.matches.SearchId
-import ch.isbsib.proteomics.mzviz.matches.models.{ProteinIdent, PepSpectraMatch, SearchInfo}
+import ch.isbsib.proteomics.mzviz.matches.models.{SearchInfo}
 import ch.isbsib.proteomics.mzviz.matches.services.{ProteinMatchMongoDBService, MatchMongoDBService, SearchInfoDBService}
 import ch.isbsib.proteomics.mzviz.results.basket.BasketMongoDBService
 import com.wordnik.swagger.annotations._
@@ -17,13 +16,9 @@ import play.api.Logger
 import play.api.cache.Cached
 import play.api.libs.json._
 import play.api.mvc.Action
-import play.api.Play.current
-import play.mvc.Result
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import play.api.db.slick._
-import play.api.db.slick.Config.driver.simple._
-import scala.util.{Success, Failure}
+import play.api.Play.current
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
@@ -126,7 +121,6 @@ object SearchController extends MatchController {
         }
     }
 
-  val ms1Dao = TableQuery[ExpMs1MySqlDBService]
 
   @ApiOperation(nickname = "delete",
     value = "delete PSMs, Proteins & searchInfo for a given list of searchIds (or one), seperated by comma",

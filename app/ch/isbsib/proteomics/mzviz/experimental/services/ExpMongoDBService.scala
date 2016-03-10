@@ -39,8 +39,9 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
   // "ref.title" -> IndexType.Ascending),
 
   //we put a implicit JSON serilizer here, the JSON Mongo format is difference from the JSON web format
-  // peak array are serilized for sake of speed
+  // peak array are serialized for sake of speed
   implicit val formatExpMSnSpectrum = new Format[ExpMSnSpectrum] {
+
     override def reads(json: JsValue): JsResult[ExpMSnSpectrum] = {
       val ref = (JsPath \ "ref").read[SpectrumRef].reads(json).get
       val msLevel = MSLevel(json.validate[Int]((JsPath \ "peaks" \ "msLevel").read[Int]).get)

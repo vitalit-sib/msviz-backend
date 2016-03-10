@@ -131,7 +131,7 @@ object LoaderMGF {
 
       SpectrumRef(
         scanNumber = if(scanNumber.isDefined) Some(ScanNumber(scanNumber.get)) else None,
-        precursor = ExpPeakPrecursor(moz, intens, rt, Charge(z)),
+        precursor = ExpPeakPrecursor(moz, intens, rt, Charge(z), None),
         title = title,
         SpectrumId(id = SpectrumUniqueId(spId), runId = runId)
       )

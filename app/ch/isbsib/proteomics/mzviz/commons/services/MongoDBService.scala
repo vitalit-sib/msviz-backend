@@ -78,4 +78,6 @@ trait MongoDBService {
 
 case class MongoNotFoundException(message: String) extends Exception(message)
 
+case class MongoInsertException(message: String) extends Exception(message)
+
 case class MongoDuplicateKeyException(message: String) extends Exception(message)
