@@ -9,7 +9,7 @@ import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
 import ch.isbsib.proteomics.mzviz.experimental.importer._
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, MSRun, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.models._
-import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMongoDBService, ExpMs1MySqlDBService, ExpMs1MongoDBService}
+import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMongoDBService}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import com.wordnik.swagger.annotations._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -19,13 +19,10 @@ import ch.isbsib.proteomics.mzviz.experimental.services.ExpMs1TmpMongoDBService
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
-import play.api.db.slick._
-import play.api.db.slick.Config.driver.simple._
 import play.api.Play.current
 import play.api.libs.json.Json
 import play.api.libs.json.Json._
 
-import scala.slick.jdbc.meta.MTable
 
 
 /**
@@ -34,76 +31,6 @@ import scala.slick.jdbc.meta.MTable
  */
 @Api(value = "/exp", description = "experimental data access")
 object ExperimentalController extends CommonController {
-
-  implicit val ms1Format = Json.format[Ms1Peak]
-  val ms1Dao = TableQuery[ExpMs1MySqlDBService]
-
-  def setupMySqlTables = DBAction { implicit rs =>
-    if(MTable.getTables("MS").list.isEmpty) {
-      ms1Dao.ddl.create
-      Ok("table MS was created")
-    }else{
-      Ok("table MS already existed")
-    }
-  }
-
-
-//  @ApiOperation(nickname = "findXicMySql",
-//    value = "find all ms1 for a given run id and moz in the MySQL database",
-//    notes = """Returns only list of retention times and intensities""",
-//    httpMethod = "GET")
-//  @ApiImplicitParams(Array(
-//    new ApiImplicitParam(name = "tolerance", value = "tolerance", required = false, dataType = "Double", paramType = "query"),
-//    new ApiImplicitParam(name = "rtTolerance", value = "rtTolerance", required = false, dataType = "Double", paramType = "query")
-//  ))
-//  def findXicMySql(@ApiParam(value = """run id""", defaultValue = "") @PathParam("runId") runId: String,
-//              @ApiParam(value = """m/z""", defaultValue = "") @PathParam("moz") moz: Double,
-//              tolerance: Option[Double]=None,
-//              rtTolerance: Option[Double]=None
-//               ) =
-//    DBAction { implicit rs =>
-//
-//      // set the default value to 10 ppm
-//      val ppmTolerance = tolerance.getOrElse(10.0)
-//      val daltonTolerance = moz / 1000000 * ppmTolerance
-//
-//      val ms1List = ms1Dao.filter(ms => (ms.ref === runId)
-//        && (ms.moz <= moz+daltonTolerance)
-//        && ms.moz >= moz-daltonTolerance).list.map(m => Ms1EntryWithRef(RunId(m.ref), RetentionTime(m.rt), Intensity(m.int), Moz(m.moz))
-//      )
-//
-//      val sphList = ExpMs1MongoDBService().extract2Lists(ms1List, rtTolerance.getOrElse(10.0))
-//
-//      Ok(sphList)
-//    }
-
-
-  @ApiOperation(nickname = "loadMS1MySql",
-    value = "Loads a mzxml file to mysql database",
-    notes = """ source will be a unique descriptor on the source""",
-    httpMethod = "POST")
-  @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "body", value = "mzxml", required = true, dataType = "text/plain", paramType = "body")
-  ))
-  def loadMS1MySql(@ApiParam(name = "runId", value = "a string id with run identifier", required = true) @PathParam("runId") runId: String) =
-    DBAction(parse.temporaryFile) { implicit rs =>
-        val entries = FastLoaderMzXML.parseFile(rs.request.body.file, RunId(runId))
-
-        val nrInserted = entries.map({ e =>
-          val rt = e.retentionTime.value
-          val runId = e.spId.runId.value
-
-          val ms1Peaks = e.peaks.map({ peak =>
-            Ms1Peak(runId, rt, peak.moz.value, peak.intensity.value)
-          })
-
-          // insert peaks into MySql
-          ms1Dao ++= ms1Peaks
-          ms1Peaks.length
-        }).sum
-
-      Ok(Json.obj("inserted" -> nrInserted.toString))
-    }
 
 
   def stats = Action.async {
@@ -207,33 +134,32 @@ object ExperimentalController extends CommonController {
       }
     }
 
-  // val ms1Dao = TableQuery[ExpMs1MySqlDBService]
 
-  @ApiOperation(nickname = "deleteMSRun",
-    value = "delete all ms1 and ms2+ spectra",
-    notes = """No double check is done. Use with caution""",
-    response = classOf[String],
-    httpMethod = "DELETE")
-  def deleteMSRun(runIds: String) = Action.async {
-
-    val runIdSet = runIds.split(",").map(RunId(_)).toSet
-
-
-    // delete ms1 spectra
-    val ms1Del: Int = DB.withSession { implicit session =>
-        runIdSet.map({ runId =>
-          ms1Dao.filter(ms => (ms.ref === runId.value)).delete
-        }).sum
-      }
-
-    for{
-    // delete ms2+ spectra
-      msnDel <- ExpMongoDBService().delete(runIdSet)
-    }yield{
-      Ok(Json.obj("msn" -> msnDel, "ms1" -> ms1Del))
-    }
-
-  }
+//  @ApiOperation(nickname = "deleteMSRun",
+//    value = "delete all ms1 and ms2+ spectra",
+//    notes = """No double check is done. Use with caution""",
+//    response = classOf[String],
+//    httpMethod = "DELETE")
+//  def deleteMSRun(runIds: String) = Action.async {
+//
+//    val runIdSet = runIds.split(",").map(RunId(_)).toSet
+//
+//
+//    // delete ms1 spectra
+//    val ms1Del: Int = DB.withSession { implicit session =>
+//        runIdSet.map({ runId =>
+//          ms1Dao.filter(ms => (ms.ref === runId.value)).delete
+//        }).sum
+//      }
+//
+//    for{
+//    // delete ms2+ spectra
+//      msnDel <- ExpMongoDBService().delete(runIdSet)
+//    }yield{
+//      Ok(Json.obj("msn" -> msnDel, "ms1" -> ms1Del))
+//    }
+//
+//  }
 
 
   @ApiOperation(nickname = "findXIC",

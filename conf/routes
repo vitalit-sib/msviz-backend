@@ -6,13 +6,12 @@
 GET           /                                                      ch.isbsib.proteomics.mzviz.controllers.UtilsController.hello
 
 GET           /api-docs/exp                                          controllers.ApiHelpController.getResource(path = "/exp")
-GET           /setup-mysql                                           ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.setupMySqlTables
 GET           /exp                                                   ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.stats
 GET           /exp/xic/:runId/:moz                                   ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findXic(runId,moz:Double,tolerance:Option[Double], rtTolerance:Option[Double])
 POST          /exp/ms1/:runId                                        ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.loadMS1(runId,intensityThreshold:Double)
 GET           /exp/msruns                                            ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.listMSRunIds
 POST          /exp/msrun/:runId                                      ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.loadMSRun(runId)
-DELETE        /exp/msrun/:runId                                      ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.deleteMSRun(runId)
+#DELETE        /exp/msrun/:runId                                      ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.deleteMSRun(runId)
 OPTIONS       /exp/msrun/:runId                                      ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.options(runId)
 GET           /exp/spectrum/:runId/:spId                             ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findExpSpectrum(runId:String, spId:String, sortByMoz:Option[Boolean], mostIntense:Option[Integer])
 GET           /exp/spectra-ref/:runId                                ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findAllSpectraRefByRunId(runId)

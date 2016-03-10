@@ -29,8 +29,6 @@ libraryDependencies ++= Seq(
   "org.reactivemongo" %% "play2-reactivemongo" % "0.10.5.0.akka23",
   "com.wordnik" %% "swagger-play2" % "1.3.10",
   "org.scalamock" %% "scalamock-specs2-support" % "3.2",
-  "com.typesafe.play" %% "play-slick" % "0.8.0",
-  "mysql" % "mysql-connector-java" % "5.1.21",
   "net.lingala.zip4j" % "zip4j" % "1.3.2",
   "uk.ac.ebi.jmzml" % "jmzml" % "1.7.4"
 )
