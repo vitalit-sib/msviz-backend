@@ -193,15 +193,25 @@ object ExperimentalController extends CommonController {
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name = "body", value = "mzxml", required = true, dataType = "text/plain", paramType = "body")
   ))
-  def loadMS1(@ApiParam(name = "runId", value = "a string id with run identifier", required = true) @PathParam("runId") runId: String, intensityThreshold: Double = 1000) =
+  def loadMS1(@ApiParam(name = "runId", value = "a string id with run identifier", required = true) @PathParam("runId") runId: String,
+              intensityThreshold: Option[Double] = None,
+              fileType: Option[String] = None) =
     Action.async(parse.temporaryFile) {
       request =>
 
-        val ms1SpIter: Iterator[ExpMs1Spectrum] = LoaderMzML().parse(request.body.file, RunId(runId)).filter(_.isLeft).map(_.left.get)
+        // default values
+        val intThres = intensityThreshold.getOrElse(30000.0)
+        val selType = fileType.getOrElse("MzML")
+
+        val ms1SpIter: Iterator[ExpMs1Spectrum] = if(selType == "MzML"){
+          LoaderMzML().parse(request.body.file, RunId(runId)).filter(_.isLeft).map(_.left.get)
+        }else{
+          LoaderMzXML().parse(request.body.file, RunId(runId))
+        }
 
         (for {
           // insert all peaks above threshold into a temporary mongodb collection
-          resMs1Insertion <- ExpMs1BinMongoDBService().insertMs1spectra(ms1SpIter, intensityThreshold)
+          resMs1Insertion <- ExpMs1BinMongoDBService().insertMs1spectra(ms1SpIter, intThres)
         } yield {
             Ok(Json.obj("nrMs1Peaks" -> resMs1Insertion))
 
