@@ -114,15 +114,14 @@ class MzMLIterator(mzMLObjectIterator: MzMLObjectIterator[Nothing], runId: RunId
    * @return
    */
   def parseMs1(sp:Spectrum, runId: RunId):ExpMs1Spectrum = {
-    val cvParams = sp.getCvParam.asScala.toSeq
-
     val scanNr:ScanNumber = ScanNumber(scanNumberPattern.findFirstIn(sp.getId).get.split("=")(1).toInt)
     val spId: SpectrumId = SpectrumId(SpectrumUniqueId(scanNr.value.toString), runId)
 
     // parse info from scanList
     if(sp.getScanList.getCount != 1) throw new IllegalStateException("None or more than one scan found: Don't know how to handle that")
     val scanListCvParams = sp.getScanList.getScan.get(0).getCvParam.asScala.toSeq
-    val rt: RetentionTime = RetentionTime(parseCvEntry(scanListCvParams, "MS:1000016").get.toDouble)
+    // it looks like the rt is in minutes
+    val rt: RetentionTime = RetentionTime(parseCvEntry(scanListCvParams, "MS:1000016").get.toDouble * 60)
 
     val rawPeaks = parseBinaryData(sp.getBinaryDataArrayList.getBinaryDataArray.asScala.toSeq)
     val peaks: List[ExpPeakMS1] = rawPeaks.map(p => ExpPeakMS1(p._1, p._2)).toList

@@ -104,6 +104,7 @@ object JsonExpFormats {
   implicit val formatSpectrumId = Json.format[SpectrumId]
   implicit val formatSpectrumRef = Json.format[SpectrumRef]
   implicit val formatMs1Entry = Json.format[Ms1EntryWithRef]
+  implicit val formatMs1Bin = Json.format[Ms1Bin]
 
 /*
   implicit val writesMs1Entry = new Writes[Ms1Entry] {

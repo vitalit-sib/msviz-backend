@@ -255,14 +255,15 @@ object ExperimentalController extends CommonController {
       val ppmTolerance = tolerance.getOrElse(10.0)
       val daltonTolerance = moz / 1000000 * ppmTolerance
 
-      Future{Ok("hoho")}
-//      val futureList = ExpMs1BinMongoDBService().findMs1EntryWithMozTol(RunId(runId),Moz(moz),daltonTolerance)
-//
-//      ExpMs1MongoDBService().extract2FutureLists(futureList, rtTolerance.getOrElse(1.0))
-//            .map { case sphList: JsObject => Ok(sphList) }
-//              .recover {
-//              case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
-//            }
+      val futureList = ExpMs1TmpMongoDBService().findMs1EntryWithMozTol(RunId(runId),Moz(moz),daltonTolerance)
+
+      val sphList = ExpMs1TmpMongoDBService().extract2Lists(futureList, rtTolerance.getOrElse(10.0))
+
+      sphList.map { case sphList: JsObject => Ok(sphList) }
+        .recover {
+          case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
+        }
+
     }
 
 
