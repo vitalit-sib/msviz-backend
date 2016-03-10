@@ -21,6 +21,7 @@ GET           /api-docs/sequences                                    controllers
 GET           /sequences/list-sources                                ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.listSources
 POST          /sequences/:sourceId/fasta                             ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.loadFasta(sourceId, regexp:Option[String])
 DELETE        /sequences/:sourceId                                   ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.deleteSource(sourceId)
+OPTIONS       /sequences/:sourceId                                   ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.optionsId(sourceId)
 GET           /sequences/stats                                       ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.stats
 
 GET           /api-docs/sequence                                     controllers.ApiHelpController.getResource(path = "/sequence")

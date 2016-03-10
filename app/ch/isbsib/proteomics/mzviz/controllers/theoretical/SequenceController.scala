@@ -3,6 +3,7 @@ package ch.isbsib.proteomics.mzviz.controllers.theoretical
 import javax.ws.rs.PathParam
 
 import ch.isbsib.proteomics.mzviz.controllers.CommonController
+import ch.isbsib.proteomics.mzviz.controllers.results.BasketController._
 import ch.isbsib.proteomics.mzviz.theoretical.SequenceSource
 import ch.isbsib.proteomics.mzviz.theoretical.importer.FastaParser
 import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
@@ -28,6 +29,16 @@ object SequenceController extends CommonController {
       Ok(Json.toJson(st))
     }
   }
+
+  @ApiOperation(nickname = "optionsId",
+    value = "empty options method",
+    notes = """returns Ok to fulfill the pre-flight OPTIONS request""",
+    response = classOf[String],
+    httpMethod = "OPTIONS")
+  def optionsId(@ApiParam(value = """id""") @PathParam("id") id: String) =
+    Action {
+      Ok("Ok")
+    }
 
   @ApiOperation(nickname = "listSources",
     value = "the list of sequence sources",
@@ -73,6 +84,7 @@ object SequenceController extends CommonController {
                  regexp:Option[String]=None) =
     Action.async(parse.temporaryFile) {
       request =>
+        println("weeeeeeeee")
         val entries = FastaParser(request.body.file, SequenceSource(sourceId), regexp).parse
         SequenceMongoDBService().insert(entries).map { n => Ok(Json.obj("inserted" -> n))
         }.recover {
