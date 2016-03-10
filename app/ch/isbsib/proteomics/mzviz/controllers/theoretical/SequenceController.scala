@@ -37,7 +37,7 @@ object SequenceController extends CommonController {
     httpMethod = "OPTIONS")
   def optionsId(@ApiParam(value = """id""") @PathParam("id") id: String) =
     Action {
-      Ok("Ok")
+      Ok("Okay")
     }
 
   @ApiOperation(nickname = "listSources",
