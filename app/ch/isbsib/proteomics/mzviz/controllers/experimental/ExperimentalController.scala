@@ -15,7 +15,7 @@ import com.wordnik.swagger.annotations._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json._
 import play.api.mvc.Action
-import ch.isbsib.proteomics.mzviz.experimental.services.ExpMs1TmpMongoDBService
+import ch.isbsib.proteomics.mzviz.experimental.services.ExpMs1BinMongoDBService
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
@@ -135,31 +135,24 @@ object ExperimentalController extends CommonController {
     }
 
 
-//  @ApiOperation(nickname = "deleteMSRun",
-//    value = "delete all ms1 and ms2+ spectra",
-//    notes = """No double check is done. Use with caution""",
-//    response = classOf[String],
-//    httpMethod = "DELETE")
-//  def deleteMSRun(runIds: String) = Action.async {
-//
-//    val runIdSet = runIds.split(",").map(RunId(_)).toSet
-//
-//
-//    // delete ms1 spectra
-//    val ms1Del: Int = DB.withSession { implicit session =>
-//        runIdSet.map({ runId =>
-//          ms1Dao.filter(ms => (ms.ref === runId.value)).delete
-//        }).sum
-//      }
-//
-//    for{
-//    // delete ms2+ spectra
-//      msnDel <- ExpMongoDBService().delete(runIdSet)
-//    }yield{
-//      Ok(Json.obj("msn" -> msnDel, "ms1" -> ms1Del))
-//    }
-//
-//  }
+  @ApiOperation(nickname = "deleteMSRun",
+    value = "delete all ms1 and ms2+ spectra",
+    notes = """No double check is done. Use with caution""",
+    response = classOf[String],
+    httpMethod = "DELETE")
+  def deleteMSRun(runIds: String) = Action.async {
+
+    val runIdSet = runIds.split(",").map(RunId(_)).toSet
+
+    for{
+    // delete ms2+ and ms1 spectra
+      msnDel <- ExpMongoDBService().delete(runIdSet)
+      ms1Del <- ExpMs1BinMongoDBService().deleteAllByRunIds(runIdSet)
+    }yield{
+      Ok(Json.obj("msn" -> msnDel, "ms1" -> ms1Del))
+    }
+
+  }
 
 
   @ApiOperation(nickname = "findXIC",
@@ -181,9 +174,9 @@ object ExperimentalController extends CommonController {
       val ppmTolerance = tolerance.getOrElse(10.0)
       val daltonTolerance = moz / 1000000 * ppmTolerance
 
-      val futureList = ExpMs1TmpMongoDBService().findMs1EntryWithMozTol(RunId(runId),Moz(moz),daltonTolerance)
+      val futureList = ExpMs1BinMongoDBService().findMs1EntryWithMozTol(RunId(runId),Moz(moz),daltonTolerance)
 
-      val sphList = ExpMs1TmpMongoDBService().extract2Lists(futureList, rtTolerance.getOrElse(10.0))
+      val sphList = ExpMs1BinMongoDBService().extract2Lists(futureList, rtTolerance.getOrElse(10.0))
 
       sphList.map { case sphList: JsObject => Ok(sphList) }
         .recover {
@@ -208,7 +201,7 @@ object ExperimentalController extends CommonController {
 
         (for {
           // insert all peaks above threshold into a temporary mongodb collection
-          resMs1Insertion <- ExpMs1TmpMongoDBService().insertMs1spectra(ms1SpIter, intensityThreshold)
+          resMs1Insertion <- ExpMs1BinMongoDBService().insertMs1spectra(ms1SpIter, intensityThreshold)
         } yield {
             Ok(Json.obj("nrMs1Peaks" -> resMs1Insertion))
 

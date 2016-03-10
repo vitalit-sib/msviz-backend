@@ -4,10 +4,8 @@ package ch.isbsib.proteomics.mzviz.experimental.importer
 
 import ch.isbsib.proteomics.mzviz.commons._
 import ch.isbsib.proteomics.mzviz.experimental._
-import org.expasy.mzjava.core.ms.spectrum.{ScanNumberDiscrete, MsnSpectrum}
 import org.specs2.mutable.Specification
-import scala.util.Success
-import java.io.{ObjectOutputStream, FileOutputStream, File}
+import java.io.File
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
@@ -18,7 +16,7 @@ class LoaderMzXMLspecs extends Specification {
   "load MzXML" should {
 
     val mzXmlFile = new File("test/resources/ms1/F001644_small.mzXML")
-    val ms1Iterator = LoaderMzXML.parseFile(mzXmlFile, RunId("hoho"))
+    val ms1Iterator = LoaderMzXML().parse(mzXmlFile, RunId("hoho"))
     val sp = ms1Iterator.next
 
     """check size""" in {
@@ -45,7 +43,7 @@ class LoaderMzXMLspecs extends Specification {
 
     """check total #peaks""" in {
       var total = 0
-      val ms1Iterator2 = LoaderMzXML.parseFile(mzXmlFile, RunId("hoho"))
+      val ms1Iterator2 = LoaderMzXML().parse(mzXmlFile, RunId("hoho"))
       while(ms1Iterator2.hasNext){
         val sp = ms1Iterator2.next
         total += sp.peaks.length
@@ -58,32 +56,36 @@ class LoaderMzXMLspecs extends Specification {
   "load MzXML2" should {
 
     val mzXmlFile = new File("test/resources/ms1/F001644_small.mzXML")
-    val ms1Sps = FastLoaderMzXML.parseFile(mzXmlFile, RunId("hoho"))
+    val ms1Sps = LoaderMzXML().parse(mzXmlFile, RunId("hoho"))
 
     """check size""" in {
       ms1Sps.size mustEqual 98
     }
 
     """check scanNumber""" in {
-      ms1Sps(0).spId.id mustEqual SpectrumUniqueId("1")
+      val ms1Sps = LoaderMzXML().parse(mzXmlFile, RunId("hoho"))
+      ms1Sps.next.spId.id mustEqual SpectrumUniqueId("1")
     }
 
     """check retentionTime""" in {
-      ms1Sps(0).retentionTime mustEqual RetentionTime(0.176703)
+      val ms1Sps = LoaderMzXML().parse(mzXmlFile, RunId("hoho"))
+      ms1Sps.next.retentionTime mustEqual RetentionTime(0.176703)
     }
 
     """check peaks""" in {
-      ms1Sps(0).peaks.length mustEqual 388
+      val ms1Sps = LoaderMzXML().parse(mzXmlFile, RunId("hoho"))
+      ms1Sps.next.peaks.length mustEqual 388
     }
 
     """check base peak""" in {
-      val basePeak = ms1Sps(0).peaks.maxBy(_.intensity.value)
+      val ms1Sps = LoaderMzXML().parse(mzXmlFile, RunId("hoho"))
+      val basePeak = ms1Sps.next.peaks.maxBy(_.intensity.value)
       basePeak.intensity mustEqual(Intensity(6809045.0))
       basePeak.moz mustEqual(Moz(519.1379352044135))
     }
 
     """check total #peaks""" in {
-      val ms1Sps = FastLoaderMzXML.parseFile(mzXmlFile, RunId("hoho"))
+      val ms1Sps = LoaderMzXML().parse(mzXmlFile, RunId("hoho"))
       val totalPeaks = ms1Sps.map(_.peaks.length).sum
       totalPeaks mustEqual 31771
     }

@@ -73,7 +73,7 @@ import org.specs2.mutable.Specification
 
       // check scanNr and rt
       sp.scanNumber.get.value mustEqual(6385)
-      sp.retentionTime.value mustEqual(35.17126)
+      sp.retentionTime.value mustEqual(2110.2756)
 
       // check peaks
       sp.peaks.size mustEqual(5132)

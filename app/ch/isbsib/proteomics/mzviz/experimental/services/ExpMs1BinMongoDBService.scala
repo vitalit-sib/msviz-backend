@@ -19,8 +19,8 @@ import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
  * @author Roman Mylonas & Trinidad Martin
  *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
-class ExpMs1TmpMongoDBService (val db: DefaultDB) extends MongoDBService {
-  val collectionName = "ms1Tmp"
+class ExpMs1BinMongoDBService (val db: DefaultDB) extends MongoDBService {
+  val collectionName = "ms1Bin"
   val mainKeyName = "ref"
 
   new Index(
@@ -59,22 +59,6 @@ class ExpMs1TmpMongoDBService (val db: DefaultDB) extends MongoDBService {
     Future.sequence(resList.toList).map(_.sum)
 
   }
-
-
-//  def insertMs1Bin(ms1Bin: Ms1Bin): Future[Boolean] = {
-//
-//    val future = collection.insert(ms1Bin)
-//
-//    val answer:Future[Boolean] = future.map({
-//      case e: LastError if e.inError => throw MongoInsertException(e.errMsg.get)
-//      case _ => true
-//    })
-//
-//    answer
-//
-//  }
-
-
 
   /**
    * insert a MS1 spectrum into a temporary collection "ms1Tmp"
@@ -221,6 +205,36 @@ class ExpMs1TmpMongoDBService (val db: DefaultDB) extends MongoDBService {
   }
 
 
+  /**
+   * Delete all bins containing the given RunIds
+   *
+   * @param runIds
+   * @return
+   */
+  def deleteAllByRunIds(runIds: Set[RunId]): Future[Int] = {
+
+    Future.sequence(runIds.map({ runId =>
+
+      // create a regex which looks for all occurences of the given RunId
+      val regexString = "^" + runId.value + "_"
+      val query = Json.obj("ref" -> Json.obj("$regex" -> regexString))
+
+      collection.remove(query).map {
+        case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
+        case _ => 1
+      }
+
+    })).map(_.sum)
+  }
+
+
+  /**
+   * sort the retention times and add 0 intensity points in large gaps
+   *
+   * @param futureMs1List
+   * @param rtTolerance
+   * @return
+   */
   def extract2Lists(futureMs1List:Future[List[Ms1Entry]], rtTolerance: Double): Future[JsObject] = {
 
     futureMs1List.map({ ms1List =>
@@ -268,8 +282,8 @@ class ExpMs1TmpMongoDBService (val db: DefaultDB) extends MongoDBService {
 /**
  * the companion object
  */
-object ExpMs1TmpMongoDBService extends Controller with MongoController {
-  val default = new ExpMs1TmpMongoDBService(db)
+object ExpMs1BinMongoDBService extends Controller with MongoController {
+  val default = new ExpMs1BinMongoDBService(db)
 
   /**
    * get the default db/collection
