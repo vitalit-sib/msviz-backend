@@ -38,6 +38,7 @@ GET           /match/sim/:runId/:title/:scoreThresh/:matchTol        ch.isbsib.p
 GET           /api-docs/search                                       controllers.ApiHelpController.getResource(path = "/search")
 GET           /search/:searchId                                      ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.get(searchId)
 GET           /search                                                ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.list
+POST          /search                                                ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.loadZippedResults(resultType: Option[String])
 POST          /search/:searchId                                      ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.loadResults(searchId:String, resultType:Option[String], runId:Option[String])
 DELETE        /search/:searchIds                                     ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.delete(searchIds)
 OPTIONS       /search/:searchIds                                     ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.options(searchIds)
