@@ -200,7 +200,7 @@ object ExperimentalController extends CommonController {
       request =>
 
         // default values
-        val intThres = intensityThreshold.getOrElse(30000.0)
+        val intThres = intensityThreshold.getOrElse(1.0)
         val selType = fileType.getOrElse("MzML")
 
         val ms1SpIter: Iterator[ExpMs1Spectrum] = if(selType == "MzML"){

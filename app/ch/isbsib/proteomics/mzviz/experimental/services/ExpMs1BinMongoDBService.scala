@@ -5,15 +5,17 @@ import ch.isbsib.proteomics.mzviz.experimental.{RunIdAndMozBin, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.models._
 import play.api.libs.json.{JsObject, JsNumber, JsArray, Json}
 import play.api.mvc.Controller
+import play.libs.Akka
 import play.modules.reactivemongo.MongoController
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
 import reactivemongo.core.commands.LastError
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import ch.isbsib.proteomics.mzviz.commons.{Intensity, Moz, RetentionTime}
 import scala.collection.mutable.ListBuffer
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
+import play.api.Play
 
 /**
  * @author Roman Mylonas & Trinidad Martin
@@ -28,7 +30,6 @@ class ExpMs1BinMongoDBService (val db: DefaultDB) extends MongoDBService {
     name = Some("ref")
   )
 
-
   /**
    * insert a list of MS1 spectra into a temporary collection "ms1Tmp"
    *
@@ -36,27 +37,60 @@ class ExpMs1BinMongoDBService (val db: DefaultDB) extends MongoDBService {
    * @param ms1Iterator ExpMs1Spectum
    * @return gives back the number of entries inserted into the db
    */
-  def insertMs1spectra(ms1Iterator: Iterator[ExpMs1Spectrum], intensityThreshold:Double): Future[Int] = {
+  def insertMs1spectra(ms1Iterator: Iterator[ExpMs1Spectrum], intensityThreshold:Double): Future[Boolean] = {
 
-    // number of spectra which are parsed before inserting
-    val bufferSize = 20
+      // number of spectra which are parsed before inserting
+      val bufferSize = Play.current.configuration.getString("experimental.ms1.buffer").get.toInt
 
-    // split the iterator into slices
-    val slidingIt = ms1Iterator.sliding(bufferSize, bufferSize)
+      // split the iterator into slices
+      val slidingIt = ms1Iterator.sliding(bufferSize, bufferSize)
 
-    var resList:ListBuffer[Future[Int]] = ListBuffer()
+      // loop through all slices
+      val resIt = for (slice <- slidingIt) yield {
+        val initMap: Map[String, (Seq[Moz], Seq[Intensity], Seq[RetentionTime])] = Map()
 
-    // loop through all slices
-    while(slidingIt.hasNext){
-        val initMap:Map[String,(Seq[Moz], Seq[Intensity], Seq[RetentionTime])] = Map()
+        val resMap = slice.foldLeft(initMap)((a, b) => mergeBinMaps(a, parseMs1spectrum(b, intensityThreshold)))
+        val res: Future[Boolean] = insertMs1Bin(resMap)
+        res
+      }
 
-        val someList = slidingIt.next()
+      Future.sequence(resIt.toList).map(_.foldLeft(true)((a, b) => a & b))
 
-        val resMap = someList.par.foldLeft(initMap)((a,b) => mergeBinMaps(a, parseMs1spectrum(b, intensityThreshold)))
-        resList += insertMs1Bin(resMap)
+  }
+
+  /**
+   * Insert a given Map into the database
+   *
+   * @param ms1Bin
+   * @return
+   */
+  def insertMs1Bin(ms1Bin: Map[String, (Seq[Moz], Seq[Intensity], Seq[RetentionTime])]): Future[Boolean] = {
+
+    def f(entry:(String, (Seq[Moz], Seq[Intensity], Seq[RetentionTime]))): Future[Boolean] ={
+      val selector = Json.obj("ref" -> entry._1)
+
+      val newEntry = Json.obj("$push" -> Json.obj(
+          "mozList" -> Json.obj("$each" -> JsArray(entry._2._1.map(a => JsNumber(a.value)))),
+          "intList" -> Json.obj("$each" -> JsArray(entry._2._2.map(a => JsNumber(a.value)))),
+          "rtList" -> Json.obj("$each" -> JsArray(entry._2._3.map(a => JsNumber(a.value))))
+        )
+      )
+
+      // create or update
+      val answer = collection.update(selector, newEntry, upsert = true)
+
+      answer.map({
+        case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
+        case _ => true
+      })
+
     }
 
-    Future.sequence(resList.toList).map(_.sum)
+    ms1Bin.foldLeft(Future{true})({ (previousFuture, next) =>
+      for{
+        previous <- previousFuture
+        newRes <- f(next)} yield (previous & newRes)
+      })
 
   }
 
@@ -116,37 +150,6 @@ class ExpMs1BinMongoDBService (val db: DefaultDB) extends MongoDBService {
         a ++ Map(b._1 -> b._2)
       }
     })
-
-  }
-
-
-  /**
-   * Insert a given Map into the database
-   *
-   * @param ms1Bin
-   * @return
-   */
-  def insertMs1Bin(ms1Bin: Map[String, (Seq[Moz], Seq[Intensity], Seq[RetentionTime])]): Future[Int] = {
-
-    Future.sequence(ms1Bin.map({entry =>
-      val selector = Json.obj("ref" -> entry._1)
-
-      val newEntry = Json.obj("$push" -> Json.obj(
-        "mozList" -> Json.obj("$each" -> JsArray(entry._2._1.map(a => JsNumber(a.value)))),
-        "intList" -> Json.obj("$each" -> JsArray(entry._2._2.map(a => JsNumber(a.value)))),
-        "rtList" -> Json.obj("$each" -> JsArray(entry._2._3.map(a => JsNumber(a.value))))
-        )
-      )
-
-      // create or update
-      val answer = collection.update(selector, newEntry, upsert = true)
-
-      answer.map({
-        case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
-        case _ => 1
-      })
-
-    }).toList).map(_.sum)
 
   }
 
