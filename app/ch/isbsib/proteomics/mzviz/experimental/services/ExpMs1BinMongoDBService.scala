@@ -1,19 +1,17 @@
 package ch.isbsib.proteomics.mzviz.experimental.services
 
-import ch.isbsib.proteomics.mzviz.commons.services.{MongoInsertException, MongoNotFoundException, MongoDBService}
+import ch.isbsib.proteomics.mzviz.commons.services.{MongoNotFoundException, MongoDBService}
 import ch.isbsib.proteomics.mzviz.experimental.{RunIdAndMozBin, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.models._
 import play.api.libs.json.{JsObject, JsNumber, JsArray, Json}
 import play.api.mvc.Controller
-import play.libs.Akka
 import play.modules.reactivemongo.MongoController
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
 import reactivemongo.core.commands.LastError
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{, Future}
 import ch.isbsib.proteomics.mzviz.commons.{Intensity, Moz, RetentionTime}
-import scala.collection.mutable.ListBuffer
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import play.api.Play
 
@@ -49,7 +47,10 @@ class ExpMs1BinMongoDBService (val db: DefaultDB) extends MongoDBService {
       val resIt = for (slice <- slidingIt) yield {
         val initMap: Map[String, (Seq[Moz], Seq[Intensity], Seq[RetentionTime])] = Map()
 
-        val resMap = slice.foldLeft(initMap)((a, b) => mergeBinMaps(a, parseMs1spectrum(b, intensityThreshold)))
+        // make use of parallelisation to create the bins of moz values
+        val resMap = slice.par.aggregate(initMap)((a, b) => mergeBinMaps(a, parseMs1spectrum(b, intensityThreshold)), mergeBinMaps(_,_))
+
+        // insert bins into the database (serial insert only, to not block the db access)
         val res: Future[Boolean] = insertMs1Bin(resMap)
         res
       }
@@ -86,6 +87,7 @@ class ExpMs1BinMongoDBService (val db: DefaultDB) extends MongoDBService {
 
     }
 
+    // make the insert serial, to not block the db
     ms1Bin.foldLeft(Future{true})({ (previousFuture, next) =>
       for{
         previous <- previousFuture
