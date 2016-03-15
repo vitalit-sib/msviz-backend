@@ -10,7 +10,7 @@ import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{IndexType, Index}
 import reactivemongo.core.commands.LastError
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{, Future}
+import scala.concurrent.{Future}
 import ch.isbsib.proteomics.mzviz.commons.{Intensity, Moz, RetentionTime}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import play.api.Play
