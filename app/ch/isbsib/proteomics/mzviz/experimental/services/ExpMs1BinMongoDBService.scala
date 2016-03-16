@@ -23,10 +23,15 @@ class ExpMs1BinMongoDBService (val db: DefaultDB) extends MongoDBService {
   val collectionName = "ms1Bin"
   val mainKeyName = "ref"
 
-  new Index(
-    Seq("ref" -> IndexType.Ascending),
-    name = Some("ref")
-  )
+
+  setIndexes(List(
+    new Index(
+      Seq("ref" -> IndexType.Ascending),
+      name = Some("ref"),
+      unique = true)
+  ))
+
+
 
   /**
    * insert a list of MS1 spectra into a temporary collection "ms1Tmp"
