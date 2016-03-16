@@ -213,7 +213,7 @@ object ExperimentalController extends CommonController {
           // insert all peaks above threshold into a temporary mongodb collection
           resMs1Insertion <- ExpMs1BinMongoDBService().insertMs1spectra(ms1SpIter, intThres)
         } yield {
-            Ok(Json.obj("nrMs1Peaks" -> resMs1Insertion))
+            Ok(Json.obj("insertionFinished" -> resMs1Insertion))
 
         }).recover{
             case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
