@@ -3,7 +3,7 @@ package ch.isbsib.proteomics.mzviz.matches.importer
 import java.io.{IOException, File}
 import java.util.Calendar
 
-import ch.isbsib.proteomics.mzviz.commons.helpers.Unzip
+import ch.isbsib.proteomics.mzviz.commons.helpers.{FileFinder, Unzip}
 import ch.isbsib.proteomics.mzviz.experimental.{ScanNumber, SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
@@ -413,7 +413,7 @@ object LoaderMaxQuant {
   def parseZip(maxQuantZip: File, idTitle: String): Seq[(Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo)] = {
     val tmpDir = Unzip.unzip(maxQuantZip)
 
-    val dirsInTmpDir = Unzip.getListOfDirs(tmpDir)
+    val dirsInTmpDir = FileFinder.getListOfDirs(tmpDir)
     val txtDir = if(dirsInTmpDir.length == 1 && dirsInTmpDir(0).getName == "txt") tmpDir + "/txt/" else tmpDir + "/"
 
     parse(txtDir, idTitle)

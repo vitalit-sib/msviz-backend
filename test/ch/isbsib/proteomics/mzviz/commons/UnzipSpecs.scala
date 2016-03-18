@@ -2,7 +2,7 @@ package ch.isbsib.proteomics.mzviz.commons
 
 import java.io.File
 
-import ch.isbsib.proteomics.mzviz.commons.helpers.Unzip
+import ch.isbsib.proteomics.mzviz.commons.helpers.{FileFinder, Unzip}
 import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.matches.models.maxquant.{EvidenceTableEntry, ProteinGroupsTableEntry}
 import ch.isbsib.proteomics.mzviz.matches.models.{PepSpectraMatch, ProteinIdent}
@@ -22,7 +22,7 @@ class UnzipSpecs extends Specification {
 
     val unzippedDir = Unzip.unzip(zipFile)
 
-    val files = Unzip.getListOfDirs(unzippedDir)
+    val files = FileFinder.getListOfDirs(unzippedDir)
 
     files.length mustEqual(1)
     files(0).getName mustEqual("txt")

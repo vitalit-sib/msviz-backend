@@ -46,18 +46,4 @@ object Unzip {
     tmpDir
   }
 
-  /**
-   * give back the list of directories found at the given path
-   * @param dir
-   * @return list of files
-   */
-  def getListOfDirs(dir: String):List[File] = {
-    val d = new File(dir)
-    if (d.exists && d.isDirectory) {
-      d.listFiles.filter(_.isDirectory).toList
-    } else {
-      List[File]()
-    }
-  }
-
 }
