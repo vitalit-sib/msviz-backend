@@ -76,8 +76,9 @@ class LoaderMascotData {
     // get file extensions as lower case
     val extensions =  availableFiles.map(x =>  x.toString.substring(x.toString.lastIndexOf(".") + 1).toLowerCase)
 
-    // see for every file type if it is here
-    val listFound = fileTypes.toList.map(x => if())
+    // find the pair for every file type
+    val listFound = fileTypes.toList.map(x => extensions.filter(_ == x.toLowerCase)).zipWithIndex
+
     //val listFound = fileTypes.toList.map(x => extensions.contains(x.toLowerCase))
 
     // check if all are true
