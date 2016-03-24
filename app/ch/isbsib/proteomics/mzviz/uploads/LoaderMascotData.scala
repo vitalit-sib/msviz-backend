@@ -1,12 +1,11 @@
 package ch.isbsib.proteomics.mzviz.uploads
 
 import ch.isbsib.proteomics.mzviz.commons.helpers.{FileFinder, Unzip}
-import ch.isbsib.proteomics.mzviz.matches.SearchId
-import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
 
 import scala.concurrent.Future
 import java.io.File
 import scala.concurrent.ExecutionContext.Implicits.global
+import java.io.File
 
 /**
  * @author Roman Mylonas & Trinidad Martin
@@ -66,23 +65,24 @@ class LoaderMascotData {
   /**
    * get the required files as a hashmap
    *
-   * @param fileTypes
+   * @param requiredTypes
    * @param runPath
    */
-  def getRequiredFiles(fileTypes: Set[String], runPath: File): Map[String, File] = {
+  def getRequiredFiles(requiredTypes: Set[String], runPath: File): Map[String, File] = {
 
-    val availableFiles = FileFinder.getListOfFiles(runPath.getAbsolutePath)
+    val availableFiles: List[File] = FileFinder.getListOfFiles(runPath.getAbsolutePath)
 
     // get file extensions as lower case
-    val extensions =  availableFiles.map(x =>  x.toString.substring(x.toString.lastIndexOf(".") + 1).toLowerCase)
+    val extensions: List[String] =  availableFiles.map(x =>  x.toString.substring(x.toString.lastIndexOf(".") + 1).toLowerCase)
+
+    val extFilePairs = extensions.zip(availableFiles)
 
     // find the pair for every file type
-    val listFound = fileTypes.toList.map(x => extensions.filter(_ == x.toLowerCase)).zipWithIndex
-
-    //val listFound = fileTypes.toList.map(x => extensions.contains(x.toLowerCase))
-
-    // check if all are true
-    listFound.forall(x => x)
+    requiredTypes.map({ x =>
+      val l = extFilePairs.filter(_._1 == x)
+      val hit = if(l.size > 0) l(0) else throw new RuntimeException("Required file type is missing: " + x)
+      (x, hit._2)
+    }).toMap
 
   }
 
