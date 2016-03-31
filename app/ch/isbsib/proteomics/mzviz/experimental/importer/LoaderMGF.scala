@@ -161,7 +161,7 @@ object LoaderMGF {
    * @param runId a runId
    * @return
    */
-  def load(filename: String, runId: RunId): Try[Iterator[ExpMSnSpectrum]] = load(new File(filename), runId)
+  def load(filename: String, runId: RunId): Iterator[ExpMSnSpectrum] = load(new File(filename), runId)
 
   /**
    * Loads an MGF file. peak order is taken out from the MGF file order as this makes sense in our examples
@@ -170,10 +170,8 @@ object LoaderMGF {
    * @param runId the runId under which to register the run
    * @return
    */
-  def load(file: File, runId: RunId): Try[Iterator[ExpMSnSpectrum]] = Try {
+  def load(file: File, runId: RunId): Iterator[ExpMSnSpectrum] = {
     val lPeaks: Iterator[ExpMSnSpectrum] = expMSnSpectrumIterator(file, runId)
-     // .toSeq
-    //new MSRun(runId, lPeaks)
     lPeaks
   }
 
@@ -184,12 +182,15 @@ object LoaderMGF {
    * @return
    */
   def expMSnSpectrumIterator(file: File, runId: RunId): Iterator[ExpMSnSpectrum] ={
-    new IonsIterator(file)
+    val it = new IonsIterator(file)
       .map(t => text2MSnSpectrum(t, runId))
       .filter({
       case (Failure(e)) => throw e
       case (Success(t)) => true
     }).map(_.get)
+
+    it
+
   }
 
   /**

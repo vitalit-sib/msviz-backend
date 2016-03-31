@@ -90,12 +90,12 @@ class LoaderMGFSpecs extends Specification {
   "load" should {
 
     "count the msms" in {
-      val run: Iterator[ExpMSnSpectrum] = LoaderMGF.load(new File("test/resources/mascot/F001644.mgf"), RunId("pipo")).get
+      val run: Iterator[ExpMSnSpectrum] = LoaderMGF.load(new File("test/resources/mascot/F001644.mgf"), RunId("pipo"))
       run.size must equalTo(1822)
     }
     "check a guy" in {
 
-      val run: Iterator[ExpMSnSpectrum] = LoaderMGF.load(new File("test/resources/mascot/F001644.mgf"), RunId("pipo")).get
+      val run: Iterator[ExpMSnSpectrum] = LoaderMGF.load(new File("test/resources/mascot/F001644.mgf"), RunId("pipo"))
 
       val sp = run.toSeq(3)
       sp.ref.precursor.charge must equalTo(Charge(2))
@@ -106,7 +106,7 @@ class LoaderMGFSpecs extends Specification {
       sp.ref.scanNumber must equalTo(Some(ScanNumber(10823)))
     }
     "m/z are increasing order" in {
-      val run: Iterator[ExpMSnSpectrum] = LoaderMGF.load(new File("test/resources/mascot/F001644.mgf"), RunId("pipo")).get
+      val run: Iterator[ExpMSnSpectrum] = LoaderMGF.load(new File("test/resources/mascot/F001644.mgf"), RunId("pipo"))
       val mozs = run.toSeq(0).peaks.map(_.moz).toList
       val mDelta = mozs.drop(1).zip(mozs.dropRight(1)).map (p => p._1.value - p._2.value).filter(_<0)
       mDelta must have size(0)
@@ -116,11 +116,11 @@ class LoaderMGFSpecs extends Specification {
   "loading wiff" should {
 
     "count the msms" in {
-      val run = LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("pipo")).get
+      val run = LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("pipo"))
       run.toSeq.size must equalTo(123)
     }
     "check a guy" in {
-      val run = LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("pipo")).get
+      val run = LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("pipo"))
       val sp = run.toSeq(3)
       sp.ref.precursor.charge must equalTo(Charge(2))
       sp.ref.precursor.moz must equalTo(Moz(407.717649))
@@ -145,13 +145,13 @@ class LoaderMGFSpecs extends Specification {
   }
 
   "id should be scanNumber" in{
-    val runMascot = LoaderMGF.load(new File("test/resources/mascot/F001644.mgf"), RunId("pipo")).get
+    val runMascot = LoaderMGF.load(new File("test/resources/mascot/F001644.mgf"), RunId("pipo"))
     val firstSpectra=runMascot.next()
 
     firstSpectra.ref.spectrumId.id.value mustEqual(firstSpectra.ref.scanNumber.get.value.toString)
     firstSpectra.ref.spectrumId.id mustEqual(SpectrumUniqueId("11150"))
 
-    val runMaxQuant = LoaderMGF.load(new File("test/resources/maxquant/8077A.mgf"), RunId("pipoMax")).get
+    val runMaxQuant = LoaderMGF.load(new File("test/resources/maxquant/8077A.mgf"), RunId("pipoMax"))
 
     val firstSpectraMQ=runMaxQuant.next()
 

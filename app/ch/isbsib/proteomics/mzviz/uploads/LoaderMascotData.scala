@@ -1,11 +1,18 @@
 package ch.isbsib.proteomics.mzviz.uploads
 
 import ch.isbsib.proteomics.mzviz.commons.helpers.{FileFinder, Unzip}
+import ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController._
+import ch.isbsib.proteomics.mzviz.experimental.{MSRun, RunId}
+import ch.isbsib.proteomics.mzviz.experimental.importer.{LoaderMGF, LoaderMzML, LoaderMzXML}
+import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMongoDBService, ExpMs1BinMongoDBService}
+import play.api.libs.json.Json
 
 import scala.concurrent.Future
 import java.io.File
 import scala.concurrent.ExecutionContext.Implicits.global
 import java.io.File
+
+import scala.util.{Failure, Success}
 
 /**
  * @author Roman Mylonas & Trinidad Martin
@@ -19,7 +26,7 @@ class LoaderMascotData {
    * @param zipPath
    * @return
    */
-  def loadZip(zipPath: String): Future[Boolean] = {
+  def loadZip(zipPath: String, intensityThreshold: Double): Future[Boolean] = {
 
     // unzip the file
     val unzipPath = Unzip.unzip(new File(zipPath))
@@ -31,7 +38,7 @@ class LoaderMascotData {
     resDirList.foldLeft(Future{true})( (futureA, b) =>
       for {
         a <- futureA
-        c <- insertRunFromPath(b)
+        c <- insertRunFromPath(b, 234)
       } yield {
         a & c
       })
@@ -44,18 +51,32 @@ class LoaderMascotData {
    * @param runPath
    * @return
    */
-  def insertRunFromPath(runPath: File):Future[Boolean] = {
+  def insertRunFromPath(runPath: File, intensityThreshold: Double):Future[Boolean] = {
+
+    // get the runId
+    val runId: RunId = RunId("hoho")
 
     // check if all required files are here (it is not case sensitive)
     val requiredTypes = Set("mzid", "mzML", "mgf")
     val availableFiles = getRequiredFiles(requiredTypes, runPath)
 
-    if(availableFiles.size != requiredTypes.size){
-      throw new RuntimeException("There are some required files missing in [" + runPath.getName + "]. Following file types are needed: " + requiredTypes.toString)
+    // now we insert all the data
+
+    val ms1Iterator = LoaderMzML().parse(availableFiles.get("mzML").get, runId).filter(_.isLeft).map(_.left.get)
+    val ms2Iterator = LoaderMGF.load(availableFiles.get("mgf").get, runId)
+
+    for{
+      //first we insert MS1 data, because they're slow
+      resMs1Insertion <- ExpMs1BinMongoDBService().insertMs1spectra(ms1Iterator, intensityThreshold)
+
+      // and only last the other data
+
+    }yield{
+      resMs1Insertion
+
     }
 
-    // first we insert matches (they're fast)
-    //LoaderMzIdent.parse(request.body.file, SearchId(searchId), rid)
+    //
 
     ???
 

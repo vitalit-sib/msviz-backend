@@ -38,8 +38,8 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
       service.countMsnSpectra.futureValue must equalTo(0)
       service.countMsRuns.futureValue must equalTo(0)
 
-      val msnRun1= new MSRun(RunId("test-1"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("test-1")).get.toSeq)
-      val msnRun2= new MSRun(RunId("test-2"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("test-2")).get.toSeq)
+      val msnRun1= new MSRun(RunId("test-1"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("test-1")).toSeq)
+      val msnRun2= new MSRun(RunId("test-2"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("test-2")).toSeq)
       service.insert(msnRun1).futureValue
       service.insert(msnRun2).futureValue
 
@@ -51,8 +51,8 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "delete" should {
     "get 2 , remove 1 " in new TempMongoDBService {
-      val msnRun1= new MSRun(RunId("test-1"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("test-1")).get.toSeq)
-      val msnRun2= new MSRun(RunId("test-2"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("test-2")).get.toSeq)
+      val msnRun1= new MSRun(RunId("test-1"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("test-1")).toSeq)
+      val msnRun2= new MSRun(RunId("test-2"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("test-2")).toSeq)
       service.insert(msnRun1).futureValue
       service.insert(msnRun2).futureValue
       service.countMsRuns.futureValue must equalTo(2)
@@ -70,7 +70,7 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
   "findSpectrumByRunIdwithEmptySpectra" should {
     "find eight" in new TempMongoDBService {
 
-      val msnRun1= new MSRun(RunId("test-empty"),LoaderMGF.load(new File("test/resources/mascot/F003077.mgf"), RunId("test-empty")).get.toSeq)
+      val msnRun1= new MSRun(RunId("test-empty"),LoaderMGF.load(new File("test/resources/mascot/F003077.mgf"), RunId("test-empty")).toSeq)
 
       val n= service.insert(msnRun1).futureValue
       val sp = service.findSpectrumByRunId(RunId("test-empty")).futureValue.toList
@@ -85,7 +85,7 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "findSpectrumByRunIdAndTitle" should {
     "find one" in new TempMongoDBService {
-      val msnRun1= new MSRun(RunId("test-1"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("test-1")).get.toSeq)
+      val msnRun1= new MSRun(RunId("test-1"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("test-1")).toSeq)
 
       val n= service.insert(msnRun1).futureValue
 
@@ -103,7 +103,7 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "findSpectrumByRunId" should {
     "find one" in new TempMongoDBService {
-      val msnRun1= new MSRun(RunId("test-1"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("test-1")).get.toSeq)
+      val msnRun1= new MSRun(RunId("test-1"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("test-1")).toSeq)
 
       val n= service.insert(msnRun1).futureValue
 
@@ -117,7 +117,7 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "findSpectrumBySpId" should {
     "find one" in new TempMongoDBService {
-      val msnRun1= new MSRun(RunId("test-1"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("test-1")).get.toSeq)
+      val msnRun1= new MSRun(RunId("test-1"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("test-1")).toSeq)
 
       val n= service.insert(msnRun1).futureValue
 
@@ -131,7 +131,7 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
 
   "findAllSpectraRefByrunId" should {
     "find all with one runID" in new TempMongoDBService {
-      val msnRun1= new MSRun(RunId("test-1"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("chanclas")).get.toSeq)
+      val msnRun1= new MSRun(RunId("test-1"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("chanclas")).toSeq)
 
       val n= service.insert(msnRun1).futureValue
 
@@ -143,9 +143,9 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
 
     "find all with one runId in set" in new TempMongoDBService {
 
-      val msnRun1= new MSRun(RunId("test-1"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("chanclas_0")).get.toSeq)
-      val msnRun2= new MSRun(RunId("test-2"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("chanclas_1")).get.toSeq)
-      val msnRun3= new MSRun(RunId("test-2"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("chanclas_2")).get.toSeq)
+      val msnRun1= new MSRun(RunId("test-1"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("chanclas_0")).toSeq)
+      val msnRun2= new MSRun(RunId("test-2"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("chanclas_1")).toSeq)
+      val msnRun3= new MSRun(RunId("test-2"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("chanclas_2")).toSeq)
 
       service.insert(msnRun1).futureValue
       service.insert(msnRun2).futureValue

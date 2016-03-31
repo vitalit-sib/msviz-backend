@@ -48,7 +48,7 @@ class NormDotProductSimSpecs extends Specification {
 
   "compute normalized dot product from MGF" should {
 
-    val run: MSRun = new MSRun(RunId("test-1"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("pipo")).get.toSeq)
+    val run: MSRun = new MSRun(RunId("test-1"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("pipo")).toSeq)
     "compare two spectra from MGF" in {
 
       val spSpMatches = NormDotProdSim().calcSimilarityList(run.msnSpectra(0), run.msnSpectra, peakMatchTol)
