@@ -36,7 +36,6 @@ class LoaderMQData {
     val folderList = FileFinder.getListOfDirs(unzipPath)
 
     //parse txt/summary to obtain check if we have all expected files
-    //parse txt/summary to obtain check if we have all expected files
     val txtFiles = FileFinder.getListOfFiles(folderList(0).toString)
     val summaryFile = unzipPath + "/txt/summary.txt"
     val summaryHash = LoaderMaxQuant.parseMaxquantSummaryTableRawSearchId(new File(summaryFile))
@@ -85,6 +84,6 @@ class LoaderMQData {
 
 object LoaderMQData {
 
-  def apply() = new LoaderMascotData
+  def apply() = new LoaderMQData
 
 }
