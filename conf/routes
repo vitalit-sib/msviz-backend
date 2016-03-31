@@ -3,54 +3,56 @@
 # ~~~~
 
 # Home page
-GET           /                                                      ch.isbsib.proteomics.mzviz.controllers.UtilsController.hello
+GET            /                                                      ch.isbsib.proteomics.mzviz.controllers.UtilsController.hello
 
-GET           /api-docs/exp                                          controllers.ApiHelpController.getResource(path = "/exp")
-GET           /exp                                                   ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.stats
-GET           /exp/xic/:runId/:moz                                   ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findXic(runId,moz:Double,tolerance:Option[Double], rtTolerance:Option[Double])
-POST          /exp/ms1/:runId                                        ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.loadMS1(runId,intensityThreshold:Option[Double], fileType:Option[String])
-GET           /exp/msruns                                            ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.listMSRunIds
-POST          /exp/msrun/:runId                                      ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.loadMSRun(runId)
-DELETE        /exp/msrun/:runId                                      ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.deleteMSRun(runId)
-OPTIONS       /exp/msrun/:runId                                      ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.options(runId)
-GET           /exp/spectrum/:runId/:spId                             ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findExpSpectrum(runId:String, spId:String, sortByMoz:Option[Boolean], mostIntense:Option[Integer])
-GET           /exp/spectra-ref/:runId                                ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findAllSpectraRefByRunId(runId)
+GET            /api-docs/exp                                          controllers.ApiHelpController.getResource(path = "/exp")
+GET            /exp                                                   ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.stats
+GET            /exp/xic/:runId/:moz                                   ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findXic(runId,moz:Double,tolerance:Option[Double], rtTolerance:Option[Double])
+POST           /exp/ms1/:runId                                        ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.loadMS1(runId,intensityThreshold:Option[Double], fileType:Option[String])
+GET            /exp/msruns                                            ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.listMSRunIds
+POST           /exp/msrun/:runId                                      ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.loadMSRun(runId)
+DELETE         /exp/msrun/:runId                                      ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.deleteMSRun(runId)
+OPTIONS        /exp/msrun/:runId                                      ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.options(runId)
+GET            /exp/spectrum/:runId/:spId                             ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findExpSpectrum(runId:String, spId:String, sortByMoz:Option[Boolean], mostIntense:Option[Integer])
+GET            /exp/spectra-ref/:runId                                ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findAllSpectraRefByRunId(runId)
 
-GET           /api-docs/sequences                                    controllers.ApiHelpController.getResource(path = "/sequences")
-GET           /sequences/list-sources                                ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.listSources
-POST          /sequences/:sourceId/fasta                             ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.loadFasta(sourceId, regexp:Option[String])
-DELETE        /sequences/:sourceId                                   ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.deleteSource(sourceId)
-OPTIONS       /sequences/:sourceId                                   ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.optionsId(sourceId)
-GET           /sequences/stats                                       ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.stats
+GET            /api-docs/sequences                                    controllers.ApiHelpController.getResource(path = "/sequences")
+GET            /sequences/list-sources                                ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.listSources
+POST           /sequences/:sourceId/fasta                             ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.loadFasta(sourceId, regexp:Option[String])
+DELETE         /sequences/:sourceId                                   ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.deleteSource(sourceId)
+OPTIONS        /sequences/:sourceId                                   ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.optionsId(sourceId)
+GET            /sequences/stats                                       ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.stats
 
-GET           /api-docs/sequence                                     controllers.ApiHelpController.getResource(path = "/sequence")
-GET           /sequence/:sourceId/:identifier                        ch.isbsib.proteomics.mzviz.controllers.theoretical.OneSequenceController.get(sourceId, identifier)
+GET            /api-docs/sequence                                     controllers.ApiHelpController.getResource(path = "/sequence")
+GET            /sequence/:sourceId/:identifier                        ch.isbsib.proteomics.mzviz.controllers.theoretical.OneSequenceController.get(sourceId, identifier)
 
-GET           /api-docs/match                                        controllers.ApiHelpController.getResource(path = "/match")
-GET           /match/psms/:searchId                                  ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findAllPSMBySearchId(searchId, addSpectrumRef:Option[Boolean])
-GET           /match/proteins/:searchIds                             ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findAllProteinRefsBySearchIds(searchIds, withModif:Option[String])
-GET           /match/protein-matches/:searchIds                      ch.isbsib.proteomics.mzviz.controllers.matches.ProteinMatchController.findAllProteinsBySearchIds(searchIds)
-GET           /match/modifications/:searchIds                        ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findAllModificationsBySearchIds(searchIds)
-GET           /match/psms/:searchIds/by-ac/:accessionCode            ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findAllPSMByProteinAC(searchIds, accessionCode, sequenceSource:Option[String])
-GET           /match/psms/:searchId/by-spectrum/:spectrumId          ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findAllBySearchIdAndSpectrumId(searchId, spectrumId)
-GET           /match/sim/:runId/:title/:scoreThresh/:matchTol        ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findSimilarSpectra(runId, title, scoreThresh, matchTol)
+GET            /api-docs/match                                        controllers.ApiHelpController.getResource(path = "/match")
+GET            /match/psms/:searchId                                  ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findAllPSMBySearchId(searchId, addSpectrumRef:Option[Boolean])
+GET            /match/proteins/:searchIds                             ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findAllProteinRefsBySearchIds(searchIds, withModif:Option[String])
+GET            /match/protein-matches/:searchIds                      ch.isbsib.proteomics.mzviz.controllers.matches.ProteinMatchController.findAllProteinsBySearchIds(searchIds)
+GET            /match/modifications/:searchIds                        ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findAllModificationsBySearchIds(searchIds)
+GET            /match/psms/:searchIds/by-ac/:accessionCode            ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findAllPSMByProteinAC(searchIds, accessionCode, sequenceSource:Option[String])
+GET            /match/psms/:searchId/by-spectrum/:spectrumId          ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findAllBySearchIdAndSpectrumId(searchId, spectrumId)
+GET            /match/sim/:runId/:title/:scoreThresh/:matchTol        ch.isbsib.proteomics.mzviz.controllers.matches.PSMController.findSimilarSpectra(runId, title, scoreThresh, matchTol)
 
-GET           /api-docs/search                                       controllers.ApiHelpController.getResource(path = "/search")
-GET           /search/:searchId                                      ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.get(searchId)
-GET           /search                                                ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.list
-POST          /search                                                ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.loadZippedResults(resultType: Option[String])
-POST          /search/:searchId                                      ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.loadResults(searchId:String, resultType:Option[String], runId:Option[String])
-DELETE        /search/:searchIds                                     ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.delete(searchIds)
-OPTIONS       /search/:searchIds                                     ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.options(searchIds)
+GET            /api-docs/search                                       controllers.ApiHelpController.getResource(path = "/search")
+GET            /search/:searchId                                      ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.get(searchId)
+GET            /search                                                ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.list
+POST           /search                                                ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.loadZippedResults(resultType: Option[String])
+POST           /search/:searchId                                      ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.loadResults(searchId:String, resultType:Option[String], runId:Option[String])
+DELETE         /search/:searchIds                                     ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.delete(searchIds)
+OPTIONS        /search/:searchIds                                     ch.isbsib.proteomics.mzviz.controllers.matches.SearchController.options(searchIds)
 
-GET           /compare/:searchIds                                    ch.isbsib.proteomics.mzviz.controllers.matches.ProteinMatchMultipleSearchesController.findAllProteinsForMultipleSearchIds(searchIds, withModif:Option[String])
+GET            /compare/:searchIds                                    ch.isbsib.proteomics.mzviz.controllers.matches.ProteinMatchMultipleSearchesController.findAllProteinsForMultipleSearchIds(searchIds, withModif:Option[String])
 
-DELETE        /basket/:mongoId                                       ch.isbsib.proteomics.mzviz.controllers.results.BasketController.delete(mongoId)
-PUT           /basket                                                ch.isbsib.proteomics.mzviz.controllers.results.BasketController.put
-OPTIONS       /basket                                                ch.isbsib.proteomics.mzviz.controllers.results.BasketController.options
-OPTIONS       /basket/:id                                            ch.isbsib.proteomics.mzviz.controllers.results.BasketController.optionsId(id)
-GET           /basket                                                ch.isbsib.proteomics.mzviz.controllers.results.BasketController.listSearchIds
-GET           /basket/:searchId                                      ch.isbsib.proteomics.mzviz.controllers.results.BasketController.findBySearchId(searchId)
+DELETE         /basket/:mongoId                                       ch.isbsib.proteomics.mzviz.controllers.results.BasketController.delete(mongoId)
+PUT            /basket                                                ch.isbsib.proteomics.mzviz.controllers.results.BasketController.put
+OPTIONS        /basket                                                ch.isbsib.proteomics.mzviz.controllers.results.BasketController.options
+OPTIONS        /basket/:id                                            ch.isbsib.proteomics.mzviz.controllers.results.BasketController.optionsId(id)
+GET            /basket                                                ch.isbsib.proteomics.mzviz.controllers.results.BasketController.listSearchIds
+GET            /basket/:searchId                                      ch.isbsib.proteomics.mzviz.controllers.results.BasketController.findBySearchId(searchId)
 
-GET           /docs/*file                                            controllers.Assets.at(path="/public/docs", file)
-GET           /api-docs                                              controllers.ApiHelpController.getResources
+GET            /docs/*file                                            controllers.Assets.at(path="/public/docs", file)
+GET            /api-docs                                              controllers.ApiHelpController.getResources
+
+#POST            /upload/:fileId                                       ch.isbsib.proteomics.mzviz.uploads.LoaderMQData.loadZip(resultType: Option[String])

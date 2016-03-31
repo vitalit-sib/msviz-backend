@@ -114,6 +114,27 @@ object LoaderMaxQuant {
     }.toMap
     summaryMap
   }
+  /**
+   *
+   * @param file
+   * @return Map[raw,experiment]
+   */
+  def parseMaxquantSummaryTableRawSearchId(file: File): Map[String, String] = {
+
+    val linesParam: Iterator[String] = fromFile(file).getLines()
+    //val headerParam = linesParam.take(1).next.split("\t").toList
+
+    val (mSummaryList, headerSummaryMap) = parseCommonLines(file)
+    val experimentPos: Int = headerSummaryMap("Experiment")
+    val rawPos: Int = headerSummaryMap("Raw file")
+    val summaryMap = mSummaryList.map {
+      (
+        entry => Tuple2(entry(rawPos),entry(experimentPos))
+
+        )
+    }.filterNot(_._2.isEmpty()).toMap
+    summaryMap
+  }
 
   def parseMaxquantMsMs(file: File, rawfilesRunIdMap: Map[String, RunId]): Map[Int, MsMsTableEntry] = {
 
