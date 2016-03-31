@@ -1,9 +1,9 @@
 package ch.isbsib.proteomics.mzviz.experimental.services
 
-import ch.isbsib.proteomics.mzviz.commons.{IntensityRank, Intensity, Moz, MSLevel}
+import ch.isbsib.proteomics.mzviz.commons._
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoDBService, MongoNotFoundException}
 import ch.isbsib.proteomics.mzviz.experimental.models.{SpectrumId, ExpPeakMSn, ExpMSnSpectrum, SpectrumRef}
-import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId, MSRun}
+import ch.isbsib.proteomics.mzviz.experimental.{MSRun, SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json._
@@ -14,6 +14,7 @@ import reactivemongo.api._
 import reactivemongo.api.indexes.{IndexType, Index}
 import reactivemongo.bson._
 import reactivemongo.core.commands.{LastError, RawCommand, Count}
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Future
@@ -77,6 +78,35 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
       )
     }
   }
+
+
+  /**
+   * Insert all Msn spectra from an iterator using a cetrain buffer size
+   *
+   * @param ms2Iterator
+   * @param runId
+   * @return
+   */
+  def insertMs2spectra(ms2Iterator: Iterator[ExpMSnSpectrum], runId: RunId): Future[Int] = {
+
+    // number of spectra which are parsed before inserting
+    val bufferSize = 20
+
+    // split the iterator into slices
+    val slidingIt = ms2Iterator.sliding(bufferSize, bufferSize)
+
+    var resList:ListBuffer[Future[Int]] = ListBuffer()
+
+    // loop through all slices
+    while(slidingIt.hasNext){
+      val someList = slidingIt.next()
+
+      resList += ExpMongoDBService().insert(new MSRun(runId, someList.toSeq))
+    }
+
+    Future.sequence(resList.toList).map(_.sum)
+  }
+
 
   /**
    * insert an ms run into the database.

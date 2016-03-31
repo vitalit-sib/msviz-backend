@@ -61,24 +61,13 @@ object ExperimentalController extends CommonController {
   def loadMSRun(@ApiParam(name = "runId", value = "a string id with run identifier", required = true) @PathParam("runId") runId: String) = Action.async(parse.temporaryFile) {
     request =>
 
-      // Why is the controller not stopping when it fails???
-
       Try{
-        LoaderMGF.load(request.body.file, RunId(runId))
+        val ms1Iterator = LoaderMGF.load(request.body.file, RunId(runId))
+        ExpMongoDBService().insertMs2spectra(ms1Iterator, RunId(runId))
       } match {
-        case Success(it) => {
+        case Success(insertedNr) => {
 
-          var i = 0
-
-          while(it.hasNext){
-            val msnRun= new MSRun(RunId(runId), Seq(it.next))
-            ExpMongoDBService().insert(msnRun)
-            i += 1
-          }
-
-          Future {
-            Ok(Json.obj("inserted" -> i))
-          }
+          insertedNr.map(nr => Ok(Json.obj("inserted" -> nr)))
 
         }
         case Failure(e) => Future {

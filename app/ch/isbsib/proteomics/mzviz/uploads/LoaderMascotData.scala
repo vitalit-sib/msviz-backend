@@ -66,8 +66,9 @@ class LoaderMascotData {
     val ms2Iterator = LoaderMGF.load(availableFiles.get("mgf").get, runId)
 
     for{
-      //first we insert MS1 data, because they're slow
+      //first we insert MS data, because they're slow
       resMs1Insertion <- ExpMs1BinMongoDBService().insertMs1spectra(ms1Iterator, intensityThreshold)
+      resMs2Insertion <- ExpMongoDBService().insertMs2spectra(ms2Iterator, runId)
 
       // and only last the other data
 
