@@ -26,7 +26,7 @@ class LoaderMQDataSpecs extends Specification with ScalaFutures{
           val mqZip = "test/resources/uploads/maxQuant.zip"
           val results: Future[Int] = new LoaderMQData(db).loadZip(mqZip)
 
-          results.futureValue mustEqual 66
+          results.futureValue mustEqual 2690
 
     }
   }
