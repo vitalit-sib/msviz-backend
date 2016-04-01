@@ -1,0 +1,23 @@
+BEGIN IONS
+CHARGE=2+
+PEPMASS=400.492728
+TITLE=File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 53.601 min, Period: 1, Cycle(s): 2061 (Experiment 4)
+191.986600 1.749
+282.991100 2.099
+322.950100 2.05
+399.985600 2.702
+498.930100 0.8761
+160.017500 0.9924
+END IONS
+
+BEGIN IONS
+CHARGE=2+
+PEPMASS=405.997799
+TITLE=File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 53.36 to 53.43 min, Period: 1, Cycle(s): 2060 (Experiment 3), 2059 (Experiment 4)
+178.025400 7.78
+212.976900 19.97
+390.972500 8.508
+408.992700 30.05
+583.365100 0.2153
+185.954600 4.072
+END IONS

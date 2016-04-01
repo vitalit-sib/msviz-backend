@@ -18,7 +18,6 @@ class LoaderMQDataSpecs extends Specification with ScalaFutures{
   implicit val defaultPatience =
     PatienceConfig(timeout = Span(15, Seconds), interval = Span(5000, Millis))
 
-
   "load MQ" should {
 
       """check size""" in new TempMongoDBForSpecs{

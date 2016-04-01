@@ -78,21 +78,6 @@ object SearchController extends MatchController {
     }
   }
 
-  @ApiOperation(nickname = "loadZippedResults",
-    value = "Loads multiple MzIdentMl or MaxQuant result from a ZIP file",
-    notes = """ """,
-    response = classOf[String],
-    httpMethod = "POST")
-  @ApiImplicitParams(Array(
-    new ApiImplicitParam(name = "body", value = "result file", required = true, paramType = "body")
-  ))
-  def loadZippedResults(@ApiParam(name = "resultType", value = "the source of the results (mzIdentML or maxQuant)", required = false) @PathParam("resultType") resultType: Option[String]) =
-    Action.async(parse.temporaryFile) {
-      request =>
-      Future{Ok("not implemented")}
-    }
-
-
   @ApiOperation(nickname = "loadResults",
     value = "Loads an MzIdentMl or MaxQuant result",
     notes = """ """,
