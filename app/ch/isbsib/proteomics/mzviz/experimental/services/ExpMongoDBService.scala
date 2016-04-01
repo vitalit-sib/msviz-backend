@@ -102,7 +102,7 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
     while(slidingIt.hasNext){
       val someList = slidingIt.next()
 
-      resList += ExpMongoDBService().insert(new MSRun(runId, someList.toSeq))
+      resList += this.insert(new MSRun(runId, someList.toSeq))
     }
 
     Future.sequence(resList.toList).map(_.sum)

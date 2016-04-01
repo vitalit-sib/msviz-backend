@@ -8,6 +8,9 @@ import ch.isbsib.proteomics.mzviz.experimental.importer.LoaderMzML
 import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, ExpMs1Spectrum}
 import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMongoDBService, ExpMs1BinMongoDBService}
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMaxQuant
+import play.api.mvc.Controller
+import play.modules.reactivemongo.MongoController
+import reactivemongo.api.DefaultDB
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -18,7 +21,8 @@ import scala.concurrent.Future
  * @author Roman Mylonas & Trinidad Martin
  *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
-class LoaderMQData {
+class LoaderMQData(val db: DefaultDB) {
+
   /**
    * load a zip file containing mzML and txt folder with MQ results
    *
@@ -32,27 +36,20 @@ class LoaderMQData {
     // get the list of files
     val fileList = FileFinder.getListOfFiles(unzipPath)
 
-    //get the list of subfolders
-    val folderList = FileFinder.getListOfDirs(unzipPath)
-
     //parse txt/summary to obtain check if we have all expected files
-    val txtFiles = FileFinder.getListOfFiles(folderList(0).toString)
     val summaryFile = unzipPath + "/txt/summary.txt"
     val summaryHash = LoaderMaxQuant.parseMaxquantSummaryTableRawSearchId(new File(summaryFile))
 
     //Check if all mzML files are available
     summaryHash.keys.foreach {
-      (
         key =>
           if (!fileList.contains(new File(unzipPath + "/" + key + ".mzML"))) {
             throw new RuntimeException("File" + unzipPath + "/" + key + ".mzML" + "not found")
           }
-        )
     }
 
     //Load mzML files
     val itTotalEntries=summaryHash.keys.map {
-      (
         file => {
           //Load ms1 and ms2
           val itMs1Ms2 = LoaderMzML().parse(new File(unzipPath + "/" + file + ".mzML"), RunId(summaryHash.get(file).get)).partition(_.isLeft)
@@ -62,18 +59,16 @@ class LoaderMQData {
           // calculate number of entries per each ms to check in the test
           for {
           //Load MS1
-            ms1 <- ExpMs1BinMongoDBService().insertMs1spectra(itMs1, 1)
+            ms1 <- new ExpMs1BinMongoDBService(db).insertMs1spectra(itMs1, 1)
             //Load MS2
-            ms2 <- ExpMongoDBService().insertMs2spectra(itMs2, RunId(summaryHash.get(file).get))
+            ms2 <- new ExpMongoDBService(db).insertMs2spectra(itMs2, RunId(summaryHash.get(file).get))
           }yield{
             ms1 + ms2
           }
 
-        })
+        }
     }
     Future.sequence(itTotalEntries.toList).map(_.sum)
-    //return future boolean
-    //Future(totalEntries != 0)
   }
 
 }
@@ -82,8 +77,10 @@ class LoaderMQData {
  * the companion object
  */
 
-object LoaderMQData {
+object LoaderMQData extends Controller with MongoController {
 
-  def apply() = new LoaderMQData
+  val default = new LoaderMQData(db)
+
+  def apply() = default
 
 }

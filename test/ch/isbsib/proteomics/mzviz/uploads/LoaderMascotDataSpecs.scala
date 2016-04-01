@@ -27,50 +27,28 @@ class LoaderMascotDataSpecs extends Specification with ScalaFutures {
     PatienceConfig(timeout = Span(15, Seconds), interval = Span(5000, Millis))
 
 
-//  "check required files" in {
-//
-//    val dir = new File ("test/resources/uploads/sample1")
-//
-//    val requiredFilesMap = LoaderMascotData().getRequiredFiles(Set("mzid", "mgf", "mzml"), dir)
-//
-//    requiredFilesMap.get("mzid").get.getName mustEqual ("sample1.mzid")
-//    requiredFilesMap.get("mgf").get.getName mustEqual ("sample1.mgf")
-//    requiredFilesMap.get("mzml").get.getName mustEqual ("sample1.mzML")
-//
-//  }
-//
-//
-//  "check runId from path" in {
-//
-//    val dir = new File ("test/resources/uploads/sample1")
-//
-//    val runId = LoaderMascotData().getRunIdFromPath(dir)
-//
-//    runId mustEqual("sample1")
-//
-//  }
+  "check required files" in {
 
+    val dir = new File ("test/resources/uploads/sample1")
 
-  /**
-   * extends the temp mngodatabase and add a exp service above it
-   */
-  trait TempMongoDBService extends TempMongoDBForSpecs {
-    val service = new MatchMongoDBService(db)
-  }
+    val requiredFilesMap = LoaderMascotData().getRequiredFiles(Set("mzid", "mgf", "mzml"), dir)
 
-  "hoho" should {
-
-  "test fake mongo" in new TempMongoDBService{
-
-    println("but here?")
-
-    val file_1 = new File("test/resources/mascot/M_100.mzid")
-    service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"))._1).futureValue
-    val ho = service.countRunIds.futureValue
-    println(ho)
-    ho must equalTo(3)
-  }
+    requiredFilesMap.get("mzid").get.getName mustEqual ("sample1.mzid")
+    requiredFilesMap.get("mgf").get.getName mustEqual ("sample1.mgf")
+    requiredFilesMap.get("mzml").get.getName mustEqual ("sample1.mzML")
 
   }
+
+
+  "check runId from path" in {
+
+    val dir = new File ("test/resources/uploads/sample1")
+
+    val runId = LoaderMascotData().getRunIdFromPath(dir)
+
+    runId mustEqual("sample1")
+
+  }
+
 
 }

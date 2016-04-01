@@ -18,6 +18,7 @@ import org.specs2.mutable.Specification
  * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
+
   implicit val defaultPatience =
     PatienceConfig(timeout = Span(15, Seconds), interval = Span(5000, Millis))
 

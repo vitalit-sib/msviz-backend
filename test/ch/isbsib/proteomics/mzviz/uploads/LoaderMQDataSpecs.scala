@@ -18,29 +18,15 @@ class LoaderMQDataSpecs extends Specification with ScalaFutures{
   implicit val defaultPatience =
     PatienceConfig(timeout = Span(15, Seconds), interval = Span(5000, Millis))
 
-  /**
-   * extends the temp mngodatabase and add a exp service above it
-   */
-  trait TempMongoDBService extends TempMongoDBForSpecs {
-    val service = new MatchMongoDBService(db)
-    val expService = new ExpMongoDBService(db)
-    val expMs1Service = new ExpMs1BinMongoDBService(db)
-  }
-
 
   "load MQ" should {
 
+      """check size""" in new TempMongoDBForSpecs{
 
-
-
-      """check size""" in new TempMongoDBService{
-
-        //running(FakeApplication()) {
           val mqZip = "test/resources/uploads/maxQuant.zip"
-          val results: Future[Int] = LoaderMQData().loadZip(mqZip)
+          val results: Future[Int] = new LoaderMQData(db).loadZip(mqZip)
 
           results.futureValue mustEqual 66
-      //}
 
     }
   }
