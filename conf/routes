@@ -55,4 +55,6 @@ GET            /basket/:searchId                                      ch.isbsib.
 GET            /docs/*file                                            controllers.Assets.at(path="/public/docs", file)
 GET            /api-docs                                              controllers.ApiHelpController.getResources
 
-#POST            /upload/:fileId                                       ch.isbsib.proteomics.mzviz.uploads.LoaderMQData.loadZip(resultType: Option[String])
+GET            /api-docs/uploads                                      controllers.ApiHelpController.getResource(path = "/uploads")
+POST           /uploads/:resultType                                   ch.isbsib.proteomics.mzviz.controllers.uploads.ZipDataController.loadZip(resultType: String)
+OPTIONS        /uploads/:resultType                                   ch.isbsib.proteomics.mzviz.controllers.uploads.ZipDataController.options(resultType: String)
