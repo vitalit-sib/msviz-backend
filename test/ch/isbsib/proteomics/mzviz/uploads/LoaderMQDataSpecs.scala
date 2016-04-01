@@ -1,18 +1,13 @@
-package ch.isbsib.proteomics.mzviz.experimental.importer
-
-import java.io.File
+package ch.isbsib.proteomics.mzviz.uploads
 
 import ch.isbsib.proteomics.mzviz.commons.TempMongoDBForSpecs
-import ch.isbsib.proteomics.mzviz.experimental.RunId
-import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMs1BinMongoDBService, ExpMongoDBService}
-import ch.isbsib.proteomics.mzviz.matches.services.{MatchMongoDBService, MatchesMongoDBServiceSpecs}
-import ch.isbsib.proteomics.mzviz.uploads.LoaderMQData
-import org.scalatest.time.{Millis, Seconds, Span}
-import scala.concurrent.Future
+import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMongoDBService, ExpMs1BinMongoDBService}
+import ch.isbsib.proteomics.mzviz.matches.services.MatchMongoDBService
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.time.{Millis, Seconds, Span}
 import org.specs2.mutable.Specification
-import play.api.test._
-import play.api.test.Helpers._
+
+import scala.concurrent.Future
 
 /**
  * @author Roman Mylonas & Trinidad Martin

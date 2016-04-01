@@ -166,7 +166,7 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
     val runIds:Set[RunId] = psms.map(p => RunId(p.searchId.value)).toSet
     //println(s"runIds = $runIds")
 
-    val futSpectrumRefs: Future[Seq[SpectrumRef]] = ExpMongoDBService().findAllSpectraRefByrunId(runIds)
+    val futSpectrumRefs: Future[Seq[SpectrumRef]] = new ExpMongoDBService(db).findAllSpectraRefByrunId(runIds)
 
     val futRunId2speRefDict: Future[Map[RunId, Map[SpectrumId, SpectrumRef]]] =
       futSpectrumRefs.map({ spectrumRefs =>

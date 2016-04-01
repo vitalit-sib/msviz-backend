@@ -89,6 +89,7 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
    */
   def insertMs2spectra(ms2Iterator: Iterator[ExpMSnSpectrum], runId: RunId): Future[Int] = {
 
+    // @TODO buffer size shouldnt be hardcoded
     // number of spectra which are parsed before inserting
     val bufferSize = 20
 

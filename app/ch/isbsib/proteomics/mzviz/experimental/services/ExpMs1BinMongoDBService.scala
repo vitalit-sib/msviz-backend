@@ -38,6 +38,7 @@ class ExpMs1BinMongoDBService (val db: DefaultDB) extends MongoDBService {
    */
   def insertMs1spectra(ms1Iterator: Iterator[ExpMs1Spectrum], intensityThreshold:Double): Future[Int] = {
 
+    // @TODO buffer size shouldnt be hardcoded
     // number of spectra which are parsed before inserting
     val bufferSize = 20
 
