@@ -3,13 +3,13 @@ package ch.isbsib.proteomics.mzviz.controllers.theoretical
 import javax.ws.rs.PathParam
 
 import ch.isbsib.proteomics.mzviz.controllers.CommonController
-import ch.isbsib.proteomics.mzviz.controllers.results.BasketController._
 import ch.isbsib.proteomics.mzviz.theoretical.SequenceSource
 import ch.isbsib.proteomics.mzviz.theoretical.importer.FastaParser
 import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
 import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
 import ch.isbsib.proteomics.mzviz.theoretical.services.SequenceMongoDBService
+import ch.isbsib.proteomics.mzviz.uploads.LoaderMQData
 import com.wordnik.swagger.annotations._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json._
@@ -81,7 +81,7 @@ object SequenceController extends CommonController {
     new ApiImplicitParam(name = "body", value = "fasta file", required = true, dataType = "text/plain", paramType = "body")
   ))
   def loadFasta(@ApiParam(value = """sourceId""", defaultValue = "uniprot_sprot_20231224") @PathParam("sourceId") sourceId: String,
-                 regexp:Option[String]=None) =
+                @ApiParam(value = """regexp""", defaultValue = "None") @PathParam("regexp") regexp:Option[String]=None) =
     Action.async(parse.temporaryFile) {
       request =>
         val entries = FastaParser(request.body.file, SequenceSource(sourceId), regexp).parse
@@ -90,4 +90,5 @@ object SequenceController extends CommonController {
           case e => BadRequest(Json.toJson(e))
         }
     }
+
 }

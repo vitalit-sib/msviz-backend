@@ -3,15 +3,12 @@ package ch.isbsib.proteomics.mzviz.controllers.uploads
 import javax.ws.rs.PathParam
 
 import ch.isbsib.proteomics.mzviz.controllers.CommonController
-import ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController._
 import ch.isbsib.proteomics.mzviz.uploads.LoaderMQData
 import com.wordnik.swagger.annotations._
 import play.api.libs.json.Json
 import play.api.mvc.Action
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
-
-import scala.concurrent.Future
 
 /**
  * @author Roman Mylonas & Trinidad Martin
@@ -28,7 +25,9 @@ object ZipDataController extends CommonController {
     httpMethod = "OPTIONS")
   def options(@ApiParam(value = """resultType""") @PathParam("resultType") resultType: String) =
     Action {
-      Ok("Okay")
+      Ok("Okay").withHeaders(
+        ACCESS_CONTROL_ALLOW_HEADERS ->  s"$ORIGIN, X-Requested-With, $CONTENT_TYPE, $ACCEPT, $AUTHORIZATION, X-Auth-Token"
+      )
     }
 
   @ApiOperation(nickname = "loadZip",
@@ -42,8 +41,8 @@ object ZipDataController extends CommonController {
   def loadZip(@ApiParam(value = """resultType""", defaultValue = "maxquant") @PathParam("resultType") resultType: String) =
     Action.async(parse.temporaryFile) {
       request =>
-        print(request.body.file)
-        val entries = LoaderMQData.apply.loadZip((request.body.file).toString)
+        println(request.body.file)
+        val entries = LoaderMQData().loadZip(request.body.file.getAbsolutePath)
         entries.map { n => Ok(Json.obj("inserted" -> n))
         }.recover {
           case e => BadRequest(Json.toJson(e))
