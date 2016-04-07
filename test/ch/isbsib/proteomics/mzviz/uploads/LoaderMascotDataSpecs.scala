@@ -85,6 +85,25 @@ class LoaderMascotDataSpecs extends Specification with ScalaFutures {
 
     }
 
+    "load zip" in new TempMongoDBService{
+
+      val zipFile = "test/resources/uploads/mascot_test.zip"
+      val results: Future[Int] = loaderService.loadZip(zipFile, 1)
+
+      results.futureValue mustEqual(2792)
+
+      // check ms1
+      val ms1List = exp1Service.findMs1EntryWithMozTol(RunId("sample1"), Moz(519.14), 0.3).futureValue
+      ms1List.size mustEqual(148)
+
+      val ms2List = exp2Service.findAllSpectraRefByrunId(Set(RunId("sample1"), RunId("sample2"))).futureValue
+      ms2List.size mustEqual(4)
+
+      val matchList = matchService.findAllSpectrumIdBySearchId(SearchId("sample1")).futureValue
+      matchList.size mustEqual(62)
+
+    }
+
   }
 
 
