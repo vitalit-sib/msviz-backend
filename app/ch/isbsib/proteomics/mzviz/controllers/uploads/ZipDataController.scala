@@ -3,7 +3,7 @@ package ch.isbsib.proteomics.mzviz.controllers.uploads
 import javax.ws.rs.PathParam
 
 import ch.isbsib.proteomics.mzviz.controllers.CommonController
-import ch.isbsib.proteomics.mzviz.uploads.LoaderMQData
+import ch.isbsib.proteomics.mzviz.uploads.{LoaderMascotData, LoaderMQData}
 import com.wordnik.swagger.annotations._
 import play.api.libs.json.Json
 import play.api.mvc.Action
@@ -41,8 +41,13 @@ object ZipDataController extends CommonController {
   def loadZip(@ApiParam(value = """resultType""", defaultValue = "maxquant") @PathParam("resultType") resultType: String) =
     Action.async(parse.temporaryFile) {
       request =>
-        println(request.body.file)
-        val entries = LoaderMQData().loadZip(request.body.file.getAbsolutePath)
+        val intensityThreshold = 1
+
+        val entries = if(resultType == "maxquant")
+                        LoaderMQData().loadZip(request.body.file.getAbsolutePath)
+                      else
+                        LoaderMascotData().loadZip(request.body.file.getAbsolutePath, intensityThreshold)
+
         entries.map { n => Ok(Json.obj("inserted" -> n))
         }.recover {
           case e => BadRequest(Json.toJson(e))
