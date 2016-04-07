@@ -75,7 +75,7 @@ object LoaderMaxQuant {
   }
 
   def parseFastaFilename(fastaFilename:String): String = {
-    val fastaFileNameRegx = """.+\\(.+).fasta""".r
+    val fastaFileNameRegx = """.+\\(.+)""".r
     val fileNameRegx = """.+\\(.+)""".r
 
     fastaFilename match {
@@ -166,7 +166,7 @@ object LoaderMaxQuant {
     msmsEntryScores
   }
 
-  def loadProtIdent(maxQuantDir: String, runIdsAndRawfiles: Seq[(RunId, String)], sequenceSource:SequenceSource, idTitle:String): Map[RunId, Seq[ProteinIdent]] = {
+  def loadProtIdent(maxQuantDir: String, runIdsAndRawfiles: Seq[(RunId, String)], sequenceSource:SequenceSource, idTitle:Option[String]): Map[RunId, Seq[ProteinIdent]] = {
 
     // load files
     val file_prot = new File(maxQuantDir + filename_prot)
@@ -195,7 +195,8 @@ object LoaderMaxQuant {
 
         val protInfo = ProteinIdentInfo(AccessionCode(ac), sequenceSource, identScore, entry.uniquePeptides(runId), entry.msCount(runId), true)
 
-        Tuple2(runId, ProteinIdent(SearchId(idTitle + ":" + runId.value), protInfo, subset))
+        val searchId = if(idTitle.isDefined) idTitle.get + ":" + runId.value else runId.value
+        Tuple2(runId, ProteinIdent(SearchId(searchId), protInfo, subset))
       })
     })
 
@@ -341,7 +342,7 @@ object LoaderMaxQuant {
     peptidesMap
   }
 
-  def loadPepSpectraMatch(maxQuantDir: String, runIds: Seq[RunId], sequenceSource:SequenceSource, idTitle:String): Map[RunId, Seq[PepSpectraMatch]] = {
+  def loadPepSpectraMatch(maxQuantDir: String, runIds: Seq[RunId], sequenceSource:SequenceSource, idTitle:Option[String]): Map[RunId, Seq[PepSpectraMatch]] = {
     //load files
     val file_evidence = new File(maxQuantDir + filename_evidence)
     val file_peptides = new File(maxQuantDir + filename_peptides)
@@ -365,7 +366,8 @@ object LoaderMaxQuant {
 
       val proteinList = Seq(ProteinMatch(leadingProteinRef, pepEntry.previousAA, pepEntry.nextAA, pepEntry.startPos, pepEntry.endPos, pepEntry.isDecoy))
 
-      Tuple2(RunId(entry.experiment), PepSpectraMatch(SearchId(idTitle + ":" + entry.experiment), spectrumId, pep, matchInfo, proteinList))
+      val searchId = if(idTitle.isDefined) idTitle.get + ":" + entry.experiment else entry.experiment
+      Tuple2(RunId(entry.experiment), PepSpectraMatch(SearchId(searchId), spectrumId, pep, matchInfo, proteinList))
     })
 
     // Group the list by RunId to create a Map[RunId, List[RunId,PepSpectraMatch]] and then mapValues to create Map[RunId,List[PepSpectraMatch]]
@@ -377,7 +379,7 @@ object LoaderMaxQuant {
    * @param maxQuantDir
    * @return
    */
-  def parseSearchInfo(maxQuantDir: String, sequenceSource:SequenceSource, idTitle: String): Map[RunId, SearchInfo] = {
+  def parseSearchInfo(maxQuantDir: String, sequenceSource:SequenceSource, idTitle: Option[String]): Map[RunId, SearchInfo] = {
 
     // load files
     val file_params = new File(maxQuantDir + filename_params)
@@ -392,9 +394,11 @@ object LoaderMaxQuant {
 
     val searchInfoHashAux: Map[RunId, SearchInfo] = summaryHash.map({
       val nowDate = Some(Calendar.getInstance().getTime())
-      keyVal => Tuple2(
+      keyVal =>
+        val searchId = if(idTitle.isDefined) idTitle.get + ":" + keyVal._1 else keyVal._1
+        Tuple2(
         RunId(keyVal._1),
-        SearchInfo(searchId=SearchId(idTitle + ":" + keyVal._1),
+        SearchInfo(searchId=SearchId(searchId),
           title=keyVal._1, Seq(SearchDatabase(sequenceSource.value, None, None)),
           username=username,
           enzyme=keyVal._2,
@@ -408,7 +412,7 @@ object LoaderMaxQuant {
   }
 
 
-  def parse(maxQuantDir: String, idTitle: String): Seq[(Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo)] = {
+  def parse(maxQuantDir: String, idTitle: Option[String]): Seq[(Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo)] = {
 
     val file_params = new File(maxQuantDir + filename_params)
 
@@ -431,7 +435,7 @@ object LoaderMaxQuant {
   }
 
 
-  def parseZip(maxQuantZip: File, idTitle: String): Seq[(Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo)] = {
+  def parseZip(maxQuantZip: File, idTitle: Option[String]): Seq[(Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo)] = {
     val tmpDir = Unzip.unzip(maxQuantZip)
 
     val dirsInTmpDir = FileFinder.getListOfDirs(tmpDir)

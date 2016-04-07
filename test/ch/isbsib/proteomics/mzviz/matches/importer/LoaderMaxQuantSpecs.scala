@@ -88,7 +88,7 @@ class LoaderMaxQuantSpecs extends Specification {
 
   "load ProteinIdents" in {
 
-    val proteinIdMap:Map[RunId,Seq[ProteinIdent]] = LoaderMaxQuant.loadProtIdent("test/resources/maxquant/", runIdsAndRawfiles, SequenceSource("SomeSource"), "hoho")
+    val proteinIdMap:Map[RunId,Seq[ProteinIdent]] = LoaderMaxQuant.loadProtIdent("test/resources/maxquant/", runIdsAndRawfiles, SequenceSource("SomeSource"), Some("hoho"))
 
     // should have 2 runIds
     proteinIdMap.keys.size mustEqual(2)
@@ -142,7 +142,7 @@ class LoaderMaxQuantSpecs extends Specification {
 
   "load PepSpectraMatch" in {
 
-    val pepSpectraMap:Map[RunId,Seq[PepSpectraMatch]] = LoaderMaxQuant.loadPepSpectraMatch("test/resources/maxquant/",runIds, SequenceSource("SomeSource"), "hoho")
+    val pepSpectraMap:Map[RunId,Seq[PepSpectraMatch]] = LoaderMaxQuant.loadPepSpectraMatch("test/resources/maxquant/",runIds, SequenceSource("SomeSource"), Some("hoho"))
 
     // should have 2 runIds
     pepSpectraMap.keys.size mustEqual(2)
@@ -183,7 +183,7 @@ class LoaderMaxQuantSpecs extends Specification {
   }
 
   "parse Search Info" in {
-    val searchInfoMap= LoaderMaxQuant.parseSearchInfo("test/resources/maxquant/", SequenceSource("SomeSource"), "hoho")
+    val searchInfoMap= LoaderMaxQuant.parseSearchInfo("test/resources/maxquant/", SequenceSource("SomeSource"), Some("hoho"))
 
     // should have 2 runIds
     searchInfoMap.keys.size mustEqual(2)
@@ -201,7 +201,7 @@ class LoaderMaxQuantSpecs extends Specification {
   }
 
   "parse" in {
-    val parseMaxQuant= LoaderMaxQuant.parse("test/resources/maxquant/", "hoho")
+    val parseMaxQuant= LoaderMaxQuant.parse("test/resources/maxquant/", Some("hoho"))
 
     parseMaxQuant.size mustEqual(2)
 
@@ -214,6 +214,23 @@ class LoaderMaxQuantSpecs extends Specification {
     list2._1(0).pep.sequence mustEqual("AAAAAEQQQFYLLLGNLLSPDNVVR")
     list2._1(0).pep.modificationNames mustEqual(Vector(Seq(ModifName("Acetyl")),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),
     Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq()))
+
+  }
+
+  "parse with None title" in {
+    val parseMaxQuant= LoaderMaxQuant.parse("test/resources/maxquant/", None)
+
+    parseMaxQuant.size mustEqual(2)
+
+    val list1=parseMaxQuant(0)
+    val list2=parseMaxQuant(1)
+
+    list1._1(0).pep.sequence mustEqual("AAQAPTPGLLQSPR")
+    list2._2(0).mainProt.proteinAC.value mustEqual("A0A0C4DH35")
+    list2._1(1).matchInfo.score.mainScore mustEqual(78.456)
+    list2._1(0).pep.sequence mustEqual("AAAAAEQQQFYLLLGNLLSPDNVVR")
+    list2._1(0).pep.modificationNames mustEqual(Vector(Seq(ModifName("Acetyl")),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),
+      Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq()))
 
   }
 

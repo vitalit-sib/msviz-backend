@@ -8,6 +8,7 @@ import ch.isbsib.proteomics.mzviz.experimental.importer.LoaderMzML
 import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, ExpMs1Spectrum}
 import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMongoDBService, ExpMs1BinMongoDBService}
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMaxQuant
+import ch.isbsib.proteomics.mzviz.matches.services.{SearchInfoDBService, ProteinMatchMongoDBService, MatchMongoDBService}
 import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
 import reactivemongo.api.DefaultDB
@@ -32,7 +33,6 @@ class LoaderMQData(val db: DefaultDB) {
   def loadZip(zipPath: String): Future[Int] = {
     // unzip the file
     val unzipPath = Unzip.unzip(new File(zipPath))
-
     // get the list of files
     val fileList = FileFinder.getListOfFiles(unzipPath)
 
@@ -51,19 +51,33 @@ class LoaderMQData(val db: DefaultDB) {
     //Load mzML files
     val itTotalEntries=summaryHash.keys.map {
         file => {
+          println("weeeeee backend")
+          println(file)
           //Load ms1 and ms2
           val itMs1Ms2 = LoaderMzML().parse(new File(unzipPath + "/" + file + ".mzML"), RunId(summaryHash.get(file).get)).partition(_.isLeft)
           val itMs1: Iterator[ExpMs1Spectrum] = itMs1Ms2._1.map(_.left.get)
           val itMs2: Iterator[ExpMSnSpectrum] = itMs1Ms2._2.map(_.right.get)
+          //Load maxQuant results
+          val maxqResults= LoaderMaxQuant.parse(unzipPath.toString + "/txt/",None)
+
+          maxqResults.foreach({ psmAndProteinList =>
+            new MatchMongoDBService(db).insert(psmAndProteinList._1)
+            new ProteinMatchMongoDBService(db).insert(psmAndProteinList._2)
+            new SearchInfoDBService(db).insert(psmAndProteinList._3)
+          })
 
           // calculate number of entries per each ms to check in the test
           for {
+
           //Load MS1
             ms1 <- new ExpMs1BinMongoDBService(db).insertMs1spectra(itMs1, 1)
             //Load MS2
             ms2 <- new ExpMongoDBService(db).insertMs2spectra(itMs2, RunId(summaryHash.get(file).get))
           }yield{
+            println("inserting")
+            println(ms1)
             ms1 + ms2
+
           }
 
         }
