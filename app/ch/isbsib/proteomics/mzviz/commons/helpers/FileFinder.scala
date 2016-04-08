@@ -36,4 +36,19 @@ object FileFinder {
     }
   }
 
+  /**
+   * recursively look for the right directory to start from
+   * @param baseDir
+   * @return
+   */
+  def getHighestDir(baseDir: String):String = {
+    val innerDirs = FileFinder.getListOfDirs(baseDir)
+    if(innerDirs.size == 0) return baseDir
+
+    // it's enough to look at the first directory if there are several
+    val innerInnerDirs = FileFinder.getListOfDirs(innerDirs(0).getAbsolutePath)
+    if(innerInnerDirs.size == 0) return baseDir
+    else getHighestDir(innerDirs(0).getAbsolutePath)
+  }
+
 }
