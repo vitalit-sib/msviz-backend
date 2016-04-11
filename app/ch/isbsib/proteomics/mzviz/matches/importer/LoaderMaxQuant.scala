@@ -97,19 +97,19 @@ object LoaderMaxQuant {
   /**
    *
    * @param file
-   * @return Map[experiment,enzyme]
+   * @return Map[experiment,(enzyme, raw file)]
    */
-  def parseMaxquantSummaryTable(file: File): Map[String, String] = {
-
-    val linesParam: Iterator[String] = fromFile(file).getLines()
-    //val headerParam = linesParam.take(1).next.split("\t").toList
+  def parseMaxquantSummaryTable(file: File): Map[String, (String, String)] = {
 
     val (mSummaryList, headerSummaryMap) = parseCommonLines(file)
+
     val experimentPos: Int = headerSummaryMap("Experiment")
     val enzymePos: Int = headerSummaryMap("Enzyme")
+    val rawFilePos: Int = headerSummaryMap("Raw file")
+
     val summaryMap = mSummaryList.map {
       (
-        entry => Tuple2(entry(experimentPos), entry(enzymePos))
+        entry => Tuple2(entry(experimentPos), (entry(enzymePos), entry(rawFilePos)))
         )
     }.toMap
     summaryMap
@@ -386,7 +386,7 @@ object LoaderMaxQuant {
     val file_summary = new File(maxQuantDir + filename_summary)
 
     val paramsHash = parseMaxquantParametersTable(file_params)
-    val summaryHash: Map[String, String] = parseMaxquantSummaryTable(file_summary)
+    val summaryHash: Map[String, (String, String)] = parseMaxquantSummaryTable(file_summary)
 
     val username = paramsHash("User name")
     val parentTolerance = None
@@ -399,9 +399,10 @@ object LoaderMaxQuant {
         Tuple2(
         RunId(keyVal._1),
         SearchInfo(searchId=SearchId(searchId),
-          title=keyVal._1, Seq(SearchDatabase(sequenceSource.value, None, None)),
+          title=keyVal._2._2,
+          database=Seq(SearchDatabase(sequenceSource.value, None, None)),
           username=username,
-          enzyme=keyVal._2,
+          enzyme=keyVal._2._1,
           parentTolerance=parentTolerance,
           fragmentTolerance=fragmentTolerance,
           creationDate=nowDate)

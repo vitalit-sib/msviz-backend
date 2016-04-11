@@ -189,7 +189,7 @@ class LoaderMaxQuantSpecs extends Specification {
     searchInfoMap.keys.size mustEqual(2)
 
     val firstEntry=searchInfoMap(RunId("DMSO"))
-    firstEntry.title mustEqual("DMSO")
+    firstEntry.title mustEqual("20150318_Petricevic_7371A")
     firstEntry.enzyme mustEqual("Trypsin/P")
     firstEntry.fragmentTolerance mustEqual("20 ppm")
     firstEntry.parentTolerance mustEqual(None)

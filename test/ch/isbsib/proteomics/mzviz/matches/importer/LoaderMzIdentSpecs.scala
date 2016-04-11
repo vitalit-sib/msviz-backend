@@ -57,7 +57,7 @@ class LoaderMzIdentSpecs extends Specification {
 
     "parse M_100" should {
       running(FakeApplication()) {
-        val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/M_100.mzid"), SearchId("M_100"), RunId("M_100.mgf"))
+        val psmAndProtLists: (Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo) = LoaderMzIdent.parse(new File("test/resources/mascot/M_100.mzid"), SearchId("M_100"), RunId("M_100.mgf"))
         val psm = psmAndProtLists._1
         val prots = psmAndProtLists._2
 

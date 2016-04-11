@@ -32,7 +32,7 @@ import scala.xml.Elem
 object LoaderMzIdent {
 
 
-  def parse(file: File, searchId: SearchId, runId: RunId): Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = {
+  def parseWithXmlElem(file: File, searchId: SearchId, runId: RunId, mzidXml: Elem): Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = {
 
     // we try to take the unimod information from Play application if it is started
     if(play.api.Play.maybeApplication.isDefined) {
@@ -52,9 +52,6 @@ object LoaderMzIdent {
       }
     }
 
-    // load MzIdentML as scala xml elem
-    val mzidXml = scala.xml.XML.loadFile(file)
-
     // get the info about the SearchDatabases
     val searchDbSourceInfo = parseSearchDbSourceInfo(mzidXml)
 
@@ -64,6 +61,22 @@ object LoaderMzIdent {
     val searchInfo = parseSearchInfo(mzidXml, searchId)
 
     Tuple3(psmList, proteinList, searchInfo)
+
+  }
+
+  /**
+   * parse the mzIdentML file
+   *
+   * @param file
+   * @param searchId
+   * @param runId
+   * @return
+   */
+  def parse(file: File, searchId: SearchId, runId: RunId): Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = {
+    // load MzIdentML as scala xml elem
+    val mzidXml = scala.xml.XML.loadFile(file)
+
+    this.parseWithXmlElem(file, searchId, runId, mzidXml)
   }
 
 
@@ -111,12 +124,12 @@ object LoaderMzIdent {
   def parseSearchInfo(mzidXml: Elem, searchId: SearchId): SearchInfo = {
 
     // get the info about the SearchDatabases
-    val title =parseTitleFilename(mzidXml)
-    val database= parseSearchDbSourceInfo(mzidXml)
-    val username=parseUsernameFilename(mzidXml)
-    val enzyme=parseEnzymeFilename(mzidXml)
-    val parentTolerance=Option(parseParentToleranceFilename(mzidXml))
-    val fragmentTolerance=parseFragmentToleranceFilename(mzidXml)
+    val title = parseTitleFilename(mzidXml)
+    val database = parseSearchDbSourceInfo(mzidXml)
+    val username = parseUsernameFilename(mzidXml)
+    val enzyme = parseEnzymeFilename(mzidXml)
+    val parentTolerance = Option(parseParentToleranceFilename(mzidXml))
+    val fragmentTolerance = parseFragmentToleranceFilename(mzidXml)
     val nowDate = Some(Calendar.getInstance().getTime())
 
     SearchInfo(searchId,title,database,username, enzyme,parentTolerance,fragmentTolerance,nowDate)
