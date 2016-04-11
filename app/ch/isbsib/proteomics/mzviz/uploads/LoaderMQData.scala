@@ -57,6 +57,7 @@ class LoaderMQData(val db: DefaultDB) {
           val itMs1Ms2 = LoaderMzML().parse(new File(unzipPath + "/" + file + ".mzML"), RunId(summaryHash.get(file).get)).partition(_.isLeft)
           val itMs1: Iterator[ExpMs1Spectrum] = itMs1Ms2._1.map(_.left.get)
           val itMs2: Iterator[ExpMSnSpectrum] = itMs1Ms2._2.map(_.right.get)
+
           //Load maxQuant results
           val maxqResults= LoaderMaxQuant.parse(unzipPath.toString + "/txt/",None)
 

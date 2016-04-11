@@ -146,7 +146,7 @@ class MzMLIterator(mzMLObjectIterator: MzMLObjectIterator[Nothing], runId: RunId
     // parse info from scanList
     if(sp.getScanList.getCount != 1) throw new IllegalStateException("None or more than one scan found: Don't know how to handle that")
     val scanListCvParams = sp.getScanList.getScan.get(0).getCvParam.asScala.toSeq
-    val precRt: RetentionTime = RetentionTime(parseCvEntry(scanListCvParams, "MS:1000016").get.toDouble)
+    val precRt: RetentionTime = RetentionTime(parseCvEntry(scanListCvParams, "MS:1000016").get.toDouble.toDouble * 60)
 
     // parse precursor info
     if(sp.getPrecursorList.getCount != 1) throw new IllegalStateException("None or more than one precursor found: Don't know how to handle that")

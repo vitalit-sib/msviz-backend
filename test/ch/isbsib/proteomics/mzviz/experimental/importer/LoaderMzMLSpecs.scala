@@ -42,7 +42,7 @@ import org.specs2.mutable.Specification
       sp.ref.precursor.charge.value mustEqual(3)
       sp.ref.precursor.intensity.value mustEqual(9.612146875e05)
       sp.ref.precursor.moz.value mustEqual(738.696250136775)
-      sp.ref.precursor.retentionTime.value mustEqual(35.157922)
+      sp.ref.precursor.retentionTime.value mustEqual(2109.47532)
       sp.ref.precursor.scanNumber.get.value mustEqual(6377)
 
       // check peaks
