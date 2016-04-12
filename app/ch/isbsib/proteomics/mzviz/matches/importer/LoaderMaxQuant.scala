@@ -78,11 +78,23 @@ object LoaderMaxQuant {
     val fastaFileNameRegx = """.+\\(.+)""".r
     val fileNameRegx = """.+\\(.+)""".r
 
+    //Prepared for several sources
+    val fastaFilesArray= fastaFilename.split(";")
+    /*
     fastaFilename match {
       case fastaFileNameRegx(n) => n
       case fileNameRegx(n) => n
       case _ => fastaFilename
-    }
+    }*/
+
+    // Create a new String separated by ";" with the source names
+    fastaFilesArray.map{(
+      file => file  match {
+        case fastaFileNameRegx(n) => n
+        case fileNameRegx(n) => n
+        case _ => fastaFilename
+      }
+      )}.mkString(";")
   }
 
   def parseMaxquantParametersTable(file: File): Map[String, String] = {

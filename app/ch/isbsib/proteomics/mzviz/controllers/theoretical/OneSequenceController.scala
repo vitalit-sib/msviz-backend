@@ -34,7 +34,7 @@ object OneSequenceController extends CommonController {
            ) =
     Action.async(parse.temporaryFile) {
       request =>
-        SequenceMongoDBService().findEntryByIdentifierAndSource(ProteinIdentifier(identifier), SequenceSource(sourceId))
+        SequenceMongoDBService().findEntryByIdentifierAndSources(ProteinIdentifier(identifier), SequenceSource(sourceId))
           .map { e =>
           Ok(Json.toJson(e))
         }.recover {

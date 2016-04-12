@@ -107,7 +107,7 @@ class FastaMongoDBServiceSpecs extends Specification with ScalaFutures {
     "find one entry" in new TempMongoDBService {
 
       val f1 = service.insert(FastaParser("test/resources/sequences/M_100small.fasta", SequenceSource("small-1"), None).parse).futureValue
-      val entry = service.findEntryByIdentifierAndSource(ProteinIdentifier("P04899"),SequenceSource("small-1")).futureValue
+      val entry = service.findEntryByIdentifierAndSources(ProteinIdentifier("P04899"),SequenceSource("small-1")).futureValue
       Thread.sleep(200)
       entry.proteinRef.AC must equalTo(AccessionCode("P04899"))
       entry.proteinRef.identifiers must equalTo(Set(ProteinIdentifier("P04899"), ProteinIdentifier("GNAI2_HUMAN")))
@@ -119,7 +119,7 @@ class FastaMongoDBServiceSpecs extends Specification with ScalaFutures {
     "find one entry" in new TempMongoDBService {
 
       val f1 = service.insert(FastaParser("test/resources/sequences/M_100small.fasta", SequenceSource("small-1"), None).parse).futureValue
-      val entry = service.findEntryByIdentifierAndSource(ProteinIdentifier("GNAI2_HUMAN"),SequenceSource("small-1")).futureValue
+      val entry = service.findEntryByIdentifierAndSources(ProteinIdentifier("GNAI2_HUMAN"),SequenceSource("small-1")).futureValue
       Thread.sleep(200)
       entry.proteinRef.AC must equalTo(AccessionCode("P04899"))
       entry.proteinRef.identifiers must equalTo(Set(ProteinIdentifier("P04899"), ProteinIdentifier("GNAI2_HUMAN")))
