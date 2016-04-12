@@ -39,7 +39,8 @@ class LoaderMascotData(val db: DefaultDB) {
   def loadZip(zipPath: String, intensityThreshold: Double): Future[Int] = {
 
     val unzipPath = Unzip.unzip(new File(zipPath))
-    loadUnzipped(unzipPath, intensityThreshold)
+
+    loadUnzipped(FileFinder.getHighestDir(unzipPath), intensityThreshold)
   }
 
 

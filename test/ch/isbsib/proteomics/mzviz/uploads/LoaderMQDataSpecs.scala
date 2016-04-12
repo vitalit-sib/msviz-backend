@@ -33,7 +33,7 @@ class LoaderMQDataSpecs extends Specification with ScalaFutures{
       """check size""" in new TempMongoDBService{
 
           val mqZip = "test/resources/uploads/maxQuant.zip"
-          val results: Future[Int] = loaderService.loadZip(mqZip)
+          val results: Future[Int] = loaderService.loadZip(mqZip, 1)
 
           results.futureValue mustEqual 2690
 

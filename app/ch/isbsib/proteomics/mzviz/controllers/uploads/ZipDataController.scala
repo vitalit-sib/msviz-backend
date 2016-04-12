@@ -41,10 +41,10 @@ object ZipDataController extends CommonController {
   def loadZip(@ApiParam(value = """resultType""", defaultValue = "maxquant") @PathParam("resultType") resultType: String) =
     Action.async(parse.temporaryFile) {
       request =>
-        val intensityThreshold = 1
+        val intensityThreshold = 30000
 
         val entries = if(resultType == "maxquant")
-                        LoaderMQData().loadZip(request.body.file.getAbsolutePath)
+                        LoaderMQData().loadZip(request.body.file.getAbsolutePath, intensityThreshold)
                       else
                         LoaderMascotData().loadZip(request.body.file.getAbsolutePath, intensityThreshold)
 

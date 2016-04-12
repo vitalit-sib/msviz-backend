@@ -30,9 +30,11 @@ class LoaderMQData(val db: DefaultDB) {
    * @param zipPath
    * @return
    */
-  def loadZip(zipPath: String): Future[Int] = {
+  def loadZip(zipPath: String, intensityThreshold:Double): Future[Int] = {
     // unzip the file
-    val unzipPath = Unzip.unzip(new File(zipPath))
+    val unzipPath = FileFinder.getHighestDir(Unzip.unzip(new File(zipPath)))
+
+
     // get the list of files
     val fileList = FileFinder.getListOfFiles(unzipPath)
 
@@ -55,6 +57,7 @@ class LoaderMQData(val db: DefaultDB) {
           val itMs1Ms2 = LoaderMzML().parse(new File(unzipPath + "/" + file + ".mzML"), RunId(summaryHash.get(file).get)).partition(_.isLeft)
           val itMs1: Iterator[ExpMs1Spectrum] = itMs1Ms2._1.map(_.left.get)
           val itMs2: Iterator[ExpMSnSpectrum] = itMs1Ms2._2.map(_.right.get)
+
           //Load maxQuant results
           val maxqResults= LoaderMaxQuant.parse(unzipPath.toString + "/txt/",None)
 
@@ -68,7 +71,7 @@ class LoaderMQData(val db: DefaultDB) {
           for {
 
           //Load MS1
-            ms1 <- new ExpMs1BinMongoDBService(db).insertMs1spectra(itMs1, 1)
+            ms1 <- new ExpMs1BinMongoDBService(db).insertMs1spectra(itMs1, intensityThreshold)
             //Load MS2
             ms2 <- new ExpMongoDBService(db).insertMs2spectra(itMs2, RunId(summaryHash.get(file).get))
           }yield{
