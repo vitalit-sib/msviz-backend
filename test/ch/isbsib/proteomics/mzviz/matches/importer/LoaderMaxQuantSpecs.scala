@@ -57,6 +57,13 @@ class LoaderMaxQuantSpecs extends Specification {
     source mustEqual("C:\\MaxQuant 1.5.3.30\\UniProt-fasta\\Homo_sapiens_091215\\UP000005640_9606.fasta")
   }
 
+  "parse title 2 sources" in {
+    val source= LoaderMaxQuant.parseMaxquantParametersTable(new File("test/resources/maxquant/parameters2Sources.txt"))("Fasta file")
+    val title = LoaderMaxQuant.parseFastaFilename(source)
+
+    title mustEqual("hiv_proteins.fasta;HUMAN.fasta")
+  }
+
   "parse msms" in {
 
     val msmsHash=LoaderMaxQuant.parseMaxquantMsMs(new File("test/resources/maxquant/msms.txt"), rawfilesRunIdMap)

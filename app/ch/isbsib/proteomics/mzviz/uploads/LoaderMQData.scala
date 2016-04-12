@@ -51,8 +51,6 @@ class LoaderMQData(val db: DefaultDB) {
     //Load mzML files
     val itTotalEntries=summaryHash.keys.map {
         file => {
-          println("weeeeee backend")
-          println(file)
           //Load ms1 and ms2
           val itMs1Ms2 = LoaderMzML().parse(new File(unzipPath + "/" + file + ".mzML"), RunId(summaryHash.get(file).get)).partition(_.isLeft)
           val itMs1: Iterator[ExpMs1Spectrum] = itMs1Ms2._1.map(_.left.get)
@@ -74,8 +72,6 @@ class LoaderMQData(val db: DefaultDB) {
             //Load MS2
             ms2 <- new ExpMongoDBService(db).insertMs2spectra(itMs2, RunId(summaryHash.get(file).get))
           }yield{
-            println("inserting")
-            println(ms1)
             ms1 + ms2
 
           }
