@@ -44,8 +44,11 @@ object FileFinder {
   def getHighestDir(baseDir: String):String = {
     val innerDirs = FileFinder.getListOfDirs(baseDir)
     if(innerDirs.size == 0) return baseDir
-    // we're just looking at the first directory
-    else getHighestDir(innerDirs(0).getAbsolutePath)
+    // we're just looking at the first directory, but ignoring the __MACOSX folder
+    else {
+      val nextDir = if(innerDirs(0).getName == "__MACOSX") innerDirs(1) else innerDirs(0)
+      getHighestDir(nextDir.getAbsolutePath)
+    }
   }
 
 }
