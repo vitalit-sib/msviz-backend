@@ -89,11 +89,9 @@ object LoaderMaxQuant {
 
     // Create a new String separated by ";" with the source names
     fastaFilesArray.map{(
-      file => file  match {
-        case fastaFileNameRegx(n) => n
-        case fileNameRegx(n) => n
-        case _ => fastaFilename
-      }
+      file => {
+        val a=file.split("\\\\") //(file.length - 1)
+        a(a.length - 1)}
       )}.mkString(";")
   }
 

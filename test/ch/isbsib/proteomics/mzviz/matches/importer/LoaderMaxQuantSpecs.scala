@@ -62,6 +62,11 @@ class LoaderMaxQuantSpecs extends Specification {
     val title = LoaderMaxQuant.parseFastaFilename(source)
 
     title mustEqual("hiv_proteins.fasta;HUMAN.fasta")
+
+    val source2= LoaderMaxQuant.parseMaxquantParametersTable(new File("/Users/tmartinc/Documents/msViz/maxQuant/txt/parameters.txt"))("Fasta file")
+    val title2 = LoaderMaxQuant.parseFastaFilename(source2)
+
+    title2 mustEqual("UP000005640_9606.fasta;PetricevicOneEntry.fasta")
   }
 
   "parse msms" in {
@@ -209,6 +214,7 @@ class LoaderMaxQuantSpecs extends Specification {
 
   "parse" in {
     val parseMaxQuant= LoaderMaxQuant.parse("test/resources/maxquant/", Some("hoho"))
+    val parseMQ=LoaderMaxQuant.parse("/Users/tmartinc/Documents/msViz/maxQuant/txt/", Some("wewe"))
 
     parseMaxQuant.size mustEqual(2)
 
@@ -222,6 +228,10 @@ class LoaderMaxQuantSpecs extends Specification {
     list2._1(0).pep.modificationNames mustEqual(Vector(Seq(ModifName("Acetyl")),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),
     Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq()))
 
+    //with 2 sources
+    parseMQ.size mustEqual(2)
+    val list=parseMQ(0)
+    list._2(0).mainProt.source.toString mustEqual("UP000005640_9606.fasta;PetricevicOneEntry.fasta")
   }
 
   "parse with None title" in {
