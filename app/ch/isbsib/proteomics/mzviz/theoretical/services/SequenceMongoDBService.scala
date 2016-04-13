@@ -85,10 +85,10 @@ class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
   /**
    *
    * @param id any entry indetifier
-   * @param source data source
+   * @param sources data sources
    * @return
    */
-  def findEntryByIdentifierAndSource(id: ProteinIdentifier, source: SequenceSource): Future[FastaEntry] = {
+  def findEntryByIdentifierAndSources(id: ProteinIdentifier, sources: SequenceSource): Future[FastaEntry] = {
     //Prepare query for multiple sources
     val sourcesArray=sources.toString.split(";")
     

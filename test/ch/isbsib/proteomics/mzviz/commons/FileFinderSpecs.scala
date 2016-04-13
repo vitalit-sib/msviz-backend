@@ -18,18 +18,26 @@ class FileFinderSpecs extends Specification {
 
     val files = FileFinder.getListOfDirs(dir)
 
+    files.length mustEqual(1)
+
+  }
+
+  "list files" in {
+
+    val dir = "test/resources/uploads"
+
+    val files = FileFinder.getListOfFiles(dir)
+
     files.length mustEqual(2)
 
   }
 
+  "highest dir" in {
 
-  "list files" in {
+    val dir = "test/resources/uploads"
+    val highest = FileFinder.getHighestDir(dir)
 
-    val dir = "test/resources/uploads/sample1"
-
-    val files = FileFinder.getListOfFiles(dir)
-
-    files.length mustEqual(3)
+    highest.split("\\/").last mustEqual("mascot_test")
 
   }
 

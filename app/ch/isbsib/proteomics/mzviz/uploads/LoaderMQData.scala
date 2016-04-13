@@ -1,6 +1,7 @@
 package ch.isbsib.proteomics.mzviz.uploads
 
 import java.io.File
+import java.nio.file.{Paths, Path, Files}
 
 import ch.isbsib.proteomics.mzviz.commons.helpers.{FileFinder, Unzip}
 import ch.isbsib.proteomics.mzviz.experimental.RunId
@@ -34,19 +35,19 @@ class LoaderMQData(val db: DefaultDB) {
     // unzip the file
     val unzipPath = FileFinder.getHighestDir(Unzip.unzip(new File(zipPath)))
 
-
-    // get the list of files
-    val fileList = FileFinder.getListOfFiles(unzipPath)
+    // goto highest path but without the txt
+    val innerPath = unzipPath.split("\\/").dropRight(1).mkString("/")
 
     //parse txt/summary to obtain check if we have all expected files
-    val summaryFile = unzipPath + "/txt/summary.txt"
+    val summaryFile = innerPath + "/txt/summary.txt"
     val summaryHash = LoaderMaxQuant.parseMaxquantSummaryTableRawSearchId(new File(summaryFile))
 
     //Check if all mzML files are available
     summaryHash.keys.foreach {
         key =>
-          if (!fileList.contains(new File(unzipPath + "/" + key + ".mzML"))) {
-            throw new RuntimeException("File" + unzipPath + "/" + key + ".mzML" + "not found")
+          val fileToFind = innerPath + "/" + key + ".mzML"
+          if (! Files.exists(Paths.get(fileToFind))) {
+            throw new RuntimeException("[" + fileToFind + "] not found")
           }
     }
 
@@ -54,12 +55,12 @@ class LoaderMQData(val db: DefaultDB) {
     val itTotalEntries=summaryHash.keys.map {
         file => {
           //Load ms1 and ms2
-          val itMs1Ms2 = LoaderMzML().parse(new File(unzipPath + "/" + file + ".mzML"), RunId(summaryHash.get(file).get)).partition(_.isLeft)
+          val itMs1Ms2 = LoaderMzML().parse(new File(innerPath + "/" + file + ".mzML"), RunId(summaryHash.get(file).get)).partition(_.isLeft)
           val itMs1: Iterator[ExpMs1Spectrum] = itMs1Ms2._1.map(_.left.get)
           val itMs2: Iterator[ExpMSnSpectrum] = itMs1Ms2._2.map(_.right.get)
 
           //Load maxQuant results
-          val maxqResults= LoaderMaxQuant.parse(unzipPath.toString + "/txt/",None)
+          val maxqResults= LoaderMaxQuant.parse(innerPath.toString + "/txt/",None)
 
           maxqResults.foreach({ psmAndProteinList =>
             new MatchMongoDBService(db).insert(psmAndProteinList._1)

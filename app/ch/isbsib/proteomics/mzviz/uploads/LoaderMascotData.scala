@@ -2,6 +2,7 @@ package ch.isbsib.proteomics.mzviz.uploads
 
 import ch.isbsib.proteomics.mzviz.commons.helpers.{FileFinder, Unzip}
 import ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController._
+import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, ExpMs1Spectrum}
 import ch.isbsib.proteomics.mzviz.experimental.{MSRun, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.importer.{LoaderMGF, LoaderMzML, LoaderMzXML}
 import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMongoDBService, ExpMs1BinMongoDBService}
@@ -15,11 +16,12 @@ import play.modules.reactivemongo.MongoController
 import reactivemongo.api.DefaultDB
 
 import scala.concurrent.Future
-import java.io.File
+import java.nio.file.{Paths, Files}
 import scala.concurrent.ExecutionContext.Implicits.global
 import java.io.File
 
 import scala.util.{Failure, Success}
+import scala.xml.Elem
 
 /**
  * @author Roman Mylonas & Trinidad Martin
@@ -30,6 +32,13 @@ class LoaderMascotData(val db: DefaultDB) {
   // file types that are required
   val requiredTypes = Set("mzid", "mgf", "mzml")
 
+  // define services
+  val ms1Service = new ExpMs1BinMongoDBService(db)
+  val msnService = new ExpMongoDBService(db)
+  val matchService = new MatchMongoDBService(db)
+  val protMatchService = new ProteinMatchMongoDBService(db)
+  val searchInfoService = new SearchInfoDBService(db)
+
   /**
    * load a zip file containing a run per subfolder
    *
@@ -38,25 +47,110 @@ class LoaderMascotData(val db: DefaultDB) {
    */
   def loadZip(zipPath: String, intensityThreshold: Double): Future[Int] = {
 
-    val unzipPath = Unzip.unzip(new File(zipPath))
-
-    loadUnzipped(FileFinder.getHighestDir(unzipPath), intensityThreshold)
+    val unzipPath = FileFinder.getHighestDir(Unzip.unzip(new File(zipPath)))
+    println(unzipPath)
+    loadUnzipped(unzipPath, intensityThreshold)
   }
 
 
   def loadUnzipped(path: String, intensityThreshold: Double): Future[Int] = {
 
-    // get the list of SearchIds to enter
-    val resDirList = FileFinder.getListOfDirs(path)
+    // get the list of files in the directory
+    val fileList = FileFinder.getListOfFiles(path)
 
+    // keep mzId files
+    val mzIdFiles = fileList.filter(x => x.getName.split("\\.").last.toLowerCase() == "mzid")
+
+    // list of searchIds
+    val searchIds = mzIdFiles.map(x => SearchId(x.getName.split("\\.")(0)))
+
+    // get the XML parsers
+    val elemList = mzIdFiles.map(file => scala.xml.XML.loadFile(file))
+
+    // get the corresponding mzML files
+    val mzMlFiles = elemList.map(el => new File(path + "/" + LoaderMzIdent.parseSpectraFilename(el) + ".mzML"))
+
+    // assert that all mzML files are here
+    mzMlFiles.foreach({ mzMlFile =>
+      if (! Files.exists(mzMlFile.toPath)) {
+        throw new RuntimeException("[" + mzMlFile + "] not found")
+      }
+    })
+
+    // assert that searchIds are not already inserted
+    searchIds.foreach({ id =>
+      for{
+        found <- searchInfoService.isSearchIdExist(id)
+      } yield {
+        if(found) throw new RuntimeException("[" + id + "] was already inserted. Please delete this entry before re-insertion")
+      }
+    })
+
+    for{
+      nrExp <- insertExpData(mzMlFiles.zip(searchIds), intensityThreshold)
+      nrMatch <- insertMatchData(mzIdFiles.zip(searchIds.zip(elemList)))
+    } yield {
+      nrExp + nrMatch
+    }
+
+
+
+  }
+
+
+  def insertMatchData(mzIdFiles: List[(File, (SearchId, Elem))]): Future[Int] = {
     // insert one by one
-    resDirList.foldLeft(Future{0})( (futureA, b) =>
+    mzIdFiles.foldLeft(Future{0})( (futureA, b) =>
       for {
         a <- futureA
-        c <- insertRunFromPath(b, intensityThreshold)
+        c <- insertOneMatch(b._1, b._2)
       } yield {
         a + c
       })
+
+  }
+
+  def insertOneMatch(mzIdFile: File, searchId: (SearchId, Elem)): Future[Int] = {
+    val matchData = LoaderMzIdent.parseWithXmlElem(mzIdFile, searchId._1, RunId(searchId._1.value), searchId._2)
+
+    for{
+      // and only last the other data
+      matchNr <- matchService.insert(matchData._1)
+      psmNumber <- protMatchService.insert(matchData._2)
+      searchOk <- searchInfoService.insert(matchData._3)
+
+    }yield{
+      matchNr + psmNumber + (if(searchOk) 1 else 0)
+    }
+  }
+
+
+  def insertExpData(mzMlFiles: List[(File, SearchId)], intensityThreshold: Double): Future[Int] = {
+    // insert one by one
+    mzMlFiles.foldLeft(Future{0})( (futureA, b) =>
+      for {
+        a <- futureA
+        c <- insertOneExp(b._1, b._2, intensityThreshold)
+      } yield {
+        a + c
+      })
+  }
+
+
+  def insertOneExp(mzMlFile: File, id: SearchId, intensityThreshold: Double): Future[Int] = {
+
+    val itMs1Ms2 = LoaderMzML().parse(mzMlFile, RunId(id.value)).partition(_.isLeft)
+    val itMs1: Iterator[ExpMs1Spectrum] = itMs1Ms2._1.map(_.left.get)
+    val itMs2: Iterator[ExpMSnSpectrum] = itMs1Ms2._2.map(_.right.get)
+
+    for {
+    //Load MS1
+      ms1 <- ms1Service.insertMs1spectra(itMs1, intensityThreshold)
+      //Load MS2
+      ms2 <- msnService.insertMs2spectra(itMs2, RunId(id.value))
+    }yield{
+      ms1 + ms2
+    }
   }
 
   /**
@@ -66,6 +160,8 @@ class LoaderMascotData(val db: DefaultDB) {
    * @return
    */
   def insertRunFromPath(runPath: File, intensityThreshold: Double):Future[Int] = {
+
+
 
     // get the runId
     val runId: RunId = getRunIdFromPath(runPath)
@@ -80,13 +176,13 @@ class LoaderMascotData(val db: DefaultDB) {
 
     for{
       //first we insert MS data, because they're slow
-      ms1Nr <- new ExpMs1BinMongoDBService(db).insertMs1spectra(ms1Iterator, intensityThreshold)
-      ms2Nr <- new ExpMongoDBService(db).insertMs2spectra(ms2Iterator, runId)
+      ms1Nr <- ms1Service.insertMs1spectra(ms1Iterator, intensityThreshold)
+      ms2Nr <- msnService.insertMs2spectra(ms2Iterator, runId)
 
       // and only last the other data
-      matchNr <- new MatchMongoDBService(db).insert(matchData._1)
-      psmNumber <- new ProteinMatchMongoDBService(db).insert(matchData._2)
-      searchOk <- new SearchInfoDBService(db).insert(matchData._3)
+      matchNr <- matchService.insert(matchData._1)
+      psmNumber <- protMatchService.insert(matchData._2)
+      searchOk <- searchInfoService.insert(matchData._3)
 
     }yield{
       ms1Nr + ms2Nr + matchNr + psmNumber + (if(searchOk) 1 else 0)
