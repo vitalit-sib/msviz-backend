@@ -91,27 +91,17 @@ class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
   def findEntryByIdentifierAndSources(id: ProteinIdentifier, sources: SequenceSource): Future[FastaEntry] = {
     //Prepare query for multiple sources
     val sourcesArray=sources.toString.split(";")
-    
-    var found= false
-    var i = 0
-    val protRefEmpty=ProteinRef(AccessionCode(""),Set(),None )
-    var result: Future[FastaEntry]= Future(FastaEntry(protRefEmpty,"", -1))
-    while (i < sourcesArray.length & !found){
-        val source= sourcesArray(i)
-        val query = Json.obj("proteinRef.identifiers" -> id.value, "proteinRef.source" -> source)
-        println("query is " + query)
-        val res2: Future[FastaEntry]= collection.find(query).cursor[FastaEntry].headOption map {
-          case Some(fe: FastaEntry) => {
-            found=true
-            fe
-          }
-          case None => throw new MongoNotFoundException(s"$source/$id")
-        }
-        i= i+1
-        result= res2
-      }
-    //Return first result
-   result
+
+    val searchFastaEntries = sourcesArray.toStream.map({ source =>
+      val query = Json.obj("proteinRef.identifiers" -> id.value, "proteinRef.source" -> source)
+      val res2: Future[Option[FastaEntry]]= collection.find(query).cursor[FastaEntry].headOption
+      res2
+    })
+
+    // check if the entry was found
+    val res:Future[Option[FastaEntry]] = Future.find(searchFastaEntries)(_.isDefined) map {_.getOrElse(throw new MongoNotFoundException("could not find Sequence"))}
+    res.map(_.getOrElse(throw new MongoNotFoundException("could not find Sequence")))
+
   }
 
   /**
