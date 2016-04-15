@@ -15,6 +15,7 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json._
 import play.api.mvc.Action
 
+
 /**
  *
  * handles sequence REST API
@@ -56,7 +57,7 @@ object SequenceController extends CommonController {
 
   @ApiOperation(nickname = "deleteSource",
     value = "delete all entries from a given source",
-    notes = """use at your own risk""",
+    notes = """use at your own risk :)""",
     response = classOf[String],
     httpMethod = "DELETE")
   def deleteSource(@ApiParam(value = """sourceId""", defaultValue = "") @PathParam("sourceId") sourceId: String) =
@@ -74,7 +75,7 @@ object SequenceController extends CommonController {
 
   @ApiOperation(nickname = "loadFasta",
     value = "Loads a fasta file",
-    notes = """ source will be a unique descriptor on the source""",
+    notes = """ source will be a unique descriptor on the source """,
     response = classOf[String],
     httpMethod = "POST")
   @ApiImplicitParams(Array(
@@ -84,6 +85,7 @@ object SequenceController extends CommonController {
                 @ApiParam(value = """regexp""", defaultValue = "None") @PathParam("regexp") regexp:Option[String]=None) =
     Action.async(parse.temporaryFile) {
       request =>
+
         val entries = FastaParser(request.body.file, SequenceSource(sourceId), regexp).parse
         SequenceMongoDBService().insert(entries).map { n => Ok(Json.obj("inserted" -> n))
         }.recover {

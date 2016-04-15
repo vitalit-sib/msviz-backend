@@ -48,7 +48,6 @@ class LoaderMascotData(val db: DefaultDB) {
   def loadZip(zipPath: String, intensityThreshold: Double): Future[Int] = {
 
     val unzipPath = FileFinder.getHighestDir(Unzip.unzip(new File(zipPath)))
-    println(unzipPath)
     loadUnzipped(unzipPath, intensityThreshold)
   }
 
@@ -149,7 +148,7 @@ class LoaderMascotData(val db: DefaultDB) {
       //Load MS2
       ms2 <- msnService.insertMs2spectra(itMs2, RunId(id.value))
     }yield{
-      ms1 + ms2
+      if(ms1) 1 else 0 + ms2
     }
   }
 
@@ -160,8 +159,6 @@ class LoaderMascotData(val db: DefaultDB) {
    * @return
    */
   def insertRunFromPath(runPath: File, intensityThreshold: Double):Future[Int] = {
-
-
 
     // get the runId
     val runId: RunId = getRunIdFromPath(runPath)
@@ -185,7 +182,7 @@ class LoaderMascotData(val db: DefaultDB) {
       searchOk <- searchInfoService.insert(matchData._3)
 
     }yield{
-      ms1Nr + ms2Nr + matchNr + psmNumber + (if(searchOk) 1 else 0)
+      if(ms1Nr) 1 else 0 + ms2Nr + matchNr + psmNumber + (if(searchOk) 1 else 0)
     }
 
   }

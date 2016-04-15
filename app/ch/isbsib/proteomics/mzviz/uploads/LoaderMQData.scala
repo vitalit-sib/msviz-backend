@@ -76,7 +76,7 @@ class LoaderMQData(val db: DefaultDB) {
             //Load MS2
             ms2 <- new ExpMongoDBService(db).insertMs2spectra(itMs2, RunId(summaryHash.get(file).get))
           }yield{
-            ms1 + ms2
+            if(ms1) 1 else 0 + ms2
 
           }
 

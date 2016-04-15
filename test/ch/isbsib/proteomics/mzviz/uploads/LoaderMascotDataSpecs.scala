@@ -71,7 +71,7 @@ class LoaderMascotDataSpecs extends Specification with ScalaFutures {
       val unzipped = "test/resources/uploads/mascot_test"
       val results: Future[Int] = loaderService.loadUnzipped(unzipped, 1)
 
-      results.futureValue mustEqual(3242)
+      results.futureValue mustEqual(554)
 
       // check ms1
       val ms1List = exp1Service.findMs1EntryWithMozTol(RunId("sample1"), Moz(519.14), 0.3).futureValue
@@ -90,7 +90,7 @@ class LoaderMascotDataSpecs extends Specification with ScalaFutures {
       val zipFile = "test/resources/uploads/mascot_test.zip"
       val results: Future[Int] = loaderService.loadZip(zipFile, 500000)
 
-      results.futureValue mustEqual(1508)
+      results.futureValue mustEqual(554)
 
       // check ms1
       val ms1List = exp1Service.findMs1EntryWithMozTol(RunId("sample1"), Moz(519.14), 0.3).futureValue

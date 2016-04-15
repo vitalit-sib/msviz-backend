@@ -154,10 +154,10 @@ object ExperimentalController extends CommonController {
     new ApiImplicitParam(name = "tolerance", value = "tolerance", required = false, dataType = "Double", paramType = "query"),
     new ApiImplicitParam(name = "rtTolerance", value = "rtTolerance", required = false, dataType = "Double", paramType = "query")
   ))
-  def findXic(@ApiParam(value = """run id""", defaultValue = "") @PathParam("runId") runId: String,
-              @ApiParam(value = """m/z""", defaultValue = "") @PathParam("moz") moz: Double,
-              tolerance: Option[Double]=None,
-             rtTolerance: Option[Double]=None
+  def findXic(@ApiParam(value = """run id""", required = true) @PathParam("runId") runId: String,
+              @ApiParam(value = """m/z""", required = true) @PathParam("moz") moz: Double,
+              @ApiParam(name = "tolerance", value = """the moz tolerance in ppm""", defaultValue = "10", required=false) @PathParam("tolerance") tolerance: Option[Double]=None,
+              @ApiParam(name = "rtTolerance", value = """additional 0 intensity peaks are inserted if space between peaks is bigger than this tolerance""", defaultValue = "10") @PathParam("rtTolerance") rtTolerance: Option[Double]=None
                ) =
     Action.async {
 
@@ -185,13 +185,13 @@ object ExperimentalController extends CommonController {
     new ApiImplicitParam(name = "body", value = "mzxml", required = true, dataType = "text/plain", paramType = "body")
   ))
   def loadMS1(@ApiParam(name = "runId", value = "a string id with run identifier", required = true) @PathParam("runId") runId: String,
-              intensityThreshold: Option[Double] = None,
-              fileType: Option[String] = None) =
+              @ApiParam(name = "intensityThreshold", value = "ignore all peaks below this threshold", required = false) @PathParam("intensityThreshold") intensityThreshold: Option[Double] = None,
+              @ApiParam(name = "fileType", value = "source of results: either MzML (default) or MzXML", required = true) @PathParam("fileType") fileType: Option[String] = None) =
     Action.async(parse.temporaryFile) {
       request =>
 
         // default values
-        val intThres = intensityThreshold.getOrElse(30000.0)
+        val intThres = intensityThreshold.getOrElse(1.0)
         val selType = fileType.getOrElse("MzML")
 
         val ms1SpIter: Iterator[ExpMs1Spectrum] = if(selType == "MzML"){
@@ -204,7 +204,7 @@ object ExperimentalController extends CommonController {
           // insert all peaks above threshold into a temporary mongodb collection
           resMs1Insertion <- ExpMs1BinMongoDBService().insertMs1spectra(ms1SpIter, intThres)
         } yield {
-            Ok(Json.obj("nrMs1Peaks" -> resMs1Insertion))
+            Ok(Json.obj("insertionFinished" -> resMs1Insertion))
 
         }).recover{
             case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))

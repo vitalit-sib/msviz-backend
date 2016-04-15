@@ -5,6 +5,7 @@ import ch.isbsib.proteomics.mzviz.commons.services.{MongoDBService, MongoNotFoun
 import ch.isbsib.proteomics.mzviz.experimental.models.{SpectrumId, ExpPeakMSn, ExpMSnSpectrum, SpectrumRef}
 import ch.isbsib.proteomics.mzviz.experimental.{MSRun, SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
+import play.api.Play
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json._
 import play.api.mvc.Controller
@@ -89,9 +90,10 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
    */
   def insertMs2spectra(ms2Iterator: Iterator[ExpMSnSpectrum], runId: RunId): Future[Int] = {
 
-    // @TODO buffer size shouldnt be hardcoded
     // number of spectra which are parsed before inserting
-    val bufferSize = 20
+    val bufferSize =  if(Play.maybeApplication.isDefined){
+      Play.current.configuration.getString("experimental.ms2.buffer").get.toInt
+    } else 50
 
     // split the iterator into slices
     val slidingIt = ms2Iterator.sliding(bufferSize, bufferSize)

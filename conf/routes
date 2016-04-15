@@ -3,6 +3,7 @@
 # ~~~~
 
 # Home page
+
 GET            /                                                      ch.isbsib.proteomics.mzviz.controllers.UtilsController.hello
 
 GET            /api-docs/exp                                          controllers.ApiHelpController.getResource(path = "/exp")
@@ -21,6 +22,7 @@ GET            /sequences/list-sources                                ch.isbsib.
 POST           /sequences/:sourceId/fasta                             ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.loadFasta(sourceId, regexp:Option[String])
 DELETE         /sequences/:sourceId                                   ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.deleteSource(sourceId)
 OPTIONS        /sequences/:sourceId                                   ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.optionsId(sourceId)
+OPTIONS       /sequences/:sourceId/fasta                             ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.optionsId(sourceId)
 GET            /sequences/stats                                       ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.stats
 
 GET            /api-docs/sequence                                     controllers.ApiHelpController.getResource(path = "/sequence")
@@ -57,3 +59,4 @@ GET            /api-docs                                              controller
 GET            /api-docs/uploads                                      controllers.ApiHelpController.getResource(path = "/uploads")
 POST           /uploads/:resultType                                   ch.isbsib.proteomics.mzviz.controllers.uploads.ZipDataController.loadZip(resultType: String)
 OPTIONS        /uploads/:resultType                                   ch.isbsib.proteomics.mzviz.controllers.uploads.ZipDataController.options(resultType: String)
+
