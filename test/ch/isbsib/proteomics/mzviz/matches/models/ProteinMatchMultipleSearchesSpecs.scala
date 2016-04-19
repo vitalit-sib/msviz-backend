@@ -7,7 +7,6 @@ import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
 import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 import org.specs2.mutable.Specification
-import play.api.test.FakeApplication
 import play.api.test.Helpers._
 
 
@@ -61,7 +60,6 @@ class ProteinMatchMultipleSearchesSpecs extends Specification {
   }
 
   "proteinMatchMultipleSearches from files" should {
-    running(FakeApplication()) {
       val psmAndProtLists1: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/M_100.mzid"), SearchId("M_100"), RunId("M_100"))
       val psmAndProtLists4: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/F002687_acetylation.mzid"), SearchId("F002687"), RunId("F002687"))
 
@@ -86,9 +84,7 @@ class ProteinMatchMultipleSearchesSpecs extends Specification {
         // ALBU_HUMAN should be in both runs
         proteinInfo_2.dict.size mustEqual (psmAndProtLists1._2.size + psmAndProtLists4._2.size - 1)
 
-
       }
-    }
 
   }
 
