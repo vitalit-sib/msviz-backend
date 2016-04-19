@@ -4,10 +4,10 @@ import java.io.File
 
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
-import ch.isbsib.proteomics.mzviz.matches.{HitRank, SearchId}
+import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models.{SearchInfo, ProteinIdent, ProteinRef, PepSpectraMatch}
 import ch.isbsib.proteomics.mzviz.modifications.ModifName
-import ch.isbsib.proteomics.mzviz.theoretical.{ProteinIdentifier, AccessionCode, NumDatabaseSequences, SequenceSource}
+import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
 import org.specs2.mutable.Specification
 
 import play.api.test._
@@ -56,7 +56,6 @@ class LoaderMzIdentSpecs extends Specification {
   }
 
     "parse M_100" should {
-      running(FakeApplication()) {
         val psmAndProtLists: (Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo) = LoaderMzIdent.parse(new File("test/resources/mascot/M_100.mzid"), SearchId("M_100"), RunId("M_100.mgf"))
         val psm = psmAndProtLists._1
         val prots = psmAndProtLists._2
@@ -138,12 +137,9 @@ class LoaderMzIdentSpecs extends Specification {
 
         }
 
-     }
-
     }
 
     "parse F001644" should {
-      running(FakeApplication()) {
         val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/F001644.mzid"), SearchId("F001644"), RunId("F001644.mgf"))
         val psms = psmAndProtLists._1
         val prots = psmAndProtLists._2
@@ -163,12 +159,10 @@ class LoaderMzIdentSpecs extends Specification {
 
           psmsFlt.size must equalTo(1)
         }
-      }
-
     }
 
   "parse M_100_with_X" should {
-    running(FakeApplication()) {
+
       val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/M_100_with_X.mzid"), SearchId("with_X"), RunId("M_100.mgf"))
       val psm = psmAndProtLists._1
 
@@ -176,12 +170,9 @@ class LoaderMzIdentSpecs extends Specification {
         psm(0).pep.sequence must equalTo("TYTXLK")
         psm(0).pep.molMass must equalTo(None)
       }
-    }
-
   }
 
   "parse modification scores" should {
-    running(FakeApplication()) {
       val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/F002687_acetylation.mzid"), SearchId("modif"), RunId("M_100.mgf"))
       val psms = psmAndProtLists._1
 
@@ -205,14 +196,10 @@ class LoaderMzIdentSpecs extends Specification {
         psmsFlt(0).matchInfo.score.scoreMap("Mascot:delta score") mustEqual (90.46)
         psmsFlt(1).matchInfo.score.scoreMap("Mascot:delta score") mustEqual (9.21)
       }
-    }
-
-
   }
 
 
   "parse protein positions" should {
-    running(FakeApplication()) {
       val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/F001303.mzid"), SearchId("modif"), RunId("M_100.mgf"))
       val psms = psmAndProtLists._1
 
@@ -261,12 +248,10 @@ class LoaderMzIdentSpecs extends Specification {
         psmsFlt(0).proteinList(1).proteinRef.source.get mustEqual (SequenceSource("SwissProt_2013_12.fasta"))
 
       }
-    }
-
   }
 
   "parse passThresholds" should {
-    running(FakeApplication()) {
+
       val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/F001303.mzid"), SearchId("modif"), RunId("M_100.mgf"))
       val psms = psmAndProtLists._1
 
@@ -282,8 +267,6 @@ class LoaderMzIdentSpecs extends Specification {
         psmsFlt(2).matchInfo.isRejected mustEqual (Option(false))
         psmsFlt(3).matchInfo.isRejected mustEqual (Option(true))
       }
-    }
-
   }
 
 
