@@ -1,0 +1,62 @@
+Parameter	Value
+Version	1.3.0.5
+Fixed modifications	Carbamidomethyl (C)
+Randomize	False
+Special AAs	KR
+Include contaminants	True
+MS/MS tol. (FTMS)	20 ppm
+Top MS/MS peaks per 100 Da. (FTMS)	10
+MS/MS deisotoping (FTMS)	True
+MS/MS tol. (ITMS)	0.5 Da
+Top MS/MS peaks per 100 Da. (ITMS)	6
+MS/MS deisotoping (ITMS)	False
+MS/MS tol. (TOF)	0.1 Da
+Top MS/MS peaks per 100 Da. (TOF)	10
+MS/MS deisotoping (TOF)	True
+MS/MS tol. (Unknown)	0.5 Da
+Top MS/MS peaks per 100 Da. (Unknown)	6
+MS/MS deisotoping (Unknown)	False
+Peptide FDR	0.01
+Max. peptide PEP	1
+Protein FDR	0.01
+Site FDR	0.01
+Use Normalized Ratios For Occupancy	True
+Apply site FDR separately	True
+Min. peptide Length	7
+Min. score	0
+Min. unique peptides	1
+Min. razor peptides	1
+Min. peptides	1
+Use only unmodified peptides and	True
+Modifications included in protein quantification	Oxidation (M);Acetyl (Protein N-term)
+Peptides used for protein quantification	Razor
+Discard unmodified counterpart peptides	True
+Min. ratio count	1
+Lfq min. ratio count	2
+Site quantification	Use least modified peptide
+Re-quantify	True
+Keep low-scoring versions of identified peptides	No
+Label-free protein quantification	False
+iBAQ	False
+iBAQ log fit	True
+MS/MS recalibration	False
+Match between runs	True
+Time window [min]	2
+Find dependent peptides	False
+Fasta file	C:\MaxQuant\New-fasta\hiv_proteins.fasta;C:\MaxQuant\New-fasta\HUMAN.fasta
+Labeled amino acid filtering	True
+Site tables	Oxidation (M)Sites.txt
+Cut peaks	True
+Randomize	False
+Special AAs	KR
+Include contaminants	True
+RT shift	False
+Advanced ratios	False
+AIF correlation	0.8
+First pass AIF correlation	0.8
+AIF topx	50
+AIF min mass	0
+AIF SIL weight	4
+AIF ISO weight	2
+AIF iterative	False
+AIF threshold FDR	0.01
