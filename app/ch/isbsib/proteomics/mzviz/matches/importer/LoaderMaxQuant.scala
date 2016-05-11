@@ -78,6 +78,8 @@ object LoaderMaxQuant {
     val fastaFileNameRegx = """.+\\(.+)""".r
     val fileNameRegx = """.+\\(.+)""".r
 
+    println(fastaFilename)
+
     //Prepared for several sources
     val fastaFilesArray= fastaFilename.split(";")
     /*

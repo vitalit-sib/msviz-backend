@@ -63,10 +63,10 @@ class LoaderMaxQuantSpecs extends Specification {
 
     title mustEqual("hiv_proteins.fasta;HUMAN.fasta")
 
-    val source2= LoaderMaxQuant.parseMaxquantParametersTable(new File("/Users/tmartinc/Documents/msViz/maxQuant/txt/parameters.txt"))("Fasta file")
+    val source2= LoaderMaxQuant.parseMaxquantParametersTable(new File("test/resources/maxquant/parameters.txt"))("Fasta file")
     val title2 = LoaderMaxQuant.parseFastaFilename(source2)
 
-    title2 mustEqual("UP000005640_9606.fasta;PetricevicOneEntry.fasta")
+    title2 mustEqual("UP000005640_9606.fasta")
   }
 
   "parse msms" in {
@@ -214,7 +214,7 @@ class LoaderMaxQuantSpecs extends Specification {
 
   "parse" in {
     val parseMaxQuant= LoaderMaxQuant.parse("test/resources/maxquant/", Some("hoho"))
-    val parseMQ=LoaderMaxQuant.parse("/Users/tmartinc/Documents/msViz/maxQuant/txt/", Some("wewe"))
+    val parseMQ=LoaderMaxQuant.parse("test/resources/maxquant/", Some("wewe"))
 
     parseMaxQuant.size mustEqual(2)
 
@@ -231,7 +231,7 @@ class LoaderMaxQuantSpecs extends Specification {
     //with 2 sources
     parseMQ.size mustEqual(2)
     val list=parseMQ(0)
-    list._2(0).mainProt.source.toString mustEqual("UP000005640_9606.fasta;PetricevicOneEntry.fasta")
+    list._2(0).mainProt.source.toString mustEqual("UP000005640_9606.fasta")
   }
 
   "parse with None title" in {
