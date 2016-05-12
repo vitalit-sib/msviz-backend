@@ -67,7 +67,7 @@ object SearchController extends MatchController {
   ))
   def get(
            @ApiParam(value = """searchId""", defaultValue = "M_100") @PathParam("searchId") searchId: String
-           ) = Cached(req => req.uri) {
+           ) =  {
     Action.async {
       for {
         searchInfo <- SearchInfoDBService().get(SearchId(searchId))

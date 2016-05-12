@@ -235,7 +235,6 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
       val basketEntries = service.findByProtein("mascot:F0024533,mascot:F0024543", AccessionCode("OSBL8_HUMAN")).futureValue
       basketEntries.length mustEqual(1)
       basketEntries(0)._id.isEmpty mustEqual(false)
-      println(basketEntries(0)._id)
       basketEntries(0).xicPeaks.length mustEqual(2)
     }
 

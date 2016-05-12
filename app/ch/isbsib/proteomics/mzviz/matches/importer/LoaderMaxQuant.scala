@@ -78,8 +78,6 @@ object LoaderMaxQuant {
     val fastaFileNameRegx = """.+\\(.+)""".r
     val fileNameRegx = """.+\\(.+)""".r
 
-    println(fastaFilename)
-
     //Prepared for several sources
     val fastaFilesArray= fastaFilename.split(";")
     /*
@@ -392,6 +390,8 @@ object LoaderMaxQuant {
    * @return
    */
   def parseSearchInfo(maxQuantDir: String, sequenceSource:SequenceSource, idTitle: Option[String]): Map[RunId, SearchInfo] = {
+
+    println("sequence source: " + sequenceSource.value)
 
     // load files
     val file_params = new File(maxQuantDir + filename_params)
