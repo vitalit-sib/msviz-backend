@@ -5,7 +5,7 @@ import java.io.File
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models.{PepSpectraMatch, ProteinIdent}
-import ch.isbsib.proteomics.mzviz.matches.models.maxquant.{EvidenceTableEntry, ProteinGroupsTableEntry}
+import ch.isbsib.proteomics.mzviz.matches.models.maxquant.{PeptidesTableEntry, EvidenceTableEntry, ProteinGroupsTableEntry}
 import ch.isbsib.proteomics.mzviz.modifications.ModifName
 import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 import ch.isbsib.proteomics.mzviz.theoretical.models.SearchDatabase
@@ -137,19 +137,19 @@ class LoaderMaxQuantSpecs extends Specification {
   }
 
   "parse peptides table" in {
-    val mapPeptides = LoaderMaxQuant.parsePeptidesTable(new File("test/resources/maxquant/peptides.txt"))
+    val mapPeptides:(Map [Int, Int] ,Map[Int, PeptidesTableEntry]) = LoaderMaxQuant.parsePeptidesTable(new File("test/resources/maxquant/peptides.txt"))
 
-    mapPeptides.size mustEqual(1300)
+    mapPeptides._2.size mustEqual(1300)
 
     //Failing because of entries 269;270;271, removed by the filtering because of decoy entry without start and end position
 
     //Select second row id=2
-    mapPeptides(2).evidenceId  mustEqual(2)
-    mapPeptides(2).previousAA.get mustEqual("R")
-    mapPeptides(2).nextAA.get mustEqual("N")
-    mapPeptides(2).startPos mustEqual(660)
-    mapPeptides(2).endPos mustEqual(676)
-    mapPeptides(2).isDecoy.get mustEqual(false)
+    mapPeptides._2(2).evidenceId  mustEqual(2)
+    mapPeptides._2(2).previousAA.get mustEqual("R")
+    mapPeptides._2(2).nextAA.get mustEqual("N")
+    mapPeptides._2(2).startPos mustEqual(660)
+    mapPeptides._2(2).endPos mustEqual(676)
+    mapPeptides._2(2).isDecoy.get mustEqual(false)
   }
 
   "load PepSpectraMatch" in {
@@ -159,8 +159,8 @@ class LoaderMaxQuantSpecs extends Specification {
     // should have 2 runIds
     pepSpectraMap.keys.size mustEqual(2)
 
-    pepSpectraMap(RunId("Nocodazole")).size mustEqual(648)
-    pepSpectraMap(RunId("DMSO")).size mustEqual(652)
+    pepSpectraMap(RunId("Nocodazole")).size mustEqual(1390)
+    pepSpectraMap(RunId("DMSO")).size mustEqual(1278)
 
     val pep10 = pepSpectraMap(RunId("Nocodazole")).filter(p => p.pep.sequence == "AIFQQPPVGVR")
     val pep11 = pepSpectraMap(RunId("DMSO")).filter(p => p.pep.sequence == "AIFQQPPVGVR")

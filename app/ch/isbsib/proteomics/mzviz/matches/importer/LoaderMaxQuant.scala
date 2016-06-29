@@ -327,9 +327,9 @@ object LoaderMaxQuant {
     }
     recur(modifList,sequence,List())
   }
-  def parsePeptidesTable(file: File): Map[Int, PeptidesTableEntry] = {
+  def parsePeptidesTable(file: File): (Map [Int, Int] ,Map[Int, PeptidesTableEntry]) = {
     val (mPeptidesList, headerPeptidesMap) = parseCommonLines(file)
-    //val evidenceIdPos: Int = headerPeptidesMap("Evidence IDs")
+    val evidenceIdPos: Int = headerPeptidesMap("Evidence IDs")
     val peptideIdPos: Int = headerPeptidesMap("id")
     val previousAAPos: Int = headerPeptidesMap("Amino acid before")
     val nextAAPos: Int = headerPeptidesMap("Amino acid after")
@@ -340,16 +340,46 @@ object LoaderMaxQuant {
     //Filter mPeptidesList, remove entries with no start or end position, coming from REV_
     val mPeptidesListFiltered = mPeptidesList.filter({ l => !l(startPos).isEmpty() && !l(endPos).isEmpty()})
 
+    val emptyEvidencePeptideMap:Map[Int, Int] = Map()
+    val emptyPeptideMap:Map[Int, PeptidesTableEntry] = Map()
+
+
+    val evidencePeptidesResult=mPeptidesListFiltered.foldLeft(Tuple2(emptyEvidencePeptideMap, emptyPeptideMap))({ (a, row) =>
+      val pepId = row(peptideIdPos).toInt
+      val evidenceId = row(evidenceIdPos)
+      val isDecoy = if (row(isDecoyPos).isEmpty()) Option(false) else Option(true)
+
+      //We create a new hashmap to link evidence Id with pep Id
+      val evidencePeptideMap = if(evidenceId != "") evidenceId.split(";").map ({
+        evidId => Tuple2(evidId.toInt,pepId)
+      }).toMap else Map()
+
+      val peptidesEntry = PeptidesTableEntry(pepId, Option(row(previousAAPos)), Option(row(nextAAPos)), row(startPos).toInt,
+        row(endPos).toInt, isDecoy)
+
+      val peptideMap:Map[Int, PeptidesTableEntry] = Map(pepId -> peptidesEntry)
+
+      Tuple2(a._1 ++ evidencePeptideMap, a._2 ++ peptideMap)
+    })
+    evidencePeptidesResult
+
+    /*
     //map from pepId -> info
-    val peptidesMap = mPeptidesListFiltered.map({
+    val peptidesTuple = mPeptidesListFiltered.map({
       row =>
         val pepId = row(peptideIdPos).toInt
+        val evidenceId = row(evidenceIdPos)
         val isDecoy = if (row(isDecoyPos).isEmpty()) Option(false) else Option(true)
+        val evidencePeptideSeq = evidenceId.split(";").map ({
+          evidId => Tuple2(evidId,pepId)
+        })
         val peptidesEntry = PeptidesTableEntry(pepId, Option(row(previousAAPos)), Option(row(nextAAPos)), row(startPos).toInt,
           row(endPos).toInt, isDecoy)
-        Tuple2(pepId, peptidesEntry)
-    }).toMap
-    peptidesMap
+        Tuple3(pepId, peptidesEntry,evidencePeptideSeq)
+    })
+    Tuple2((peptidesTuple, peptidesTuple._2).toMap, peptidesTuple._3)
+
+    */
   }
 
   def loadPepSpectraMatch(maxQuantDir: String, runIds: Seq[RunId], sequenceSource:SequenceSource, idTitle:Option[String]): Map[RunId, Seq[PepSpectraMatch]] = {
@@ -357,10 +387,10 @@ object LoaderMaxQuant {
     val file_evidence = new File(maxQuantDir + filename_evidence)
     val file_peptides = new File(maxQuantDir + filename_peptides)
 
-    val peptidesHash = parsePeptidesTable(file_peptides)
+    val (evidencePepHash,peptidesHash) = parsePeptidesTable(file_peptides)
     val evidenceEntryAux: List[EvidenceTableEntry] = parseEvidenceTable(file_evidence)
-    //Filter evidenceEntryAux, remove rows where id doesn't correspond to any key in PeptidesHash
-    val evidenceEntry: List[EvidenceTableEntry] = evidenceEntryAux.filter({ entry => peptidesHash.keySet.exists(_ == entry.id)})
+    //Filter evidenceEntryAux, remove rows where id doesn't correspond to any key in evidencePepHash
+    val evidenceEntry: List[EvidenceTableEntry] = evidenceEntryAux.filter({ entry => evidencePepHash.keySet.exists(_ == entry.id)})
 
 
 
@@ -383,6 +413,7 @@ object LoaderMaxQuant {
     // Group the list by RunId to create a Map[RunId, List[RunId,PepSpectraMatch]] and then mapValues to create Map[RunId,List[PepSpectraMatch]]
     runIdToPepSpectraMatchList.groupBy(_._1).mapValues(list => list.map(_._2))
   }
+
 
   /**
    * parse a maxquant file and return search information.
