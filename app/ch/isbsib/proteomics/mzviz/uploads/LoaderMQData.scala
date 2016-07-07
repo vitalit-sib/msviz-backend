@@ -37,7 +37,6 @@ class LoaderMQData(val db: DefaultDB) {
    */
   def loadZip(zipPath: String, intensityThreshold:Double): Future[Int] = {
     // unzip the file
-    println("mqqqqqqqqq")
     val unzipPath = FileFinder.getHighestDir(Unzip.unzip(new File(zipPath)))
 
     // goto highest path but without the txt
