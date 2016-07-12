@@ -210,6 +210,24 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
   }
 
   /**
+   * retrieve all MS2 spectra which have a precursor in the given range
+   * @param runId
+   * @param moz
+   * @param daltonTolerance
+   * @return
+   */
+  def findSpectrumByMozTol(runId:RunId, moz:Moz, daltonTolerance:Double): Future[Seq[ExpMSnSpectrum]] = {
+    val lowerLimit = moz.value - daltonTolerance
+    val upperLimit = moz.value + daltonTolerance
+    val query = Json.obj(
+      "ref.spectrumId.runId" -> runId.value,
+      "ref.precursor.moz" -> Json.obj("$gte" -> lowerLimit, ("$lte" -> upperLimit))
+    )
+
+    collection.find(query).cursor[ExpMSnSpectrum].collect[Seq]()
+  }
+
+  /**
    * get the list of the run ids
    * @return
    */

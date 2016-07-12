@@ -146,6 +146,36 @@ object ExperimentalController extends CommonController {
   }
 
 
+
+  @ApiOperation(nickname = "findPrecursors",
+    value = "find all ms2 for a given run id wich have a precursor around moz with the given tolerance",
+    notes = """Returns for ms1 list of retention times and intensities""",
+    httpMethod = "GET")
+  @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "tolerance", value = "tolerance", required = false, dataType = "Double", paramType = "query")
+  ))
+  def findPrecursors(@ApiParam(value = """run id""", required = true) @PathParam("runId") runId: String,
+              @ApiParam(value = """m/z""", required = true) @PathParam("moz") moz: Double,
+              @ApiParam(name = "tolerance", value = """the moz tolerance in ppm""", defaultValue = "10", required=false) @PathParam("tolerance") tolerance: Option[Double]=None
+               ) =
+    Action.async {
+
+      // set the default value to 10 ppm
+      val ppmTolerance = tolerance.getOrElse(10.0)
+      val daltonTolerance = moz / 1000000 * ppmTolerance
+
+      // and the corresponding Ms2 precursors
+      val futureMs2List = ExpMongoDBService().findSpectrumByMozTol(RunId(runId), Moz(moz), daltonTolerance)
+
+      futureMs2List.map {ms2List  => Ok(Json.toJson(ms2List)) }
+        .recover {
+          case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
+        }
+
+    }
+
+
+
   @ApiOperation(nickname = "findXIC",
     value = "find all ms1 for a given run id and moz",
     notes = """Returns only list of retention times and intensities""",
