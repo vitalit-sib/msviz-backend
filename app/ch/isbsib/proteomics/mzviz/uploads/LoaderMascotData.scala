@@ -67,12 +67,23 @@ class LoaderMascotData(val db: DefaultDB) {
     val elemList = mzIdFiles.map(file => scala.xml.XML.loadFile(file))
 
     // get the corresponding mzML files
-    val mzMlFiles = elemList.map(el => new File(path + "/" + LoaderMzIdent.parseSpectraFilename(el) + ".mzML"))
+    // zip XML elements and mzid names, List[(Elem, File)]
+    val mzMlFiles = elemList.zip(mzIdFiles).map({
+      tuple =>
+        val found= LoaderMzIdent.parseSpectraFilename(tuple._1)
+        var filename= path + "/" + found
+
+        //if resubmitted job, SpectraData location field is empty, so we take mzid name
+        if (found == ""){
+          filename= tuple._2.toString.split("\\.")(0)
+        }
+        new File(filename + ".mzML")
+    })
 
     // assert that all mzML files are here
     mzMlFiles.foreach({ mzMlFile =>
       if (! Files.exists(mzMlFile.toPath)) {
-        throw new RuntimeException("[" + mzMlFile + "] not found")
+        throw new RuntimeException("[" + mzMlFile + "] not found. If resubmitted job please rename your mzML files.")
       }
     })
 

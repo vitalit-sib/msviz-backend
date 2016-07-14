@@ -143,7 +143,9 @@ object LoaderMzIdent {
    */
   def parseSpectraFilename(mzidXml: Elem): String = {
     val spectraDataLocation = mzidXml \\ "SpectraData" \ "@location"
+    println(FilenameUtils.getBaseName(spectraDataLocation.text))
     FilenameUtils.getBaseName(spectraDataLocation.text)
+
   }
 
   /**
