@@ -18,7 +18,7 @@ class FileFinderSpecs extends Specification {
 
     val files = FileFinder.getListOfDirs(dir)
 
-    files.length mustEqual(1)
+    files.length mustEqual(2)
 
   }
 
@@ -28,7 +28,7 @@ class FileFinderSpecs extends Specification {
 
     val files = FileFinder.getListOfFiles(dir)
 
-    files.length mustEqual(2)
+    files.length mustEqual(3)
 
   }
 
