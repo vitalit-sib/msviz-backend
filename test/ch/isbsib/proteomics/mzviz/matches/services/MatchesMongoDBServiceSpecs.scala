@@ -95,7 +95,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
           val psmList = service.findAllPSMBySearchId(SearchId("M_100")).futureValue
           psmList.size must equalTo(62)
 
-    }
+      }
   }
 
 
@@ -110,8 +110,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
           protRefList.size must equalTo(27)
           protRefList(0).AC mustEqual AccessionCode("CD109_HUMAN")
           protRefList(0).source mustEqual Some(SequenceSource("SwissProt_2014_08.fasta"))
-
-    }
+      }
   }
 
 
@@ -154,19 +153,33 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
           service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100_1"), RunId("M_100.mgf"))._1).futureValue
 
           val psms = service.findAllPSMsByProtein(AccessionCode("CD109_HUMAN")).futureValue
-
           psms.size must equalTo(4)
       }
-      "list all" in new TempMongoDBService {
+
+      "list all with searchId" in new TempMongoDBService {
           service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"))._1).futureValue
           service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100_1"), RunId("M_100.mgf"))._1).futureValue
 
           val psms = service.findAllPSMsByProtein(AccessionCode("CD109_HUMAN"), searchIds = Some(Set(SearchId("M_100_1")))).futureValue
-
           psms.size must equalTo(2)
       }
 
+      "list all AHNK_HUMAN not rejected" in new TempMongoDBService {
+        service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"))._1).futureValue
+
+        val psms = service.findAllPSMsByProtein(AccessionCode("AHNK_HUMAN")).futureValue
+        psms.size must equalTo(15)
+      }
+
+      "list all AHNK_HUMAN not rejected" in new TempMongoDBService {
+        service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"))._1).futureValue
+
+        val psms = service.findAllPSMsByProtein(AccessionCode("AHNK_HUMAN"), notRejected = Some(true)).futureValue
+        psms.size must equalTo(9)
+      }
+
     }
+
 
 
 }

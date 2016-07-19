@@ -158,9 +158,11 @@ object PSMController extends MatchController {
     }) {
       Action.async { implicit request =>
         MatchMongoDBService().findAllPSMsByProtein(
-          AccessionCode(accessionCode),
+          accessionCode = AccessionCode(accessionCode),
           source = sequenceSource.map(s => SequenceSource(s)),
-          searchIds = if (searchIds == "*") None else Some(searchIds.split(",").toList.map(s => SearchId(s)).toSet)
+          searchIds = if (searchIds == "*") None else Some(searchIds.split(",").toList.map(s => SearchId(s)).toSet),
+          // we only take the ones which are not rejected
+          notRejected = Some(true)
         )
           .map { case psms =>
           render {
