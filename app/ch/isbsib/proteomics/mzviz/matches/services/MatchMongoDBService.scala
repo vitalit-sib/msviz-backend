@@ -107,6 +107,7 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @return
    */
   def findAllBySearchIdAndSpectrumId(searchId: SearchId, spectrumUniqueId: SpectrumUniqueId): Future[Seq[PepSpectraMatch]] = {
+
     val query = Json.obj("searchId" -> searchId.value, "spectrumId.id" -> spectrumUniqueId.value)
     collection.find(query)
       .cursor[PepSpectraMatch]
@@ -120,6 +121,7 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
    */
   def findAllPSMBySearchId(searchId: SearchId): Future[Seq[PepSpectraMatch]] = {
     val query = Json.obj("searchId" -> searchId.value)
+
     collection.find(query).cursor[PepSpectraMatch].collect[List]()
   }
 

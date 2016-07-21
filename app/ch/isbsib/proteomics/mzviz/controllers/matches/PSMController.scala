@@ -187,6 +187,7 @@ object PSMController extends MatchController {
     Cached(req => {
       req.uri
     }) {
+
       Action.async { implicit request =>
         MatchMongoDBService().findAllBySearchIdAndSpectrumId(
           SearchId(searchId),

@@ -284,5 +284,38 @@ class LoaderMzIdentSpecs extends Specification {
 
   }
 
+  "parse gordo" should {
+    val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/Zanou_8524C_Qex.mzid"), SearchId("Zanou_8524C_Qex"), RunId("Zanou_8524C_Qex.mgf"))
+    val psms = psmAndProtLists._1
+    val prots = psmAndProtLists._2
+
+    "check PSMs size" in {
+      psms.size must equalTo(7340)
+    }
+
+    "check psm content" in {
+      val psmsFlt = psms.filter({ psm =>
+        psm.spectrumId.id == SpectrumUniqueId("7300")
+      })
+
+      psmsFlt.size must equalTo(4)
+      psmsFlt(0).matchInfo.score.scoreMap("Mascot:delta score") mustEqual (95.86)
+      psmsFlt(1).matchInfo.score.scoreMap("Mascot:delta score") mustEqual (3.12)
+      psmsFlt(2).matchInfo.score.scoreMap("Mascot:delta score") mustEqual (0.98)
+
+      psmsFlt(0).pep.sequence mustEqual("KISQTAQTYDPR")
+      //psmsFlt(0).pep.modificationNames mustEqual Vector(List(), List(), List(), List("Phospho"), List(), List(), List(), List(), List(), List(), List(), List(), List(), List())
+      psmsFlt(0).spectrumId.id.value mustEqual ("7300")
+      psmsFlt(0).matchInfo.score.mainScore mustEqual (34.54)
+      psmsFlt(1).pep.sequence mustEqual("KISQTAQTYDPR")
+      //psmsFlt(1).pep.modificationNames mustEqual Vector(List(), List(), List(), List(), List(), List("Phospho"), List(), List(), List(), List(), List(), List(), List(), List())
+      psmsFlt(1).spectrumId.id.value mustEqual ("7300")
+      psmsFlt(1).matchInfo.score.mainScore mustEqual (19.66)
+
+
+
+    }
+  }
+
 
   }
