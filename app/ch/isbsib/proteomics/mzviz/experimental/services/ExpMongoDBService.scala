@@ -10,7 +10,7 @@ import play.api.libs.iteratee.Enumerator
 import play.api.libs.json._
 import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
-import play.modules.reactivemongo.json.collection.JSONCollection
+import play.modules.reactivemongo.json.BSONFormats._
 import reactivemongo.api._
 import reactivemongo.api.indexes.{IndexType, Index}
 import reactivemongo.bson._
@@ -142,7 +142,7 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
   def findAllSpectraRefByrunId(runId: RunId): Future[Seq[SpectrumRef]] =findAllSpectraRefByrunId(Set(runId))
 
   /**
-   * Returns just the spectra ref fin a set of runIds
+   * Returns just the spectra ref as a set of runIds
    * @param runIds the target set of runIds
    * @return
    */
@@ -225,6 +225,32 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
     )
 
     collection.find(query).cursor[ExpMSnSpectrum].collect[Seq]()
+  }
+
+  /**
+   * retrieve all spectrum info which have a precursor in the given range
+   * @param runId
+   * @param moz
+   * @param daltonTolerance
+   * @return
+   */
+  def findSpectrumRefByMozTol(runId:RunId, moz:Moz, daltonTolerance:Double): Future[Seq[SpectrumRef]] = {
+    val lowerLimit = moz.value - daltonTolerance
+    val upperLimit = moz.value + daltonTolerance
+    val query = Json.obj(
+      "ref.spectrumId.runId" -> runId.value,
+      "ref.precursor.moz" -> Json.obj("$gte" -> lowerLimit, ("$lte" -> upperLimit))
+    )
+
+    val projection = Json.obj("ref" -> 1)
+
+    collection.find(query, projection)
+      .cursor[JsObject]
+      .collect[List]()
+      .map(lo => lo.map({ o =>
+        Json.fromJson[SpectrumRef](o \ "ref").asOpt.get
+      }))
+
   }
 
   /**
