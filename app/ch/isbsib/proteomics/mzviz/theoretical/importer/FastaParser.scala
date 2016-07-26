@@ -2,6 +2,7 @@ package ch.isbsib.proteomics.mzviz.theoretical.importer
 
 import java.io.File
 import java.util.Scanner
+import play.api.Logger
 
 import ch.isbsib.proteomics.mzviz.matches.models.ProteinRef
 import ch.isbsib.proteomics.mzviz.theoretical.{ProteinIdentifier, SequenceSource, AccessionCode}
@@ -45,7 +46,8 @@ class FastaParser(file: File, source: SequenceSource, regexp:Option[String]) {
     val it: Iterator[String] = new Iterator[String] {
       override def hasNext: Boolean = scanner.hasNext
 
-      override def next(): String = scanner.next()
+      // give back next entry and remove heading '>' and any special characters
+      override def next(): String = scanner.next().replaceAll("^>|[^\\x00-\\x7F]", "")
     }
 
     it.map(parseOneProtBlock)
