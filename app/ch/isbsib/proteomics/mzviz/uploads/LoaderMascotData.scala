@@ -48,12 +48,15 @@ class LoaderMascotData(val db: DefaultDB) {
   def loadZip(zipPath: String, intensityThreshold: Double): Future[Int] = {
 
     val unzipPath = FileFinder.getHighestDir(Unzip.unzip(new File(zipPath)))
+    println("load zip")
+    println(unzipPath)
     loadUnzipped(unzipPath, intensityThreshold)
   }
 
 
   def loadUnzipped(path: String, intensityThreshold: Double): Future[Int] = {
 
+    println("unzip")
     // get the list of files in the directory
     val fileList = FileFinder.getListOfFiles(path)
 
@@ -137,6 +140,8 @@ class LoaderMascotData(val db: DefaultDB) {
 
   def insertExpData(mzMlFiles: List[(File, SearchId)], intensityThreshold: Double): Future[Int] = {
     // insert one by one
+
+    println("expData")
     mzMlFiles.foldLeft(Future{0})( (futureA, b) =>
       for {
         a <- futureA
