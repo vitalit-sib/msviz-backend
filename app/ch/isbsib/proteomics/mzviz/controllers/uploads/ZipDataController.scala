@@ -48,7 +48,7 @@ object ZipDataController extends CommonController {
                       else
                         LoaderMascotData().loadZip(request.body.file.getAbsolutePath, intensityThreshold)
 
-        entries.map { n => Ok(Json.obj("inserted" -> n))
+        entries.map { n => Ok(("File uploaded"))
         }.recover {
           case e => BadRequest(Json.toJson(e))
         }

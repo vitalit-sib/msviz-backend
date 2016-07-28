@@ -5,9 +5,11 @@ import java.io.File
 
 import akka.actor.{ActorSystem, Props, Actor}
 import ch.isbsib.proteomics.mzviz.controllers.uploads.ZipDataController._
+import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.uploads.{LoaderMascotData, LoaderMQData}
 import play.api.libs.json.Json
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 /**
  * @author Roman Mylonas & Trinidad Martin
@@ -26,12 +28,12 @@ class SenderUploadActor(path: String, intensityThreshold: Double, resultType: St
 
       ///TO DO insert
 
-      val entries = if(resultType == "maxquant")
+      val entries: Future[Seq[SearchId]] = if(resultType == "maxquant")
         LoaderMQData().loadZip(path, intensityThreshold)
       else
         LoaderMascotData().loadZip(path, intensityThreshold)
 
-      entries.map { n =>  val receiver = acsy.actorOf(Props[ReceiverUploadActor], "upload")
+      entries.map { n =>  val receiver = acsy.actorOf(Props(new ReceiverUploadActor(n,"done")), "upload")
         receiver ! "inserted_end"
       }
     }

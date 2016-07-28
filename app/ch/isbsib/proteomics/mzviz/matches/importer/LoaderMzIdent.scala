@@ -132,7 +132,7 @@ object LoaderMzIdent {
     val fragmentTolerance = parseFragmentToleranceFilename(mzidXml)
     val nowDate = Some(Calendar.getInstance().getTime())
 
-    SearchInfo(searchId,title,database,username, enzyme,parentTolerance,fragmentTolerance,nowDate)
+    SearchInfo(searchId,title,database,username, enzyme,parentTolerance,fragmentTolerance,"inserting",nowDate)
   }
 
   /**

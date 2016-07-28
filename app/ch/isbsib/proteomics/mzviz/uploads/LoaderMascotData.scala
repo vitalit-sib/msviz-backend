@@ -45,7 +45,7 @@ class LoaderMascotData(val db: DefaultDB) {
    * @param zipPath
    * @return
    */
-  def loadZip(zipPath: String, intensityThreshold: Double): Future[Int] = {
+  def loadZip(zipPath: String, intensityThreshold: Double): Future[Seq[SearchId]] = {
 
     val unzipPath = FileFinder.getHighestDir(Unzip.unzip(new File(zipPath)))
     println("load zip")
@@ -54,7 +54,7 @@ class LoaderMascotData(val db: DefaultDB) {
   }
 
 
-  def loadUnzipped(path: String, intensityThreshold: Double): Future[Int] = {
+  def loadUnzipped(path: String, intensityThreshold: Double): Future[Seq[SearchId]] = {
 
     println("unzip")
     // get the list of files in the directory
@@ -103,10 +103,9 @@ class LoaderMascotData(val db: DefaultDB) {
       nrExp <- insertExpData(mzMlFiles.zip(searchIds), intensityThreshold)
       nrMatch <- insertMatchData(mzIdFiles.zip(searchIds.zip(elemList)))
     } yield {
-      nrExp + nrMatch
+      //nrExp + nrMatch
+      searchIds
     }
-
-
 
   }
 

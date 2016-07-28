@@ -17,5 +17,6 @@ case class SearchInfo (searchId: SearchId,
                        enzyme: String,
                        parentTolerance: Option[String],
                        fragmentTolerance: String,
+                       status:String,
                        creationDate: Option[Date]
                         )

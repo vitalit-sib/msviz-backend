@@ -35,7 +35,7 @@ class LoaderMQData(val db: DefaultDB) {
    * @param zipPath
    * @return
    */
-  def loadZip(zipPath: String, intensityThreshold:Double): Future[Int] = {
+  def loadZip(zipPath: String, intensityThreshold:Double): Future[Seq[SearchId]] = {
     // unzip the file
     val unzipPath = FileFinder.getHighestDir(Unzip.unzip(new File(zipPath)))
 
@@ -45,6 +45,7 @@ class LoaderMQData(val db: DefaultDB) {
     //parse txt/summary to obtain check if we have all expected files
     val summaryFile = innerPath + "/txt/summary.txt"
     val summaryHash = LoaderMaxQuant.parseMaxquantSummaryTableRawSearchId(new File(summaryFile))
+
 
     //Check if all mzML files are available
     summaryHash.keys.foreach {
@@ -86,7 +87,11 @@ class LoaderMQData(val db: DefaultDB) {
 
         }
       }
-      Future.sequence(itTotalEntries.toList).map(_.sum)
+      //Future.sequence(itTotalEntries.toList).map(_.sum)
+      val searchIds: Seq[SearchId]= summaryHash.values.map{
+        searchId => SearchId(searchId)
+      }.toSeq
+      Future(searchIds)
     }catch{
       case e=>{
         removeSearches(summaryHash.values)

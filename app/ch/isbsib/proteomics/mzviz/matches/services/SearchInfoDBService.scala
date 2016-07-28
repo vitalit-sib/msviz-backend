@@ -67,6 +67,23 @@ class SearchInfoDBService(val db: DefaultDB) extends MongoDBService {
   }
 
   /**
+   * change status from inserting to done/error
+   * @param searchId the seach id
+   * @return
+   */
+  def updateStatus(searchId: SearchId, status: String): Future[Boolean] = {
+    val query = Json.obj("searchId" -> searchId.value)
+
+    val update = Json.obj(
+      "$set" -> Json.obj("status" -> status)
+    )
+    collection.update(query,update).map {
+      case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
+      case _ => true
+    }
+  }
+
+  /**
    * remove all entries from the mongodb
    * @param searchIds mutliple search ids
    * @return

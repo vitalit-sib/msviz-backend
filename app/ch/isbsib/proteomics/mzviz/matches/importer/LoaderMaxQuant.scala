@@ -448,6 +448,7 @@ object LoaderMaxQuant {
           enzyme=keyVal._2._1,
           parentTolerance=parentTolerance,
           fragmentTolerance=fragmentTolerance,
+          status="inserting",
           creationDate=nowDate)
         )
     })
