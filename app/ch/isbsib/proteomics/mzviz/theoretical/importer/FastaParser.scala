@@ -22,7 +22,8 @@ class FastaParser(file: File, source: SequenceSource, regexp:Option[String]) {
 
   def parseOneProtBlock(protLines: String): FastaEntry = {
     val firstNewLineIndex = protLines.indexOf("\n")
-    val headline = protLines.substring(0, firstNewLineIndex)
+    // give back next entry and remove heading '>' and any special characters
+    val headline = protLines.substring(0, firstNewLineIndex).replaceAll("^>|[^\\x00-\\x7F]", "")
     val seqLines = protLines.substring(firstNewLineIndex + 1)
 
     //get accession code and cleanup sequence
@@ -31,7 +32,6 @@ class FastaParser(file: File, source: SequenceSource, regexp:Option[String]) {
     val seq = seqLines.replaceAll( """\s+""", "")
 
     FastaEntry(ProteinRef(ac, ids, Some(source)), seq, seq.size)
-    //val=SequenceMongoDBService()
   }
 
   /**
@@ -46,8 +46,7 @@ class FastaParser(file: File, source: SequenceSource, regexp:Option[String]) {
     val it: Iterator[String] = new Iterator[String] {
       override def hasNext: Boolean = scanner.hasNext
 
-      // give back next entry and remove heading '>' and any special characters
-      override def next(): String = scanner.next().replaceAll("^>|[^\\x00-\\x7F]", "")
+      override def next(): String = scanner.next()
     }
 
     it.map(parseOneProtBlock)
