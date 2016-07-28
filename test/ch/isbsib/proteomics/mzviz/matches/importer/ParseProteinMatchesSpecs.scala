@@ -109,4 +109,34 @@ class ParseProteinMatchesSpecs extends Specification {
   }
 
 
+  "check main and subset proteins" should {
+
+    val file = scala.xml.XML.loadFile(new File("test/resources/mascot/F001303.mzid"))
+    val dbInfo = LoaderMzIdent.parseSearchDbSourceInfo(file)
+    val spIdTitleRelation = ParseProteinMatches.parseProtList(file, SearchId("hoho"), dbInfo)
+
+    "check size" in {
+      spIdTitleRelation.size must equalTo(1605)
+    }
+
+    "check main prots" in {
+      val main1 = spIdTitleRelation.find( one => one.mainProt.proteinAC.value == "HBB1_MOUSE")
+      val main2 = spIdTitleRelation.find( one => one.mainProt.proteinAC.value == "HBB2_MOUSE")
+
+      main1.isDefined mustEqual(true)
+      main2.isDefined mustEqual(true)
+    }
+
+    "check subset prots" in {
+      val main1 = spIdTitleRelation.find( one => one.mainProt.proteinAC.value == "HBB1_MOUSE")
+      val main2 = spIdTitleRelation.find( one => one.mainProt.proteinAC.value == "HBB2_MOUSE")
+
+      main1.get.subsetProts(0).proteinAC.value mustEqual(main2.get.subsetProts(0).proteinAC.value)
+
+    }
+
+
+  }
+
+
 }
