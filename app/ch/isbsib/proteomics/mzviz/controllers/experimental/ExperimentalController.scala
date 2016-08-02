@@ -111,6 +111,24 @@ object ExperimentalController extends CommonController {
       }
     }
 
+  @ApiOperation(nickname = "findSpectrumRef",
+    value = "find a spectrum reference by run id and spectrum title",
+    notes = """the tuple should be unique by indexing""",
+    response = classOf[SpectrumRef],
+    httpMethod = "GET")
+  def findSpectrumRef(@ApiParam(value = """run id""", defaultValue = "") @PathParam("runId") runId: String,
+                      @ApiParam(value = """spectrum id""", defaultValue = "") @PathParam("spId") spId: String
+                       ) =
+    Action.async {
+      ExpMongoDBService().findSpectrumRefByRunIdAndScanNumber(RunId(runId), SpectrumUniqueId(spId))
+        .map { case spref: SpectrumRef => Ok(Json.toJson(spref)) }
+        .recover {
+          case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
+        }
+    }
+
+
+
   @ApiOperation(nickname = "findAllSpectraRefByRunId",
     value = "find all spectra for a given run id",
     notes = """Returns only the reference information (precursor & co)""",

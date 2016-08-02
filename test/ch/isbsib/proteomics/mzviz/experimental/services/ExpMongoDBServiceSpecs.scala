@@ -129,6 +129,7 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
     }
   }
 
+
   "findAllSpectraRefByrunId" should {
     "find all with one runID" in new TempMongoDBService {
       val msnRun1= new MSRun(RunId("test-1"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("chanclas")).toSeq)
@@ -176,6 +177,28 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
 
       spRefList.length mustEqual(3)
     }
+  }
+
+
+  "find sp and sp-ref by runId and scanNr" should {
+    "find sp" in new TempMongoDBService {
+      val msnRun1= new MSRun(RunId("test-1"),LoaderMGF.load(new File("test/resources/maxquant/8077A.mgf"), RunId("MQ")).toSeq)
+      val n= service.insert(msnRun1).futureValue
+
+      val sp = service.findSpectrumByRunIdAndScanNumber(RunId("MQ"), SpectrumUniqueId("4")).futureValue
+      sp.peaks.size mustEqual(19)
+      sp.ref.precursor.moz mustEqual(Moz(421.757765091763))
+    }
+
+    "find sp-ref" in new TempMongoDBService {
+      val msnRun1= new MSRun(RunId("test-1"),LoaderMGF.load(new File("test/resources/maxquant/8077A.mgf"), RunId("MQ")).toSeq)
+      val n= service.insert(msnRun1).futureValue
+
+      val spRef = service.findSpectrumRefByRunIdAndScanNumber(RunId("MQ"), SpectrumUniqueId("4")).futureValue
+      spRef.precursor.moz mustEqual(Moz(421.757765091763))
+      spRef.spectrumId.id mustEqual(SpectrumUniqueId("4"))
+    }
+
   }
 
 

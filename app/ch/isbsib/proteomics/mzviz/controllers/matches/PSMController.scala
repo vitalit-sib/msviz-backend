@@ -62,13 +62,6 @@ object PSMController extends MatchController {
           MatchMongoDBService().enrichWithSpectrumRefs(psms)
             .map(enrichPSMs => Ok(Json.toJson(enrichPSMs)))
         })
- /*
-        for {
-          psms <- futPSMs
-          enrichedPMSs <- MatchMongoDBService().enrichWithSpectrumRefs(psms)
-        } yield {
-          Ok(Json.toJson(enrichedPMSs))
-        }*/
       } else {
         futPSMs.map(psms => Ok(Json.toJson(psms)))
       }
