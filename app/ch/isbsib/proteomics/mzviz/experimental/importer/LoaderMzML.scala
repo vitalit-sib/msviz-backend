@@ -33,9 +33,7 @@ class LoaderMzML {
     val unmarshaller = new MzMLUnmarshaller(mzmlFile)
     val it:MzMLObjectIterator[Nothing] = unmarshaller.unmarshalCollectionFromXpath(xpath, classOf[Spectrum])
 
-
     new MzMLIterator(it, runId)
-
   }
 
 }

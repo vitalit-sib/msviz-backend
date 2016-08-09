@@ -30,7 +30,7 @@ import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
  */
 
 @Api(value = "/test", description = "test")
-object actorsUpload extends CommonController {
+object ActorsUpload extends CommonController {
   @ApiOperation(nickname = "test",
     value = "test",
     notes = """test""",

@@ -124,6 +124,7 @@ class LoaderMascotData(val db: DefaultDB) {
 
   def insertOneMatch(mzIdFile: File, searchId: (SearchId, Elem)): Future[Int] = {
     val matchData = LoaderMzIdent.parseWithXmlElem(mzIdFile, searchId._1, RunId(searchId._1.value), searchId._2)
+    println("match data")
 
     for{
       // and only last the other data
@@ -152,18 +153,26 @@ class LoaderMascotData(val db: DefaultDB) {
 
 
   def insertOneExp(mzMlFile: File, id: SearchId, intensityThreshold: Double): Future[Int] = {
+    println("insert one exp: " + mzMlFile.toString + " with threshold " + intensityThreshold)
 
-    val itMs1Ms2 = LoaderMzML().parse(mzMlFile, RunId(id.value)).partition(_.isLeft)
-    val itMs1: Iterator[ExpMs1Spectrum] = itMs1Ms2._1.map(_.left.get)
-    val itMs2: Iterator[ExpMSnSpectrum] = itMs1Ms2._2.map(_.right.get)
+    val itMs1Ms2 = LoaderMzML().parse(mzMlFile, RunId(id.value))
+
+    println("got the iterator")
+
+    val itMs1Ms2parts = itMs1Ms2.partition(_.isLeft)
+
+    println("data partitioned")
+
+    val itMs1: Iterator[ExpMs1Spectrum] = itMs1Ms2parts._1.map(_.left.get)
+    val itMs2: Iterator[ExpMSnSpectrum] = itMs1Ms2parts._2.map(_.right.get)
 
     for {
-    //Load MS1
       ms1 <- ms1Service.insertMs1spectra(itMs1, intensityThreshold)
-      //Load MS2
       ms2 <- msnService.insertMs2spectra(itMs2, RunId(id.value))
-    }yield{
-      if(ms1) 1 else 0 + ms2
+    } yield {
+      val i = (if(ms1) 0 else 1) + ms2
+      println("ms1 and ms2 got really finished: " + i)
+      i
     }
   }
 

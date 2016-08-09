@@ -28,7 +28,7 @@ import ch.isbsib.proteomics.mzviz.matches.services.SearchInfoDBService
 class ReceiverUploadActor(searchIds: Seq[SearchId],status:String) extends Actor {
   def receive = {
     case "inserted_end" =>{
-      val p = new java.io.PrintWriter(new File("wee.txt"))
+      val p = new java.io.PrintWriter(new File("/tmp/wee.txt"))
       p.print("doneee")
       p.close()
 
