@@ -111,6 +111,24 @@ object ExperimentalController extends CommonController {
       }
     }
 
+  @ApiOperation(nickname = "findSpectrumRef",
+    value = "find a spectrum reference by run id and spectrum title",
+    notes = """the tuple should be unique by indexing""",
+    response = classOf[SpectrumRef],
+    httpMethod = "GET")
+  def findSpectrumRef(@ApiParam(value = """run id""", defaultValue = "") @PathParam("runId") runId: String,
+                      @ApiParam(value = """spectrum id""", defaultValue = "") @PathParam("spId") spId: String
+                       ) =
+    Action.async {
+      ExpMongoDBService().findSpectrumRefByRunIdAndScanNumber(RunId(runId), SpectrumUniqueId(spId))
+        .map { case spref: SpectrumRef => Ok(Json.toJson(spref)) }
+        .recover {
+          case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
+        }
+    }
+
+
+
   @ApiOperation(nickname = "findAllSpectraRefByRunId",
     value = "find all spectra for a given run id",
     notes = """Returns only the reference information (precursor & co)""",
@@ -147,14 +165,14 @@ object ExperimentalController extends CommonController {
 
 
 
-  @ApiOperation(nickname = "findPrecursors",
-    value = "find all ms2 for a given run id wich have a precursor around moz with the given tolerance",
+  @ApiOperation(nickname = "findSpectrumByMozTol",
+    value = "find all ms2 for a given run id which have a precursor around moz with the given tolerance",
     notes = """Returns for ms1 list of retention times and intensities""",
     httpMethod = "GET")
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name = "tolerance", value = "tolerance", required = false, dataType = "Double", paramType = "query")
   ))
-  def findPrecursors(@ApiParam(value = """run id""", required = true) @PathParam("runId") runId: String,
+  def findSpectrumByMozTol(@ApiParam(value = """run id""", required = true) @PathParam("runId") runId: String,
               @ApiParam(value = """m/z""", required = true) @PathParam("moz") moz: Double,
               @ApiParam(name = "tolerance", value = """the moz tolerance in ppm""", defaultValue = "10", required=false) @PathParam("tolerance") tolerance: Option[Double]=None
                ) =
@@ -166,6 +184,33 @@ object ExperimentalController extends CommonController {
 
       // and the corresponding Ms2 precursors
       val futureMs2List = ExpMongoDBService().findSpectrumByMozTol(RunId(runId), Moz(moz), daltonTolerance)
+
+      futureMs2List.map {ms2List  => Ok(Json.toJson(ms2List)) }
+        .recover {
+          case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
+        }
+
+    }
+
+  @ApiOperation(nickname = "findSpectrumRefByMozTol",
+    value = "find all ms2 information for a given run id which have a precursor around moz with the given tolerance",
+    notes = """Returns for ms1 list of retention times and intensities""",
+    httpMethod = "GET")
+  @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "tolerance", value = "tolerance", required = false, dataType = "Double", paramType = "query")
+  ))
+  def findSpectrumRefByMozTol(@ApiParam(value = """run id""", required = true) @PathParam("runId") runId: String,
+                           @ApiParam(value = """m/z""", required = true) @PathParam("moz") moz: Double,
+                           @ApiParam(name = "tolerance", value = """the moz tolerance in ppm""", defaultValue = "10", required=false) @PathParam("tolerance") tolerance: Option[Double]=None
+                            ) =
+    Action.async {
+
+      // set the default value to 10 ppm
+      val ppmTolerance = tolerance.getOrElse(10.0)
+      val daltonTolerance = moz / 1000000 * ppmTolerance
+
+      // and the corresponding Ms2 precursors
+      val futureMs2List = ExpMongoDBService().findSpectrumRefByMozTol(RunId(runId), Moz(moz), daltonTolerance)
 
       futureMs2List.map {ms2List  => Ok(Json.toJson(ms2List)) }
         .recover {

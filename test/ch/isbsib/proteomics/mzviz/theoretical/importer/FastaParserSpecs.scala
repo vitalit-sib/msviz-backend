@@ -120,6 +120,24 @@ class FastaParserSpecs extends Specification with ScalaFutures {
       val ubp15 = entries.filter(_.proteinRef.AC.value.contains("UBP15_HUMAN"))
       ubp15.length mustEqual(3)
     }
+
+
   }
+
+  "parse special chars" should{
+
+    val regexp_2 = "([^ ]*).*"
+    val entries_2 = FastaParser("test/resources/sequences/special_chars.fasta", SequenceSource("test"), Some(regexp_2)).parse.toSeq
+
+    "size" in {
+      entries_2.size mustEqual(5)
+    }
+
+    "first entry" in {
+      entries_2(0).proteinRef.AC.value mustEqual("P08898|H3_CAEEL")
+    }
+
+  }
+
 
 }

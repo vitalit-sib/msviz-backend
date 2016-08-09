@@ -2,6 +2,7 @@ package ch.isbsib.proteomics.mzviz.theoretical.importer
 
 import java.io.File
 import java.util.Scanner
+import play.api.Logger
 
 import ch.isbsib.proteomics.mzviz.matches.models.ProteinRef
 import ch.isbsib.proteomics.mzviz.theoretical.{ProteinIdentifier, SequenceSource, AccessionCode}
@@ -21,7 +22,8 @@ class FastaParser(file: File, source: SequenceSource, regexp:Option[String]) {
 
   def parseOneProtBlock(protLines: String): FastaEntry = {
     val firstNewLineIndex = protLines.indexOf("\n")
-    val headline = protLines.substring(0, firstNewLineIndex)
+    // give back next entry and remove heading '>' and any special characters
+    val headline = protLines.substring(0, firstNewLineIndex).replaceAll("^>|[^\\x00-\\x7F]", "")
     val seqLines = protLines.substring(firstNewLineIndex + 1)
 
     //get accession code and cleanup sequence
@@ -30,7 +32,6 @@ class FastaParser(file: File, source: SequenceSource, regexp:Option[String]) {
     val seq = seqLines.replaceAll( """\s+""", "")
 
     FastaEntry(ProteinRef(ac, ids, Some(source)), seq, seq.size)
-    //val=SequenceMongoDBService()
   }
 
   /**

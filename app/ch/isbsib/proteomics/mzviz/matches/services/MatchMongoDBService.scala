@@ -139,7 +139,10 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @param accessionCode entry AC
    * @return
    */
-  def findAllPSMsByProtein(accessionCode: AccessionCode, source: Option[SequenceSource] = None, searchIds: Option[Set[SearchId]] = None): Future[Seq[PepSpectraMatch]] = {
+  def findAllPSMsByProtein(accessionCode: AccessionCode,
+                           source: Option[SequenceSource] = None,
+                           searchIds: Option[Set[SearchId]] = None,
+                           notRejected: Option[Boolean] = None): Future[Seq[PepSpectraMatch]] = {
 
     Logger.info(s"accessionCode=$accessionCode, searchIds = $searchIds")
     val query = Json.obj("proteinList.proteinRef.AC" -> accessionCode.value) ++
@@ -149,6 +152,10 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
       }) ++
       (searchIds match {
         case Some(ssids) => Json.obj("searchId" -> Json.obj("$in" -> ssids.toList.map(_.value)))
+        case _ => Json.obj()
+      }) ++
+      (notRejected match {
+        case Some(notRej) => Json.obj("matchInfo.isRejected" -> false)
         case _ => Json.obj()
       })
 

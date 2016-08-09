@@ -62,13 +62,6 @@ object PSMController extends MatchController {
           MatchMongoDBService().enrichWithSpectrumRefs(psms)
             .map(enrichPSMs => Ok(Json.toJson(enrichPSMs)))
         })
- /*
-        for {
-          psms <- futPSMs
-          enrichedPMSs <- MatchMongoDBService().enrichWithSpectrumRefs(psms)
-        } yield {
-          Ok(Json.toJson(enrichedPMSs))
-        }*/
       } else {
         futPSMs.map(psms => Ok(Json.toJson(psms)))
       }
@@ -158,9 +151,11 @@ object PSMController extends MatchController {
     }) {
       Action.async { implicit request =>
         MatchMongoDBService().findAllPSMsByProtein(
-          AccessionCode(accessionCode),
+          accessionCode = AccessionCode(accessionCode),
           source = sequenceSource.map(s => SequenceSource(s)),
-          searchIds = if (searchIds == "*") None else Some(searchIds.split(",").toList.map(s => SearchId(s)).toSet)
+          searchIds = if (searchIds == "*") None else Some(searchIds.split(",").toList.map(s => SearchId(s)).toSet),
+          // we only take the ones which are not rejected
+          notRejected = Some(true)
         )
           .map { case psms =>
           render {

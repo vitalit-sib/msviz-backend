@@ -74,12 +74,12 @@ class LoaderMascotData(val db: DefaultDB) {
     val mzMlFiles = elemList.zip(mzIdFiles).map({
       tuple =>
         val found= LoaderMzIdent.parseSpectraFilename(tuple._1)
-        var filename= path + "/" + found
 
-        //if resubmitted job, SpectraData location field is empty, so we take mzid name
-        if (found == ""){
-          filename= tuple._2.toString.split("\\.")(0)
-        }
+        //if resubmitted job, SpectraData location file is empty, so we take mzid name
+        val  filename=
+          if(found == "") path + "/" + tuple._2.toString.split("\\/").last.split("\\.")(0)
+          else path + "/" + found
+
         new File(filename + ".mzML")
     })
 

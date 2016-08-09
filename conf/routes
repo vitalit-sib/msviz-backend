@@ -15,8 +15,10 @@ POST           /exp/msrun/:runId                                      ch.isbsib.
 DELETE         /exp/msrun/:runId                                      ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.deleteMSRun(runId)
 OPTIONS        /exp/msrun/:runId                                      ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.options(runId)
 GET            /exp/spectrum/:runId/:spId                             ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findExpSpectrum(runId:String, spId:String, sortByMoz:Option[Boolean], mostIntense:Option[Integer])
+GET            /exp/spectrum-ref/:runId/:spId                         ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findSpectrumRef(runId:String, spId:String)
 GET            /exp/spectra-ref/:runId                                ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findAllSpectraRefByRunId(runId)
-GET            /exp/spectra/:runId/:moz                               ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findPrecursors(runId,moz:Double,tolerance:Option[Double])
+GET            /exp/spectra/:runId/:moz                               ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findSpectrumByMozTol(runId,moz:Double,tolerance:Option[Double])
+GET            /exp/spectra-ref/:runId/:moz                           ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findSpectrumRefByMozTol(runId,moz:Double,tolerance:Option[Double])
 
 GET            /api-docs/sequences                                    controllers.ApiHelpController.getResource(path = "/sequences")
 GET            /sequences/list-sources                                ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.listSources
