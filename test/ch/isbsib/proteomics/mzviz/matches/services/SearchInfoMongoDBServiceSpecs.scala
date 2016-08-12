@@ -55,7 +55,6 @@ class SearchInfoMongoDBServiceSpecs extends Specification with ScalaFutures {
       oSearch.isDefined must equalTo(true)
 
       val si = oSearch.get
-      si.creationDate.isDefined mustEqual(true)
       si.database(0).toString mustEqual("SearchDatabase(SDB_SwissProt_ID,Some(SwissProt_2014_08.fasta),Some(546238))")
       si.enzyme mustEqual("Trypsin")
       si.fragmentTolerance mustEqual("0.3 dalton")
@@ -122,4 +121,16 @@ class SearchInfoMongoDBServiceSpecs extends Specification with ScalaFutures {
       } must throwA[Exception]
     }
   }
+
+  "createSearchIdWithError" should {
+    "create new error" in new TempMongoDBService {
+      service.createSearchIdWithError(SearchId("hoho"), "a new error").futureValue
+      val searchList = service.list.futureValue
+      searchList.size mustEqual(1)
+      searchList(0).status.code mustEqual("error")
+      searchList(0).searchId.value.replaceFirst("\\d+", "") mustEqual("_hoho")
+    }
+  }
+
+
 }

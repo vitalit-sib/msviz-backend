@@ -55,6 +55,7 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
    */
   def insert(matches: Seq[PepSpectraMatch]): Future[Int] = {
     val searchIds = matches.map(_.searchId.value).toSet
+
     for {
       c <- checkIfAnyKeyExist(searchIds)
       n <- collection.bulkInsert(Enumerator(matches: _*))

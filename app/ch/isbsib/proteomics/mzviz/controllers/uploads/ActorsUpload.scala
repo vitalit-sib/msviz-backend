@@ -22,6 +22,7 @@ import play.api.Play
 import scala.concurrent.ExecutionContext.Implicits.global
 import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
 
+import scala.concurrent.Future
 
 
 /**
@@ -44,17 +45,14 @@ object ActorsUpload extends CommonController {
     Action(parse.temporaryFile){
 
       request =>
-      val acsy = ActorSystem("WSU-CEG-7370-Actors")
+        val actorSystem = ActorSystem()
 
+        val receiverActor = actorSystem.actorOf(Props(new ReceiverUploadActor()), "receive-upload-answer")
+        val uploadActor = actorSystem.actorOf(Props(new SenderUploadActor(receiverActor)), "start-upload")
 
-      val uploadActor = acsy.actorOf(Props(new SenderUploadActor(request.body.file.getAbsolutePath, intensityTh.getOrElse(1.0), resultType)), "start")
-        uploadActor ! "start"
+        uploadActor ! new ZipUploadData(request.body.file.getAbsolutePath, intensityTh.getOrElse(1.0), resultType)
 
-
-      //val receiver: Actor = new ReceiverUploadActor()
-      //val sender = new SenderUploadActor(request.body.file.getAbsolutePath, intensityTh.getOrElse(1.0))
-
-      Ok("Ok")
+        Ok("insertion was started")
     }
 
 

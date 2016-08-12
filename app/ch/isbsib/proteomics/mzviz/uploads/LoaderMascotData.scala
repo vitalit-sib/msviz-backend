@@ -1,6 +1,10 @@
 package ch.isbsib.proteomics.mzviz.uploads
 
+import java.lang
+import java.util.Calendar
+
 import ch.isbsib.proteomics.mzviz.commons.helpers.{FileFinder, Unzip}
+import ch.isbsib.proteomics.mzviz.commons.importers.ImporterException
 import ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController._
 import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, ExpMs1Spectrum}
 import ch.isbsib.proteomics.mzviz.experimental.{MSRun, RunId}
@@ -8,7 +12,8 @@ import ch.isbsib.proteomics.mzviz.experimental.importer.{LoaderMGF, LoaderMzML, 
 import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMongoDBService, ExpMs1BinMongoDBService}
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
-import ch.isbsib.proteomics.mzviz.matches.services.{SearchInfoDBService, ProteinMatchMongoDBService, MatchMongoDBService}
+import ch.isbsib.proteomics.mzviz.matches.models.{SubmissionStatus, SearchInfo}
+import ch.isbsib.proteomics.mzviz.matches.services.{CommonMatchService, SearchInfoDBService, ProteinMatchMongoDBService, MatchMongoDBService}
 import ch.isbsib.proteomics.mzviz.uploads.LoaderMQData._
 import play.api.libs.json.Json
 import play.api.mvc.Controller
@@ -20,7 +25,7 @@ import java.nio.file.{Paths, Files}
 import scala.concurrent.ExecutionContext.Implicits.global
 import java.io.File
 
-import scala.util.{Failure, Success}
+import scala.util.{Try, Failure, Success}
 import scala.xml.Elem
 
 /**
@@ -38,6 +43,7 @@ class LoaderMascotData(val db: DefaultDB) {
   val matchService = new MatchMongoDBService(db)
   val protMatchService = new ProteinMatchMongoDBService(db)
   val searchInfoService = new SearchInfoDBService(db)
+  val commonMatchService = new CommonMatchService(db)
 
   /**
    * load a zip file containing a run per subfolder
@@ -46,134 +52,324 @@ class LoaderMascotData(val db: DefaultDB) {
    * @return
    */
   def loadZip(zipPath: String, intensityThreshold: Double): Future[Seq[SearchId]] = {
-
     val unzipPath = FileFinder.getHighestDir(Unzip.unzip(new File(zipPath)))
     println("load zip")
     println(unzipPath)
-    loadUnzipped(unzipPath, intensityThreshold)
+    val loadingResult:Future[Seq[SearchId]] = loadUnzipped(unzipPath, intensityThreshold)
+
+    loadingResult
   }
 
-
+  /**
+   * load all data from the path
+   *
+   * @param path
+   * @param intensityThreshold
+   * @return
+   */
   def loadUnzipped(path: String, intensityThreshold: Double): Future[Seq[SearchId]] = {
 
     println("unzip")
+
+    println(path)
+
+    val zipFileName = path.split("\\/").last + ".zip"
+
+    println(zipFileName)
+
     // get the list of files in the directory
     val fileList = FileFinder.getListOfFiles(path)
 
     // keep mzId files
-    val mzIdFiles = fileList.filter(x => x.getName.split("\\.").last.toLowerCase() == "mzid")
+    val mzIdFiles:List[File] = fileList.filter(x => x.getName.split("\\.").last.toLowerCase() == "mzid")
 
     // list of searchIds
     val searchIds = mzIdFiles.map(x => SearchId(x.getName.split("\\.")(0)))
 
     // get the XML parsers
-    val elemList = mzIdFiles.map(file => scala.xml.XML.loadFile(file))
+    val mzMlXmlElems:Try[List[Elem]] = Try(mzIdFiles.map(file => scala.xml.XML.loadFile(file)))
 
-    // get the corresponding mzML files
-    // zip XML elements and mzid names, List[(Elem, File)]
-    val mzMlFiles = elemList.zip(mzIdFiles).map({
-      tuple =>
-        val found= LoaderMzIdent.parseSpectraFilename(tuple._1)
 
-        //if resubmitted job, SpectraData location file is empty, so we take mzid name
-        val  filename=
-          if(found == "") path + "/" + tuple._2.toString.split("\\/").last.split("\\.")(0)
-          else path + "/" + found
+      // get the corresponding mzML files
+      // zip XML elements and mzid names, List[(Elem, File)]
+      val mzMlFiles:Try[List[File]] = mzMlXmlElems.map(_.zip(mzIdFiles).map({
+        tuple =>
+          val found= LoaderMzIdent.parseSpectraFilename(tuple._1)
 
-        new File(filename + ".mzML")
-    })
+          //if resubmitted job, SpectraData location file is empty, so we take mzid name
+          val  filename=
+            if(found == "") path + "/" + tuple._2.toString.split("\\/").last.split("\\.")(0)
+            else path + "/" + found
 
-    // assert that all mzML files are here
-    mzMlFiles.foreach({ mzMlFile =>
-      if (! Files.exists(mzMlFile.toPath)) {
-        throw new RuntimeException("[" + mzMlFile + "] not found. If resubmitted job please rename your mzML files.")
-      }
-    })
+          new File(filename + ".mzML")
+      })).recoverWith({
+        case e: Exception => {
+          searchInfoService.createSearchIdWithError(SearchId(zipFileName), "There must be something wrong with one of your MzIdentMl files")
+          Failure(e)
+        }
+      })
 
+    val allMzMlFound = checkMzMlFilesExist(mzMlFiles.get, searchIds)
+
+    // if not all mzML files are available we throw an exception
+    if(allMzMlFound){
+      // check if searchIds are already taken
+      val searchIdAlreadyExists = checkSearchIdsExists(searchIds)
+      searchIdAlreadyExists.flatMap(alreadyExists => {
+        if (alreadyExists._1){
+          val searchIdsString = searchIds.map(_.value).reduceLeft(_ + "," + _)
+          throw new ImporterException(s"Some of the SearchIds [$searchIdsString] already exist.")
+        }
+        else insertAllData(searchIds, mzIdFiles, mzMlFiles.get, mzMlXmlElems.get, intensityThreshold)
+      })
+    }
+    else {
+      throw new ImporterException(s"There are mzMl files missing in the given zip file: [$path]")
+    }
+
+  }
+
+  /**
+   * Check if any of the given SearchIds already exists.
+   * In case it already exists we create an error SearchId for the given SearchId
+   * @param searchIds
+   * @return
+   */
+  def checkSearchIdsExists(searchIds: Seq[SearchId]):Future[(Boolean, List[SearchId])] = {
     // assert that searchIds are not already inserted
-    searchIds.foreach({ id =>
-      for{
-        found <- searchInfoService.isSearchIdExist(id)
-      } yield {
-        if(found) throw new RuntimeException("[" + id + "] was already inserted. Please delete this entry before re-insertion")
-      }
+    val searchIdCheck:Seq[Future[(Boolean, SearchId)]] = searchIds.map({ id =>
+      searchInfoService.isSearchIdExist(id).map({ alreadyTaken =>
+        if(alreadyTaken) searchInfoService.createSearchIdWithError(id, s"SearchId [${id.value}] already exists. Please delete SearchIds with this name before reinsertion")
+        (alreadyTaken, id)
+      })
     })
 
-    for{
-      nrExp <- insertExpData(mzMlFiles.zip(searchIds), intensityThreshold)
-      nrMatch <- insertMatchData(mzIdFiles.zip(searchIds.zip(elemList)))
+    // check if all searchIds are ok
+    val failedSearchIds:List[SearchId] = List()
+
+    val searchIdAlreadyExists:Future[(Boolean, List[SearchId])] = Future.sequence(searchIdCheck).map({
+      found => found.foldLeft((false, failedSearchIds))({(a,b) =>
+        ((a._1 & b._1), if(b._1) b._2 :: a._2 else a._2)
+      })
+    })
+
+    searchIdAlreadyExists
+  }
+
+
+  /**
+   * Check if the given mzMl files exist.
+   * If they are missing we create the corresponding SearchIds with errors
+   * @param mzMlFiles
+   * @param searchIds
+   * @return
+   */
+  def checkMzMlFilesExist(mzMlFiles: Seq[File], searchIds: Seq[SearchId]): Boolean = {
+    // assert that all mzML files are here
+    val filesFound = mzMlFiles.zip(searchIds).map({ case (mzMlFile,searchId) =>
+      if (! Files.exists(mzMlFile.toPath)) {
+        searchInfoService.createSearchIdWithError(searchId, s"Error while parsing [${searchId.value}]. Could not find mzML file [${mzMlFile.getName}]")
+        false
+      } else true
+    })
+
+    filesFound.reduceLeft(_ & _)
+  }
+
+
+  /**
+   * insert all data to the database
+   *
+   * @param searchIds
+   * @param mzIdFiles
+   * @param mzMlFiles
+   * @param mzMlXmlElems
+   * @param intensityThreshold
+   * @return
+   */
+  def insertAllData(searchIds: List[SearchId],
+                    mzIdFiles: List[File],
+                    mzMlFiles: List[File],
+                    mzMlXmlElems: List[Elem],
+                    intensityThreshold:Double): Future[Seq[SearchId]] = {
+
+    // the callback to update the searchId status
+    def updateStatus(searchId:SearchId, code: String, message:String) = {
+      val status = new SubmissionStatus(code=code, message = message)
+      searchInfoService.updateStatus(searchId, status)
+    }
+
+    val insertedIds = for{
+      nrMatch <- insertMatchData(mzIdFiles.zip(searchIds.zip(mzMlXmlElems)), Some(updateStatus))
+      nrExp <- insertExpData(mzMlFiles.zip(searchIds), intensityThreshold, Some(updateStatus))
     } yield {
       //nrExp + nrMatch
       searchIds
     }
 
+    // if one SearchId fails we remove all SearchIds
+    insertedIds.recover({
+      case e:Exception => {
+        searchIds.foreach({ id =>
+          commonMatchService.deleteAllMatchInfo(id)
+          ms1Service.deleteAllByRunIds(Set(RunId(id.value)))
+          msnService.delete(Set(RunId(id.value)))
+        })
+        throw new ImporterException("Error while inserting experimental data. " + e.getMessage, e)
+      }
+    })
+
   }
 
 
-  def insertMatchData(mzIdFiles: List[(File, (SearchId, Elem))]): Future[Int] = {
+  /**
+   * insert psm, proteinInfo and searchInfo data from a list of mzId files
+   *
+   * @param mzIdFiles
+   * @param updateStatusCallback
+   * @return
+   */
+  def insertMatchData(mzIdFiles: List[(File, (SearchId, Elem))],
+                      updateStatusCallback: Option[(SearchId, String, String) => Future[Boolean]] = None): Future[Int] = {
     // insert one by one
     mzIdFiles.foldLeft(Future{0})( (futureA, b) =>
       for {
         a <- futureA
-        c <- insertOneMatch(b._1, b._2)
+        c <- insertOneMatch(b._1, b._2, updateStatusCallback).get
       } yield {
         a + c
       })
 
   }
 
-  def insertOneMatch(mzIdFile: File, searchId: (SearchId, Elem)): Future[Int] = {
-    val matchData = LoaderMzIdent.parseWithXmlElem(mzIdFile, searchId._1, RunId(searchId._1.value), searchId._2)
-    println("match data")
+  /**
+   * insert psm, proteinInfo and searchInfo data from one mzId file
+   *
+   * @param mzIdFile
+   * @param searchId
+   * @param updateStatusCallback
+   * @return
+   */
+  def insertOneMatch(mzIdFile: File,
+                     searchId: (SearchId, Elem),
+                     updateStatusCallback: Option[(SearchId, String, String) => Future[Boolean]] = None): Try[Future[Int]] = {
 
-    for{
+    Try {
+
+      val matchData = LoaderMzIdent.parseWithXmlElem(mzIdFile, searchId._1, RunId(searchId._1.value), searchId._2)
+      println("match data")
+
+      for {
       // and only last the other data
-      matchNr <- matchService.insert(matchData._1)
-      psmNumber <- protMatchService.insert(matchData._2)
-      searchOk <- searchInfoService.insert(matchData._3)
+        matchNr <- matchService.insert(matchData._1)
+        psmNumber <- protMatchService.insert(matchData._2)
+        searchOk <- searchInfoService.insert(matchData._3)
 
-    }yield{
-      matchNr + psmNumber + (if(searchOk) 1 else 0)
-    }
+      } yield {
+        if (updateStatusCallback.isDefined) updateStatusCallback.get.apply(searchId._1, "processing", "waiting to insert experimental data")
+        matchNr + psmNumber + (if (searchOk) 1 else 0)
+      }
+
+    }.recoverWith({
+      case e: Exception => {
+        val errorMessage = s"There is something wrong with your MzIdentMl file [${mzIdFile.getName}]"
+        searchInfoService. createSearchIdWithError(searchId._1, errorMessage)
+        Failure(new ImporterException(errorMessage, e))
+      }
+    })
+
   }
 
 
-  def insertExpData(mzMlFiles: List[(File, SearchId)], intensityThreshold: Double): Future[Int] = {
+  /**
+   * insert ms1 and ms2 data from a list of mzML files
+   *
+   * @param mzMlFiles
+   * @param intensityThreshold
+   * @param updateStatusCallback
+   * @return
+   */
+  def insertExpData(mzMlFiles: List[(File, SearchId)],
+                    intensityThreshold: Double,
+                    updateStatusCallback: Option[(SearchId, String, String) => Future[Boolean]] = None): Future[Int] = {
     // insert one by one
 
     println("expData")
     mzMlFiles.foldLeft(Future{0})( (futureA, b) =>
       for {
         a <- futureA
-        c <- insertOneExp(b._1, b._2, intensityThreshold)
+        c <- insertOneExp(b._1, b._2, intensityThreshold, updateStatusCallback)
       } yield {
         a + c
       })
   }
 
-
-  def insertOneExp(mzMlFile: File, id: SearchId, intensityThreshold: Double): Future[Int] = {
+  /**
+   * insert ms1 and ms2 data from one mzML file
+   * @param mzMlFile
+   * @param id
+   * @param intensityThreshold
+   * @param updateStatusCallback
+   * @return
+   */
+  def insertOneExp(mzMlFile: File,
+                   id: SearchId,
+                   intensityThreshold: Double,
+                   updateStatusCallback: Option[(SearchId, String, String) => Future[Boolean]] = None): Future[Int] = {
     println("insert one exp: " + mzMlFile.toString + " with threshold " + intensityThreshold)
 
-    val itMs1Ms2 = LoaderMzML().parse(mzMlFile, RunId(id.value))
+    val itMs1Ms2 = Try( LoaderMzML().parse(mzMlFile, RunId(id.value)) ).recoverWith({
+      case e: Exception => {
+        val errorMessage = s"Error while parsing MzML file. There is something wrong with MzML file [${mzMlFile.getName}]"
+        searchInfoService.createSearchIdWithError(id, errorMessage)
+        Failure(new ImporterException(errorMessage, e))
+      }
+    })
 
     println("got the iterator")
 
-    val itMs1Ms2parts = itMs1Ms2.partition(_.isLeft)
+    val itMs1Ms2parts = itMs1Ms2.get.partition(_.isLeft)
 
     println("data partitioned")
 
     val itMs1: Iterator[ExpMs1Spectrum] = itMs1Ms2parts._1.map(_.left.get)
     val itMs2: Iterator[ExpMSnSpectrum] = itMs1Ms2parts._2.map(_.right.get)
 
-    for {
-      ms1 <- ms1Service.insertMs1spectra(itMs1, intensityThreshold)
-      ms2 <- msnService.insertMs2spectra(itMs2, RunId(id.value))
-    } yield {
-      val i = (if(ms1) 0 else 1) + ms2
-      println("ms1 and ms2 got really finished: " + i)
-      i
-    }
+    updateStatusCallback.get.apply(id, "processing", "inserting ms1 data")
+
+    val insertMs1:Future[Boolean] = ms1Service.insertMs1spectra(itMs1, intensityThreshold)
+
+    insertMs1.recover({
+      case e: Exception => {
+        val errorMessage = s"Error while inserting ms1 data."
+        searchInfoService.createSearchIdWithError(id, errorMessage)
+        throw new ImporterException(errorMessage, e)
+      }
+    })
+
+    insertMs1.flatMap({ ms1Inserted =>
+      if(updateStatusCallback.isDefined){
+        updateStatusCallback.get.apply(id, "processing", "inserting ms2 data")
+      }
+      val insertMs2: Future[Int] = msnService.insertMs2spectra(itMs2, RunId(id.value))
+
+      insertMs2.recover({
+        case e: Exception => {
+          val errorMessage = s"Error while inserting ms2 data."
+          searchInfoService.createSearchIdWithError(id, errorMessage)
+          throw new ImporterException(errorMessage, e)
+        }
+      })
+
+      insertMs2.map({ ms2Inserted =>
+        if(updateStatusCallback.isDefined){
+          updateStatusCallback.get.apply(id, "processing", "finished ms2 insertion")
+        }
+
+        (if(ms1Inserted) 0 else 1) + ms2Inserted
+      })
+    })
+
   }
 
   /**
@@ -250,8 +446,6 @@ class LoaderMascotData(val db: DefaultDB) {
 
 
 }
-
-
 
 
 /**

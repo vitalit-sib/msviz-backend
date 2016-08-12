@@ -4,7 +4,7 @@ import java.util.Calendar
 
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoDBService, MongoNotFoundException}
 import ch.isbsib.proteomics.mzviz.matches.SearchId
-import ch.isbsib.proteomics.mzviz.matches.models.SearchInfo
+import ch.isbsib.proteomics.mzviz.matches.models.{SubmissionStatus, SearchInfo}
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
 import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
 
@@ -43,7 +43,7 @@ class SearchInfoDBService(val db: DefaultDB) extends MongoDBService {
   def insert(entries: SearchInfo): Future[Boolean] = {
 
     // add timestamp to the searchInfo
-    val newEntry = entries.copy(creationDate = Some(Calendar.getInstance().getTime()))
+    val newEntry = entries.copy(creationDate = Calendar.getInstance().getTime())
 
     collection.insert(newEntry).map{
       case e: LastError if e.inError => false
@@ -71,16 +71,32 @@ class SearchInfoDBService(val db: DefaultDB) extends MongoDBService {
    * @param searchId the seach id
    * @return
    */
-  def updateStatus(searchId: SearchId, status: String): Future[Boolean] = {
+  def updateStatus(searchId: SearchId, submissionStatus: SubmissionStatus): Future[Boolean] = {
     val query = Json.obj("searchId" -> searchId.value)
 
     val update = Json.obj(
-      "$set" -> Json.obj("status" -> status)
+      "$set" -> Json.obj("status" -> submissionStatus)
     )
     collection.update(query,update).map {
       case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
       case _ => true
     }
+  }
+
+
+  /**
+   * Create a SearchId with a timestamp in front and the status "error"
+   * @param searchId
+   * @param message
+   * @return
+   */
+  def createSearchIdWithError(searchId: SearchId, message: String): Future[Boolean] ={
+    val status = new SubmissionStatus("error", message)
+    val nowDate = Calendar.getInstance().getTime()
+    // the error searchId has still to be unique, so with add a timestamp in front with a separated _
+    val errorSearchId = SearchId(nowDate.getTime + "_" + searchId.value)
+    val info = new SearchInfo(errorSearchId, "", List(), "", "", None, "", status, nowDate)
+    this.insert(info)
   }
 
   /**

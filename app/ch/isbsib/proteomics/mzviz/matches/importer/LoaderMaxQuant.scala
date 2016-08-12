@@ -436,7 +436,7 @@ object LoaderMaxQuant {
     val fragmentTolerance = paramsHash("MS/MS tol. (FTMS)")
 
     val searchInfoHashAux: Map[RunId, SearchInfo] = summaryHash.map({
-      val nowDate = Some(Calendar.getInstance().getTime())
+      val nowDate = Calendar.getInstance().getTime()
       keyVal =>
         val searchId = if(idTitle.isDefined) idTitle.get + ":" + keyVal._1 else keyVal._1
         Tuple2(
@@ -448,7 +448,7 @@ object LoaderMaxQuant {
           enzyme=keyVal._2._1,
           parentTolerance=parentTolerance,
           fragmentTolerance=fragmentTolerance,
-          status="inserting",
+          status = new SubmissionStatus("processing", "new SearchId was created"),
           creationDate=nowDate)
         )
     })

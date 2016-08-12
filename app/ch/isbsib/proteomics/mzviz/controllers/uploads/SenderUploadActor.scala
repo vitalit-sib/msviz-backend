@@ -1,13 +1,9 @@
 package ch.isbsib.proteomics.mzviz.controllers.uploads
 
 
-import java.io.File
-
-import akka.actor.{ActorSystem, Props, Actor}
-import ch.isbsib.proteomics.mzviz.controllers.uploads.ZipDataController._
+import akka.actor.{ActorRef, Actor}
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.uploads.{LoaderMascotData, LoaderMQData}
-import play.api.libs.json.Json
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -17,25 +13,27 @@ import scala.concurrent.Future
  */
 
 
-class SenderUploadActor(path: String, intensityThreshold: Double, resultType: String) extends Actor {
+class SenderUploadActor(receiverUploadActor: ActorRef) extends Actor {
   def receive = {
 
-    case "start" => {
-      println("actor uploading")
-      sender ! (s"starting")
+    case ZipUploadData(path, intensityThreshold, resultType) => {
+      // we don't send anything to the sender, since he's not listening
+      //sender ! ("started")
 
-      val acsy = ActorSystem("WSU-CEG-7370-Actors")
+      val entries: Future[Seq[SearchId]] =  if (resultType == "maxquant")
+                                                LoaderMQData().loadZip(path, intensityThreshold)
+                                              else {
+                                                LoaderMascotData().loadZip(path, intensityThreshold)
+                                              }
 
-      ///TO DO insert
+      // send the result (a Future) to the receiver
+      receiverUploadActor ! entries
 
-      val entries: Future[Seq[SearchId]] = if(resultType == "maxquant")
-        LoaderMQData().loadZip(path, intensityThreshold)
-      else
-        LoaderMascotData().loadZip(path, intensityThreshold)
+      // stop the actor
+      context.stop(self)
 
-      entries.map { n =>  val receiver = acsy.actorOf(Props(new ReceiverUploadActor(n,"done")), "upload")
-        receiver ! "inserted_end"
-      }
     }
   }
 }
+
+case class ZipUploadData(path: String, intensityThreshold: Double, resultType: String)

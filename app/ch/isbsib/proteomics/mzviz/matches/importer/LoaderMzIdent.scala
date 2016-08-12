@@ -126,9 +126,18 @@ object LoaderMzIdent {
     val enzyme = parseEnzymeFilename(mzidXml)
     val parentTolerance = Option(parseParentToleranceFilename(mzidXml))
     val fragmentTolerance = parseFragmentToleranceFilename(mzidXml)
-    val nowDate = Some(Calendar.getInstance().getTime())
+    val nowDate = Calendar.getInstance().getTime()
 
-    SearchInfo(searchId,title,database,username, enzyme,parentTolerance,fragmentTolerance,"inserting",nowDate)
+    SearchInfo(
+      searchId,
+      title,
+      database,
+      username,
+      enzyme,
+      parentTolerance,
+      fragmentTolerance,
+      new SubmissionStatus ("processing", "created new SearchInfo"),
+      nowDate)
   }
 
   /**
