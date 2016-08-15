@@ -19,6 +19,7 @@ import play.api.libs.json.Json
 import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
 import reactivemongo.api.DefaultDB
+import scala.util.control.NonFatal
 
 import scala.concurrent.Future
 import java.nio.file.{Paths, Files}
@@ -55,7 +56,7 @@ class LoaderMascotData(val db: DefaultDB) {
 
     val unzipPath:Try[String] = Try ( FileFinder.getHighestDir(Unzip.unzip(zipFile)) )
     unzipPath.recover({
-      case e: Exception => {
+      case NonFatal(e) => {
         val errorMessage = s"Could not read ZIP file."
         val now = Calendar.getInstance().getTime()
         searchInfoService.createSearchIdWithError(SearchId(now.toString), errorMessage)
@@ -105,7 +106,7 @@ class LoaderMascotData(val db: DefaultDB) {
 
           new File(filename + ".mzML")
       })).recoverWith({
-        case e: Exception => {
+        case NonFatal(e) => {
           val now = Calendar.getInstance().getTime()
           searchInfoService.createSearchIdWithError(SearchId(now.toString), "There must be something wrong with one of your MzIdentMl files.")
           Failure(e)
@@ -212,7 +213,7 @@ class LoaderMascotData(val db: DefaultDB) {
 
     // if one SearchId fails we remove all SearchIds
     insertedIds.recover({
-      case e:Exception => {
+      case NonFatal(e) => {
         searchIds.foreach({ id =>
           commonMatchService.deleteAllMatchInfo(id)
           ms1Service.deleteAllByRunIds(Set(RunId(id.value)))
@@ -274,7 +275,7 @@ class LoaderMascotData(val db: DefaultDB) {
       }
 
     }.recoverWith({
-      case e: Exception => {
+      case NonFatal(e) => {
         val errorMessage = s"There is something wrong with your MzIdentMl file [${mzIdFile.getName}]"
         searchInfoService. createSearchIdWithError(searchId._1, errorMessage)
         Failure(new ImporterException(errorMessage, e))
@@ -322,7 +323,7 @@ class LoaderMascotData(val db: DefaultDB) {
     println("insert one exp: " + mzMlFile.toString + " with threshold " + intensityThreshold)
 
     val itMs1Ms2 = Try( LoaderMzML().parse(mzMlFile, RunId(id.value)) ).recoverWith({
-      case e: Exception => {
+      case NonFatal(e) => {
         val errorMessage = s"Error while parsing MzML file. There is something wrong with MzML file [${mzMlFile.getName}]"
         searchInfoService.createSearchIdWithError(id, errorMessage)
         Failure(new ImporterException(errorMessage, e))
@@ -343,7 +344,7 @@ class LoaderMascotData(val db: DefaultDB) {
     val insertMs1:Future[Boolean] = ms1Service.insertMs1spectra(itMs1, intensityThreshold)
 
     insertMs1.recover({
-      case e: Exception => {
+      case NonFatal(e) => {
         val errorMessage = s"Error while inserting ms1 data."
         searchInfoService.createSearchIdWithError(id, errorMessage)
         throw new ImporterException(errorMessage, e)
@@ -356,7 +357,7 @@ class LoaderMascotData(val db: DefaultDB) {
       }
 
       val insertMs2: Future[Int] = msnService.insertMs2spectra(itMs2, RunId(id.value)).recover({
-        case e: Exception => {
+        case NonFatal(e) => {
           val errorMessage = s"Error while inserting ms2 data."
           searchInfoService.createSearchIdWithError(id, errorMessage)
           throw new ImporterException(errorMessage, e)
