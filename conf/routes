@@ -63,4 +63,4 @@ GET            /api-docs/uploads                                      controller
 #POST           /uploads/:resultType                                   ch.isbsib.proteomics.mzviz.controllers.uploads.ZipDataController.loadZip(resultType: String)
 OPTIONS        /uploads/:resultType                                   ch.isbsib.proteomics.mzviz.controllers.uploads.ZipDataController.options(resultType: String)
 POST           /uploads/:resultType/local/:files                      ch.isbsib.proteomics.mzviz.controllers.uploads.UploadLocalController.load(resultType: String, files:String)
-POST           /uploads/:resultType                                   ch.isbsib.proteomics.mzviz.controllers.uploads.ActorsUpload.upload(resultType: String,intensityThr:Option[Double])
+POST           /uploads/:resultType                                   ch.isbsib.proteomics.mzviz.controllers.uploads.ActorsUpload.upload(resultType: String, intensityThr:Option[Double])

@@ -19,6 +19,7 @@ class SenderUploadActor(receiverUploadActor: ActorRef) extends Actor {
   def receive = {
 
     case ZipUploadData(path, intensityThreshold, resultType) => {
+
       // we don't send anything to the sender, since he's not listening
       //sender ! ("started")
 

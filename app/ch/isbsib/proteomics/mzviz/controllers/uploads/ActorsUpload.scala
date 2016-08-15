@@ -41,7 +41,7 @@ object ActorsUpload extends CommonController {
     new ApiImplicitParam(name = "body", value = "file or folder", required = true, dataType = "text/plain", paramType = "body")
   ))
   def upload (@ApiParam(value = """resultType""", defaultValue = "maxquant") @PathParam("resultType") resultType: String,
-          @ApiParam(name = "intensityTh", value = """intensity Threshold""", defaultValue = "1", required=false) @PathParam("intensityTh") intensityTh:Option[Double]) =
+          @ApiParam(name = "intensityThr", value = """intensity threshold""", defaultValue = "1", required=false) @PathParam("intensityThr") intensityThr:Option[Double]) =
     Action(parse.temporaryFile){
 
       request =>
@@ -50,7 +50,7 @@ object ActorsUpload extends CommonController {
         val receiverActor = actorSystem.actorOf(Props(new ReceiverUploadActor()), "receive-upload-answer")
         val uploadActor = actorSystem.actorOf(Props(new SenderUploadActor(receiverActor)), "start-upload")
 
-        uploadActor ! new ZipUploadData(request.body.file, intensityTh.getOrElse(1.0), resultType)
+        uploadActor ! new ZipUploadData(request.body.file, intensityThr.getOrElse(1.0), resultType)
 
         Ok("insertion was started")
     }

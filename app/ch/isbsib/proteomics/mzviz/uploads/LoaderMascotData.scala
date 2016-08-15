@@ -151,7 +151,7 @@ class LoaderMascotData(val db: DefaultDB) {
 
     val searchIdAlreadyExists:Future[(Boolean, List[SearchId])] = Future.sequence(searchIdCheck).map({
       found => found.foldLeft((false, failedSearchIds))({(a,b) =>
-        ((a._1 & b._1), if(b._1) b._2 :: a._2 else a._2)
+        ((a._1 | b._1), if(b._1) b._2 :: a._2 else a._2)
       })
     })
 
