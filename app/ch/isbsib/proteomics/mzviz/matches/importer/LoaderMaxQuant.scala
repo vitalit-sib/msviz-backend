@@ -422,8 +422,6 @@ object LoaderMaxQuant {
    */
   def parseSearchInfo(maxQuantDir: String, sequenceSource:SequenceSource, idTitle: Option[String]): Map[RunId, SearchInfo] = {
 
-    println("sequence source: " + sequenceSource.value)
-
     // load files
     val file_params = new File(maxQuantDir + filename_params)
     val file_summary = new File(maxQuantDir + filename_summary)

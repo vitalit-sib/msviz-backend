@@ -52,7 +52,7 @@ class LoaderMQData(val db: DefaultDB) {
         key =>
           val fileToFind = innerPath + "/" + key + ".mzML"
           if (! Files.exists(Paths.get(fileToFind))) {
-            throw new RuntimeException("[" + fileToFind + "] not found")
+            Future{ throw new RuntimeException("[" + fileToFind + "] not found") }
           }
     }
     try {

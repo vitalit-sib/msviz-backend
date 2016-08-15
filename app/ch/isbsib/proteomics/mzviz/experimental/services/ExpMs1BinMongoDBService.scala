@@ -43,7 +43,6 @@ class ExpMs1BinMongoDBService (val db: DefaultDB) extends MongoDBService {
    * @return gives back the number of entries inserted into the db
    */
   def insertMs1spectra(ms1Iterator: Iterator[ExpMs1Spectrum], intensityThreshold:Double): Future[Boolean] = {
-      println("insert ms1")
 
       // number of spectra which are parsed before inserting
       val bufferSize =  if(Play.maybeApplication.isDefined){
@@ -69,19 +68,13 @@ class ExpMs1BinMongoDBService (val db: DefaultDB) extends MongoDBService {
         // insert bins into the database (serial insert only, to not block the db access)
         val res: Future[Boolean] = insertMs1Bin(resMap)
 
-        println("start inserting " + slideNr)
         slideNr += 1
         val status:Boolean = Await.result(res, dbTimeout minutes)
-        println("slide inserted")
 
         status
       }
 
-      println("got the ms1 iterator")
-
       val ms1Inserted: Future[Boolean] = Future{ resIt.foldLeft(true)((a, b) => a & b) }
-
-      println("finished ms1 inserting")
 
       ms1Inserted
   }

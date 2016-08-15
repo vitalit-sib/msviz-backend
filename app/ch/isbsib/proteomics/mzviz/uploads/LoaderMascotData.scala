@@ -7,26 +7,25 @@ import ch.isbsib.proteomics.mzviz.commons.helpers.{FileFinder, Unzip}
 import ch.isbsib.proteomics.mzviz.commons.importers.ImporterException
 import ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController._
 import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, ExpMs1Spectrum}
-import ch.isbsib.proteomics.mzviz.experimental.{MSRun, RunId}
-import ch.isbsib.proteomics.mzviz.experimental.importer.{LoaderMGF, LoaderMzML, LoaderMzXML}
+import ch.isbsib.proteomics.mzviz.experimental.RunId
+import ch.isbsib.proteomics.mzviz.experimental.importer.{LoaderMGF, LoaderMzML}
 import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMongoDBService, ExpMs1BinMongoDBService}
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
-import ch.isbsib.proteomics.mzviz.matches.models.{SubmissionStatus, SearchInfo}
+import ch.isbsib.proteomics.mzviz.matches.models.SubmissionStatus
 import ch.isbsib.proteomics.mzviz.matches.services.{CommonMatchService, SearchInfoDBService, ProteinMatchMongoDBService, MatchMongoDBService}
 import ch.isbsib.proteomics.mzviz.uploads.LoaderMQData._
-import play.api.libs.json.Json
 import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
 import reactivemongo.api.DefaultDB
 import scala.util.control.NonFatal
 
 import scala.concurrent.Future
-import java.nio.file.{Paths, Files}
+import java.nio.file.Files
 import scala.concurrent.ExecutionContext.Implicits.global
 import java.io.File
 
-import scala.util.{Try, Failure, Success}
+import scala.util.{Try, Failure}
 import scala.xml.Elem
 
 /**
@@ -55,17 +54,17 @@ class LoaderMascotData(val db: DefaultDB) {
   def loadZip(zipFile: File, intensityThreshold: Double): Future[Seq[SearchId]] = {
 
     val unzipPath:Try[String] = Try ( FileFinder.getHighestDir(Unzip.unzip(zipFile)) )
+
+    // create an searchId with error if unzip fails
     unzipPath.recover({
       case NonFatal(e) => {
         val errorMessage = s"Could not read ZIP file."
         val now = Calendar.getInstance().getTime()
         searchInfoService.createSearchIdWithError(SearchId(now.toString), errorMessage)
-        throw new ImporterException(errorMessage, e)
+        Future{ throw new ImporterException(errorMessage, e) }
       }
     })
 
-    println("load zip")
-    println(unzipPath)
     val loadingResult:Future[Seq[SearchId]] = loadUnzipped(unzipPath.get, intensityThreshold)
 
     loadingResult
@@ -91,7 +90,6 @@ class LoaderMascotData(val db: DefaultDB) {
 
     // get the XML parsers
     val mzMlXmlElems:Try[List[Elem]] = Try(mzIdFiles.map(file => scala.xml.XML.loadFile(file)))
-
 
       // get the corresponding mzML files
       // zip XML elements and mzid names, List[(Elem, File)]
@@ -261,7 +259,6 @@ class LoaderMascotData(val db: DefaultDB) {
     Try {
 
       val matchData = LoaderMzIdent.parseWithXmlElem(mzIdFile, searchId._1, RunId(searchId._1.value), searchId._2)
-      println("match data")
 
       for {
       // and only last the other data
@@ -296,9 +293,8 @@ class LoaderMascotData(val db: DefaultDB) {
   def insertExpData(mzMlFiles: List[(File, SearchId)],
                     intensityThreshold: Double,
                     updateStatusCallback: Option[(SearchId, String, String) => Future[Boolean]] = None): Future[Int] = {
-    // insert one by one
 
-    println("expData")
+    // insert one by one
     mzMlFiles.foldLeft(Future{0})( (futureA, b) =>
       for {
         a <- futureA
@@ -320,7 +316,6 @@ class LoaderMascotData(val db: DefaultDB) {
                    id: SearchId,
                    intensityThreshold: Double,
                    updateStatusCallback: Option[(SearchId, String, String) => Future[Boolean]] = None): Future[Int] = {
-    println("insert one exp: " + mzMlFile.toString + " with threshold " + intensityThreshold)
 
     val itMs1Ms2 = Try( LoaderMzML().parse(mzMlFile, RunId(id.value)) ).recoverWith({
       case NonFatal(e) => {
@@ -330,11 +325,7 @@ class LoaderMascotData(val db: DefaultDB) {
       }
     })
 
-    println("got the iterator")
-
     val itMs1Ms2parts = itMs1Ms2.get.partition(_.isLeft)
-
-    println("data partitioned")
 
     val itMs1: Iterator[ExpMs1Spectrum] = itMs1Ms2parts._1.map(_.left.get)
     val itMs2: Iterator[ExpMSnSpectrum] = itMs1Ms2parts._2.map(_.right.get)
