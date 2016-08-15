@@ -49,7 +49,7 @@ object UploadLocalController extends CommonController {
         val entries = if(resultType == "maxquant")
           LoaderMQData().loadDir(pathFolder+ fileName, intensityThreshold)
         else
-          LoaderMascotData().loadZip(request.body.file.getAbsolutePath, intensityThreshold)
+          LoaderMascotData().loadZip(request.body.file, intensityThreshold)
 
         entries.map { n => Ok(("File uploaded"))
         }.recover {

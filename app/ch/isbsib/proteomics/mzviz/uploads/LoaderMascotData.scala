@@ -48,14 +48,24 @@ class LoaderMascotData(val db: DefaultDB) {
   /**
    * load a zip file containing a run per subfolder
    *
-   * @param zipPath
+   * @param zipFile
    * @return
    */
-  def loadZip(zipPath: String, intensityThreshold: Double): Future[Seq[SearchId]] = {
-    val unzipPath = FileFinder.getHighestDir(Unzip.unzip(new File(zipPath)))
+  def loadZip(zipFile: File, intensityThreshold: Double): Future[Seq[SearchId]] = {
+
+    val unzipPath:Try[String] = Try ( FileFinder.getHighestDir(Unzip.unzip(zipFile)) )
+    unzipPath.recover({
+      case e: Exception => {
+        val errorMessage = s"Could not read ZIP file."
+        val now = Calendar.getInstance().getTime()
+        searchInfoService.createSearchIdWithError(SearchId(now.toString), errorMessage)
+        throw new ImporterException(errorMessage, e)
+      }
+    })
+
     println("load zip")
     println(unzipPath)
-    val loadingResult:Future[Seq[SearchId]] = loadUnzipped(unzipPath, intensityThreshold)
+    val loadingResult:Future[Seq[SearchId]] = loadUnzipped(unzipPath.get, intensityThreshold)
 
     loadingResult
   }
@@ -68,14 +78,6 @@ class LoaderMascotData(val db: DefaultDB) {
    * @return
    */
   def loadUnzipped(path: String, intensityThreshold: Double): Future[Seq[SearchId]] = {
-
-    println("unzip")
-
-    println(path)
-
-    val zipFileName = path.split("\\/").last + ".zip"
-
-    println(zipFileName)
 
     // get the list of files in the directory
     val fileList = FileFinder.getListOfFiles(path)
@@ -104,7 +106,8 @@ class LoaderMascotData(val db: DefaultDB) {
           new File(filename + ".mzML")
       })).recoverWith({
         case e: Exception => {
-          searchInfoService.createSearchIdWithError(SearchId(zipFileName), "There must be something wrong with one of your MzIdentMl files")
+          val now = Calendar.getInstance().getTime()
+          searchInfoService.createSearchIdWithError(SearchId(now.toString), "There must be something wrong with one of your MzIdentMl files.")
           Failure(e)
         }
       })
@@ -351,9 +354,8 @@ class LoaderMascotData(val db: DefaultDB) {
       if(updateStatusCallback.isDefined){
         updateStatusCallback.get.apply(id, "processing", "inserting ms2 data")
       }
-      val insertMs2: Future[Int] = msnService.insertMs2spectra(itMs2, RunId(id.value))
 
-      insertMs2.recover({
+      val insertMs2: Future[Int] = msnService.insertMs2spectra(itMs2, RunId(id.value)).recover({
         case e: Exception => {
           val errorMessage = s"Error while inserting ms2 data."
           searchInfoService.createSearchIdWithError(id, errorMessage)

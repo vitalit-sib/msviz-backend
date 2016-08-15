@@ -1,6 +1,8 @@
 package ch.isbsib.proteomics.mzviz.controllers.uploads
 
 
+import java.io.File
+
 import akka.actor.{ActorRef, Actor}
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.uploads.{LoaderMascotData, LoaderMQData}
@@ -36,4 +38,4 @@ class SenderUploadActor(receiverUploadActor: ActorRef) extends Actor {
   }
 }
 
-case class ZipUploadData(path: String, intensityThreshold: Double, resultType: String)
+case class ZipUploadData(zipFile: File, intensityThreshold: Double, resultType: String)

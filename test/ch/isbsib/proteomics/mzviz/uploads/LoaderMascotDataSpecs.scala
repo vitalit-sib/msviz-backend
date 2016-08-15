@@ -107,7 +107,7 @@ class LoaderMascotDataSpecs extends Specification with ScalaFutures {
 
     "load zip" in new TempMongoDBService{
 
-      val zipFile = "test/resources/uploads/mascot_test.zip"
+      val zipFile = new File("test/resources/uploads/mascot_test.zip")
       val results: Future[Seq[SearchId]] = loaderService.loadZip(zipFile, 500000)
 
       results.futureValue mustEqual Seq(SearchId("sample1"), SearchId("sample2"))

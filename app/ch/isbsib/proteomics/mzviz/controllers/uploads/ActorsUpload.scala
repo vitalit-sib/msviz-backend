@@ -50,7 +50,7 @@ object ActorsUpload extends CommonController {
         val receiverActor = actorSystem.actorOf(Props(new ReceiverUploadActor()), "receive-upload-answer")
         val uploadActor = actorSystem.actorOf(Props(new SenderUploadActor(receiverActor)), "start-upload")
 
-        uploadActor ! new ZipUploadData(request.body.file.getAbsolutePath, intensityTh.getOrElse(1.0), resultType)
+        uploadActor ! new ZipUploadData(request.body.file, intensityTh.getOrElse(1.0), resultType)
 
         Ok("insertion was started")
     }

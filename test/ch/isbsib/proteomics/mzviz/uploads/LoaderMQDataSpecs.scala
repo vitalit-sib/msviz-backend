@@ -1,5 +1,7 @@
 package ch.isbsib.proteomics.mzviz.uploads
 
+import java.io.File
+
 import ch.isbsib.proteomics.mzviz.commons.{Moz, TempMongoDBForSpecs}
 import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMongoDBService, ExpMs1BinMongoDBService}
@@ -32,7 +34,7 @@ class LoaderMQDataSpecs extends Specification with ScalaFutures{
 
       """check size""" in new TempMongoDBService{
 
-        val mqZip = "test/resources/uploads/maxQuant.zip"
+        val mqZip = new File("test/resources/uploads/maxQuant.zip")
         val results: Future[Seq[SearchId]] = loaderService.loadZip(mqZip, 1)
 
         results.futureValue mustEqual Seq(SearchId("DMSO"), SearchId("Nocodazole"))

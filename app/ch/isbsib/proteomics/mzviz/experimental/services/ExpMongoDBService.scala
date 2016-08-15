@@ -91,8 +91,6 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
   def insertMs2spectra(ms2Iterator: Iterator[ExpMSnSpectrum], runId: RunId): Future[Int] = {
     println("insert ms2")
 
-    if(true) throw new Exception("some artificial exception")
-
     // number of spectra which are parsed before inserting
     val bufferSize =  if(Play.maybeApplication.isDefined){
       Play.current.configuration.getString("experimental.ms2.buffer").get.toInt
@@ -109,6 +107,8 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
 
       resList += this.insert(new MSRun(runId, someList.toSeq))
     }
+
+    if(true) Future {throw new Exception("some artificial exception") }
 
     Future.sequence(resList.toList).map(_.sum)
   }

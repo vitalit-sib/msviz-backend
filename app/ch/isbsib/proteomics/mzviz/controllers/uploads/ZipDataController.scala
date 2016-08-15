@@ -44,9 +44,9 @@ object ZipDataController extends CommonController {
         val intensityThreshold = 30000
 
         val entries = if(resultType == "maxquant")
-                        LoaderMQData().loadZip(request.body.file.getAbsolutePath, intensityThreshold)
+                        LoaderMQData().loadZip(request.body.file, intensityThreshold)
                       else
-                        LoaderMascotData().loadZip(request.body.file.getAbsolutePath, intensityThreshold)
+                        LoaderMascotData().loadZip(request.body.file, intensityThreshold)
 
         entries.map { n => Ok(("File uploaded"))
         }.recover {
