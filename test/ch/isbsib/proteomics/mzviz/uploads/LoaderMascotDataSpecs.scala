@@ -38,41 +38,16 @@ class LoaderMascotDataSpecs extends Specification with ScalaFutures {
     val matchService = new MatchMongoDBService(db)
   }
 
-//  "helper functions" should {
-//
-//    "check required files" in new TempMongoDBService {
-//
-//      val dir = new File("test/resources/uploads/sample1")
-//
-//      val requiredFilesMap = loaderService.getRequiredFiles(Set("mzid", "mgf", "mzml"), dir)
-//
-//      requiredFilesMap.get("mzid").get.getName mustEqual ("sample1.mzid")
-//      requiredFilesMap.get("mgf").get.getName mustEqual ("sample1.mgf")
-//      requiredFilesMap.get("mzml").get.getName mustEqual ("sample1.mzML")
-//
-//    }
-//
-//    "check runId from path" in new TempMongoDBService {
-//
-//      val dir = new File("test/resources/uploads/sample1")
-//
-//      val runId: String = loaderService.getRunIdFromPath(dir).value
-//
-//      runId mustEqual ("sample1")
-//
-//    }
-//
-//  }
-
   "load data" should {
 
     "load unzipped" in new TempMongoDBService{
 
       val unzipped = "test/resources/uploads/mascot_test"
-      val results: Future[Seq[SearchId]] = loaderService.loadUnzipped(unzipped, 1.0)
+      val futureResults: Future[Seq[SearchId]] = loaderService.loadUnzipped(unzipped, 1.0)
 
-      //results.futureValue mustEqual(554)
-      results.futureValue mustEqual Seq(SearchId("sample1"), SearchId("sample2"))
+      val results = futureResults.futureValue
+      results.size mustEqual 2
+      results(0).value.replaceAll("\\d", "") mustEqual("sample")
 
       // check ms1
       val ms1List = exp1Service.findMs1EntryWithMozTol(RunId("sample1"), Moz(519.14), 0.3).futureValue
@@ -89,9 +64,10 @@ class LoaderMascotDataSpecs extends Specification with ScalaFutures {
     "load unzipped with resubmitted job" in new TempMongoDBService{
 
       val unzipped = "test/resources/uploads/mascot_test_renamed"
-      val results: Future[Seq[SearchId]] = loaderService.loadUnzipped(unzipped, 1.0)
+      val futureRes: Future[Seq[SearchId]] = loaderService.loadUnzipped(unzipped, 1.0)
 
-      results.futureValue mustEqual Seq(SearchId("sample1"), SearchId("sample2"))
+      val results = futureRes.futureValue
+      results.size mustEqual 2
 
       // check ms1
       val ms1List = exp1Service.findMs1EntryWithMozTol(RunId("sample1"), Moz(519.14), 0.3).futureValue
@@ -108,9 +84,10 @@ class LoaderMascotDataSpecs extends Specification with ScalaFutures {
     "load zip" in new TempMongoDBService{
 
       val zipFile = new File("test/resources/uploads/mascot_test.zip")
-      val results: Future[Seq[SearchId]] = loaderService.loadZip(zipFile, 500000)
+      val futureRes: Future[Seq[SearchId]] = loaderService.loadZip(zipFile, 500000)
 
-      results.futureValue mustEqual Seq(SearchId("sample1"), SearchId("sample2"))
+      val results = futureRes.futureValue
+      results.size mustEqual 2
 
       // check ms1
       val ms1List = exp1Service.findMs1EntryWithMozTol(RunId("sample1"), Moz(519.14), 0.3).futureValue
