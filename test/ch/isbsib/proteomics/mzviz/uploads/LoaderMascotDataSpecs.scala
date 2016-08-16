@@ -38,30 +38,30 @@ class LoaderMascotDataSpecs extends Specification with ScalaFutures {
     val matchService = new MatchMongoDBService(db)
   }
 
-  "load data" should {
+  "load unzipped" should {
 
-    "load unzipped" in new TempMongoDBService{
+    "load unzipped data" in new TempMongoDBService {
 
       val unzipped = "test/resources/uploads/mascot_test"
       val futureResults: Future[Seq[SearchId]] = loaderService.loadUnzipped(unzipped, 1.0)
 
       val results = futureResults.futureValue
       results.size mustEqual 2
-      results(0).value.replaceAll("\\d", "") mustEqual("sample")
+      results(0).value.replaceAll("\\d", "") mustEqual ("sample")
 
       // check ms1
       val ms1List = exp1Service.findMs1EntryWithMozTol(RunId("sample1"), Moz(519.14), 0.3).futureValue
-      ms1List.size mustEqual(148)
+      ms1List.size mustEqual (148)
 
       val ms2List = exp2Service.findAllSpectraRefByrunId(Set(RunId("sample1"), RunId("sample2"))).futureValue
-      ms2List.size mustEqual(82)
+      ms2List.size mustEqual (82)
 
       val matchList = matchService.findAllSpectrumIdBySearchId(SearchId("sample1")).futureValue
-      matchList.size mustEqual(62)
+      matchList.size mustEqual (62)
 
     }
 
-    "load unzipped with resubmitted job" in new TempMongoDBService{
+    "load unzipped with resubmitted job" in new TempMongoDBService {
 
       val unzipped = "test/resources/uploads/mascot_test_renamed"
       val futureRes: Future[Seq[SearchId]] = loaderService.loadUnzipped(unzipped, 1.0)
@@ -71,7 +71,31 @@ class LoaderMascotDataSpecs extends Specification with ScalaFutures {
 
       // check ms1
       val ms1List = exp1Service.findMs1EntryWithMozTol(RunId("sample1"), Moz(519.14), 0.3).futureValue
-      ms1List.size mustEqual(148)
+      ms1List.size mustEqual (148)
+
+      val ms2List = exp2Service.findAllSpectraRefByrunId(Set(RunId("sample1"), RunId("sample2"))).futureValue
+      ms2List.size mustEqual (82)
+
+      val matchList = matchService.findAllSpectrumIdBySearchId(SearchId("sample1")).futureValue
+      matchList.size mustEqual (62)
+
+    }
+
+  }
+
+  "load zip" should {
+
+    "load zip data" in new TempMongoDBService{
+
+      val zipFile = new File("test/resources/uploads/mascot_test.zip")
+      val futureRes: Future[Seq[SearchId]] = loaderService.loadZip(zipFile, 500000)
+
+      val results = futureRes.futureValue
+      results.size mustEqual 2
+
+      // check ms1
+      val ms1List = exp1Service.findMs1EntryWithMozTol(RunId("sample1"), Moz(519.14), 0.3).futureValue
+      ms1List.size mustEqual(15)
 
       val ms2List = exp2Service.findAllSpectraRefByrunId(Set(RunId("sample1"), RunId("sample2"))).futureValue
       ms2List.size mustEqual(82)
@@ -81,9 +105,9 @@ class LoaderMascotDataSpecs extends Specification with ScalaFutures {
 
     }
 
-    "load zip" in new TempMongoDBService{
+    "load zip with no dir" in new TempMongoDBService{
 
-      val zipFile = new File("test/resources/uploads/mascot_test.zip")
+      val zipFile = new File("test/resources/uploads/mascot_nodir.zip")
       val futureRes: Future[Seq[SearchId]] = loaderService.loadZip(zipFile, 500000)
 
       val results = futureRes.futureValue
