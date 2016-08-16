@@ -25,13 +25,18 @@ class ReceiverUploadActor() extends Actor {
       res.onComplete({
         case Success(ids) => {
           log.info("Ok inserted ids " + ids)
-          ids.foreach({ id =>
+          val statusUpdated:Seq[Future[Boolean]] = ids.map({ id =>
             val status = new SubmissionStatus(code="done", message = "All data was successfully inserted.")
             SearchInfoDBService().updateStatus(id, status)
           })
+
+          Future.sequence(statusUpdated).map(a => a.reduceLeft(_ & _)).onComplete({
+            case Success(ids) => log.info("Status was set to done")
+            case Failure(e) => log.error(e, "Could not set status")
+          })
         }
         case Failure(e) => {
-          log.error(e, "Got an error from the SenderUploadActor")
+          log.error(e, "Got an error from the SenderUploadActor: " + e.getMessage)
         }
       })
 

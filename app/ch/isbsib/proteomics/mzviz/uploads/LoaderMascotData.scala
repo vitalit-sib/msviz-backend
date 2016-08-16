@@ -19,6 +19,7 @@ import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
 import reactivemongo.api.DefaultDB
 import scala.util.control.NonFatal
+import play.api.Logger
 
 import scala.concurrent.Future
 import java.nio.file.Files
@@ -61,6 +62,7 @@ class LoaderMascotData(val db: DefaultDB) {
         val errorMessage = s"Could not read ZIP file."
         val now = Calendar.getInstance().getTime()
         searchInfoService.createSearchIdWithError(SearchId(now.toString), errorMessage)
+        Logger.error(errorMessage)
         Future{ throw new ImporterException(errorMessage, e) }
       }
     })
@@ -106,7 +108,9 @@ class LoaderMascotData(val db: DefaultDB) {
       })).recoverWith({
         case NonFatal(e) => {
           val now = Calendar.getInstance().getTime()
-          searchInfoService.createSearchIdWithError(SearchId(now.toString), "There must be something wrong with one of your MzIdentMl files.")
+          val errorMessage = "There must be something wrong with one of your MzIdentMl files."
+          Logger.error(errorMessage)
+          searchInfoService.createSearchIdWithError(SearchId(now.toString), errorMessage)
           Failure(e)
         }
       })
@@ -120,13 +124,17 @@ class LoaderMascotData(val db: DefaultDB) {
       searchIdAlreadyExists.flatMap(alreadyExists => {
         if (alreadyExists._1){
           val searchIdsString = searchIds.map(_.value).reduceLeft(_ + "," + _)
-          throw new ImporterException(s"Some of the SearchIds [$searchIdsString] already exist.")
+          val errorMessage = s"Some of the SearchIds [$searchIdsString] already exist."
+          Logger.error(errorMessage)
+          throw new ImporterException(errorMessage)
         }
         else insertAllData(searchIds, mzIdFiles, mzMlFiles.get, mzMlXmlElems.get, intensityThreshold)
       })
     }
     else {
-      throw new ImporterException(s"There are mzMl files missing in the given zip file: [$path]")
+      val errorMessage = s"There are mzMl files missing in the given zip file: [$path]"
+      Logger.error(errorMessage)
+      throw new ImporterException(errorMessage)
     }
 
   }
@@ -170,7 +178,9 @@ class LoaderMascotData(val db: DefaultDB) {
     // assert that all mzML files are here
     val filesFound = mzMlFiles.zip(searchIds).map({ case (mzMlFile,searchId) =>
       if (! Files.exists(mzMlFile.toPath)) {
-        searchInfoService.createSearchIdWithError(searchId, s"Error while parsing [${searchId.value}]. Could not find mzML file [${mzMlFile.getName}]")
+        val errorMessage = s"Error while parsing [${searchId.value}]. Could not find mzML file [${mzMlFile.getName}]"
+        Logger.error(errorMessage)
+        searchInfoService.createSearchIdWithError(searchId, errorMessage)
         false
       } else true
     })
@@ -197,6 +207,7 @@ class LoaderMascotData(val db: DefaultDB) {
 
     // the callback to update the searchId status
     def updateStatus(searchId:SearchId, code: String, message:String) = {
+      Logger.info(s"changed [${searchId.value}] to status [$code] with message: $message")
       val status = new SubmissionStatus(code=code, message = message)
       searchInfoService.updateStatus(searchId, status)
     }
@@ -217,7 +228,9 @@ class LoaderMascotData(val db: DefaultDB) {
           ms1Service.deleteAllByRunIds(Set(RunId(id.value)))
           msnService.delete(Set(RunId(id.value)))
         })
-        throw new ImporterException("Error while inserting experimental data. " + e.getMessage, e)
+        val errorMessage = "Error while inserting experimental data. " + e.getMessage
+        Logger.error(errorMessage)
+        throw new ImporterException(errorMessage, e)
       }
     })
 
@@ -274,6 +287,7 @@ class LoaderMascotData(val db: DefaultDB) {
     }.recoverWith({
       case NonFatal(e) => {
         val errorMessage = s"There is something wrong with your MzIdentMl file [${mzIdFile.getName}]"
+        Logger.error(errorMessage)
         searchInfoService. createSearchIdWithError(searchId._1, errorMessage)
         Failure(new ImporterException(errorMessage, e))
       }
@@ -320,6 +334,7 @@ class LoaderMascotData(val db: DefaultDB) {
     val itMs1Ms2 = Try( LoaderMzML().parse(mzMlFile, RunId(id.value)) ).recoverWith({
       case NonFatal(e) => {
         val errorMessage = s"Error while parsing MzML file. There is something wrong with MzML file [${mzMlFile.getName}]"
+        Logger.error(errorMessage)
         searchInfoService.createSearchIdWithError(id, errorMessage)
         Failure(new ImporterException(errorMessage, e))
       }
@@ -337,6 +352,7 @@ class LoaderMascotData(val db: DefaultDB) {
     insertMs1.recover({
       case NonFatal(e) => {
         val errorMessage = s"Error while inserting ms1 data."
+        Logger.error(errorMessage)
         searchInfoService.createSearchIdWithError(id, errorMessage)
         throw new ImporterException(errorMessage, e)
       }

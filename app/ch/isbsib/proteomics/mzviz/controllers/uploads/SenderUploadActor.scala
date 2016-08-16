@@ -8,6 +8,7 @@ import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.uploads.{LoaderMascotData, LoaderMQData}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import akka.event.Logging
 
 /**
  * @author Roman Mylonas & Trinidad Martin
@@ -16,6 +17,8 @@ import scala.concurrent.Future
 
 
 class SenderUploadActor(receiverUploadActor: ActorRef) extends Actor {
+  val log = Logging(context.system, this)
+
   def receive = {
 
     case ZipUploadData(path, intensityThreshold, resultType) => {
@@ -23,17 +26,22 @@ class SenderUploadActor(receiverUploadActor: ActorRef) extends Actor {
       // we don't send anything to the sender, since he's not listening
       //sender ! ("started")
 
-      val entries: Future[Seq[SearchId]] =  if (resultType == "maxquant")
-                                                LoaderMQData().loadZip(path, intensityThreshold)
-                                              else {
-                                                LoaderMascotData().loadZip(path, intensityThreshold)
-                                              }
+      try {
+        val entries: Future[Seq[SearchId]] = if (resultType == "maxquant")
+          LoaderMQData().loadZip(path, intensityThreshold)
+        else {
+          LoaderMascotData().loadZip(path, intensityThreshold)
+        }
 
-      // send the result (a Future) to the receiver
-      receiverUploadActor ! entries
+        // send the result (a Future) to the receiver
+        receiverUploadActor ! entries
 
-      // stop the actor
-      context.stop(self)
+      } catch {
+        case e: Exception => log.error(e, "Catched an error in SenderUploadActor")
+      } finally {
+        // stop the actor
+        context.stop(self)
+      }
 
     }
   }
