@@ -443,12 +443,18 @@ class LoaderMQData(val db: DefaultDB) {
                    id: SearchId,
                    intensityThreshold: Double,
                    updateStatusCallback: Option[(SearchId, String, String) => Future[Boolean]] = None): Future[Int] = {
+    println("insert one exp")
 
     val itMs1Ms2 = Try(LoaderMzML().parse(mzMlFile, RunId(id.value))).recoverWith({
       case NonFatal(e) => {
+        println("got non fatal error")
         val errorMessage = s"Error while parsing MzML file. There is something wrong with MzML file [${mzMlFile.getName}]"
         searchInfoService.createSearchIdWithError(id, errorMessage)
         Failure(new ImporterException(errorMessage, e))
+      }
+      case _ => {
+        println("some fatal error")
+        Failure(new ImporterException("hoho"))
       }
     })
 
