@@ -28,9 +28,9 @@ class ReceiverUploadActor() extends Actor {
     case res: Future[Seq[SearchId]] => {
       res.onComplete({
         case Success(ids) => {
-          log.info("Ok inserted ids " + ids)
+          log.info("Ok loaded ids " + ids)
           val statusUpdated:Seq[Future[Boolean]] = ids.map({ id =>
-            val status = new SubmissionStatus(code="done", message = "All data was successfully inserted.")
+            val status = new SubmissionStatus(code="done", message = "All data was successfully loaded.")
             SearchInfoDBService().updateStatus(id, status)
           })
 

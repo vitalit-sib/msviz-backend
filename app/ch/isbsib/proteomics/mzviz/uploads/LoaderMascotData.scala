@@ -157,7 +157,7 @@ class LoaderMascotData(val db: DefaultDB) {
     // assert that searchIds are not already inserted
     val searchIdCheck:Seq[Future[(Boolean, SearchId)]] = searchIds.map({ id =>
       searchInfoService.isSearchIdExist(id).map({ alreadyTaken =>
-        if(alreadyTaken) searchInfoService.createSearchIdWithError(id, s"SearchId [${id.value}] already exists. Please delete SearchIds with this name before reinsertion")
+        if(alreadyTaken) searchInfoService.createSearchIdWithError(id, s"SearchId [${id.value}] already exists. Please delete SearchIds with this name before reloading")
         (alreadyTaken, id)
       })
     })
@@ -236,7 +236,7 @@ class LoaderMascotData(val db: DefaultDB) {
           ms1Service.deleteAllByRunIds(Set(RunId(id.value)))
           msnService.delete(Set(RunId(id.value)))
         })
-        val errorMessage = "Error while inserting experimental data. " + e.getMessage
+        val errorMessage = "Error while loading experimental data. " + e.getMessage
         Logger.error(errorMessage)
         throw new ImporterException(errorMessage, e)
       }
@@ -288,7 +288,7 @@ class LoaderMascotData(val db: DefaultDB) {
         searchOk <- searchInfoService.insert(matchData._3)
 
       } yield {
-        if (updateStatusCallback.isDefined) updateStatusCallback.get.apply(searchId._1, "processing", "waiting to insert experimental data")
+        if (updateStatusCallback.isDefined) updateStatusCallback.get.apply(searchId._1, "loading", "waiting to load experimental data")
         psmNr + proteinNumber + (if (searchOk) 1 else 0)
       }
 
@@ -353,13 +353,13 @@ class LoaderMascotData(val db: DefaultDB) {
     val itMs1: Iterator[ExpMs1Spectrum] = itMs1Ms2parts._1.map(_.left.get)
     val itMs2: Iterator[ExpMSnSpectrum] = itMs1Ms2parts._2.map(_.right.get)
 
-    updateStatusCallback.get.apply(id, "processing", "inserting ms1 data")
+    updateStatusCallback.get.apply(id, "loading", "loading ms1 data")
 
     val insertMs1:Future[Boolean] = ms1Service.insertMs1spectra(itMs1, intensityThreshold)
 
     insertMs1.recover({
       case NonFatal(e) => {
-        val errorMessage = s"Error while inserting ms1 data."
+        val errorMessage = s"Error while loading ms1 data."
         Logger.error(errorMessage)
         searchInfoService.createSearchIdWithError(id, errorMessage)
         throw new ImporterException(errorMessage, e)
@@ -368,12 +368,12 @@ class LoaderMascotData(val db: DefaultDB) {
 
     insertMs1.flatMap({ ms1Inserted =>
       if(updateStatusCallback.isDefined){
-        updateStatusCallback.get.apply(id, "processing", "inserting ms2 data")
+        updateStatusCallback.get.apply(id, "loading", "loading ms2 data")
       }
 
       val insertMs2: Future[Int] = msnService.insertMs2spectra(itMs2, RunId(id.value)).recover({
         case NonFatal(e) => {
-          val errorMessage = s"Error while inserting ms2 data."
+          val errorMessage = s"Error while loading ms2 data."
           searchInfoService.createSearchIdWithError(id, errorMessage)
           throw new ImporterException(errorMessage, e)
         }
@@ -381,7 +381,7 @@ class LoaderMascotData(val db: DefaultDB) {
 
       insertMs2.map({ ms2Inserted =>
         if(updateStatusCallback.isDefined){
-          updateStatusCallback.get.apply(id, "processing", "finished ms2 insertion")
+          updateStatusCallback.get.apply(id, "loading", "finished ms2 load")
         }
 
         (if(ms1Inserted) 0 else 1) + ms2Inserted
