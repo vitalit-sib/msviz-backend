@@ -47,7 +47,7 @@ object UploadLocalController extends CommonController {
         val pathFolder= Play.current.configuration.getString("upload.dir").get.toString
 
         val entries = if(resultType == "maxquant")
-          LoaderMQData().loadDir(pathFolder+ fileName, intensityThreshold)
+          LoaderMQData().loadUnzipped(pathFolder+ fileName, intensityThreshold)
         else
           LoaderMascotData().loadZip(request.body.file, intensityThreshold)
 

@@ -56,7 +56,7 @@ class LoaderMascotData(val db: DefaultDB) {
 
     val unzipPath:Try[String] = Try ( FileFinder.getHighestDir(Unzip.unzip(zipFile)) )
 
-    // create an searchId with error if unzip fails
+    // create a searchId with error if unzip fails
     unzipPath.recover({
       case NonFatal(e) => {
         val errorMessage = s"Could not read ZIP file."
@@ -275,13 +275,13 @@ class LoaderMascotData(val db: DefaultDB) {
 
       for {
       // and only last the other data
-        matchNr <- matchService.insert(matchData._1)
-        psmNumber <- protMatchService.insert(matchData._2)
+        psmNr <- matchService.insert(matchData._1)
+        proteinNumber <- protMatchService.insert(matchData._2)
         searchOk <- searchInfoService.insert(matchData._3)
 
       } yield {
         if (updateStatusCallback.isDefined) updateStatusCallback.get.apply(searchId._1, "processing", "waiting to insert experimental data")
-        matchNr + psmNumber + (if (searchOk) 1 else 0)
+        psmNr + proteinNumber + (if (searchOk) 1 else 0)
       }
 
     }.recoverWith({
@@ -381,80 +381,6 @@ class LoaderMascotData(val db: DefaultDB) {
     })
 
   }
-
-  /**
-   * parse a subfolder containing *.mzIdentML, *.mzML, *.mgf
-   *
-   * @param runPath
-   * @return
-   */
-  def insertRunFromPath(runPath: File, intensityThreshold: Double):Future[Int] = {
-
-    // get the runId
-    val runId: RunId = getRunIdFromPath(runPath)
-
-    // check if all required files are here (it is not case sensitive)
-    val availableFiles = getRequiredFiles(requiredTypes, runPath)
-
-    // now we insert all the data
-    val ms1Iterator = LoaderMzML().parse(availableFiles.get("mzml").get, runId).filter(_.isLeft).map(_.left.get)
-    val ms2Iterator = LoaderMGF.load(availableFiles.get("mgf").get, runId)
-    val matchData = LoaderMzIdent.parse(availableFiles.get("mzid").get, SearchId(runId.value), runId)
-
-    for{
-      //first we insert MS data, because they're slow
-      ms1Nr <- ms1Service.insertMs1spectra(ms1Iterator, intensityThreshold)
-      ms2Nr <- msnService.insertMs2spectra(ms2Iterator, runId)
-
-      // and only last the other data
-      matchNr <- matchService.insert(matchData._1)
-      psmNumber <- protMatchService.insert(matchData._2)
-      searchOk <- searchInfoService.insert(matchData._3)
-
-    }yield{
-      if(ms1Nr) 1 else 0 + ms2Nr + matchNr + psmNumber + (if(searchOk) 1 else 0)
-    }
-
-  }
-
-
-  /**
-   * get the required files as a hashmap
-   *
-   * @param requiredTypes
-   * @param runPath
-   */
-  def getRequiredFiles(requiredTypes: Set[String], runPath: File): Map[String, File] = {
-
-    val availableFiles: List[File] = FileFinder.getListOfFiles(runPath.getAbsolutePath)
-
-    // get file extensions as lower case
-    val extensions: List[String] =  availableFiles.map(x =>  x.toString.substring(x.toString.lastIndexOf(".") + 1).toLowerCase)
-
-    val extFilePairs = extensions.zip(availableFiles)
-
-    // find the pair for every file type
-    requiredTypes.map({ x =>
-      val l = extFilePairs.filter(_._1 == x)
-      val hit = if(l.size > 0) l(0) else throw new RuntimeException("Required file type is missing: " + x + " in [" + runPath.getAbsolutePath + "]")
-      (x, hit._2)
-    }).toMap
-
-  }
-
-
-  /**
-   * get the runId from the directory name
-   *
-   * @param runPath
-   * @return
-   */
-  def getRunIdFromPath(runPath: File): RunId = {
-    val lastPart = runPath.getAbsolutePath.split("\\/").last
-    RunId(lastPart)
-  }
-
-
 }
 
 

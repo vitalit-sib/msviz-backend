@@ -11,9 +11,12 @@ import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models.{PepSpectraMatchWithSpectrumRef, PepSpectraMatch, ProteinRef}
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
 import ch.isbsib.proteomics.mzviz.theoretical.{ProteinIdentifier, AccessionCode, SequenceSource}
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import play.api.Logger
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.Json
 import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
 import reactivemongo.api.DefaultDB
@@ -159,6 +162,13 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
         case Some(notRej) => Json.obj("matchInfo.isRejected" -> false)
         case _ => Json.obj()
       })
+
+    val mapper = new ObjectMapper()
+    mapper.registerModule(DefaultScalaModule)
+    val writer = mapper.writerWithDefaultPrettyPrinter
+    val json = writer.writeValueAsString(query)
+    println("weeeee")
+    println(json)
 
     collection.find(query).cursor[PepSpectraMatch].collect[List]()
   }
