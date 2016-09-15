@@ -23,6 +23,7 @@ import reactivemongo.api.DefaultDB
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.io.Source._
 import scala.util.{Failure, Try}
 import scala.util.control.NonFatal
 import scala.xml.Elem
@@ -231,11 +232,21 @@ class LoaderMQData(val db: DefaultDB) {
    */
   def loadUnzipped(path: String, intensityThreshold: Double): Future[Seq[SearchId]] = {
 
+
     // get the list of files in the directory
     val fileList = FileFinder.getListOfFiles(path)
 
     //parse txt/summary to obtain check if we have all expected files
     val summaryFile = path + "/txt/summary.txt"
+    //Check if summary file exists
+
+    if (!Files.exists(Paths.get(summaryFile))){
+      val errM="No summary table detected. Check if you are uploading MaxQuant data."
+      val now = Calendar.getInstance().getTime()
+      searchInfoService.createSearchIdWithError(SearchId(now.toString), errM)
+      throw new Exception (errM)
+    }
+
     // returns table with MzML and SearchID
     val summaryHash = Try(LoaderMaxQuant.parseMaxquantSummaryTableRawSearchId(new File(summaryFile)))
 
@@ -443,18 +454,12 @@ class LoaderMQData(val db: DefaultDB) {
                    id: SearchId,
                    intensityThreshold: Double,
                    updateStatusCallback: Option[(SearchId, String, String) => Future[Boolean]] = None): Future[Int] = {
-    println("insert one exp")
 
     val itMs1Ms2 = Try(LoaderMzML().parse(mzMlFile, RunId(id.value))).recoverWith({
       case NonFatal(e) => {
-        println("got non fatal error")
         val errorMessage = s"Error while parsing MzML file. There is something wrong with MzML file [${mzMlFile.getName}]"
         searchInfoService.createSearchIdWithError(id, errorMessage)
         Failure(new ImporterException(errorMessage, e))
-      }
-      case _ => {
-        println("some fatal error")
-        Failure(new ImporterException("hoho"))
       }
     })
 

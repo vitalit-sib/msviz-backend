@@ -85,7 +85,16 @@ class LoaderMascotData(val db: DefaultDB) {
     val fileList = FileFinder.getListOfFiles(path)
 
     // keep mzId files
-    val mzIdFiles:List[File] = fileList.filter(x => x.getName.split("\\.").last.toLowerCase() == "mzid")
+    val mzIdFiles:List[File] = (fileList.filter(x => x.getName.split("\\.").last.toLowerCase() == "mzid"))
+
+    //if there are no mzIdFiles then send error
+    if (mzIdFiles.isEmpty){
+      val errorMessage = "MzIdentML files not found. Verify if your Mascot data is correct"
+      val now = Calendar.getInstance().getTime()
+      searchInfoService.createSearchIdWithError(SearchId(now.toString), errorMessage)
+      Logger.error(errorMessage)
+      Failure(new Exception(errorMessage))
+    }
 
     // list of searchIds
     val searchIds = mzIdFiles.map(x => SearchId(x.getName.split("\\.")(0)))
@@ -98,7 +107,6 @@ class LoaderMascotData(val db: DefaultDB) {
       val mzMlFiles:Try[List[File]] = mzMlXmlElems.map(_.zip(mzIdFiles).map({
         tuple =>
           val found= LoaderMzIdent.parseSpectraFilename(tuple._1)
-
           //if resubmitted job, SpectraData location file is empty, so we take mzid name
           val  filename=
             if(found == "") path + "/" + tuple._2.toString.split("\\/").last.split("\\.")(0)
