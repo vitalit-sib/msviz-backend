@@ -3,6 +3,7 @@ package ch.isbsib.proteomics.mzviz.controllers.results
 import javax.ws.rs.PathParam
 
 import ch.isbsib.proteomics.mzviz.controllers.matches.SearchController._
+import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.results.basket.BasketMongoDBService
 import ch.isbsib.proteomics.mzviz.results.basket.models.{BasketEntryWithSpInfo, BasketEntry}
 import com.wordnik.swagger.annotations._
@@ -95,12 +96,12 @@ object BasketController extends CommonController{
 
     }
 
-  @ApiOperation(nickname = "delete",
+  @ApiOperation(nickname = "deleteByMongoId",
     value = "delete a basket entry by MongoId",
     notes = """No double check is done. Use with caution""",
     response = classOf[String],
     httpMethod = "DELETE")
-  def delete(@ApiParam(value = """mongoId""", defaultValue = "") @PathParam("mongoId") mongoId: String) =
+  def deleteByMongoId(@ApiParam(value = """mongoId""", defaultValue = "") @PathParam("mongoId") mongoId: String) =
     Action.async { implicit request =>
       BasketMongoDBService().deleteByMongoId(mongoId).map {case basketEntries =>
         render {
@@ -108,6 +109,24 @@ object BasketController extends CommonController{
         }
       }.recover {
           case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
+      }
+
+    }
+
+
+  @ApiOperation(nickname = "deleteBySearchIds",
+    value = "delete a basket entry by MongoId",
+    notes = """No double check is done. Use with caution""",
+    response = classOf[String],
+    httpMethod = "DELETE")
+  def deleteBySearchIds(@ApiParam(value = """searchIds""", defaultValue = "") @PathParam("searchIds") searchIds: String) =
+    Action.async { implicit request =>
+      BasketMongoDBService().deleteBySearchId(searchIds.split(",").map(s => SearchId(s)).toSet).map {case basketEntries =>
+        render {
+          case Accepts.Json() => Ok(Json.toJson(basketEntries))
+        }
+      }.recover {
+        case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
       }
 
     }

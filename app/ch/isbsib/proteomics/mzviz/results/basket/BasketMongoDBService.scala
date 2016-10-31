@@ -183,23 +183,6 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
     db.command(Count(collectionName))
   }
 
-//  /**
-//   * delete all entries which use this searchId
-//   * @return a Future of boolean
-//   */
-//  def deleteBySearchId(searchIds: Set[SearchId]): Future[Boolean] = {
-//
-//    searchIds.map({ searchId =>
-//
-//      val query = Json.obj("$text" -> Json.obj("$search" -> searchId.value))
-//
-//      collection.remove(query).map {
-//        case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
-//        case _ => true
-//      }
-//    }).sum
-//  }
-
 
   /**
    * delete entry by given MongoDB $oid (MongId)
