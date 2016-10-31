@@ -56,7 +56,7 @@ class LoaderMascotData(val db: DefaultDB) {
 
     val unzipPath:Try[String] = Try ( FileFinder.getHighestDir(Unzip.unzip(zipFile)) )
 
-    // create an searchId with error if unzip fails
+    // create a searchId with error if unzip fails
     unzipPath.recover({
       case NonFatal(e) => {
         val errorMessage = s"Could not read ZIP file."
@@ -85,7 +85,16 @@ class LoaderMascotData(val db: DefaultDB) {
     val fileList = FileFinder.getListOfFiles(path)
 
     // keep mzId files
-    val mzIdFiles:List[File] = fileList.filter(x => x.getName.split("\\.").last.toLowerCase() == "mzid")
+    val mzIdFiles:List[File] = (fileList.filter(x => x.getName.split("\\.").last.toLowerCase() == "mzid"))
+
+    //if there are no mzIdFiles then send error
+    if (mzIdFiles.isEmpty){
+      val errorMessage = "MzIdentML files not found. Verify if your Mascot data is correct"
+      val now = Calendar.getInstance().getTime()
+      searchInfoService.createSearchIdWithError(SearchId(now.toString), errorMessage)
+      Logger.error(errorMessage)
+      Failure(new Exception(errorMessage))
+    }
 
     // list of searchIds
     val searchIds = mzIdFiles.map(x => SearchId(x.getName.split("\\.")(0)))
@@ -98,7 +107,6 @@ class LoaderMascotData(val db: DefaultDB) {
       val mzMlFiles:Try[List[File]] = mzMlXmlElems.map(_.zip(mzIdFiles).map({
         tuple =>
           val found= LoaderMzIdent.parseSpectraFilename(tuple._1)
-
           //if resubmitted job, SpectraData location file is empty, so we take mzid name
           val  filename=
             if(found == "") path + "/" + tuple._2.toString.split("\\/").last.split("\\.")(0)
@@ -149,7 +157,7 @@ class LoaderMascotData(val db: DefaultDB) {
     // assert that searchIds are not already inserted
     val searchIdCheck:Seq[Future[(Boolean, SearchId)]] = searchIds.map({ id =>
       searchInfoService.isSearchIdExist(id).map({ alreadyTaken =>
-        if(alreadyTaken) searchInfoService.createSearchIdWithError(id, s"SearchId [${id.value}] already exists. Please delete SearchIds with this name before reinsertion")
+        if(alreadyTaken) searchInfoService.createSearchIdWithError(id, s"SearchId [${id.value}] already exists. Please delete SearchIds with this name before reloading")
         (alreadyTaken, id)
       })
     })
@@ -228,7 +236,7 @@ class LoaderMascotData(val db: DefaultDB) {
           ms1Service.deleteAllByRunIds(Set(RunId(id.value)))
           msnService.delete(Set(RunId(id.value)))
         })
-        val errorMessage = "Error while inserting experimental data. " + e.getMessage
+        val errorMessage = "Error while loading experimental data. " + e.getMessage
         Logger.error(errorMessage)
         throw new ImporterException(errorMessage, e)
       }
@@ -275,13 +283,13 @@ class LoaderMascotData(val db: DefaultDB) {
 
       for {
       // and only last the other data
-        matchNr <- matchService.insert(matchData._1)
-        psmNumber <- protMatchService.insert(matchData._2)
+        psmNr <- matchService.insert(matchData._1)
+        proteinNumber <- protMatchService.insert(matchData._2)
         searchOk <- searchInfoService.insert(matchData._3)
 
       } yield {
-        if (updateStatusCallback.isDefined) updateStatusCallback.get.apply(searchId._1, "processing", "waiting to insert experimental data")
-        matchNr + psmNumber + (if (searchOk) 1 else 0)
+        if (updateStatusCallback.isDefined) updateStatusCallback.get.apply(searchId._1, "loading", "waiting to load experimental data")
+        psmNr + proteinNumber + (if (searchOk) 1 else 0)
       }
 
     }.recoverWith({
@@ -345,13 +353,13 @@ class LoaderMascotData(val db: DefaultDB) {
     val itMs1: Iterator[ExpMs1Spectrum] = itMs1Ms2parts._1.map(_.left.get)
     val itMs2: Iterator[ExpMSnSpectrum] = itMs1Ms2parts._2.map(_.right.get)
 
-    updateStatusCallback.get.apply(id, "processing", "inserting ms1 data")
+    updateStatusCallback.get.apply(id, "loading", "loading ms1 data")
 
     val insertMs1:Future[Boolean] = ms1Service.insertMs1spectra(itMs1, intensityThreshold)
 
     insertMs1.recover({
       case NonFatal(e) => {
-        val errorMessage = s"Error while inserting ms1 data."
+        val errorMessage = s"Error while loading ms1 data."
         Logger.error(errorMessage)
         searchInfoService.createSearchIdWithError(id, errorMessage)
         throw new ImporterException(errorMessage, e)
@@ -360,12 +368,12 @@ class LoaderMascotData(val db: DefaultDB) {
 
     insertMs1.flatMap({ ms1Inserted =>
       if(updateStatusCallback.isDefined){
-        updateStatusCallback.get.apply(id, "processing", "inserting ms2 data")
+        updateStatusCallback.get.apply(id, "loading", "loading ms2 data")
       }
 
       val insertMs2: Future[Int] = msnService.insertMs2spectra(itMs2, RunId(id.value)).recover({
         case NonFatal(e) => {
-          val errorMessage = s"Error while inserting ms2 data."
+          val errorMessage = s"Error while loading ms2 data."
           searchInfoService.createSearchIdWithError(id, errorMessage)
           throw new ImporterException(errorMessage, e)
         }
@@ -373,7 +381,7 @@ class LoaderMascotData(val db: DefaultDB) {
 
       insertMs2.map({ ms2Inserted =>
         if(updateStatusCallback.isDefined){
-          updateStatusCallback.get.apply(id, "processing", "finished ms2 insertion")
+          updateStatusCallback.get.apply(id, "loading", "finished ms2 load")
         }
 
         (if(ms1Inserted) 0 else 1) + ms2Inserted
@@ -381,80 +389,6 @@ class LoaderMascotData(val db: DefaultDB) {
     })
 
   }
-
-  /**
-   * parse a subfolder containing *.mzIdentML, *.mzML, *.mgf
-   *
-   * @param runPath
-   * @return
-   */
-  def insertRunFromPath(runPath: File, intensityThreshold: Double):Future[Int] = {
-
-    // get the runId
-    val runId: RunId = getRunIdFromPath(runPath)
-
-    // check if all required files are here (it is not case sensitive)
-    val availableFiles = getRequiredFiles(requiredTypes, runPath)
-
-    // now we insert all the data
-    val ms1Iterator = LoaderMzML().parse(availableFiles.get("mzml").get, runId).filter(_.isLeft).map(_.left.get)
-    val ms2Iterator = LoaderMGF.load(availableFiles.get("mgf").get, runId)
-    val matchData = LoaderMzIdent.parse(availableFiles.get("mzid").get, SearchId(runId.value), runId)
-
-    for{
-      //first we insert MS data, because they're slow
-      ms1Nr <- ms1Service.insertMs1spectra(ms1Iterator, intensityThreshold)
-      ms2Nr <- msnService.insertMs2spectra(ms2Iterator, runId)
-
-      // and only last the other data
-      matchNr <- matchService.insert(matchData._1)
-      psmNumber <- protMatchService.insert(matchData._2)
-      searchOk <- searchInfoService.insert(matchData._3)
-
-    }yield{
-      if(ms1Nr) 1 else 0 + ms2Nr + matchNr + psmNumber + (if(searchOk) 1 else 0)
-    }
-
-  }
-
-
-  /**
-   * get the required files as a hashmap
-   *
-   * @param requiredTypes
-   * @param runPath
-   */
-  def getRequiredFiles(requiredTypes: Set[String], runPath: File): Map[String, File] = {
-
-    val availableFiles: List[File] = FileFinder.getListOfFiles(runPath.getAbsolutePath)
-
-    // get file extensions as lower case
-    val extensions: List[String] =  availableFiles.map(x =>  x.toString.substring(x.toString.lastIndexOf(".") + 1).toLowerCase)
-
-    val extFilePairs = extensions.zip(availableFiles)
-
-    // find the pair for every file type
-    requiredTypes.map({ x =>
-      val l = extFilePairs.filter(_._1 == x)
-      val hit = if(l.size > 0) l(0) else throw new RuntimeException("Required file type is missing: " + x + " in [" + runPath.getAbsolutePath + "]")
-      (x, hit._2)
-    }).toMap
-
-  }
-
-
-  /**
-   * get the runId from the directory name
-   *
-   * @param runPath
-   * @return
-   */
-  def getRunIdFromPath(runPath: File): RunId = {
-    val lastPart = runPath.getAbsolutePath.split("\\/").last
-    RunId(lastPart)
-  }
-
-
 }
 
 

@@ -174,7 +174,7 @@ class LoaderMaxQuantSpecs extends Specification {
     pep10.head.pep.sequence mustEqual("AIFQQPPVGVR")
 
     pep10.head.matchInfo.chargeState.get mustEqual(2)
-    pep10.head.matchInfo.isRejected mustEqual(None)
+    pep10.head.matchInfo.isRejected mustEqual(Some(false))
     pep10.head.matchInfo.massDiff.get mustEqual(0.13029)
     pep10.head.matchInfo.numMissedCleavages.get mustEqual(0)
     pep10.head.matchInfo.rank mustEqual(Some(1))
@@ -234,7 +234,7 @@ class LoaderMaxQuantSpecs extends Specification {
     list._2(0).mainProt.source.toString mustEqual("UP000005640_9606.fasta")
   }
 
-  "parse with None title" in {
+  "parse with Some(false) title" in {
     val parseMaxQuant= LoaderMaxQuant.parse("test/resources/maxquant/", None)
 
     parseMaxQuant.size mustEqual(2)
