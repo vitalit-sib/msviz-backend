@@ -167,8 +167,6 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
     mapper.registerModule(DefaultScalaModule)
     val writer = mapper.writerWithDefaultPrettyPrinter
     val json = writer.writeValueAsString(query)
-    println("weeeee")
-    println(json)
 
     collection.find(query).cursor[PepSpectraMatch].collect[List]()
   }
@@ -192,10 +190,10 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
       futSpectrumRefs.map({ spectrumRefs =>
         spectrumRefs
           .groupBy(_.spectrumId.runId) // map[RunIds, Seq[SpectrumRefs]
-          .map(({
+          .map({
           case (runId, spRefs) => //now, transform the list of spref to a map spectrumId -> spRef
             (runId, spRefs.map(spRef => (spRef.spectrumId, spRef)).toMap)
-        }))
+        })
       })
 
     for {
