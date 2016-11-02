@@ -39,7 +39,9 @@ class BasketControllerSpecs extends Specification with ScalaFutures{
     rtZoom = RtRange(lowerRt = 35, upperRt = 39),
     rtSelected = RtRange(lowerRt = 36, upperRt = 37),
     xicPeaks = Seq(XicPeak(SearchId("F002453"),Some(RetentionTime(36.48)), Some(Intensity(198000))), XicPeak(SearchId("F002453"), Some(RetentionTime(36.55)), Some(Intensity(621000)))),
-    creationDate = Some(Calendar.getInstance().getTime())
+    creationDate = Some(Calendar.getInstance().getTime()),
+    prevAA = Some("A"),
+    nextAA = Some("C")
   )
 
   "basket results" should {

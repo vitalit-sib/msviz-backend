@@ -25,7 +25,7 @@ object BasketTsvFormat {
 
     // extract the values
     def extractVal: ((BasketEntryWithSpInfo) => List[Any]) = { b: BasketEntryWithSpInfo =>
-      List(b.proteinAC.value, b.peptideSeq, b.startPos, b.endPos, b.spectrumId.runId.value, b.spectrumId.id.value,
+      List(b.proteinAC.value, b.prevAA.getOrElse("") + "." + b.peptideSeq + "." + b.nextAA.getOrElse(""), b.startPos, b.endPos, b.spectrumId.runId.value, b.spectrumId.id.value,
         b.scanNr, b.precRt, b.precMoz, b.precCharge, b.score, b.localizationScore.getOrElse("")) ++
         b.xicPeaks.map(p => Seq(rtToString(p.rt), intToString(p.intensity))).flatten
     }
