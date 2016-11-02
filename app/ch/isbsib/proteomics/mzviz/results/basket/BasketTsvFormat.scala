@@ -21,12 +21,12 @@ object BasketTsvFormat {
 
     val headerFields: List[String] = List[String]("proteinAC", "peptideSequence", "startPos", "endPos", "runId", "spectrumId",
                                       "scanNumber", "precRt", "precMoz", "precCharge", "mascotScore",
-                                      "localizationScore") ++ idHeaderFields
+                                      "localizationScore", "massDiff [ppm]") ++ idHeaderFields
 
     // extract the values
     def extractVal: ((BasketEntryWithSpInfo) => List[Any]) = { b: BasketEntryWithSpInfo =>
       List(b.proteinAC.value, b.prevAA.getOrElse("") + "." + b.peptideSeq + "." + b.nextAA.getOrElse(""), b.startPos, b.endPos, b.spectrumId.runId.value, b.spectrumId.id.value,
-        b.scanNr, b.precRt, b.precMoz, b.precCharge, b.score, b.localizationScore.getOrElse("")) ++
+        b.scanNr, b.precRt, b.precMoz, b.precCharge, b.score, b.localizationScore.getOrElse(""), b.ppmDiff.getOrElse("")) ++
         b.xicPeaks.map(p => Seq(rtToString(p.rt), intToString(p.intensity))).flatten
     }
 

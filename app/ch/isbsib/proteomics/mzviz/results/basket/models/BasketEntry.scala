@@ -31,6 +31,7 @@ trait BasketEntryBase {
   def creationDate: Option[Date]
   def prevAA: Option[String]
   def nextAA: Option[String]
+  def ppmDiff: Option[Double]
 }
 
 
@@ -51,7 +52,7 @@ trait BasketEntryBase {
  */
 case class BasketEntry (_id: Option[MongoId], proteinAC: AccessionCode, peptideSeq: String, startPos: Int, endPos: Int, searchIds: String,
                         spectrumId: SpectrumId, score: Double, localizationScore: Option[Double], ppmTolerance: Double, rtZoom: RtRange,
-                        rtSelected: RtRange, xicPeaks: Seq[XicPeak], creationDate: Option[Date], prevAA: Option[String], nextAA: Option[String]) extends BasketEntryBase
+                        rtSelected: RtRange, xicPeaks: Seq[XicPeak], creationDate: Option[Date], prevAA: Option[String], nextAA: Option[String], ppmDiff: Option[Double]) extends BasketEntryBase
 
 
 /**
@@ -71,7 +72,7 @@ case class BasketEntry (_id: Option[MongoId], proteinAC: AccessionCode, peptideS
  */
 case class BasketEntryWithSpInfo (_id: Option[MongoId], proteinAC: AccessionCode, peptideSeq: String, startPos: Int, endPos: Int, searchIds: String,
                         spectrumId: SpectrumId, scanNr:ScanNumber, precRt: Double, precCharge: Int, precMoz: Double, score: Double, localizationScore: Option[Double], ppmTolerance: Double, rtZoom: RtRange,
-                        rtSelected: RtRange, xicPeaks: Seq[XicPeak], creationDate: Option[Date], prevAA: Option[String], nextAA: Option[String]) extends BasketEntryBase
+                        rtSelected: RtRange, xicPeaks: Seq[XicPeak], creationDate: Option[Date], prevAA: Option[String], nextAA: Option[String], ppmDiff: Option[Double]) extends BasketEntryBase
 
 /**
  * A class keeping a retention time range.

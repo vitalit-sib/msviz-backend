@@ -47,7 +47,8 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     xicPeaks = Seq(XicPeak(SearchId("F002453"),Some(RetentionTime(36.48)),Some(Intensity(198000))), XicPeak(SearchId("F002453"), None, None)),
     creationDate = Some(Calendar.getInstance().getTime()),
     prevAA = Some("A"),
-    nextAA = Some("C")
+    nextAA = Some("C"),
+    ppmDiff = Some(0.56)
   )
 
   val entry2 = new BasketEntry(None, proteinAC = AccessionCode("OSBL8_HUMAN"),
@@ -64,7 +65,8 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     xicPeaks = Seq(XicPeak(SearchId("F002453"), Some(RetentionTime(47.93)), Some(Intensity(472000))), XicPeak(SearchId("F002453"), Some(RetentionTime(47.94)), Some(Intensity(1470000)))),
     creationDate = Some(Calendar.getInstance().getTime()),
     prevAA = Some("A"),
-    nextAA = Some("C")
+    nextAA = Some("C"),
+    ppmDiff = Some(0.56)
   )
 
   val entry3 = new BasketEntry(_id=None, proteinAC = AccessionCode("OSBL8_HUMAN"),
@@ -81,7 +83,8 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     xicPeaks = Seq(XicPeak(SearchId("F002453"), Some(RetentionTime(37.74)), Some(Intensity(139000))), XicPeak(SearchId("F002453"), Some(RetentionTime(37.82)), Some(Intensity(634000)))),
     creationDate = Some(Calendar.getInstance().getTime()),
     prevAA = Some("A"),
-    nextAA = Some("C")
+    nextAA = Some("C"),
+    ppmDiff = Some(0.56)
   )
 
   val entry4 = new BasketEntry(_id=None, proteinAC = AccessionCode("K2C1_HUMAN"),
@@ -98,7 +101,8 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     xicPeaks = Seq(XicPeak(SearchId("F002453"), Some(RetentionTime(30.51)), Some(Intensity(95400))), XicPeak(SearchId("F002453"), Some(RetentionTime(30.30)), Some(Intensity(3620000)))),
     creationDate = Some(Calendar.getInstance().getTime()),
     prevAA = Some("A"),
-    nextAA = Some("C")
+    nextAA = Some("C"),
+    ppmDiff = Some(0.56)
   )
 
   val entry5 = new BasketEntry(_id=None, proteinAC = AccessionCode("K2C1_HUMAN"),
@@ -115,7 +119,8 @@ class BasketMongoDBServiceSpecs extends Specification with ScalaFutures {
     xicPeaks = Seq(XicPeak(SearchId("F009998"), Some(RetentionTime(30.51)), Some(Intensity(95400))), XicPeak(SearchId("F009999"), Some(RetentionTime(30.30)), Some(Intensity(3620000)))),
     creationDate = Some(Calendar.getInstance().getTime()),
     prevAA = Some("A"),
-    nextAA = Some("C")
+    nextAA = Some("C"),
+    ppmDiff = Some(0.56)
   )
 
 

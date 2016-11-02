@@ -41,7 +41,8 @@ class BasketControllerSpecs extends Specification with ScalaFutures{
     xicPeaks = Seq(XicPeak(SearchId("F002453"),Some(RetentionTime(36.48)), Some(Intensity(198000))), XicPeak(SearchId("F002453"), Some(RetentionTime(36.55)), Some(Intensity(621000)))),
     creationDate = Some(Calendar.getInstance().getTime()),
     prevAA = Some("A"),
-    nextAA = Some("C")
+    nextAA = Some("C"),
+    ppmDiff = Some(0.56)
   )
 
   "basket results" should {
