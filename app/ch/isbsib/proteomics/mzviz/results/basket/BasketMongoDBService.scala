@@ -197,6 +197,20 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
     }
   }
 
+    /**
+     * delete all entries with the given Basket Id (which is a concatenation of SearchIds seperated by commas)
+     * @return a Future of boolean
+     */
+    def deleteByBasketId(basketId: String): Future[Boolean] = {
+
+      val selector = BSONDocument("searchIds" -> basketId)
+
+      bsonCollection.remove(selector).map {
+        case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
+        case _ => true
+      }
+    }
+
   /**
    * delete all entries which contain the given SearchId
    * @param searchIds Set of SearchIds

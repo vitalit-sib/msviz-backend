@@ -119,9 +119,9 @@ object BasketController extends CommonController{
     notes = """No double check is done. Use with caution""",
     response = classOf[String],
     httpMethod = "DELETE")
-  def deleteBySearchId(@ApiParam(value = """searchIds""", defaultValue = "") @PathParam("searchIds") searchId: String) =
+  def deleteByBasketId(@ApiParam(value = """basketId""", defaultValue = "") @PathParam("basketId") basketId: String) =
     Action.async { implicit request =>
-      BasketMongoDBService().deleteBySearchId(Set(SearchId(searchId))).map {case basketEntries =>
+      BasketMongoDBService().deleteByBasketId(basketId).map {case basketEntries =>
         render {
           case Accepts.Json() => Ok(Json.toJson(basketEntries))
         }
