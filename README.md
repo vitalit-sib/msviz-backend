@@ -8,13 +8,13 @@ Visit the [wiki page](../../wiki) to have more details.
 Roman Mylonas (roman.mylonas@sib.swiss)
 
 ###Developer
-*Trinidad Martin
-*Alexandre Masselot
-*Roman Mylonas
+* Trinidad Martin
+* Alexandre Masselot
+* Roman Mylonas
 
 ###Institutions
-*Vital-IT, SIB Swiss Institute of Bioinformatics
-*Protein Analysis Facility, University of Lausanne
+* Vital-IT, SIB Swiss Institute of Bioinformatics
+* Protein Analysis Facility, University of Lausanne
 
 ## Copyright
 Copyright (C) 2014-2016 by SIB Swiss Institute of Bioinformatics.
