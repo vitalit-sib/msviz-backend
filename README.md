@@ -1,21 +1,31 @@
-# msViz Backend
-A mass spectrometry visualization platform, developed by the PAF & Vital-IT, SIB Swiss Institute of Bioinformatics.
-
+# MsViz Backend
+MsViz is a zero-learning-curve software platform for detailed manual validation and quantitation of post-translational modifications.
 
 Visit the [wiki page](../../wiki) to have more details.
 
-## Copyright
-Copyright (C) 2014-2015 by Roman Mylonas (roman.mylonas@isb-sib.ch), Trinidad Martin (trinidad.martin@isb-ib.ch) and Alexandre Masselot (alexandre.masselot@isb-sib.ch), SIB Swiss Institute of Bioinformatics.
+## Credits
+###Maintainer
+Roman Mylonas (roman.mylonas@sib.swiss)
 
+###Developer
+Trinidad Martin
+Alexandre Masselot
+Roman Mylonas
+
+###Institutions
+Vital-IT, SIB Swiss Institute of Bioinformatics
+Protein Analysis Facility, University of Lausanne
+
+## Copyright
+Copyright (C) 2014-2016 by SIB Swiss Institute of Bioinformatics.
 
 ## Licensing
-
 This program is available under the GNU General Public License (GPL,
 version 2 or later; see below).
 
 For users who need rights that go beyond what is allowed under the
-GNU GPL (e.g. commercial or production use), it can be licensed under other terms.
-Please contact <info@isb-sib.ch> for more information.
+GNU GPL (e.g. if you want to distribute a modified binary version without distributing the source code), it can be licensed under other terms.
+Please contact <legal@sib.swiss> for more information.
 
 ---
 This program is free software; you can redistribute it and/or modify
