@@ -7,14 +7,14 @@ Visit the [wiki page](../../wiki) to have more details.
 ###Maintainer
 Roman Mylonas (roman.mylonas@sib.swiss)
 
-###Developer
+###Developers
 * Trinidad Martin
 * Alexandre Masselot
 * Roman Mylonas
 
 ###Institutions
-* Vital-IT, SIB Swiss Institute of Bioinformatics
-* Protein Analysis Facility, University of Lausanne
+* Vital-IT, [SIB Swiss Institute of Bioinformatics](http://www.sib.swiss)
+* Protein Analysis Facility, [University of Lausanne](https://www.unil.ch/central/en/home.html)
 
 ## Copyright
 Copyright (C) 2014-2016 by SIB Swiss Institute of Bioinformatics.
