@@ -8,7 +8,7 @@ Visit the [wiki page](../../wiki) to have more details.
 Roman Mylonas (roman.mylonas@sib.swiss)
 
 ###Developers
-* Trinidad Martin
+* Trinidad Martín
 * Alexandre Masselot
 * Roman Mylonas
 
