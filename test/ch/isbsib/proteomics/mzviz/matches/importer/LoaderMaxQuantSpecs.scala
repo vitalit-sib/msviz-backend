@@ -323,7 +323,6 @@ class LoaderMaxQuantSpecs extends Specification {
     parseMaxQuant(0)._1.length mustEqual 1231
     parseMaxQuant(1)._1.length mustEqual 1330
 
-
   }
 
 
