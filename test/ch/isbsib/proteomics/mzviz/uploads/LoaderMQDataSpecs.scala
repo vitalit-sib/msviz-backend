@@ -47,7 +47,7 @@ class LoaderMQDataSpecs extends Specification with ScalaFutures{
         ms2List.size mustEqual(82)
 
         val matchList = matchService.findAllSpectrumIdBySearchId(SearchId("DMSO")).futureValue
-        matchList.size mustEqual(1278)
+        matchList.size mustEqual(1231)
 
     }
   }
