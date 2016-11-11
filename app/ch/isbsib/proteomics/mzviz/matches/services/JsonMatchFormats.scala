@@ -1,5 +1,6 @@
 package ch.isbsib.proteomics.mzviz.matches.services
 
+import ch.isbsib.proteomics.mzviz.commons.{Dalton, PPM, MassUnit}
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
@@ -54,6 +55,17 @@ object JsonMatchFormats {
     override def reads(json: JsValue): JsResult[SearchId] = JsSuccess(SearchId(json.as[String]))
 
     def writes(o: SearchId) = JsString(o.value)
+  }
+
+  implicit val formatMassUnit = new Format[MassUnit] {
+    override def reads(json: JsValue): JsResult[MassUnit] = {
+      JsSuccess(json.as[String] match{
+        case "ppm" => PPM
+        case "dalton" => Dalton
+      })
+    }
+
+    def writes(o: MassUnit) = JsString(o.value)
   }
 
   implicit val formatProteinRef = new Format[ProteinRef] {

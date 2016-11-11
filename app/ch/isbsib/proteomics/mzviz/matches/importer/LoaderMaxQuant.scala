@@ -3,6 +3,7 @@ package ch.isbsib.proteomics.mzviz.matches.importer
 import java.io.{IOException, File}
 import java.util.Calendar
 
+import ch.isbsib.proteomics.mzviz.commons.PPM
 import ch.isbsib.proteomics.mzviz.commons.helpers.{FileFinder, Unzip}
 import ch.isbsib.proteomics.mzviz.experimental.{ScanNumber, SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
@@ -82,12 +83,6 @@ object LoaderMaxQuant {
 
     //Prepared for several sources
     val fastaFilesArray= fastaFilename.split(";")
-    /*
-    fastaFilename match {
-      case fastaFileNameRegx(n) => n
-      case fileNameRegx(n) => n
-      case _ => fastaFilename
-    }*/
 
     // Create a new String separated by ";" with the source names
     fastaFilesArray.map{(
@@ -230,6 +225,7 @@ object LoaderMaxQuant {
     val molMassPos: Int = headerEvidenceMap("Mass")
     val scorePos: Int = headerEvidenceMap("Score")
     val missedCleavagesPos: Int = headerEvidenceMap("Missed cleavages")
+    val typePos: Int = headerEvidenceMap("Type")
     val massDiffPos: Int = headerEvidenceMap("Mass Error [ppm]")
     val chargePos: Int = headerEvidenceMap("Charge")
     val acPos: Int = if(headerEvidenceMap.contains("Leading Razor Protein")) headerEvidenceMap("Leading Razor Protein") else headerEvidenceMap("Leading razor protein")
@@ -242,7 +238,10 @@ object LoaderMaxQuant {
     //Filter table, remove rows with no score, taking care about "." in the score which are not digits
     val mEvidenceListFiltered = mEvidenceList.filter({ l => l(scorePos).filter(_.isDigit).length > 0})
 
-    mEvidenceListFiltered.map({
+    // remove entries that are of type MSMS
+    val mEvidenceListFiltered2 = mEvidenceListFiltered.filter({ l => l(typePos) != "MSMS"})
+
+    mEvidenceListFiltered2.map({
       m => {
         val id: Int = m(idPos).toInt
         val sequence: String = m(sequencePos)
@@ -401,7 +400,7 @@ object LoaderMaxQuant {
       val pep = Peptide(entry.sequence, entry.molMass, entry.modificationVector)
       val spectrumId = SpectrumId(SpectrumUniqueId(entry.scanNumber.toString), RunId(entry.experiment))
       // we assume that PSM is always rank 1 @TODO does MQ really only indicate first ranks?
-      val matchInfo = PepMatchInfo(IdentScore(entry.score, Map()), entry.missedCleavages, entry.massDiff, rank=Some(1), None, entry.chargeState, Some(false))
+      val matchInfo = PepMatchInfo(IdentScore(entry.score, Map()), entry.missedCleavages, entry.massDiff, Some(PPM), rank=Some(1), None, entry.chargeState, Some(false))
 
       val leadingProteinRef = ProteinRef(AccessionCode(entry.ac), Set(), Some(sequenceSource))
       val pepEntry = peptidesHash(entry.pepId)

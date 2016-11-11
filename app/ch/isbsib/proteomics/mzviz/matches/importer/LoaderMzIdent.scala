@@ -3,6 +3,7 @@ package ch.isbsib.proteomics.mzviz.matches.importer
 import java.io.{File, FileInputStream, InputStream}
 import java.util.Calendar
 
+import ch.isbsib.proteomics.mzviz.commons.Dalton
 import ch.isbsib.proteomics.mzviz.commons.helpers.OptionConverter
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
@@ -299,6 +300,7 @@ object LoaderMzIdent {
     PepMatchInfo(score = identScore,
       numMissedCleavages = OptionConverter.convertGoogleOption[Int](mzJavaMatch.getNumMissedCleavages.asInstanceOf[Optional[Int]]),
       massDiff = OptionConverter.convertGoogleOption[Double](mzJavaMatch.getMassDiff.asInstanceOf[Optional[Double]]),
+      massDiffUnit = Some(Dalton),
       rank = OptionConverter.convertGoogleOption[Int](mzJavaMatch.getRank.asInstanceOf[Optional[Int]]),
       chargeState = OptionConverter.convertGoogleOption[Int](mzJavaRes._1.getAssumedCharge.asInstanceOf[Optional[Int]]),
       totalNumIons = OptionConverter.convertGoogleOption[Int](mzJavaMatch.getTotalNumIons.asInstanceOf[Optional[Int]]),

@@ -94,10 +94,10 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
           service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"))._1).futureValue
           val psmList = service.findAllPSMBySearchId(SearchId("M_100")).futureValue
           psmList.size must equalTo(62)
+          psmList(0).matchInfo.massDiffUnit.get mustEqual Dalton
 
       }
   }
-
 
 
   "listProteinRefsBySearchId" should {

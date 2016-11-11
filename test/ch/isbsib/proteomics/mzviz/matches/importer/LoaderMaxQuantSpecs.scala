@@ -120,7 +120,7 @@ class LoaderMaxQuantSpecs extends Specification {
 
     val listEvidence = LoaderMaxQuant.parseEvidenceTable(new File("test/resources/maxquant/evidence.txt"))
 
-    listEvidence.size mustEqual (2671)
+    listEvidence.size mustEqual (2564)
 
     //Select first row
     val entry:EvidenceTableEntry=listEvidence(0)
@@ -159,8 +159,8 @@ class LoaderMaxQuantSpecs extends Specification {
     // should have 2 runIds
     pepSpectraMap.keys.size mustEqual(2)
 
-    pepSpectraMap(RunId("Nocodazole")).size mustEqual(1390)
-    pepSpectraMap(RunId("DMSO")).size mustEqual(1278)
+    pepSpectraMap(RunId("Nocodazole")).size mustEqual(1330)
+    pepSpectraMap(RunId("DMSO")).size mustEqual(1231)
 
     val pep10 = pepSpectraMap(RunId("Nocodazole")).filter(p => p.pep.sequence == "AIFQQPPVGVR")
     val pep11 = pepSpectraMap(RunId("DMSO")).filter(p => p.pep.sequence == "AIFQQPPVGVR")
@@ -315,6 +315,15 @@ class LoaderMaxQuantSpecs extends Specification {
     val firstEntry= evidenceTable(0)
     firstEntry.modificationVector mustEqual(Vector(Seq(ModifName("Acetyl")),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),
       Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq()))
+  }
+
+
+  "ignore entries of type MSMS in evidence" in {
+    val parseMaxQuant= LoaderMaxQuant.parse("test/resources/maxquant/", None)
+    parseMaxQuant(0)._1.length mustEqual 1231
+    parseMaxQuant(1)._1.length mustEqual 1330
+
+
   }
 
 
