@@ -8,4 +8,3 @@ sealed trait MassUnit {def value: String}
 case object PPM extends MassUnit {val value = "ppm"}
 case object Dalton extends MassUnit {val value = "dalton"}
 
-//case class MassUnit(value:String) extends AnyVal

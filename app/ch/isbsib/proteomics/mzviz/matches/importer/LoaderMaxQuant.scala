@@ -128,9 +128,6 @@ object LoaderMaxQuant {
    */
   def parseMaxquantSummaryTableRawSearchId(file: File): Map[String, String] = {
 
-    val linesParam: Iterator[String] = fromFile(file).getLines()
-    //val headerParam = linesParam.take(1).next.split("\t").toList
-
     val (mSummaryList, headerSummaryMap) = parseCommonLines(file)
     val experimentPos: Int = headerSummaryMap("Experiment")
     val rawPos: Int = headerSummaryMap("Raw file")
@@ -364,23 +361,6 @@ object LoaderMaxQuant {
     })
     evidencePeptidesResult
 
-    /*
-    //map from pepId -> info
-    val peptidesTuple = mPeptidesListFiltered.map({
-      row =>
-        val pepId = row(peptideIdPos).toInt
-        val evidenceId = row(evidenceIdPos)
-        val isDecoy = if (row(isDecoyPos).isEmpty()) Option(false) else Option(true)
-        val evidencePeptideSeq = evidenceId.split(";").map ({
-          evidId => Tuple2(evidId,pepId)
-        })
-        val peptidesEntry = PeptidesTableEntry(pepId, Option(row(previousAAPos)), Option(row(nextAAPos)), row(startPos).toInt,
-          row(endPos).toInt, isDecoy)
-        Tuple3(pepId, peptidesEntry,evidencePeptideSeq)
-    })
-    Tuple2((peptidesTuple, peptidesTuple._2).toMap, peptidesTuple._3)
-
-    */
   }
 
   def loadPepSpectraMatch(maxQuantDir: String, runIds: Seq[RunId], sequenceSource:SequenceSource, idTitle:Option[String]): Map[RunId, Seq[PepSpectraMatch]] = {
