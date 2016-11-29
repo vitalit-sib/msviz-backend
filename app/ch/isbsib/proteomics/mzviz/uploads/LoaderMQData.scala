@@ -89,10 +89,6 @@ class LoaderMQData(val db: DefaultDB) {
    */
   def loadUnzipped(path: String, intensityThreshold: Double): Future[Seq[SearchId]] = {
 
-
-    // get the list of files in the directory
-    val fileList = FileFinder.getListOfFiles(path)
-
     //parse txt/summary to obtain check if we have all expected files
     val summaryFile = path + "/txt/summary.txt"
     //Check if summary file exists
