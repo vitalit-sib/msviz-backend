@@ -181,7 +181,11 @@ object LoaderMzIdent {
    */
   def parseEnzymeFilename(mzidXml: Elem): String = {
     val enzymeLocation =mzidXml \\ "EnzymeName" \ "cvParam" \ "@name"
-    enzymeLocation.text
+    if(enzymeLocation.size == 0){
+      (mzidXml \\ "EnzymeName" \ "userParam" \ "@value").text
+    }else{
+      enzymeLocation.text
+    }
   }
 
   /**
@@ -304,7 +308,9 @@ object LoaderMzIdent {
       rank = OptionConverter.convertGoogleOption[Int](mzJavaMatch.getRank.asInstanceOf[Optional[Int]]),
       chargeState = OptionConverter.convertGoogleOption[Int](mzJavaRes._1.getAssumedCharge.asInstanceOf[Optional[Int]]),
       totalNumIons = OptionConverter.convertGoogleOption[Int](mzJavaMatch.getTotalNumIons.asInstanceOf[Optional[Int]]),
-      isRejected = OptionConverter.convertGoogleOption[Boolean](mzJavaMatch.isRejected.asInstanceOf[Optional[Boolean]]))
+      isRejected = OptionConverter.convertGoogleOption[Boolean](mzJavaMatch.isRejected.asInstanceOf[Optional[Boolean]]),
+      modificationProbabilities = None,
+      highestModifProbability = None)
 
   }
 
