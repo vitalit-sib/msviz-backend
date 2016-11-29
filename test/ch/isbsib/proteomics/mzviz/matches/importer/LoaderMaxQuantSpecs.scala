@@ -326,4 +326,87 @@ class LoaderMaxQuantSpecs extends Specification {
   }
 
 
+  "parse evidence with position probabilities" should {
+
+    val evidences = LoaderMaxQuant.parseEvidenceTable(new File("test/resources/maxquant/evidence.txt"))
+
+    "size" in {
+      evidences.size mustEqual(2564)
+    }
+
+    "oxidation" in {
+      val ev = evidences(1)
+
+      val modifProbs = ev.modificationProbabilities.get
+      modifProbs.size mustEqual(1)
+      modifProbs(ModifName("Oxidation")) mustEqual("AAAPQAWAGPM(1)EEPPQAQAPPR")
+
+      val highestModif = ev.highestModifProbability.get
+      highestModif.size mustEqual(1)
+      highestModif(ModifName("Oxidation")) mustEqual(1)
+    }
+
+    "acetylation" in {
+      val ev = evidences(0)
+      ev.modificationProbabilities mustEqual(None)
+
+      ev.highestModifProbability mustEqual(None)
+
+    }
+
+    "multi oxidation" in {
+      val ev = evidences(112)
+
+      val modifProbs = ev.modificationProbabilities.get
+      modifProbs.size mustEqual(1)
+      modifProbs(ModifName("Oxidation")) mustEqual("ALYDAELSQM(1)QTHISDTSVVLSM(1)DNNR")
+
+      val highestModif = ev.highestModifProbability.get
+      highestModif.size mustEqual(1)
+      highestModif(ModifName("Oxidation")) mustEqual(1)
+    }
+
+    "multi phospho" in {
+      val ev = evidences(260)
+
+      val modifProbs = ev.modificationProbabilities.get
+      modifProbs.size mustEqual(1)
+      modifProbs(ModifName("Phospho")) mustEqual("DLHQPS(0.141)LS(0.861)PAS(0.994)PHS(0.005)QGFER")
+
+      val highestModif = ev.highestModifProbability.get
+      highestModif.size mustEqual(1)
+      highestModif(ModifName("Phospho")) mustEqual(0.994)
+    }
+
+    "oxidation and phospho" in {
+      val ev = evidences(313)
+
+      val modifProbs = ev.modificationProbabilities.get
+      modifProbs.size mustEqual(2)
+      modifProbs(ModifName("Oxidation")) mustEqual("DVLGPSTVVANSDESQLLTPGKM(1)SQR")
+      modifProbs(ModifName("Phospho")) mustEqual("DVLGPSTVVANSDES(0.009)QLLT(0.981)PGKMS(0.009)QR")
+
+      val highestModif = ev.highestModifProbability.get
+      highestModif.size mustEqual(2)
+      highestModif(ModifName("Oxidation")) mustEqual(1)
+      highestModif(ModifName("Phospho")) mustEqual(0.981)
+    }
+
+    "acetyl and oxidation" in {
+      val ev = evidences(162)
+
+      val modifProbs = ev.modificationProbabilities.get
+      modifProbs.size mustEqual(1)
+      modifProbs(ModifName("Oxidation")) mustEqual("AQVAM(1)STLPVEDEESSESR")
+
+      val highestModif = ev.highestModifProbability.get
+      highestModif.size mustEqual(1)
+      highestModif(ModifName("Oxidation")) mustEqual(1)
+
+      ev.modificationVector(0)(0) mustEqual(ModifName("Acetyl"))
+    }
+
+  }
+
+
 }

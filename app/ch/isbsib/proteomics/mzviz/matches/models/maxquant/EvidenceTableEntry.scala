@@ -17,4 +17,7 @@ case class EvidenceTableEntry ( id:Int,
                                 ac:String,
                                 pepId:Int,
                                 modificationVector: Vector[Seq[ModifName]],
-                                scanNumber: Int)
+                                modificationProbabilities: Option[Map[ModifName, String]],
+                                highestModifProbability: Option[Map[ModifName, Double]],
+                                scanNumber: Int
+                              )
