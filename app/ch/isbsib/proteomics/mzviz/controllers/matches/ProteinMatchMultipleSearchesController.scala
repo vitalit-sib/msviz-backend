@@ -46,8 +46,6 @@ object ProteinMatchMultipleSearchesController extends MatchController {
           _.foldLeft( ProteinMatchMultipleSearches(Map()) )( (r, c) => r.add(c.searchId, c) )
       )
 
-      val validACs = MatchMongoDBService().listProteinRefsBySearchIds(queryParamSearchIds(searchIds), queryParamOModifName(withModif)).map(_.map(_.AC.value))
-
       // we filter on selected modif in case there is one selected
       val filteredMultiList = withModif match {
 
