@@ -1,18 +1,20 @@
 package ch.isbsib.proteomics.mzviz.matches.services
 
-import ch.isbsib.proteomics.mzviz.commons.{Dalton, PPM, MassUnit}
-import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
+import ch.isbsib.proteomics.mzviz.commons.{Dalton, MassUnit, PPM}
+import ch.isbsib.proteomics.mzviz.experimental.{RunId, SpectrumUniqueId}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.matches.{HitRank, SearchId}
 import ch.isbsib.proteomics.mzviz.matches.models._
+import ch.isbsib.proteomics.mzviz.modifications.ModifName
 import ch.isbsib.proteomics.mzviz.theoretical.models.SearchDatabase
-import ch.isbsib.proteomics.mzviz.theoretical.{ProteinIdentifier, SequenceSource, AccessionCode}
+import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, ProteinIdentifier, SequenceSource}
 import play.api.libs.json._
 import play.api.libs.json.Reads._
 import play.api.libs.json.Json
 import ch.isbsib.proteomics.mzviz.modifications.services.JsonModificationFormats._
+import play.api.libs.json.Json.JsValueWrapper
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
@@ -86,6 +88,40 @@ object JsonMatchFormats {
 
   }
 
+
+  implicit val formatModificationPobabilities = new Format[Map[ModifName, String]] {
+    override def reads(json: JsValue): JsResult[Map[ModifName, String]] = {
+      JsSuccess(json.as[Map[String, String]].map({ case (k, v) =>
+          ModifName(k) -> v
+      }))
+    }
+
+    def writes(o: Map[ModifName, String]) = Json.obj(
+      o.map({ case(s, o) =>
+          val ret: (String, JsValueWrapper) = s.value -> JsString(o)
+          ret
+      }).toSeq:_*
+    )
+
+  }
+
+  implicit val formatHighestModifProbability = new Format[Map[ModifName, Double]] {
+    override def reads(json: JsValue): JsResult[Map[ModifName, Double]] = {
+      JsSuccess(json.as[Map[String, Double]].map({ case (k, v) =>
+        ModifName(k) -> v
+      }))
+    }
+
+    def writes(o: Map[ModifName, Double]) = Json.obj(
+      o.map({ case(s, o) =>
+        val ret: (String, JsValueWrapper) = s.value -> JsNumber(o)
+        ret
+      }).toSeq:_*
+    )
+
+  }
+
+
   implicit val formatProteinMatch = Json.format[ProteinMatch]
   implicit val formatPeptide = Json.format[Peptide]
   implicit val formatIdentScore = Json.format[IdentScore]
@@ -96,6 +132,8 @@ object JsonMatchFormats {
   implicit val formatSearchInfo = Json.format[SearchInfo]
   implicit val formatProteinIdentInfo = Json.format[ProteinIdentInfo]
   implicit val formatProteinIdent = Json.format[ProteinIdent]
+
+
 
 
   implicit val writeProteinMatchMultipleSearches = new Writes[ProteinMatchMultipleSearches] {

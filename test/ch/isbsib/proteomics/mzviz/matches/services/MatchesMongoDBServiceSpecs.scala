@@ -3,11 +3,11 @@ package ch.isbsib.proteomics.mzviz.matches.services
 import java.io.File
 
 import ch.isbsib.proteomics.mzviz.commons._
-import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
+import ch.isbsib.proteomics.mzviz.experimental.{RunId, SpectrumUniqueId}
 import ch.isbsib.proteomics.mzviz.matches.SearchId
-import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
+import ch.isbsib.proteomics.mzviz.matches.importer.{LoaderMaxQuant, LoaderMzIdent}
 import ch.isbsib.proteomics.mzviz.modifications.ModifName
-import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
+import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.specs2.mutable.Specification
@@ -178,6 +178,28 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
         psms.size must equalTo(9)
       }
 
+    }
+
+    "load MXQ data" should {
+
+      "insert and delete" in new TempMongoDBService {
+        val oneMQ = LoaderMaxQuant.parse(maxQuantDir = "test/resources/maxquant/", idTitle = Some("yoyo"))(0)
+        service.insert(oneMQ._1).futureValue
+        val psms = service.findAllPSMsByProtein(AccessionCode("Q9BZF1"), notRejected = Some(true)).futureValue
+
+        // check sizes
+        service.countEntries.futureValue mustEqual(1231)
+        psms.size mustEqual(273)
+
+        // check one PSM
+        val psm = psms.filter(_.spectrumId.id.value == "9477")(0)
+        psm.matchInfo.modificationProbabilities.get(ModifName("Phospho")) mustEqual("MEGGLADGEPDRT(0.032)S(0.968)LLGDSK")
+        psm.matchInfo.highestModifProbability.get(ModifName("Phospho")) mustEqual(0.968)
+
+        psm.matchInfo.modificationProbabilities.get(ModifName("Oxidation")) mustEqual("M(1)EGGLADGEPDRTSLLGDSK")
+        psm.matchInfo.highestModifProbability.get(ModifName("Oxidation")) mustEqual(1.0)
+
+      }
     }
 
 
