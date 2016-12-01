@@ -25,7 +25,7 @@ import scala.util.Random
 class LoaderMascotDataSpecs extends Specification with ScalaFutures {
 
   implicit val defaultPatience =
-    PatienceConfig(timeout = Span(15, Seconds), interval = Span(5000, Millis))
+    PatienceConfig(timeout = Span(15, Seconds), interval = Span(50000, Millis))
 
   /**
    * extends the temp mngodatabase and add a exp service above it
@@ -47,16 +47,16 @@ class LoaderMascotDataSpecs extends Specification with ScalaFutures {
 
       val results = futureResults.futureValue
       results.size mustEqual 2
-      results(0).value.replaceAll("\\d", "") mustEqual ("sample")
+      results(0).value.replaceAll("\\d", "") mustEqual ("MSC_sample")
 
       // check ms1
-      val ms1List = exp1Service.findMs1EntryWithMozTol(RunId("sample1"), Moz(519.14), 0.3).futureValue
+      val ms1List = exp1Service.findMs1EntryWithMozTol(RunId("MSC_sample1"), Moz(519.14), 0.3).futureValue
       ms1List.size mustEqual (148)
 
-      val ms2List = exp2Service.findAllSpectraRefByrunId(Set(RunId("sample1"), RunId("sample2"))).futureValue
+      val ms2List = exp2Service.findAllSpectraRefByrunId(Set(RunId("MSC_sample1"), RunId("MSC_sample2"))).futureValue
       ms2List.size mustEqual (82)
 
-      val matchList = matchService.findAllSpectrumIdBySearchId(SearchId("sample1")).futureValue
+      val matchList = matchService.findAllSpectrumIdBySearchId(SearchId("MSC_sample1")).futureValue
       matchList.size mustEqual (62)
 
     }
@@ -70,13 +70,13 @@ class LoaderMascotDataSpecs extends Specification with ScalaFutures {
       results.size mustEqual 2
 
       // check ms1
-      val ms1List = exp1Service.findMs1EntryWithMozTol(RunId("sample1"), Moz(519.14), 0.3).futureValue
+      val ms1List = exp1Service.findMs1EntryWithMozTol(RunId("MSC_sample1"), Moz(519.14), 0.3).futureValue
       ms1List.size mustEqual (148)
 
-      val ms2List = exp2Service.findAllSpectraRefByrunId(Set(RunId("sample1"), RunId("sample2"))).futureValue
+      val ms2List = exp2Service.findAllSpectraRefByrunId(Set(RunId("MSC_sample1"), RunId("MSC_sample2"))).futureValue
       ms2List.size mustEqual (82)
 
-      val matchList = matchService.findAllSpectrumIdBySearchId(SearchId("sample1")).futureValue
+      val matchList = matchService.findAllSpectrumIdBySearchId(SearchId("MSC_sample1")).futureValue
       matchList.size mustEqual (62)
 
     }
@@ -94,13 +94,13 @@ class LoaderMascotDataSpecs extends Specification with ScalaFutures {
       results.size mustEqual 2
 
       // check ms1
-      val ms1List = exp1Service.findMs1EntryWithMozTol(RunId("sample1"), Moz(519.14), 0.3).futureValue
+      val ms1List = exp1Service.findMs1EntryWithMozTol(RunId("MSC_sample1"), Moz(519.14), 0.3).futureValue
       ms1List.size mustEqual(15)
 
-      val ms2List = exp2Service.findAllSpectraRefByrunId(Set(RunId("sample1"), RunId("sample2"))).futureValue
+      val ms2List = exp2Service.findAllSpectraRefByrunId(Set(RunId("MSC_sample1"), RunId("MSC_sample2"))).futureValue
       ms2List.size mustEqual(82)
 
-      val matchList = matchService.findAllSpectrumIdBySearchId(SearchId("sample1")).futureValue
+      val matchList = matchService.findAllSpectrumIdBySearchId(SearchId("MSC_sample1")).futureValue
       matchList.size mustEqual(62)
 
     }
@@ -114,13 +114,13 @@ class LoaderMascotDataSpecs extends Specification with ScalaFutures {
       results.size mustEqual 2
 
       // check ms1
-      val ms1List = exp1Service.findMs1EntryWithMozTol(RunId("sample1"), Moz(519.14), 0.3).futureValue
+      val ms1List = exp1Service.findMs1EntryWithMozTol(RunId("MSC_sample1"), Moz(519.14), 0.3).futureValue
       ms1List.size mustEqual(15)
 
-      val ms2List = exp2Service.findAllSpectraRefByrunId(Set(RunId("sample1"), RunId("sample2"))).futureValue
+      val ms2List = exp2Service.findAllSpectraRefByrunId(Set(RunId("MSC_sample1"), RunId("MSC_sample2"))).futureValue
       ms2List.size mustEqual(82)
 
-      val matchList = matchService.findAllSpectrumIdBySearchId(SearchId("sample1")).futureValue
+      val matchList = matchService.findAllSpectrumIdBySearchId(SearchId("MSC_sample1")).futureValue
       matchList.size mustEqual(62)
 
     }
