@@ -199,7 +199,7 @@ object LoaderMaxQuant {
 
         val protInfo = ProteinIdentInfo(AccessionCode(ac), sequenceSource, identScore, entry.uniquePeptides(runId), entry.msCount(runId), true)
 
-        val searchId = if(idTitle.isDefined) idTitle.get + ":" + runId.value else runId.value
+        val searchId = if(idTitle.isDefined) idTitle.get + runId.value else runId.value
         Tuple2(runId, ProteinIdent(SearchId(searchId), protInfo, subset))
       })
     })
@@ -438,7 +438,7 @@ object LoaderMaxQuant {
 
       val proteinList = Seq(ProteinMatch(leadingProteinRef, pepEntry.previousAA, pepEntry.nextAA, pepEntry.startPos, pepEntry.endPos, pepEntry.isDecoy))
 
-      val searchId = if(idTitle.isDefined) idTitle.get + ":" + entry.experiment else entry.experiment
+      val searchId = if(idTitle.isDefined) idTitle.get  + entry.experiment else entry.experiment
       Tuple2(RunId(entry.experiment), PepSpectraMatch(SearchId(searchId), spectrumId, pep, matchInfo, proteinList))
     })
 
@@ -468,7 +468,7 @@ object LoaderMaxQuant {
     val searchInfoHashAux: Map[RunId, SearchInfo] = summaryHash.map({
       val nowDate = Calendar.getInstance().getTime()
       keyVal =>
-        val searchId = if(idTitle.isDefined) idTitle.get + ":" + keyVal._1 else keyVal._1
+        val searchId = if(idTitle.isDefined) idTitle.get + keyVal._1 else keyVal._1
         Tuple2(
         RunId(keyVal._1),
         SearchInfo(searchId=SearchId(searchId),
@@ -478,8 +478,9 @@ object LoaderMaxQuant {
           enzyme=keyVal._2._1,
           parentTolerance=parentTolerance,
           fragmentTolerance=fragmentTolerance,
-          status = new SubmissionStatus("processing", "new SearchId was created"),
-          creationDate=nowDate)
+          status = new SubmissionStatus("loading", "new SearchId was created"),
+          creationDate=nowDate,
+          searchEngine = Some("MaxQuant"))
         )
     })
     val searchInfoHash= searchInfoHashAux.filter({entry=> entry._1.toString !="RunId()"})

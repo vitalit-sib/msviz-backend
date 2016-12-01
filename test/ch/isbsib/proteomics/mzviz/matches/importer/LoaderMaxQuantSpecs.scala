@@ -165,7 +165,7 @@ class LoaderMaxQuantSpecs extends Specification {
     val pep10 = pepSpectraMap(RunId("Nocodazole")).filter(p => p.pep.sequence == "AIFQQPPVGVR")
     val pep11 = pepSpectraMap(RunId("DMSO")).filter(p => p.pep.sequence == "AIFQQPPVGVR")
 
-    pep10.head.searchId.value mustEqual("hoho:Nocodazole")
+    pep10.head.searchId.value mustEqual("hohoNocodazole")
 
     pep10.head.spectrumId.id mustEqual(SpectrumUniqueId("8241"))
     pep10.head.spectrumId.runId.value mustEqual("Nocodazole")
@@ -195,7 +195,7 @@ class LoaderMaxQuantSpecs extends Specification {
   }
 
   "parse Search Info" in {
-    val searchInfoMap= LoaderMaxQuant.parseSearchInfo("test/resources/maxquant/", SequenceSource("SomeSource"), Some("hoho"))
+    val searchInfoMap= LoaderMaxQuant.parseSearchInfo("test/resources/maxquant/", SequenceSource("SomeSource"), Some("MXQ_"))
 
     // should have 2 runIds
     searchInfoMap.keys.size mustEqual(2)
@@ -205,7 +205,7 @@ class LoaderMaxQuantSpecs extends Specification {
     firstEntry.enzyme mustEqual("Trypsin/P")
     firstEntry.fragmentTolerance mustEqual("20 ppm")
     firstEntry.parentTolerance mustEqual(None)
-    firstEntry.searchId.value mustEqual("hoho:DMSO")
+    firstEntry.searchId.value mustEqual("MXQ_DMSO")
     firstEntry.username mustEqual("user")
     firstEntry.database(0).version mustEqual(None)
     firstEntry.database(0).entries mustEqual(None)

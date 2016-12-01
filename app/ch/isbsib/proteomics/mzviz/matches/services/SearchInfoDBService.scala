@@ -95,7 +95,7 @@ class SearchInfoDBService(val db: DefaultDB) extends MongoDBService {
     val nowDate = Calendar.getInstance().getTime()
     // the error searchId has still to be unique, so with add a timestamp in front with a separated _
     val errorSearchId = SearchId(nowDate.getTime + "_" + searchId.value)
-    val info = new SearchInfo(errorSearchId, "", List(), "", "", None, "", status, nowDate)
+    val info = new SearchInfo(errorSearchId, "", List(), "", "", None, "", status, nowDate, None)
     this.insert(info)
   }
 

@@ -43,9 +43,9 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
 
     "get them up " in new TempMongoDBService {
         service.countEntries.futureValue must equalTo(0)
-        service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"))._1).futureValue
+        service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"), None)._1).futureValue
         service.countEntries.futureValue must equalTo(62)
-        service.insert(LoaderMzIdent.parse(file_2, SearchId("F001644"), RunId("F001644.mgf"))._1).futureValue
+        service.insert(LoaderMzIdent.parse(file_2, SearchId("F001644"), RunId("F001644.mgf"), None)._1).futureValue
         service.countEntries.futureValue must equalTo(499)
         service.countRunIds.futureValue must equalTo(2)
     }
@@ -58,7 +58,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
 
     "get 2 , remove 1 " in new TempMongoDBService {
 
-        service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"))._1).futureValue
+        service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"), None)._1).futureValue
         val psmList = service.findAllPSMBySearchId(SearchId("M_100")).futureValue
         psmList.size must equalTo(62)
         service.deleteAllBySearchId(SearchId("M_100")).futureValue
@@ -74,7 +74,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
         val file_1 = new File("test/resources/mascot/M_100.mzid")
 
         //insert and check size
-        service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"))._1).futureValue
+        service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"), None)._1).futureValue
         val idList = service.findAllSpectrumIdBySearchId(SearchId("M_100")).futureValue
         idList.size must equalTo(62)
 
@@ -91,7 +91,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
 
       "find all" in new TempMongoDBService {
 
-          service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"))._1).futureValue
+          service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"), None)._1).futureValue
           val psmList = service.findAllPSMBySearchId(SearchId("M_100")).futureValue
           psmList.size must equalTo(62)
           psmList(0).matchInfo.massDiffUnit.get mustEqual Dalton
@@ -105,7 +105,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
       val file_1 = new File("test/resources/mascot/M_100.mzid")
 
       "list all" in new TempMongoDBService {
-          service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"))._1).futureValue
+          service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"), None)._1).futureValue
           val protRefList = service.listProteinRefsBySearchIds(Set(SearchId("M_100"))).futureValue
           protRefList.size must equalTo(27)
           protRefList(0).AC mustEqual AccessionCode("CD109_HUMAN")
@@ -119,7 +119,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
       val file_1 = new File("test/resources/mascot/M_100.mzid")
 
       "list all" in new TempMongoDBService {
-          service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"))._1).futureValue
+          service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"), None)._1).futureValue
           val protRefList = service.listProteinRefsBySearchIds(Set(SearchId("M_100"))).futureValue
           protRefList.size must equalTo(27)
           protRefList(0).AC mustEqual AccessionCode("CD109_HUMAN")
@@ -134,7 +134,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
       val file_1 = new File("test/resources/mascot/M_100.mzid")
 
       "list all" in new TempMongoDBService {
-          service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"))._1).futureValue
+          service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"), None)._1).futureValue
           val protRefList = service.listProteinRefsBySearchIds(Set(SearchId("M_100")), Option(ModifName("Acetyl"))).futureValue
           protRefList.size must equalTo(1)
           protRefList(0).AC mustEqual AccessionCode("ANXA2_HUMAN")
@@ -149,30 +149,30 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
       val file_1 = new File("test/resources/mascot/M_100.mzid")
 
       "list all" in new TempMongoDBService {
-          service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"))._1).futureValue
-          service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100_1"), RunId("M_100.mgf"))._1).futureValue
+          service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"), None)._1).futureValue
+          service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100_1"), RunId("M_100.mgf"), None)._1).futureValue
 
           val psms = service.findAllPSMsByProtein(AccessionCode("CD109_HUMAN")).futureValue
           psms.size must equalTo(4)
       }
 
       "list all with searchId" in new TempMongoDBService {
-          service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"))._1).futureValue
-          service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100_1"), RunId("M_100.mgf"))._1).futureValue
+          service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"), None)._1).futureValue
+          service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100_1"), RunId("M_100.mgf"), None)._1).futureValue
 
           val psms = service.findAllPSMsByProtein(AccessionCode("CD109_HUMAN"), searchIds = Some(Set(SearchId("M_100_1")))).futureValue
           psms.size must equalTo(2)
       }
 
       "list all AHNK_HUMAN not rejected" in new TempMongoDBService {
-        service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"))._1).futureValue
+        service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"), None)._1).futureValue
 
         val psms = service.findAllPSMsByProtein(AccessionCode("AHNK_HUMAN")).futureValue
         psms.size must equalTo(15)
       }
 
       "list all AHNK_HUMAN not rejected" in new TempMongoDBService {
-        service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"))._1).futureValue
+        service.insert(LoaderMzIdent.parse(file_1, SearchId("M_100"), RunId("M_100.mgf"), None)._1).futureValue
 
         val psms = service.findAllPSMsByProtein(AccessionCode("AHNK_HUMAN"), notRejected = Some(true)).futureValue
         psms.size must equalTo(9)

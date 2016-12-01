@@ -33,7 +33,7 @@ import scala.xml.Elem
 object LoaderMzIdent {
 
 
-  def parseWithXmlElem(file: File, searchId: SearchId, runId: RunId, mzidXml: Elem): Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = {
+  def parseWithXmlElem(file: File, searchId: SearchId, runId: RunId, mzidXml: Elem, searchEngine: Option[String]): Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = {
 
     // we try to take the unimod information from Play application if it is started
     if(play.api.Play.maybeApplication.isDefined) {
@@ -59,7 +59,7 @@ object LoaderMzIdent {
     // parse PSM, Protein matches and searchInfo
     val psmList = parsePsm(file, searchId, runId, searchDbSourceInfo)
     val proteinList = ParseProteinMatches.parseProtList(mzidXml, searchId, searchDbSourceInfo)
-    val searchInfo = parseSearchInfo(mzidXml, searchId)
+    val searchInfo = parseSearchInfo(mzidXml, searchId, searchEngine)
 
     Tuple3(psmList, proteinList, searchInfo)
 
@@ -73,11 +73,11 @@ object LoaderMzIdent {
    * @param runId
    * @return
    */
-  def parse(file: File, searchId: SearchId, runId: RunId): Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = {
+  def parse(file: File, searchId: SearchId, runId: RunId, searchEngine: Option[String]): (Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo) = {
     // load MzIdentML as scala xml elem
     val mzidXml = scala.xml.XML.loadFile(file)
 
-    this.parseWithXmlElem(file, searchId, runId, mzidXml)
+    this.parseWithXmlElem(file, searchId, runId, mzidXml, searchEngine)
   }
 
 
@@ -110,7 +110,7 @@ object LoaderMzIdent {
         pep = convertPeptide(t._2),
         matchInfo = convertPepMatch(t),
         proteinList = convertProtMatches(t._2, searchDbSourceInfo))
-    }).toSeq
+    })
 
   }
   /**
@@ -118,7 +118,7 @@ object LoaderMzIdent {
    * @param mzidXml Scala XML element
    * @return
    */
-  def parseSearchInfo(mzidXml: Elem, searchId: SearchId): SearchInfo = {
+  def parseSearchInfo(mzidXml: Elem, searchId: SearchId, searchEngine: Option[String]): SearchInfo = {
 
     // get the info about the SearchDatabases
     val title = parseTitleFilename(mzidXml)
@@ -137,8 +137,9 @@ object LoaderMzIdent {
       enzyme,
       parentTolerance,
       fragmentTolerance,
-      new SubmissionStatus ("processing", "created new SearchInfo"),
-      nowDate)
+      new SubmissionStatus ("loading", "created new SearchInfo"),
+      nowDate,
+      searchEngine)
   }
 
   /**

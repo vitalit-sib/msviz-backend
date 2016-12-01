@@ -56,9 +56,6 @@ class LoaderMQData(val db: DefaultDB) {
     // unzip the file
     val unzipPath: Try[String] = Try(FileFinder.getHighestDir(Unzip.unzip(zipFile)))
 
-
-    //TO CHECK, path with or without txt folder?????????
-
     // create a searchId with error if unzip fails
     unzipPath.recover({
       case NonFatal(e) => {
@@ -71,7 +68,6 @@ class LoaderMQData(val db: DefaultDB) {
       }
     })
 
-    //TO CHECK
     // goto highest path but without the txt
     val innerPath = unzipPath.get.split("\\/").dropRight(1).mkString("/")
 
@@ -105,7 +101,7 @@ class LoaderMQData(val db: DefaultDB) {
 
     // list of searchIds
     val searchIds: Try[List[SearchId]] = summaryHash.map(_.values.map {
-      searchId => SearchId(searchId.toString)
+      searchId => SearchId("MXQ_" + searchId.toString)
     }.toList).recoverWith({
       case NonFatal(e) => {
         val now = Calendar.getInstance().getTime()
@@ -129,9 +125,6 @@ class LoaderMQData(val db: DefaultDB) {
 
     val allMzMlFound = checkMzMlFilesExist(mzMlFiles.get, searchIds.get)
 
-
-
-    // if not all mzML files are available we throw an exception
     // if not all mzML files are available we throw an exception
     if (allMzMlFound) {
       // check if searchIds are already taken
@@ -251,8 +244,8 @@ class LoaderMQData(val db: DefaultDB) {
                       searchIds: List[SearchId],
                       updateStatusCallback: Option[(SearchId, String, String) => Future[Boolean]] = None): Future[Int] = {
     //Load maxQuant results
+    val maxqResults = LoaderMaxQuant.parse(innerPath.toString + "/txt/", Some("MXQ_"))
 
-    val maxqResults = LoaderMaxQuant.parse(innerPath.toString + "/txt/", None)
     val numberEntries: Seq[Future[Int]] = maxqResults.map({ psmAndProteinList: (Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo) =>
       for {
       // and only last the other data

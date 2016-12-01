@@ -97,7 +97,7 @@ class LoaderMascotData(val db: DefaultDB) {
     }
 
     // list of searchIds
-    val searchIds = mzIdFiles.map(x => SearchId(x.getName.split("\\.")(0)))
+    val searchIds = mzIdFiles.map(x => SearchId("MSC_" + x.getName.split("\\.")(0)))
 
     // get the XML parsers
     val mzMlXmlElems:Try[List[Elem]] = Try(mzIdFiles.map(file => scala.xml.XML.loadFile(file)))
@@ -279,7 +279,7 @@ class LoaderMascotData(val db: DefaultDB) {
 
     Try {
 
-      val matchData = LoaderMzIdent.parseWithXmlElem(mzIdFile, searchId._1, RunId(searchId._1.value), searchId._2)
+      val matchData = LoaderMzIdent.parseWithXmlElem(mzIdFile, searchId._1, RunId(searchId._1.value), searchId._2, Some("Mascot"))
 
       for {
       // and only last the other data
@@ -381,7 +381,7 @@ class LoaderMascotData(val db: DefaultDB) {
 
       insertMs2.map({ ms2Inserted =>
         if(updateStatusCallback.isDefined){
-          updateStatusCallback.get.apply(id, "loading", "finished ms2 load")
+          updateStatusCallback.get.apply(id, "done", "finished ms2 load")
         }
 
         (if(ms1Inserted) 0 else 1) + ms2Inserted
