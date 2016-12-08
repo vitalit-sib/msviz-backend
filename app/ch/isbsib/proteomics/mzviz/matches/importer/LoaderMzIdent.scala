@@ -286,7 +286,7 @@ object LoaderMzIdent {
    * @param mzJavaRes a Tuple of a SpectrumIdentifier and a PeptideMatch obtained from the MzJava mzIdentML parser
    * @return
    */
-  def convertPepMatch(mzJavaRes: Tuple2[SpectrumIdentifier, PeptideMatch]): PepMatchInfo = {
+  def convertPepMatch(mzJavaRes: (SpectrumIdentifier, PeptideMatch)): PepMatchInfo = {
     val mzJavaMatch = mzJavaRes._2
 
     val MainScoreName = "Mascot:score"

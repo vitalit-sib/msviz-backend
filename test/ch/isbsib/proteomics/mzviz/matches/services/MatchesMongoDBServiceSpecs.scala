@@ -23,7 +23,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
     PatienceConfig(timeout = Span(15, Seconds), interval = Span(5000, Millis))
 
   /**
-   * extends the temp mngodatabase and add a exp service above it
+   * extends the temp mongodDB and add a exp service above it
    */
   trait TempMongoDBService extends TempMongoDBForSpecs {
     val service = new MatchMongoDBService(db)
