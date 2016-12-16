@@ -20,7 +20,7 @@ import play.api.Logger
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
- *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
+ *         copyright 2014-2016, SIB Swiss Institute of Bioinformatics
  */
 @Api(value = "/proteinListMultipleSearches", description = "list of identified proteins for all given searches")
 object ProteinMatchMultipleSearchesController extends MatchController {

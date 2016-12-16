@@ -154,7 +154,7 @@ class LoaderMaxQuantSpecs extends Specification {
 
   "load PepSpectraMatch" in {
 
-    val pepSpectraMap:Map[RunId,Seq[PepSpectraMatch]] = LoaderMaxQuant.loadPepSpectraMatch("test/resources/maxquant/",runIds, SequenceSource("SomeSource"), Some("hoho"))
+    val pepSpectraMap:Map[RunId,Seq[PepSpectraMatch]] = LoaderMaxQuant.loadPepSpectraMatch("test/resources/maxquant/",runIds, SequenceSource("SomeSource"), Some("MXQ_"))
 
     // should have 2 runIds
     pepSpectraMap.keys.size mustEqual(2)
@@ -165,10 +165,10 @@ class LoaderMaxQuantSpecs extends Specification {
     val pep10 = pepSpectraMap(RunId("Nocodazole")).filter(p => p.pep.sequence == "AIFQQPPVGVR")
     val pep11 = pepSpectraMap(RunId("DMSO")).filter(p => p.pep.sequence == "AIFQQPPVGVR")
 
-    pep10.head.searchId.value mustEqual("hohoNocodazole")
+    pep10.head.searchId.value mustEqual("MXQ_Nocodazole")
 
     pep10.head.spectrumId.id mustEqual(SpectrumUniqueId("8241"))
-    pep10.head.spectrumId.runId.value mustEqual("Nocodazole")
+    pep10.head.spectrumId.runId.value mustEqual("MXQ_Nocodazole")
 
     pep10.head.pep.molMass.get mustEqual(1210.68224)
     pep10.head.pep.sequence mustEqual("AIFQQPPVGVR")
@@ -323,6 +323,11 @@ class LoaderMaxQuantSpecs extends Specification {
     parseMaxQuant(0)._1.length mustEqual 1231
     parseMaxQuant(1)._1.length mustEqual 1330
 
+  }
+
+  "parse Michal data" in {
+    val parseMaxQuant= LoaderMaxQuant.parse("test/resources/maxquant/michal/", Some("MXQ_"))
+    parseMaxQuant(0)._1.length mustEqual 156
   }
 
 
