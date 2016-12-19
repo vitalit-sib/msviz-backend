@@ -27,7 +27,7 @@ class FastaParserSpecs extends Specification with ScalaFutures {
         FastaExtractorACFromHeader.parseAC(header, None) must equalTo(AccessionCode(ac))
       }
       s"$header -> identifiers($ac,$ids)" in {
-        val rids = FastaExtractorACFromHeader.parseIdentifiers(header)
+        val rids = FastaExtractorACFromHeader.parseIdentifiers(header, None)
         if(ids == ""){
           rids must equalTo (Set())
         }else{
@@ -41,6 +41,21 @@ class FastaParserSpecs extends Specification with ScalaFutures {
     check(">P01044-1 SWISS-PROT:P01044-1", "P01044-1", "")
     check(">ENSEMBL:ENSBTAP00000024466 (Bos taurus) 44 kDa protein", "ENSEMBL:ENSBTAP00000024466", "")
     check(">P21578 SWISS-PROT:P21578|LUXY_VIBFI Yellow fluorescent protein (YFP)- Vibrio fischeri.", "P21578", "")
+  }
+
+
+  "extract AC and Identifier with regexp" should {
+
+    "AC" in {
+      val header = ">sp|Q9BZF1|OSBL8_HUMAN Oxysterol-binding protein-related protein 8 OS=Homo sapiens GN=OSBPL8 PE=1 SV=3"
+      FastaExtractorACFromHeader.parseAC(header, Some(">..\\|([^|]*)")) must equalTo(AccessionCode("Q9BZF1"))
+    }
+
+    "Identifier" in {
+      val header = ">sp|Q9BZF1|OSBL8_HUMAN Oxysterol-binding protein-related protein 8 OS=Homo sapiens GN=OSBPL8 PE=1 SV=3"
+      FastaExtractorACFromHeader.parseIdentifiers(header, Some(">..\\|([^|]*)")) must equalTo(Set(ProteinIdentifier("Q9BZF1")))
+    }
+
   }
 
   "parse" should {
@@ -97,7 +112,7 @@ class FastaParserSpecs extends Specification with ScalaFutures {
 
 
   "parse SDB_custom" should{
-    val regexp = ">\\([^ ]*\\),(.*?)\\s+.*,(.*)"
+    val regexp = ">\\([^ ]*\\),>(.*?)\\s+.*,>(.*)"
     val entries = FastaParser("test/resources/sequences/custom_20160212_0941.fasta", SequenceSource("SDB_custom"), Some(regexp)).parse.toSeq
 
     "size" in {
@@ -126,7 +141,7 @@ class FastaParserSpecs extends Specification with ScalaFutures {
 
   "parse special chars" should{
 
-    val regexp_2 = "([^ ]*).*"
+    val regexp_2 = "^>([^ ]*).*"
     val entries_2 = FastaParser("test/resources/sequences/special_chars.fasta", SequenceSource("test"), Some(regexp_2)).parse.toSeq
 
     "size" in {

@@ -85,7 +85,6 @@ object SequenceController extends CommonController {
                 @ApiParam(value = """regexp""", defaultValue = "None") @PathParam("regexp") regexp:Option[String]=None) =
     Action.async(parse.temporaryFile) {
       request =>
-
         val entries = FastaParser(request.body.file, SequenceSource(sourceId), regexp).parse
         SequenceMongoDBService().insert(entries).map { n => Ok(Json.obj("inserted" -> n))
         }.recover {
