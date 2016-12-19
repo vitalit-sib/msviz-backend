@@ -118,18 +118,22 @@ object LoaderMGF {
       val rt = args2RT(args).getOrElse(RetentionTime(-1))
       val title = args.getOrElse("TITLE", "")
 
-      val scanNumber = args.getOrElse("SCANNUMBER",
+
+      val scanNumberArgs = args.get("SCANNUMBER")
+      val scanNumber:Option[Int] = if(scanNumberArgs.isDefined) Some(scanNumberArgs.get.toInt) else {
         title match {
-          case reTitleScan(s) => s
-          case _ => "-1"
+          case reTitleScan(s) => Some(s.toInt)
+          case _ => None
         }
-      )
+      }
+
+      val spId = if(scanNumber.isDefined) scanNumber.get.toString else title
 
       SpectrumRef(
-        scanNumber = ScanNumber(scanNumber.toInt),
-        precursor = ExpPeakPrecursor(moz, intens, rt, Charge(z)),
+        scanNumber = if(scanNumber.isDefined) Some(ScanNumber(scanNumber.get)) else None,
+        precursor = ExpPeakPrecursor(moz, intens, rt, Charge(z), None),
         title = title,
-        SpectrumId(id = SpectrumUniqueId(title), runId = runId)
+        SpectrumId(id = SpectrumUniqueId(spId), runId = runId)
       )
     }
   }
@@ -157,7 +161,7 @@ object LoaderMGF {
    * @param runId a runId
    * @return
    */
-  def load(filename: String, runId: RunId): Try[MSRun] = load(new File(filename), runId)
+  def load(filename: String, runId: RunId): Iterator[ExpMSnSpectrum] = load(new File(filename), runId)
 
   /**
    * Loads an MGF file. peak order is taken out from the MGF file order as this makes sense in our examples
@@ -166,10 +170,9 @@ object LoaderMGF {
    * @param runId the runId under which to register the run
    * @return
    */
-  def load(file: File, runId: RunId): Try[MSRun] = Try {
-    val lPeaks: Seq[ExpMSnSpectrum] = expMSnSpectrumIterator(file, runId)
-      .toSeq
-    new MSRun(runId, lPeaks)
+  def load(file: File, runId: RunId): Iterator[ExpMSnSpectrum] = {
+    val lPeaks: Iterator[ExpMSnSpectrum] = expMSnSpectrumIterator(file, runId)
+    lPeaks
   }
 
   /**
@@ -179,12 +182,15 @@ object LoaderMGF {
    * @return
    */
   def expMSnSpectrumIterator(file: File, runId: RunId): Iterator[ExpMSnSpectrum] ={
-    new IonsIterator(file)
+    val it = new IonsIterator(file)
       .map(t => text2MSnSpectrum(t, runId))
       .filter({
       case (Failure(e)) => throw e
       case (Success(t)) => true
     }).map(_.get)
+
+    it
+
   }
 
   /**

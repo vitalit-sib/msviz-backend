@@ -1,7 +1,9 @@
 package ch.isbsib.proteomics.mzviz.matches.importer
 
 import java.io.{File, FileInputStream, InputStream}
+import java.util.Calendar
 
+import ch.isbsib.proteomics.mzviz.commons.Dalton
 import ch.isbsib.proteomics.mzviz.commons.helpers.OptionConverter
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
@@ -31,34 +33,51 @@ import scala.xml.Elem
 object LoaderMzIdent {
 
 
-  def parse(file: File, searchId: SearchId, runId: RunId): Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = {
+  def parseWithXmlElem(file: File, searchId: SearchId, runId: RunId, mzidXml: Elem, searchEngine: Option[String]): Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = {
 
-    val confMap = Play.application().configuration().asMap()
+    // we try to take the unimod information from Play application if it is started
+    if(play.api.Play.maybeApplication.isDefined) {
 
-    val unimodConfigTag = "unimod"
+      val confMap = Play.application().configuration().asMap()
 
-    if(confMap.containsKey(unimodConfigTag)) {
-      val unimodPath = confMap.get(unimodConfigTag).toString
+      val unimodConfigTag = "unimod"
 
-      if (Files.exists(Paths.get(unimodPath))) {
-        UnimodManager.setUnimodPath(unimodPath)
-      } else {
-        Logger.warn("could not load UniMod file from :[" + unimodPath + "]")
+      if (confMap.containsKey(unimodConfigTag)) {
+        val unimodPath = confMap.get(unimodConfigTag).toString
+
+        if (Files.exists(Paths.get(unimodPath))) {
+          UnimodManager.setUnimodPath(unimodPath)
+        } else {
+          Logger.warn("could not load UniMod file from :[" + unimodPath + "]")
+        }
       }
     }
-
-    // load MzIdentML as scala xml elem
-    val mzidXml = scala.xml.XML.loadFile(file)
 
     // get the info about the SearchDatabases
     val searchDbSourceInfo = parseSearchDbSourceInfo(mzidXml)
 
     // parse PSM, Protein matches and searchInfo
-    def psmList = parsePsm(file, searchId, runId, searchDbSourceInfo)
-    def proteinList = ParseProteinMatches.parseProtList(mzidXml, searchId, searchDbSourceInfo)
-    def searchInfo = parseSearchInfo(mzidXml, searchId)
+    val psmList = parsePsm(file, searchId, runId, searchDbSourceInfo)
+    val proteinList = ParseProteinMatches.parseProtList(mzidXml, searchId, searchDbSourceInfo)
+    val searchInfo = parseSearchInfo(mzidXml, searchId, searchEngine)
 
     Tuple3(psmList, proteinList, searchInfo)
+
+  }
+
+  /**
+   * parse the mzIdentML file
+   *
+   * @param file
+   * @param searchId
+   * @param runId
+   * @return
+   */
+  def parse(file: File, searchId: SearchId, runId: RunId, searchEngine: Option[String]): (Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo) = {
+    // load MzIdentML as scala xml elem
+    val mzidXml = scala.xml.XML.loadFile(file)
+
+    this.parseWithXmlElem(file, searchId, runId, mzidXml, searchEngine)
   }
 
 
@@ -74,15 +93,24 @@ object LoaderMzIdent {
     
     // convert the resulting list into our proper object
     searchResults.map({ t =>
+
+      val spectrumTitle:String= t._1.getSpectrum
+      val reTitleScan = """.*\.(\d+)\.\d$""".r
+      val scanNumber = spectrumTitle match {
+          case reTitleScan(s) => s
+          case _ => spectrumTitle
+        }
       PepSpectraMatch(
         searchId = searchId,
         spectrumId = SpectrumId(
-          SpectrumUniqueId(t._1.getSpectrum),
+
+        //Not sure if index is not corresponding to scanNumber
+         SpectrumUniqueId(scanNumber),
           runId = runId),
         pep = convertPeptide(t._2),
         matchInfo = convertPepMatch(t),
         proteinList = convertProtMatches(t._2, searchDbSourceInfo))
-    }).toSeq
+    })
 
   }
   /**
@@ -90,16 +118,28 @@ object LoaderMzIdent {
    * @param mzidXml Scala XML element
    * @return
    */
-  def parseSearchInfo(mzidXml: Elem, searchId: SearchId): SearchInfo = {
+  def parseSearchInfo(mzidXml: Elem, searchId: SearchId, searchEngine: Option[String]): SearchInfo = {
 
     // get the info about the SearchDatabases
-    val title =parseTitleFilename(mzidXml)
-    val database= parseSearchDbSourceInfo(mzidXml)
-    val username=parseUsernameFilename(mzidXml)
-    val enzyme=parseEnzymeFilename(mzidXml)
-    val parentTolerance=parseParentToleranceFilename(mzidXml)
-    val fragmentTolerance=parseFragmentToleranceFilename(mzidXml)
-    SearchInfo(searchId,title,database,username, enzyme,parentTolerance,fragmentTolerance)
+    val title = parseTitleFilename(mzidXml)
+    val database = parseSearchDbSourceInfo(mzidXml)
+    val username = parseUsernameFilename(mzidXml)
+    val enzyme = parseEnzymeFilename(mzidXml)
+    val parentTolerance = Option(parseParentToleranceFilename(mzidXml))
+    val fragmentTolerance = parseFragmentToleranceFilename(mzidXml)
+    val nowDate = Calendar.getInstance().getTime()
+
+    SearchInfo(
+      searchId,
+      title,
+      database,
+      username,
+      enzyme,
+      parentTolerance,
+      fragmentTolerance,
+      new SubmissionStatus ("loading", "created new SearchInfo"),
+      nowDate,
+      searchEngine)
   }
 
   /**
@@ -111,6 +151,7 @@ object LoaderMzIdent {
   def parseSpectraFilename(mzidXml: Elem): String = {
     val spectraDataLocation = mzidXml \\ "SpectraData" \ "@location"
     FilenameUtils.getBaseName(spectraDataLocation.text)
+
   }
 
   /**
@@ -140,8 +181,12 @@ object LoaderMzIdent {
    * @return enzyme
    */
   def parseEnzymeFilename(mzidXml: Elem): String = {
-    val enzymeLocation =mzidXml \\ "EnzymeName" \\ "@name"
-    FilenameUtils.getBaseName(enzymeLocation.text)
+    val enzymeLocation =mzidXml \\ "EnzymeName" \ "cvParam" \ "@name"
+    if(enzymeLocation.size == 0){
+      (mzidXml \\ "EnzymeName" \ "userParam" \ "@value").text
+    }else{
+      enzymeLocation.text
+    }
   }
 
   /**
@@ -178,7 +223,7 @@ object LoaderMzIdent {
    */
   def parseSearchDbSourceInfo(mzidXml: Elem):Seq[SearchDatabase] = {
     (mzidXml \\ "SearchDatabase").map { db =>
-      SearchDatabase((db \ "@id").text,((db \ "@version").text),((db \ "@numDatabaseSequences").text.toInt))
+      SearchDatabase((db \ "@id").text,Some(((db \ "@version").text)),Some(((db \ "@numDatabaseSequences").text.toInt)))
     }
   }
 
@@ -222,7 +267,7 @@ object LoaderMzIdent {
 
       val searchDb = searchDbSourceInfo.find(db =>
         db.id==pMatch.getSearchDatabase.get()).map(db =>
-          SequenceSource(db.version)
+          SequenceSource(db.version.get)
       )
 
       ProteinMatch(proteinRef = ProteinRef(AC = AccessionCode(pMatch.getAccession),
@@ -241,7 +286,7 @@ object LoaderMzIdent {
    * @param mzJavaRes a Tuple of a SpectrumIdentifier and a PeptideMatch obtained from the MzJava mzIdentML parser
    * @return
    */
-  def convertPepMatch(mzJavaRes: Tuple2[SpectrumIdentifier, PeptideMatch]): PepMatchInfo = {
+  def convertPepMatch(mzJavaRes: (SpectrumIdentifier, PeptideMatch)): PepMatchInfo = {
     val mzJavaMatch = mzJavaRes._2
 
     val MainScoreName = "Mascot:score"
@@ -260,10 +305,13 @@ object LoaderMzIdent {
     PepMatchInfo(score = identScore,
       numMissedCleavages = OptionConverter.convertGoogleOption[Int](mzJavaMatch.getNumMissedCleavages.asInstanceOf[Optional[Int]]),
       massDiff = OptionConverter.convertGoogleOption[Double](mzJavaMatch.getMassDiff.asInstanceOf[Optional[Double]]),
+      massDiffUnit = Some(Dalton),
       rank = OptionConverter.convertGoogleOption[Int](mzJavaMatch.getRank.asInstanceOf[Optional[Int]]),
       chargeState = OptionConverter.convertGoogleOption[Int](mzJavaRes._1.getAssumedCharge.asInstanceOf[Optional[Int]]),
       totalNumIons = OptionConverter.convertGoogleOption[Int](mzJavaMatch.getTotalNumIons.asInstanceOf[Optional[Int]]),
-      isRejected = OptionConverter.convertGoogleOption[Boolean](mzJavaMatch.isRejected.asInstanceOf[Optional[Boolean]]))
+      isRejected = OptionConverter.convertGoogleOption[Boolean](mzJavaMatch.isRejected.asInstanceOf[Optional[Boolean]]),
+      modificationProbabilities = None,
+      highestModifProbability = None)
 
   }
 

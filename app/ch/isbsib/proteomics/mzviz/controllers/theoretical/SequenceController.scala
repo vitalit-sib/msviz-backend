@@ -9,10 +9,12 @@ import ch.isbsib.proteomics.mzviz.theoretical.services.JsonTheoFormats._
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
 import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
 import ch.isbsib.proteomics.mzviz.theoretical.services.SequenceMongoDBService
+import ch.isbsib.proteomics.mzviz.uploads.LoaderMQData
 import com.wordnik.swagger.annotations._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json._
 import play.api.mvc.Action
+
 
 /**
  *
@@ -28,6 +30,16 @@ object SequenceController extends CommonController {
       Ok(Json.toJson(st))
     }
   }
+
+  @ApiOperation(nickname = "optionsId",
+    value = "empty options method",
+    notes = """returns Ok to fulfill the pre-flight OPTIONS request""",
+    response = classOf[String],
+    httpMethod = "OPTIONS")
+  def optionsId(@ApiParam(value = """id""") @PathParam("id") id: String) =
+    Action {
+      Ok("Okay")
+    }
 
   @ApiOperation(nickname = "listSources",
     value = "the list of sequence sources",
@@ -45,7 +57,7 @@ object SequenceController extends CommonController {
 
   @ApiOperation(nickname = "deleteSource",
     value = "delete all entries from a given source",
-    notes = """use at your own risk""",
+    notes = """use at your own risk :)""",
     response = classOf[String],
     httpMethod = "DELETE")
   def deleteSource(@ApiParam(value = """sourceId""", defaultValue = "") @PathParam("sourceId") sourceId: String) =
@@ -63,19 +75,21 @@ object SequenceController extends CommonController {
 
   @ApiOperation(nickname = "loadFasta",
     value = "Loads a fasta file",
-    notes = """ source will be a unique descriptor on the source""",
+    notes = """ source will be a unique descriptor on the source """,
     response = classOf[String],
     httpMethod = "POST")
   @ApiImplicitParams(Array(
     new ApiImplicitParam(name = "body", value = "fasta file", required = true, dataType = "text/plain", paramType = "body")
   ))
-  def loadFasta(@ApiParam(value = """sourceId""", defaultValue = "uniprot_sprot_20231224") @PathParam("sourceId") sourceId: String) =
+  def loadFasta(@ApiParam(value = """sourceId""", defaultValue = "uniprot_sprot_20231224") @PathParam("sourceId") sourceId: String,
+                @ApiParam(value = """regexp""", defaultValue = "None") @PathParam("regexp") regexp:Option[String]=None) =
     Action.async(parse.temporaryFile) {
       request =>
-        val entries = FastaParser(request.body.file, SequenceSource(sourceId)).parse
+        val entries = FastaParser(request.body.file, SequenceSource(sourceId), regexp).parse
         SequenceMongoDBService().insert(entries).map { n => Ok(Json.obj("inserted" -> n))
         }.recover {
           case e => BadRequest(Json.toJson(e))
         }
     }
+
 }

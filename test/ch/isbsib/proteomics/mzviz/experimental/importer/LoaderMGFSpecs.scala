@@ -4,6 +4,7 @@ import java.io.File
 
 import ch.isbsib.proteomics.mzviz.commons._
 import ch.isbsib.proteomics.mzviz.experimental._
+import ch.isbsib.proteomics.mzviz.experimental.models.ExpMSnSpectrum
 import org.specs2.mutable.Specification
 
 import scala.util.Success
@@ -87,66 +88,46 @@ class LoaderMGFSpecs extends Specification {
   }
 
   "load" should {
-    val run = LoaderMGF.load(new File("test/resources/mascot/F001644.mgf"), RunId("pipo"))
-    "get runId out of filename" in {
-      run.get.id must equalTo(RunId("pipo"))
-    }
+
     "count the msms" in {
-      run.get.msnSpectra.size must equalTo(1822)
+      val run: Iterator[ExpMSnSpectrum] = LoaderMGF.load(new File("test/resources/mascot/F001644.mgf"), RunId("pipo"))
+      run.size must equalTo(1822)
     }
     "check a guy" in {
-      /*
-            BEGIN IONS
-              CHARGE=2+
-              PEPMASS=357.235892 538655.5
-            RTINSECONDS[0]=2999.76954
-            TITLE=20141008_BSA_25cm_column2.10823.10823.2
-            133.085892 8.902e+04
-            287.006805 4.126e+04
-            325.211578 5.535e+04
-      */
-      val sp = run.get.msnSpectra(3)
+
+      val run: Iterator[ExpMSnSpectrum] = LoaderMGF.load(new File("test/resources/mascot/F001644.mgf"), RunId("pipo"))
+
+      val sp = run.toSeq(3)
       sp.ref.precursor.charge must equalTo(Charge(2))
       sp.ref.precursor.moz must equalTo(Moz(357.235892))
       sp.ref.precursor.intensity must equalTo(Intensity(538655.5))
       sp.ref.precursor.retentionTime must equalTo(RetentionTime(2999.76954))
       sp.ref.title must equalTo("20141008_BSA_25cm_column2.10823.10823.2")
-      sp.ref.scanNumber must equalTo(ScanNumber(10823))
+      sp.ref.scanNumber must equalTo(Some(ScanNumber(10823)))
     }
     "m/z are increasing order" in {
-      val mozs = run.get.msnSpectra(0).peaks.map(_.moz).toList
+      val run: Iterator[ExpMSnSpectrum] = LoaderMGF.load(new File("test/resources/mascot/F001644.mgf"), RunId("pipo"))
+      val mozs = run.toSeq(0).peaks.map(_.moz).toList
       val mDelta = mozs.drop(1).zip(mozs.dropRight(1)).map (p => p._1.value - p._2.value).filter(_<0)
       mDelta must have size(0)
     }
   }
 
   "loading wiff" should {
-    val run = LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("pipo"))
 
-    "get runId out of filename" in {
-      run.get.id must equalTo(RunId("pipo"))
-    }
     "count the msms" in {
-      run.get.msnSpectra.size must equalTo(123)
+      val run = LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("pipo"))
+      run.toSeq.size must equalTo(123)
     }
     "check a guy" in {
-      /*
-        BEGIN IONS
-        CHARGE=2+
-        PEPMASS=407.717649
-        TITLE=File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 49.866 min, Period: 1, Cycle(s): 2030 (Experiment 4)
-        196.114300 2.518
-        287.136800 1.85
-        409.147600 3.974
-        476.238900 1.148
-      */
-      val sp = run.get.msnSpectra(3)
+      val run = LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("pipo"))
+      val sp = run.toSeq(3)
       sp.ref.precursor.charge must equalTo(Charge(2))
       sp.ref.precursor.moz must equalTo(Moz(407.717649))
       sp.ref.precursor.intensity must equalTo(Intensity(0))
       sp.ref.precursor.retentionTime must equalTo(RetentionTime(49.866 * 60))
       sp.ref.title must equalTo("File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 49.866 min, Period: 1, Cycle(s): 2030 (Experiment 4)")
-      sp.ref.scanNumber must equalTo(ScanNumber(-1))
+      sp.ref.scanNumber must equalTo(None)
 
     }
     "args2RT in elution time point in TITLE" in {
@@ -160,6 +141,22 @@ class LoaderMGFSpecs extends Specification {
       rt must equalTo(Success(RetentionTime(30*(49.454 + 49.574))))
     }
 
+
+  }
+
+  "id should be scanNumber" in{
+    val runMascot = LoaderMGF.load(new File("test/resources/mascot/F001644.mgf"), RunId("pipo"))
+    val firstSpectra=runMascot.next()
+
+    firstSpectra.ref.spectrumId.id.value mustEqual(firstSpectra.ref.scanNumber.get.value.toString)
+    firstSpectra.ref.spectrumId.id mustEqual(SpectrumUniqueId("11150"))
+
+    val runMaxQuant = LoaderMGF.load(new File("test/resources/maxquant/8077A.mgf"), RunId("pipoMax"))
+
+    val firstSpectraMQ=runMaxQuant.next()
+
+    firstSpectraMQ.ref.spectrumId.id.value mustEqual(firstSpectraMQ.ref.scanNumber.get.value.toString)
+    firstSpectraMQ.ref.spectrumId.id mustEqual(SpectrumUniqueId("4"))
 
   }
 }

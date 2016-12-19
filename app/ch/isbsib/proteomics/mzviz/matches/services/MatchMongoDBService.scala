@@ -3,7 +3,7 @@ package ch.isbsib.proteomics.mzviz.matches.services
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoDBService, MongoNotFoundException}
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
-import ch.isbsib.proteomics.mzviz.experimental.models.{SpectrumRef, ExpMSnSpectrum, SpectrumId}
+import ch.isbsib.proteomics.mzviz.experimental.models.{SpectrumRef, SpectrumId}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import ch.isbsib.proteomics.mzviz.modifications.ModifName
 import ch.isbsib.proteomics.mzviz.modifications.services.JsonModificationFormats._
@@ -11,12 +11,14 @@ import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models.{PepSpectraMatchWithSpectrumRef, PepSpectraMatch, ProteinRef}
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
 import ch.isbsib.proteomics.mzviz.theoretical.{ProteinIdentifier, AccessionCode, SequenceSource}
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import play.api.Logger
 import play.api.libs.iteratee.Enumerator
-import play.api.libs.json.{JsArray, JsObject, Json}
+import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.Json
 import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
-import play.modules.reactivemongo.json.BSONFormats._
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.{BSONDocument, BSONString, BSONArray}
@@ -24,7 +26,6 @@ import reactivemongo.core.commands._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scalaz.std.java.util.map
 
 
 /**
@@ -57,6 +58,7 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
    */
   def insert(matches: Seq[PepSpectraMatch]): Future[Int] = {
     val searchIds = matches.map(_.searchId.value).toSet
+
     for {
       c <- checkIfAnyKeyExist(searchIds)
       n <- collection.bulkInsert(Enumerator(matches: _*))
@@ -109,6 +111,7 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @return
    */
   def findAllBySearchIdAndSpectrumId(searchId: SearchId, spectrumUniqueId: SpectrumUniqueId): Future[Seq[PepSpectraMatch]] = {
+
     val query = Json.obj("searchId" -> searchId.value, "spectrumId.id" -> spectrumUniqueId.value)
     collection.find(query)
       .cursor[PepSpectraMatch]
@@ -122,6 +125,7 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
    */
   def findAllPSMBySearchId(searchId: SearchId): Future[Seq[PepSpectraMatch]] = {
     val query = Json.obj("searchId" -> searchId.value)
+
     collection.find(query).cursor[PepSpectraMatch].collect[List]()
   }
 
@@ -139,7 +143,10 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @param accessionCode entry AC
    * @return
    */
-  def findAllPSMsByProtein(accessionCode: AccessionCode, source: Option[SequenceSource] = None, searchIds: Option[Set[SearchId]] = None): Future[Seq[PepSpectraMatch]] = {
+  def findAllPSMsByProtein(accessionCode: AccessionCode,
+                           source: Option[SequenceSource] = None,
+                           searchIds: Option[Set[SearchId]] = None,
+                           notRejected: Option[Boolean] = None): Future[Seq[PepSpectraMatch]] = {
 
     Logger.info(s"accessionCode=$accessionCode, searchIds = $searchIds")
     val query = Json.obj("proteinList.proteinRef.AC" -> accessionCode.value) ++
@@ -150,7 +157,16 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
       (searchIds match {
         case Some(ssids) => Json.obj("searchId" -> Json.obj("$in" -> ssids.toList.map(_.value)))
         case _ => Json.obj()
+      }) ++
+      (notRejected match {
+        case Some(notRej) => Json.obj("matchInfo.isRejected" -> false)
+        case _ => Json.obj()
       })
+
+    val mapper = new ObjectMapper()
+    mapper.registerModule(DefaultScalaModule)
+    val writer = mapper.writerWithDefaultPrettyPrinter
+    val json = writer.writeValueAsString(query)
 
     collection.find(query).cursor[PepSpectraMatch].collect[List]()
   }
@@ -168,99 +184,33 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
     val runIds:Set[RunId] = psms.map(p => RunId(p.searchId.value)).toSet
     //println(s"runIds = $runIds")
 
-    val futSpectrumRefs: Future[Seq[SpectrumRef]] = ExpMongoDBService().findAllSpectraRefByrunId(runIds)
+    val futSpectrumRefs: Future[Seq[SpectrumRef]] = new ExpMongoDBService(db).findAllSpectraRefByrunId(runIds)
 
     val futRunId2speRefDict: Future[Map[RunId, Map[SpectrumId, SpectrumRef]]] =
       futSpectrumRefs.map({ spectrumRefs =>
         spectrumRefs
           .groupBy(_.spectrumId.runId) // map[RunIds, Seq[SpectrumRefs]
-          .map(({
+          .map({
           case (runId, spRefs) => //now, transform the list of spref to a map spectrumId -> spRef
             (runId, spRefs.map(spRef => (spRef.spectrumId, spRef)).toMap)
-        }))
+        })
       })
 
     for {
       dict <- futRunId2speRefDict
     } yield {
       psms.map({ psm =>
-        //println (s"DICT = $dict)
-        //println(s"DICT= $dict(psm.searchId)(psm.spectrumId)")
         PepSpectraMatchWithSpectrumRef(psm, dict(psm.searchId)(psm.spectrumId))
       })
     }
   }
 
-  //    val command = RawCommand(BSONDocument(
-  //      "aggregate" -> collectionName,
-  //      "pipeline" -> BSONArray(
-  //        BSONDocument("$match" ->
-  //          BSONDocument(
-  //            //            "searchId" -> searchIds.value,
-  //            //            "proteinList.proteinRef.source" -> source.value,
-  //            "proteinList.proteinRef.AC" -> accessionCode.value)
-  //        ),
-  //        BSONDocument("$unwind" -> "$proteinList"),
-  //        BSONDocument("$match" ->
-  //          BSONDocument(
-  //            //            "proteinList.proteinRef.source" -> source.value,
-  //            "proteinList.proteinRef.AC" -> accessionCode.value)
-  //        ),
-  //        BSONDocument("$project" ->
-  //          BSONDocument(
-  //            "proteinPosition" -> "$proteinList",
-  //            "spectrumId" -> 1,
-  //            "pep" -> 1,
-  //            "matchInfo" -> 1,
-  //            "searchId" -> 1,
-  //            "_id" -> 0))
-  //      )
-  //    ))
-  //    db.command(command).map({
-  //      doc =>
-  //        JsArray(doc.getAs[List[BSONDocument]]("result").get.map(o => toJSON(o).asInstanceOf[JsObject])) //=>Json.toJson(o))
-  //    })
-  //  }
-  //  def findPSMByProtein(accessionCode: AccessionCode, source: Option[SequenceSource]=None, searchIds: Option[Set[SearchId]]=None): Future[JsArray] = {
-  //    val command = RawCommand(BSONDocument(
-  //      "aggregate" -> collectionName,
-  //      "pipeline" -> BSONArray(
-  //        BSONDocument("$match" ->
-  //          BSONDocument(
-  ////            "searchId" -> searchIds.value,
-  ////            "proteinList.proteinRef.source" -> source.value,
-  //            "proteinList.proteinRef.AC" -> accessionCode.value)
-  //        ),
-  //        BSONDocument("$unwind" -> "$proteinList"),
-  //        BSONDocument("$match" ->
-  //          BSONDocument(
-  ////            "proteinList.proteinRef.source" -> source.value,
-  //            "proteinList.proteinRef.AC" -> accessionCode.value)
-  //        ),
-  //        BSONDocument("$project" ->
-  //          BSONDocument(
-  //            "proteinPosition" -> "$proteinList",
-  //            "spectrumId" -> 1,
-  //            "pep" -> 1,
-  //            "matchInfo" -> 1,
-  //            "searchId" -> 1,
-  //            "_id" -> 0))
-  //      )
-  //    ))
-  //    db.command(command).map({
-  //      doc =>
-  //        JsArray(doc.getAs[List[BSONDocument]]("result").get.map(o => toJSON(o).asInstanceOf[JsObject])) //=>Json.toJson(o))
-  //    })
-  //  }
-
-
   def qFilter(searchIds: Set[SearchId]) = searchIds.toList match {
     case x :: Nil => BSONDocument("searchId" -> x.value)
     case xs => BSONDocument("searchId" -> BSONDocument("$in" -> BSONArray(xs.map(id => BSONString(id.value)))))
   }
-
   def qFilter(withModification: Option[ModifName]) = withModification match {
-    case Some(name) => BSONDocument("pep.modificationNames" -> BSONArray(BSONString(name.value)))
+    case Some(name) => BSONDocument("pep.modificationNames" -> BSONArray(BSONString(name.value)), "matchInfo.rank" -> 1)
     case None => BSONDocument()
   }
 
@@ -317,6 +267,7 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
       )
     ))
 
+
     db.command(command).map({
       doc =>
         doc.getAs[List[BSONDocument]]("result").get.map({
@@ -324,6 +275,8 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
             (ModifName(elDoc.getAs[String]("_id").get), elDoc.getAs[Int]("count").get)
         }).toMap
     })
+
+
   }
 
   /**

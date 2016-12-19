@@ -1,6 +1,7 @@
 package ch.isbsib.proteomics.mzviz.controllers
 
 import play.api.mvc.{Action, Controller}
+import play.api.Logger
 
 /**
  * Created by amasselo on 4/7/15.
@@ -8,6 +9,7 @@ import play.api.mvc.{Action, Controller}
 object UtilsController extends Controller{
 
   def hello = Action{
-    Ok("world")
+    Logger.info("hello logger")
+    Ok("hello web")
   }
 }

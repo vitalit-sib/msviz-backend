@@ -1,24 +1,24 @@
 package ch.isbsib.proteomics.mzviz.experimental.services
 
-import ch.isbsib.proteomics.mzviz.commons.{IntensityRank, Intensity, Moz, MSLevel}
+import ch.isbsib.proteomics.mzviz.commons._
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoDBService, MongoNotFoundException}
-import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMs1Spectrum, ExpPeakMSn, ExpMSnSpectrum, SpectrumRef}
-import ch.isbsib.proteomics.mzviz.experimental.{ScanNumber, RunId, MSRun}
+import ch.isbsib.proteomics.mzviz.experimental.models.{SpectrumId, ExpPeakMSn, ExpMSnSpectrum, SpectrumRef}
+import ch.isbsib.proteomics.mzviz.experimental.{MSRun, SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
-import play.api.Logger
+import play.api.Play
 import play.api.libs.iteratee.Enumerator
 import play.api.libs.json._
 import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
-import play.modules.reactivemongo.json.collection.JSONCollection
+import play.modules.reactivemongo.json.BSONFormats._
 import reactivemongo.api._
 import reactivemongo.api.indexes.{IndexType, Index}
 import reactivemongo.bson._
-import reactivemongo.core.commands.{LastError, GetLastError, RawCommand, Count}
+import reactivemongo.core.commands.{LastError, RawCommand, Count}
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
@@ -41,8 +41,9 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
   // "ref.title" -> IndexType.Ascending),
 
   //we put a implicit JSON serilizer here, the JSON Mongo format is difference from the JSON web format
-  // peak array are serilized for sake of speed
+  // peak array are serialized for sake of speed
   implicit val formatExpMSnSpectrum = new Format[ExpMSnSpectrum] {
+
     override def reads(json: JsValue): JsResult[ExpMSnSpectrum] = {
       val ref = (JsPath \ "ref").read[SpectrumRef].reads(json).get
       val msLevel = MSLevel(json.validate[Int]((JsPath \ "peaks" \ "msLevel").read[Int]).get)
@@ -79,6 +80,39 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
     }
   }
 
+
+  /**
+   * Insert all Msn spectra from an iterator using a cetrain buffer size
+   *
+   * @param ms2Iterator
+   * @param runId
+   * @return
+   */
+  def insertMs2spectra(ms2Iterator: Iterator[ExpMSnSpectrum], runId: RunId): Future[Int] = {
+
+    // number of spectra which are parsed before inserting
+    val bufferSize =  if(Play.maybeApplication.isDefined){
+      Play.current.configuration.getString("experimental.ms2.buffer").get.toInt
+    } else 50
+
+    // split the iterator into slices
+    val slidingIt = ms2Iterator.sliding(bufferSize, bufferSize)
+
+    var resList:ListBuffer[Future[Int]] = ListBuffer()
+
+    // loop through all slices
+    while(slidingIt.hasNext){
+      val someList = slidingIt.next()
+
+      resList += this.insert(new MSRun(runId, someList.toSeq))
+    }
+
+    if(true) Future {throw new Exception("some artificial exception") }
+
+    Future.sequence(resList.toList).map(_.sum)
+  }
+
+
   /**
    * insert an ms run into the database.
    * @param run already parsed and ready
@@ -94,12 +128,12 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
    * @param runId the run id
    * @return
    */
-  def delete(runId: RunId): Future[Boolean] = {
-    val query = Json.obj("ref.spectrumId.runId" -> runId.value)
-  collection.remove(query).map {
-    case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
-    case _ => true
-  }
+  def delete(runId: Set[RunId]): Future[Boolean] = {
+    val query = Json.obj("ref.spectrumId.runId" -> Json.obj("$in" -> runId.toList))
+    collection.remove(query).map {
+      case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
+      case _ => true
+    }
 }
 
   /**
@@ -110,7 +144,7 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
   def findAllSpectraRefByrunId(runId: RunId): Future[Seq[SpectrumRef]] =findAllSpectraRefByrunId(Set(runId))
 
   /**
-   * Returns just the spectra ref fin a set of runIds
+   * Returns just the spectra ref as a set of runIds
    * @param runIds the target set of runIds
    * @return
    */
@@ -141,6 +175,56 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
   }
 
   /**
+   * retrieves  by SpectruRef (run & spectra id)
+   * @param spId the spectrum reference
+   * @return
+   */
+  def findSpectrumBySpId(spId: SpectrumId): Future[ExpMSnSpectrum] = {
+    val query = Json.obj("ref.spectrumId.runId" -> spId.runId.value, "ref.spectrumId.id" -> spId.id.value)
+    collection.find(query).cursor[ExpMSnSpectrum].headOption map {
+      case Some(sp: ExpMSnSpectrum) => sp
+      case None => throw new MongoNotFoundException(s"${spId.runId.value}/$spId.id.value")
+    }
+  }
+
+  /**
+   * retrieves  by run & scanNumber (unique by index setup)
+   * @param runId the run id
+   * @param spId the spectrum id
+   * @return
+   */
+  def findSpectrumByRunIdAndScanNumber(runId: RunId, spId: SpectrumUniqueId): Future[ExpMSnSpectrum] = {
+    val query = Json.obj("ref.spectrumId.runId" -> runId.value, "ref.spectrumId.id" -> spId.value)
+    collection.find(query).cursor[ExpMSnSpectrum].headOption map {
+      case Some(sp: ExpMSnSpectrum) => sp
+      case None => throw new MongoNotFoundException(s"${runId.value}/$spId")
+    }
+  }
+
+  /**
+   * retrieves spectrum reference by run & scanNumber (unique by index setup)
+   * @param runId the run id
+   * @param spId the spectrum id
+   * @return
+   */
+  def findSpectrumRefByRunIdAndScanNumber(runId: RunId, spId: SpectrumUniqueId): Future[SpectrumRef] = {
+    val query = Json.obj("ref.spectrumId.runId" -> runId.value, "ref.spectrumId.id" -> spId.value)
+
+    val projection = Json.obj("ref" -> 1)
+
+    collection.find(query, projection)
+      .cursor[JsObject]
+      .collect[List]()
+      .map({ lo =>
+        val spList = lo.map({ o =>
+          Json.fromJson[SpectrumRef](o \ "ref").asOpt.get
+        })
+        spList(0)
+      })
+  }
+
+
+  /**
    * retrieves all spectra by run
    * @param runId the run id
    * @return
@@ -148,6 +232,50 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
   def findSpectrumByRunId(runId: RunId): Future[Iterator[ExpMSnSpectrum]] = {
     val query = Json.obj("ref.spectrumId.runId" -> runId.value)
     collection.find(query).cursor[ExpMSnSpectrum].collect[Iterator]()
+  }
+
+  /**
+   * retrieve all MS2 spectra which have a precursor in the given range
+   * @param runId
+   * @param moz
+   * @param daltonTolerance
+   * @return
+   */
+  def findSpectrumByMozTol(runId:RunId, moz:Moz, daltonTolerance:Double): Future[Seq[ExpMSnSpectrum]] = {
+    val lowerLimit = moz.value - daltonTolerance
+    val upperLimit = moz.value + daltonTolerance
+    val query = Json.obj(
+      "ref.spectrumId.runId" -> runId.value,
+      "ref.precursor.moz" -> Json.obj("$gte" -> lowerLimit, ("$lte" -> upperLimit))
+    )
+
+    collection.find(query).cursor[ExpMSnSpectrum].collect[Seq]()
+  }
+
+  /**
+   * retrieve all spectrum info which have a precursor in the given range
+   * @param runId
+   * @param moz
+   * @param daltonTolerance
+   * @return
+   */
+  def findSpectrumRefByMozTol(runId:RunId, moz:Moz, daltonTolerance:Double): Future[Seq[SpectrumRef]] = {
+    val lowerLimit = moz.value - daltonTolerance
+    val upperLimit = moz.value + daltonTolerance
+    val query = Json.obj(
+      "ref.spectrumId.runId" -> runId.value,
+      "ref.precursor.moz" -> Json.obj("$gte" -> lowerLimit, ("$lte" -> upperLimit))
+    )
+
+    val projection = Json.obj("ref" -> 1)
+
+    collection.find(query, projection)
+      .cursor[JsObject]
+      .collect[List]()
+      .map(lo => lo.map({ o =>
+        Json.fromJson[SpectrumRef](o \ "ref").asOpt.get
+      }))
+
   }
 
   /**

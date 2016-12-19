@@ -1,14 +1,10 @@
 package ch.isbsib.proteomics.mzviz.matches.importer
 
-import java.io.File
-
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumIdentifictionItem, SpectrumUniqueId}
-import ch.isbsib.proteomics.mzviz.matches.{SearchId, HitRank}
+import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models._
 import ch.isbsib.proteomics.mzviz.theoretical.models.SearchDatabase
-import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, ProteinIdentifier, AccessionCode}
-import org.apache.commons.io.FilenameUtils
-
+import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 import scala.xml.{Elem, NodeSeq}
 
 /**
@@ -20,13 +16,14 @@ object ParseProteinMatches {
   val CvParamSpectrumTitle = "MS:1000796"
   val CvParamMascotScore = "MS:1001171"
   val CvDistinctPeptidesSequences = "MS:1001097"
+  val CvSpectrumSubsetProtein = "MS:1001597"
 
   def parseProtList(mzidXml: Elem, searchId: SearchId, searchDbSourceInfo: Seq[SearchDatabase]): Seq[ProteinIdent] = {
 
     val proteinAmbiguityGroupList = mzidXml \\ "ProteinDetectionList" \\ "ProteinAmbiguityGroup"
 
-    proteinAmbiguityGroupList.map({ onePAG =>
-        val protDectList = (onePAG \\ "ProteinDetectionHypothesis").map({ oneDH =>
+    proteinAmbiguityGroupList.flatMap({ onePAG =>
+        val protDectList:Seq[(ProteinIdentInfo, Boolean)] = (onePAG \\ "ProteinDetectionHypothesis").map({ oneDH =>
           val passThreshold = if(( oneDH \\ "@passThreshold").text == "true") true else false
 
           val nrPsms = ( oneDH \\ "PeptideHypothesis").size
@@ -41,10 +38,19 @@ object ParseProteinMatches {
           val dbSeq = ( oneDH \\ "@dBSequence_ref").text
           val acAndDbSeqId = convertDbSeqId(dbSeq, searchDbSourceInfo).get
 
-          ProteinIdentInfo(acAndDbSeqId._1, acAndDbSeqId._2, score, dps, nrPsms, passThreshold)
+          // check if it is a subset protein
+          val sspCv = (oneDH \\ "cvParam").find(_.attributes.exists(_.value.text == CvSpectrumSubsetProtein))
+
+          // give back a tuple of protIdInfo and a boolean telling if it is a main protein
+          (ProteinIdentInfo(acAndDbSeqId._1, acAndDbSeqId._2, score, dps, nrPsms, passThreshold), sspCv.isEmpty)
         })
-        // the first proteinDetection is the main one
-        ProteinIdent(searchId, protDectList(0), protDectList.tail)
+
+        // split the list into main and subset proteins
+        val (mainProtTuple, subsetProtTuple) = protDectList.partition({ one => one._2})
+        val subsetProt = subsetProtTuple.map(_._1)
+
+        // create a list of main proteins containing the subset prots
+        mainProtTuple.map( oneMain => ProteinIdent(searchId, oneMain._1, subsetProt))
       })
 
   }
@@ -74,7 +80,14 @@ object ParseProteinMatches {
 
     (spIdList \\ "SpectrumIdentificationResult").flatMap({spIdRes =>
       val titleCv = (spIdRes \\ "cvParam").find(_.attributes.exists(_.value.text == CvParamSpectrumTitle))
-      val spTitle = SpectrumUniqueId((titleCv.get \\ "@value").text)
+      val title=(titleCv.get \\ "@value").text
+      val reTitleScan = """.*\.(\d+)\.\d$""".r
+      val scanNumber =title match {
+        case reTitleScan(s) => s
+        case _ => throw new Exception("cannot parse scan number from " + title)
+      }
+
+      val spTitle = SpectrumUniqueId(scanNumber)
 
       (spIdRes \\ "SpectrumIdentificationItem").map({spId =>
         //val hitRank = HitRank((spId \\ "@rank").text.toInt)

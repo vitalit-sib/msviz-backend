@@ -62,6 +62,12 @@ object JsonExpFormats {
     def writes(o: Charge) = JsNumber(o.value)
   }
 
+  implicit val formatRunIdAndMozBin = new Format[RunIdAndMozBin] {
+    override def reads(json: JsValue): JsResult[RunIdAndMozBin] = JsSuccess(RunIdAndMozBin(json.as[String]))
+
+    def writes(o: RunIdAndMozBin) = JsString(o.value)
+  }
+
   implicit val formatRetentionTime = new Format[RetentionTime] {
     override def reads(json: JsValue): JsResult[RetentionTime] = JsSuccess(RetentionTime(json.as[Double]))
 
@@ -97,7 +103,8 @@ object JsonExpFormats {
   implicit val formatExpPeakMSn = Json.format[ExpPeakMSn]
   implicit val formatSpectrumId = Json.format[SpectrumId]
   implicit val formatSpectrumRef = Json.format[SpectrumRef]
-  implicit val formatMs1Entry = Json.format[Ms1Entry]
+  implicit val formatMs1Entry = Json.format[Ms1EntryWithRef]
+  implicit val formatMs1Bin = Json.format[Ms1Bin]
 
 /*
   implicit val writesMs1Entry = new Writes[Ms1Entry] {

@@ -15,11 +15,12 @@ import play.api.mvc.Action
 import play.api.Play.current
 import scala.concurrent.ExecutionContext.Implicits.global
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
+import play.api.Logger
 
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
- *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
+ *         copyright 2014-2016, SIB Swiss Institute of Bioinformatics
  */
 @Api(value = "/proteinListMultipleSearches", description = "list of identified proteins for all given searches")
 object ProteinMatchMultipleSearchesController extends MatchController {
@@ -36,7 +37,8 @@ object ProteinMatchMultipleSearchesController extends MatchController {
   def findAllProteinsForMultipleSearchIds(
                                            @ApiParam(value = """searchIds""") @PathParam("searchIds") searchIds: String,
                                            withModif: Option[String]
-                                           ) = Cached(req => req.uri) {
+//Fast enough without cache, and it keeps the erros   ) = Cached(req => req.uri) {
+                                           )={
     Action.async {
       val sids = queryParamSearchIds(searchIds)
 
@@ -44,19 +46,18 @@ object ProteinMatchMultipleSearchesController extends MatchController {
           _.foldLeft( ProteinMatchMultipleSearches(Map()) )( (r, c) => r.add(c.searchId, c) )
       )
 
-      val validACs = MatchMongoDBService().listProteinRefsBySearchIds(queryParamSearchIds(searchIds), queryParamOModifName(withModif)).map(_.map(_.AC.value))
-
       // we filter on selected modif in case there is one selected
       val filteredMultiList = withModif match {
 
         case Some(name) => {
           // get the list of valid AC's
-          val validACs = MatchMongoDBService().listProteinRefsBySearchIds(queryParamSearchIds(searchIds), queryParamOModifName(withModif)).map(protRef => protRef.map(_.AC.value))
-
+          val validACs = MatchMongoDBService().listProteinRefsBySearchIds(queryParamSearchIds(searchIds), queryParamOModifName(withModif))
+            .map(protRef => protRef.map(_.AC.value))
           val filteredProts = validACs.flatMap({ acs =>
             // get the intersection of ACs
             val filterdFutureProts = proteinMultiList.map({ prot =>
               val protACs = prot.dict.filter({case(k,v) => acs.contains(k.value)})
+              //Update dict
               ProteinMatchMultipleSearches(protACs)
             })
             filterdFutureProts

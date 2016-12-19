@@ -3,7 +3,7 @@ package ch.isbsib.proteomics.mzviz.matches.models
 import ch.isbsib.proteomics.mzviz.commons._
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
-import ch.isbsib.proteomics.mzviz.matches.{HitRank, SearchId}
+import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.modifications.{ModifName}
 import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
 import org.specs2.mutable.Specification
@@ -17,7 +17,9 @@ class PepSpectraMatchSpecs extends Specification {
 
     // vals used in following tests
     val score = IdentScore(mainScore = 0.8, scoreMap = Map("p-value" -> 0.001))
-    val matching = PepMatchInfo(score, numMissedCleavages = Option(1), rank= Option(1), massDiff = Option(0.01), totalNumIons = Option(1), isRejected = None, chargeState = Option(2  ))
+    val matching = PepMatchInfo(score, numMissedCleavages = Some(1), rank= Some(1),
+      massDiff = Some(0.01), massDiffUnit = Some(PPM), totalNumIons = Some(1),
+      isRejected = None, chargeState = Some(2), modificationProbabilities = None, highestModifProbability = None)
     val sequence = "AKKKAA"
     val oneModifRef = ModifName("Phospho")
     val modificationRefs = Vector(Nil, Seq(oneModifRef), Nil, Nil, Nil, Nil)
@@ -42,12 +44,13 @@ class PepSpectraMatchSpecs extends Specification {
     }
 
     "create simple PepSpectraMatch" in {
-      val pepSpMatch = PepSpectraMatch(searchId = SearchId("a search result"), spectrumId = SpectrumId(SpectrumUniqueId("sp_01"), runId = RunId("blabla.mgf")), pep = pep, matchInfo = matching, proteinList = protMatch)
-      pepSpMatch.spectrumId.id must equalTo(SpectrumUniqueId("sp_01"))
+      val pepSpMatch = PepSpectraMatch(searchId = SearchId("a search result"), spectrumId = SpectrumId(SpectrumUniqueId("1"), runId = RunId("blabla.mgf")), pep = pep, matchInfo = matching, proteinList = protMatch)
+      pepSpMatch.spectrumId.id must equalTo(SpectrumUniqueId("1"))
       pepSpMatch.spectrumId.runId must equalTo(RunId("blabla.mgf"))
       pepSpMatch.matchInfo.massDiff must equalTo(Some(0.01))
       pepSpMatch.searchId must equalTo(SearchId("a search result"))
     }
 
   }
+
 }

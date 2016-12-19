@@ -23,7 +23,7 @@ class ParseProteinMatchesSpecs extends Specification {
       val mzIdentML = scala.xml.XML.loadFile(new File("test/resources/mascot/F001644.mzid"))
       val spIdTitleRelation = ParseProteinMatches.parseSpectrumIdAndTitleRelation(mzIdentML \\ "SpectrumIdentificationList")
 
-      spIdTitleRelation.get(SpectrumIdentifictionItem("SII_71_1")) must equalTo(Some(SpectrumUniqueId("20141008_BSA_25cm_column2.9985.9985.2")))
+      spIdTitleRelation.get(SpectrumIdentifictionItem("SII_71_1")) must equalTo(Some(SpectrumUniqueId("9985")))
 
       spIdTitleRelation.size must equalTo(437)
     }
@@ -33,8 +33,8 @@ class ParseProteinMatchesSpecs extends Specification {
 
   "convertDbSeqId" should {
 
-    val db1 = SearchDatabase(id = "SDB_contaminants_PAF", version="1.0", entries=999)
-    val db2 = SearchDatabase(id = "SDB_custom", version="2.0", entries=100)
+    val db1 = SearchDatabase(id = "SDB_contaminants_PAF", version=Some("1.0"), entries=Some(999))
+    val db2 = SearchDatabase(id = "SDB_custom", version=Some("2.0"), entries=Some(100))
     val searchDbs = Seq(db1, db2)
 
     "check convertion 1" in {
@@ -56,8 +56,8 @@ class ParseProteinMatchesSpecs extends Specification {
 
   "parse protein list" should {
 
-    val db1 = SearchDatabase(id = "SDB_contaminants_PAF", version="1.0", entries=999)
-    val db2 = SearchDatabase(id = "SDB_custom", version="2.0", entries=100)
+    val db1 = SearchDatabase(id = "SDB_contaminants_PAF", version=Some("1.0"), entries=Some(999))
+    val db2 = SearchDatabase(id = "SDB_custom", version=Some("2.0"), entries=Some(100))
     val searchDbs = Seq(db1, db2)
 
     val mzIdentML = scala.xml.XML.loadFile(new File("test/resources/mascot/F001644.mzid"))
@@ -105,6 +105,36 @@ class ParseProteinMatchesSpecs extends Specification {
       spIdTitleRelation(0).mainProt.source must equalTo(SequenceSource("SDB_contaminants_PAF"))
       spIdTitleRelation(2).mainProt.source must equalTo(SequenceSource("SDB_custom"))
     }
+
+  }
+
+
+  "check main and subset proteins" should {
+
+    val file = scala.xml.XML.loadFile(new File("test/resources/mascot/F001303.mzid"))
+    val dbInfo = LoaderMzIdent.parseSearchDbSourceInfo(file)
+    val spIdTitleRelation = ParseProteinMatches.parseProtList(file, SearchId("hoho"), dbInfo)
+
+    "check size" in {
+      spIdTitleRelation.size must equalTo(1605)
+    }
+
+    "check main prots" in {
+      val main1 = spIdTitleRelation.find( one => one.mainProt.proteinAC.value == "HBB1_MOUSE")
+      val main2 = spIdTitleRelation.find( one => one.mainProt.proteinAC.value == "HBB2_MOUSE")
+
+      main1.isDefined mustEqual(true)
+      main2.isDefined mustEqual(true)
+    }
+
+    "check subset prots" in {
+      val main1 = spIdTitleRelation.find( one => one.mainProt.proteinAC.value == "HBB1_MOUSE")
+      val main2 = spIdTitleRelation.find( one => one.mainProt.proteinAC.value == "HBB2_MOUSE")
+
+      main1.get.subsetProts(0).proteinAC.value mustEqual(main2.get.subsetProts(0).proteinAC.value)
+
+    }
+
 
   }
 

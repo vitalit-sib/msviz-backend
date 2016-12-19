@@ -5,6 +5,6 @@ package ch.isbsib.proteomics.mzviz.theoretical.models
  * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 case class SearchDatabase (id: String,
-                           version:String,
-                           entries:Int)
+                           version:Option[String],
+                           entries:Option[Int])
 

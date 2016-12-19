@@ -8,6 +8,7 @@ package ch.isbsib.proteomics.mzviz
 package object experimental {
   case class ScanNumber(value:Int) extends AnyVal
   case class RunId(value:String) extends AnyVal
+  case class RunIdAndMozBin(value: String) extends AnyVal
 
   /**
    * should be unique across a run (scan number or title)s
