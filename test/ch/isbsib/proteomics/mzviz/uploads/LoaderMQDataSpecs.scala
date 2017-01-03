@@ -37,17 +37,17 @@ class LoaderMQDataSpecs extends Specification with ScalaFutures{
         val mqZip = new File("test/resources/uploads/maxQuant.zip")
         val results: Future[Seq[SearchId]] = loaderService.loadZip(mqZip, 1)
 
-        results.futureValue mustEqual Seq(SearchId("DMSO"), SearchId("Nocodazole"))
+        results.futureValue mustEqual Seq(SearchId("MXQ_DMSO"), SearchId("MXQ_Nocodazole"))
 
         // check ms1
-        val ms1List = exp1Service.findMs1EntryWithMozTol(RunId("DMSO"), Moz(1957.76), 0.1).futureValue
+        val ms1List = exp1Service.findMs1EntryWithMozTol(RunId("MXQ_DMSO"), Moz(1957.76), 0.1).futureValue
         ms1List.size mustEqual(5)
 
-        val ms2List = exp2Service.findAllSpectraRefByrunId(Set(RunId("DMSO"), RunId("Nocodazole"))).futureValue
+        val ms2List = exp2Service.findAllSpectraRefByrunId(Set(RunId("MXQ_DMSO"), RunId("MXQ_Nocodazole"))).futureValue
         ms2List.size mustEqual(82)
 
-        val matchList = matchService.findAllSpectrumIdBySearchId(SearchId("DMSO")).futureValue
-        matchList.size mustEqual(1278)
+        val matchList = matchService.findAllSpectrumIdBySearchId(SearchId("MXQ_DMSO")).futureValue
+        matchList.size mustEqual(1231)
 
     }
   }

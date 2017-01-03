@@ -121,7 +121,7 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
         spFut.map({ sp =>
           new BasketEntryWithSpInfo(e._id, e.proteinAC, e.peptideSeq, e.startPos, e.endPos, e.searchIds, e.spectrumId,
             sp.ref.scanNumber.get, sp.ref.precursor.retentionTime.value/60, sp.ref.precursor.charge.value, sp.ref.precursor.moz.value,
-            e.score, e.localizationScore, e.ppmTolerance, e.rtZoom, e.rtSelected, e.xicPeaks, e.creationDate)
+            e.score, e.localizationScore, e.ppmTolerance, e.rtZoom, e.rtSelected, e.xicPeaks, e.creationDate, e.prevAA, e.nextAA, e.ppmDiff)
         })
 
       })
@@ -183,23 +183,6 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
     db.command(Count(collectionName))
   }
 
-//  /**
-//   * delete all entries which use this searchId
-//   * @return a Future of boolean
-//   */
-//  def deleteBySearchId(searchIds: Set[SearchId]): Future[Boolean] = {
-//
-//    searchIds.map({ searchId =>
-//
-//      val query = Json.obj("$text" -> Json.obj("$search" -> searchId.value))
-//
-//      collection.remove(query).map {
-//        case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
-//        case _ => true
-//      }
-//    }).sum
-//  }
-
 
   /**
    * delete entry by given MongoDB $oid (MongId)
@@ -213,6 +196,20 @@ class BasketMongoDBService (val db: DefaultDB) extends MongoDBService {
       case _ => true
     }
   }
+
+    /**
+     * delete all entries with the given Basket Id (which is a concatenation of SearchIds seperated by commas)
+     * @return a Future of boolean
+     */
+    def deleteByBasketId(basketId: String): Future[Boolean] = {
+
+      val selector = BSONDocument("searchIds" -> basketId)
+
+      bsonCollection.remove(selector).map {
+        case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
+        case _ => true
+      }
+    }
 
   /**
    * delete all entries which contain the given SearchId

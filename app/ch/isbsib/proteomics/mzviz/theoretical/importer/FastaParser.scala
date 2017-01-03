@@ -15,20 +15,21 @@ import scala.util.matching.Regex
  * opens a file and get a list of FAsta entries
  *
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
- *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
+ *         copyright 2014-2016, SIB Swiss Institute of Bioinformatics
  */
 class FastaParser(file: File, source: SequenceSource, regexp:Option[String]) {
-
 
   def parseOneProtBlock(protLines: String): FastaEntry = {
     val firstNewLineIndex = protLines.indexOf("\n")
     // give back next entry and remove heading '>' and any special characters
-    val headline = protLines.substring(0, firstNewLineIndex).replaceAll("^>|[^\\x00-\\x7F]", "")
+    val headline = ">" + protLines.substring(0, firstNewLineIndex).replaceAll("^>|[^\\x00-\\x7F]", "")
     val seqLines = protLines.substring(firstNewLineIndex + 1)
 
     //get accession code and cleanup sequence
     val ac = FastaExtractorACFromHeader.parseAC(headline, regexp)
-    val ids = FastaExtractorACFromHeader.parseIdentifiers(headline) + ProteinIdentifier(ac.value)
+    // if there is a regexp, we only take this identification
+    val acSet = Set(ProteinIdentifier(ac.value))
+    val ids =  if(regexp.isDefined) acSet else FastaExtractorACFromHeader.parseIdentifiers(headline, None) ++ acSet
     val seq = seqLines.replaceAll( """\s+""", "")
 
     FastaEntry(ProteinRef(ac, ids, Some(source)), seq, seq.size)
@@ -78,7 +79,8 @@ object FastaExtractorACFromHeader {
   ).map(s => ("^>?" + s).r)
 
   def parseAC(header: String, regexp:Option[String]): AccessionCode = {
-    val localReACList:List[Regex] = if(regexp.isDefined) regexp.get.split(",").map(_.r).toList else reACList
+    val localReACList:List[Regex] = if(regexp.isDefined) regexp.get.split(",").map( s => (s + ".*").r).toList else reACList
+
     localReACList.find(_.findFirstMatchIn(header).isDefined) match {
       case Some(re) =>
         val re(ac) = header
@@ -87,10 +89,14 @@ object FastaExtractorACFromHeader {
     }
   }
 
-  def parseIdentifiers(header: String): Set[ProteinIdentifier] = reIdentifiersList.find(_.findFirstMatchIn(header).isDefined) match {
-    case Some(re) =>
-      val re(ids )= header
-      ids.split(",").toList.toSet.map( ProteinIdentifier.apply)
-    case None => Set()
+  def parseIdentifiers(header: String, regexp:Option[String]): Set[ProteinIdentifier] = {
+    val localReACList:List[Regex] = if(regexp.isDefined) regexp.get.split(",").map( s => (s + ".*").r).toList else reIdentifiersList
+
+    localReACList.find(_.findFirstMatchIn(header).isDefined) match {
+      case Some(re) =>
+        val re(ids )= header
+        ids.split(",").toList.toSet.map( ProteinIdentifier.apply)
+      case None => Set()
+    }
   }
 }

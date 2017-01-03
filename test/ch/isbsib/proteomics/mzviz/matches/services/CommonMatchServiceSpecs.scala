@@ -37,7 +37,7 @@ class CommonMatchServiceSpecs extends Specification with ScalaFutures {
     val file = new File("test/resources/mascot/M_100.mzid")
     val searchId = SearchId("coucou")
     val mzIdent = scala.xml.XML.loadFile(file)
-    val matchData = LoaderMzIdent.parse(file, searchId, RunId("1"))
+    val matchData = LoaderMzIdent.parse(file, searchId, RunId("1"), None)
 
     "counts are 0" in new TempMongoDBService {
       matchService.insert(matchData._1).futureValue

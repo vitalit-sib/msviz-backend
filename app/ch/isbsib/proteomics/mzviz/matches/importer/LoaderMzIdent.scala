@@ -3,6 +3,7 @@ package ch.isbsib.proteomics.mzviz.matches.importer
 import java.io.{File, FileInputStream, InputStream}
 import java.util.Calendar
 
+import ch.isbsib.proteomics.mzviz.commons.Dalton
 import ch.isbsib.proteomics.mzviz.commons.helpers.OptionConverter
 import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
@@ -32,7 +33,7 @@ import scala.xml.Elem
 object LoaderMzIdent {
 
 
-  def parseWithXmlElem(file: File, searchId: SearchId, runId: RunId, mzidXml: Elem): Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = {
+  def parseWithXmlElem(file: File, searchId: SearchId, runId: RunId, mzidXml: Elem, searchEngine: Option[String]): Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = {
 
     // we try to take the unimod information from Play application if it is started
     if(play.api.Play.maybeApplication.isDefined) {
@@ -58,7 +59,7 @@ object LoaderMzIdent {
     // parse PSM, Protein matches and searchInfo
     val psmList = parsePsm(file, searchId, runId, searchDbSourceInfo)
     val proteinList = ParseProteinMatches.parseProtList(mzidXml, searchId, searchDbSourceInfo)
-    val searchInfo = parseSearchInfo(mzidXml, searchId)
+    val searchInfo = parseSearchInfo(mzidXml, searchId, searchEngine)
 
     Tuple3(psmList, proteinList, searchInfo)
 
@@ -72,11 +73,11 @@ object LoaderMzIdent {
    * @param runId
    * @return
    */
-  def parse(file: File, searchId: SearchId, runId: RunId): Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = {
+  def parse(file: File, searchId: SearchId, runId: RunId, searchEngine: Option[String]): (Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo) = {
     // load MzIdentML as scala xml elem
     val mzidXml = scala.xml.XML.loadFile(file)
 
-    this.parseWithXmlElem(file, searchId, runId, mzidXml)
+    this.parseWithXmlElem(file, searchId, runId, mzidXml, searchEngine)
   }
 
 
@@ -109,7 +110,7 @@ object LoaderMzIdent {
         pep = convertPeptide(t._2),
         matchInfo = convertPepMatch(t),
         proteinList = convertProtMatches(t._2, searchDbSourceInfo))
-    }).toSeq
+    })
 
   }
   /**
@@ -117,7 +118,7 @@ object LoaderMzIdent {
    * @param mzidXml Scala XML element
    * @return
    */
-  def parseSearchInfo(mzidXml: Elem, searchId: SearchId): SearchInfo = {
+  def parseSearchInfo(mzidXml: Elem, searchId: SearchId, searchEngine: Option[String]): SearchInfo = {
 
     // get the info about the SearchDatabases
     val title = parseTitleFilename(mzidXml)
@@ -136,8 +137,9 @@ object LoaderMzIdent {
       enzyme,
       parentTolerance,
       fragmentTolerance,
-      new SubmissionStatus ("processing", "created new SearchInfo"),
-      nowDate)
+      new SubmissionStatus ("loading", "created new SearchInfo"),
+      nowDate,
+      searchEngine)
   }
 
   /**
@@ -180,7 +182,11 @@ object LoaderMzIdent {
    */
   def parseEnzymeFilename(mzidXml: Elem): String = {
     val enzymeLocation =mzidXml \\ "EnzymeName" \ "cvParam" \ "@name"
-    enzymeLocation.text
+    if(enzymeLocation.size == 0){
+      (mzidXml \\ "EnzymeName" \ "userParam" \ "@value").text
+    }else{
+      enzymeLocation.text
+    }
   }
 
   /**
@@ -280,7 +286,7 @@ object LoaderMzIdent {
    * @param mzJavaRes a Tuple of a SpectrumIdentifier and a PeptideMatch obtained from the MzJava mzIdentML parser
    * @return
    */
-  def convertPepMatch(mzJavaRes: Tuple2[SpectrumIdentifier, PeptideMatch]): PepMatchInfo = {
+  def convertPepMatch(mzJavaRes: (SpectrumIdentifier, PeptideMatch)): PepMatchInfo = {
     val mzJavaMatch = mzJavaRes._2
 
     val MainScoreName = "Mascot:score"
@@ -299,10 +305,13 @@ object LoaderMzIdent {
     PepMatchInfo(score = identScore,
       numMissedCleavages = OptionConverter.convertGoogleOption[Int](mzJavaMatch.getNumMissedCleavages.asInstanceOf[Optional[Int]]),
       massDiff = OptionConverter.convertGoogleOption[Double](mzJavaMatch.getMassDiff.asInstanceOf[Optional[Double]]),
+      massDiffUnit = Some(Dalton),
       rank = OptionConverter.convertGoogleOption[Int](mzJavaMatch.getRank.asInstanceOf[Optional[Int]]),
       chargeState = OptionConverter.convertGoogleOption[Int](mzJavaRes._1.getAssumedCharge.asInstanceOf[Optional[Int]]),
       totalNumIons = OptionConverter.convertGoogleOption[Int](mzJavaMatch.getTotalNumIons.asInstanceOf[Optional[Int]]),
-      isRejected = OptionConverter.convertGoogleOption[Boolean](mzJavaMatch.isRejected.asInstanceOf[Optional[Boolean]]))
+      isRejected = OptionConverter.convertGoogleOption[Boolean](mzJavaMatch.isRejected.asInstanceOf[Optional[Boolean]]),
+      modificationProbabilities = None,
+      highestModifProbability = None)
 
   }
 

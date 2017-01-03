@@ -1,6 +1,6 @@
 package ch.isbsib.proteomics.mzviz.theoretical.services
 
-import ch.isbsib.proteomics.mzviz.matches.models.{SearchInfo, ProteinRef}
+import ch.isbsib.proteomics.mzviz.matches.models.ProteinRef
 import ch.isbsib.proteomics.mzviz.theoretical.models.{SequenceSourceStats, FastaEntry}
 import ch.isbsib.proteomics.mzviz.theoretical.{ProteinIdentifier, AccessionCode, SequenceSource}
 import play.api.libs.json._

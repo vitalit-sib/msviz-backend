@@ -99,7 +99,7 @@ object SearchController extends MatchController {
         (for {
 
           results  <-  Future { resultType.getOrElse("mzIdentML") match {
-            case "mzIdentML" => Seq(LoaderMzIdent.parse(request.body.file, SearchId(searchId), rid))
+            case "mzIdentML" => Seq(LoaderMzIdent.parse(request.body.file, SearchId(searchId), rid, Some("Mascot")))
             case "maxQuant" => LoaderMaxQuant.parseZip(request.body.file, Some(searchId))
             case _ => throw new Exception(s"illegal resultType [$resultType] -> accepted types are: mzIdentML, maxQuant")
           }

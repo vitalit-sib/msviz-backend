@@ -1,21 +1,22 @@
 package ch.isbsib.proteomics.mzviz.matches.importer
 
-import java.io.{IOException, File}
+import java.io.{File, IOException}
 import java.util.Calendar
 
+import ch.isbsib.proteomics.mzviz.commons.PPM
 import ch.isbsib.proteomics.mzviz.commons.helpers.{FileFinder, Unzip}
-import ch.isbsib.proteomics.mzviz.experimental.{ScanNumber, SpectrumUniqueId, RunId}
+import ch.isbsib.proteomics.mzviz.experimental.{RunId, ScanNumber, SpectrumUniqueId}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.models._
-import ch.isbsib.proteomics.mzviz.matches.models.maxquant.{PeptidesTableEntry, EvidenceTableEntry, MsMsTableEntry, ProteinGroupsTableEntry}
+import ch.isbsib.proteomics.mzviz.matches.models.maxquant.{EvidenceTableEntry, MsMsTableEntry, PeptidesTableEntry, ProteinGroupsTableEntry}
 import ch.isbsib.proteomics.mzviz.matches.services.SearchInfoDBService
 import ch.isbsib.proteomics.mzviz.modifications.ModifName
 import ch.isbsib.proteomics.mzviz.theoretical.models.SearchDatabase
-import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
+import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
 
 import scala.io.Source._
-import scala.util.Failure
+import scala.util.{Failure, Try}
 
 
 /**
@@ -55,10 +56,20 @@ object LoaderMaxQuant {
     val msmsPos: Int = headerProtMap("MS/MS IDs")
     val mainProts: Int = headerProtMap("Majority protein IDs")
 
-    val countPosHash: Map[RunId, Int] = runIds.map(runId => Tuple2(runId, headerProtMap("MS/MS Count " + runId.value))).toMap
+    val countPosHash: Map[RunId, Int] = runIds.map({ runId =>
+      val msmsCount = if(headerProtMap.contains("MS/MS Count " + runId.value)) {
+        headerProtMap("MS/MS Count " + runId.value)
+      } else {
+        headerProtMap("MS/MS Count")
+      }
+      Tuple2(runId, msmsCount)
+    }).toMap
     val uniquePepPosHash = runIds.map(runId => Tuple2(runId, headerProtMap("Unique peptides " + runId.value))).toMap
 
-    mProteinsList.map({
+    // filter out entries without a corresponding msmsId
+    val filteredProteinsList = mProteinsList.filter(_.length > msmsPos)
+
+    filteredProteinsList.map({
       m => {
         //Obtain ACs
         val acsList: List[String] = m(mainProts).split(";").toList
@@ -77,17 +88,8 @@ object LoaderMaxQuant {
   }
 
   def parseFastaFilename(fastaFilename:String): String = {
-    val fastaFileNameRegx = """.+\\(.+)""".r
-    val fileNameRegx = """.+\\(.+)""".r
-
     //Prepared for several sources
     val fastaFilesArray= fastaFilename.split(";")
-    /*
-    fastaFilename match {
-      case fastaFileNameRegx(n) => n
-      case fileNameRegx(n) => n
-      case _ => fastaFilename
-    }*/
 
     // Create a new String separated by ";" with the source names
     fastaFilesArray.map{(
@@ -101,8 +103,8 @@ object LoaderMaxQuant {
 
     val linesParam: Iterator[String] = fromFile(file).getLines()
     //val headerParam = linesParam.take(1).next.split("\t").toList
-    val paramMap: Map[String, String] = linesParam.toList.map(s => Tuple2(s.split("\t")(0), s.split("\t")(1))).toMap
-    //val source= ParamMap("Fasta file")
+    val splittedLines: List[Array[String]] = linesParam.toList.map(_.split("\t"))
+    val paramMap: Map[String, String] =  splittedLines.filter(_.length == 2).map( s => (s(0), s(1))).toMap
     paramMap
   }
 
@@ -119,11 +121,9 @@ object LoaderMaxQuant {
     val enzymePos: Int = headerSummaryMap("Enzyme")
     val rawFilePos: Int = headerSummaryMap("Raw file")
 
-    val summaryMap = mSummaryList.map {
-      (
+    val summaryMap = mSummaryList.map {(
         entry => Tuple2(entry(experimentPos), (entry(enzymePos), entry(rawFilePos)))
-        )
-    }.toMap
+      )}.toMap
     summaryMap
   }
   /**
@@ -132,9 +132,6 @@ object LoaderMaxQuant {
    * @return Map[raw,experiment]
    */
   def parseMaxquantSummaryTableRawSearchId(file: File): Map[String, String] = {
-
-    val linesParam: Iterator[String] = fromFile(file).getLines()
-    //val headerParam = linesParam.take(1).next.split("\t").toList
 
     val (mSummaryList, headerSummaryMap) = parseCommonLines(file)
     val experimentPos: Int = headerSummaryMap("Experiment")
@@ -207,7 +204,7 @@ object LoaderMaxQuant {
 
         val protInfo = ProteinIdentInfo(AccessionCode(ac), sequenceSource, identScore, entry.uniquePeptides(runId), entry.msCount(runId), true)
 
-        val searchId = if(idTitle.isDefined) idTitle.get + ":" + runId.value else runId.value
+        val searchId = if(idTitle.isDefined) idTitle.get + runId.value else runId.value
         Tuple2(runId, ProteinIdent(SearchId(searchId), protInfo, subset))
       })
     })
@@ -225,11 +222,12 @@ object LoaderMaxQuant {
   def parseEvidenceTable(file: File): List[EvidenceTableEntry] = {
     val (mEvidenceList, headerEvidenceMap) = parseCommonLines(file)
     val idPos: Int = headerEvidenceMap("id")
-    val sequencePos: Int = headerEvidenceMap("Sequence")
+    val sequencePos: Int = if(headerEvidenceMap.contains("Sequence")) headerEvidenceMap("Sequence") else headerEvidenceMap("Diff")
     val experimentPos: Int = headerEvidenceMap("Experiment")
     val molMassPos: Int = headerEvidenceMap("Mass")
     val scorePos: Int = headerEvidenceMap("Score")
     val missedCleavagesPos: Int = headerEvidenceMap("Missed cleavages")
+    val typePos: Int = headerEvidenceMap("Type")
     val massDiffPos: Int = headerEvidenceMap("Mass Error [ppm]")
     val chargePos: Int = headerEvidenceMap("Charge")
     val acPos: Int = if(headerEvidenceMap.contains("Leading Razor Protein")) headerEvidenceMap("Leading Razor Protein") else headerEvidenceMap("Leading razor protein")
@@ -239,17 +237,24 @@ object LoaderMaxQuant {
     val lengthPos: Int = headerEvidenceMap("Length")
     val scanNumberPos: Int= headerEvidenceMap("MS/MS Scan Number")
 
+    // get the fields concerning position probabilites
+    val positionProbKeys = headerEvidenceMap.keySet.filter(_ matches ".+\\s+Probabilities")
+    val modifProbSet: Set[(String, Int)] = positionProbKeys.map(_ replace("""(\w+)\(\w+\)\s+Probabilities""", "'$1")).zip(positionProbKeys.map(k => headerEvidenceMap(k)))
+
     //Filter table, remove rows with no score, taking care about "." in the score which are not digits
     val mEvidenceListFiltered = mEvidenceList.filter({ l => l(scorePos).filter(_.isDigit).length > 0})
 
-    mEvidenceListFiltered.map({
+    // remove entries that are of type MSMS
+    val mEvidenceListFiltered2 = mEvidenceListFiltered.filter({ l => l(typePos) != "MSMS"})
+
+    mEvidenceListFiltered2.map({
       m => {
         val id: Int = m(idPos).toInt
         val sequence: String = m(sequencePos)
         val experiment: String = m(experimentPos)
         val molMass: Option[Double] = Option(m(molMassPos).toDouble)
         val score: Double = m(scorePos).toDouble
-        val missCleavages: Option[Int] = Option(m(missedCleavagesPos).toInt)
+        val missCleavages: Option[Int] = Try(m(missedCleavagesPos).toInt).toOption
         val massDiff: Option[Double] = if (m(massDiffPos).filter(elem => (elem.isDigit)).length > 0) Option(m(massDiffPos).toDouble) else None
         val charge: Option[Int] = Option(m(chargePos).toInt)
         val ac: String = m(acPos)
@@ -268,13 +273,58 @@ object LoaderMaxQuant {
         //Check if there is any modification
         if(hashPosModification.keys != Set()) {
           val modifNamesVector: Vector[Seq[ModifName]] = updateVector(hashPosModification,lenghtVector)
-          EvidenceTableEntry(id, sequence, experiment, molMass, score, missCleavages, massDiff, charge, ac, pepId,modifNamesVector,scanNumber)
+
+          // parse the position probabilities
+          val modifProbs: Option[Map[ModifName, String]] = parseModifProbs(m, modifProbSet)
+          val highestModifProb: Option[Map[ModifName, Double]] = parseHighestModifProb(modifProbs)
+
+          EvidenceTableEntry(id, sequence, experiment, molMass, score, missCleavages, massDiff, charge, ac, pepId,modifNamesVector, modifProbs, highestModifProb, scanNumber)
         }
-        else EvidenceTableEntry(id, sequence, experiment, molMass, score, missCleavages, massDiff, charge, ac, pepId,vectorNames,scanNumber)
+        else EvidenceTableEntry(id, sequence, experiment, molMass, score, missCleavages, massDiff, charge, ac, pepId,vectorNames, None, None, scanNumber)
 
       }
     })
   }
+
+  /**
+    * parse the whole string containing the modification probabilites
+    *
+    * @param l
+    * @param modifProbSet
+    */
+  def parseModifProbs(l: List[String], modifProbSet: Set[(String, Int)]): Option[Map[ModifName, String]] = {
+
+    val modifProbs = modifProbSet.foldLeft(Map.empty[ModifName, String]){
+      case (a, b) =>
+        val seq = l(b._2)
+        val modifName = """^(\w+)""".r.findFirstIn(b._1).get
+        if(! seq.isEmpty) a ++ Map(ModifName(modifName) -> seq) else a
+    }
+
+    if(modifProbs.isEmpty) return None
+    else return Some(modifProbs)
+
+  }
+
+
+  /**
+    * parse the highest probability from the string
+    *
+    * @param modifProbs
+    * @return
+    */
+  def parseHighestModifProb(modifProbs:  Option[Map[ModifName, String]]):  Option[Map[ModifName, Double]] = {
+
+    if (modifProbs.isDefined) {
+      Some(modifProbs.get.map({ case (modif: ModifName, seq: String) =>
+        val maxProb = """([\d|\.]+)""".r.findAllMatchIn(seq).map(_.group(1).toDouble).max
+        (modif, maxProb)
+      }))
+    }else{
+      None
+    }
+  }
+
 
   def updateVector(modifPosHash: Map[Int, String], vectorLength: Int): Vector[Seq[ModifName]] = {
     (1 to vectorLength).toVector.map({pos =>
@@ -365,23 +415,6 @@ object LoaderMaxQuant {
     })
     evidencePeptidesResult
 
-    /*
-    //map from pepId -> info
-    val peptidesTuple = mPeptidesListFiltered.map({
-      row =>
-        val pepId = row(peptideIdPos).toInt
-        val evidenceId = row(evidenceIdPos)
-        val isDecoy = if (row(isDecoyPos).isEmpty()) Option(false) else Option(true)
-        val evidencePeptideSeq = evidenceId.split(";").map ({
-          evidId => Tuple2(evidId,pepId)
-        })
-        val peptidesEntry = PeptidesTableEntry(pepId, Option(row(previousAAPos)), Option(row(nextAAPos)), row(startPos).toInt,
-          row(endPos).toInt, isDecoy)
-        Tuple3(pepId, peptidesEntry,evidencePeptideSeq)
-    })
-    Tuple2((peptidesTuple, peptidesTuple._2).toMap, peptidesTuple._3)
-
-    */
   }
 
   def loadPepSpectraMatch(maxQuantDir: String, runIds: Seq[RunId], sequenceSource:SequenceSource, idTitle:Option[String]): Map[RunId, Seq[PepSpectraMatch]] = {
@@ -394,21 +427,21 @@ object LoaderMaxQuant {
     //Filter evidenceEntryAux, remove rows where id doesn't correspond to any key in evidencePepHash
     val evidenceEntry: List[EvidenceTableEntry] = evidenceEntryAux.filter({ entry => evidencePepHash.keySet.exists(_ == entry.id)})
 
-
-
     //Create PepSpectraMatch for each entry in evidenceEntry
     val runIdToPepSpectraMatchList: List[(RunId, PepSpectraMatch)] = evidenceEntry.map({ entry =>
       val pep = Peptide(entry.sequence, entry.molMass, entry.modificationVector)
-      val spectrumId = SpectrumId(SpectrumUniqueId(entry.scanNumber.toString), RunId(entry.experiment))
+      val spectrumId = SpectrumId(SpectrumUniqueId(entry.scanNumber.toString), RunId(idTitle.getOrElse("") + entry.experiment))
       // we assume that PSM is always rank 1 @TODO does MQ really only indicate first ranks?
-      val matchInfo = PepMatchInfo(IdentScore(entry.score, Map()), entry.missedCleavages, entry.massDiff, rank=Some(1), None, entry.chargeState, Some(false))
+      val matchInfo = PepMatchInfo(IdentScore(entry.score, Map()),
+        entry.missedCleavages, entry.massDiff, Some(PPM), rank=Some(1), None,
+        entry.chargeState, Some(false), entry.modificationProbabilities, entry.highestModifProbability)
 
       val leadingProteinRef = ProteinRef(AccessionCode(entry.ac), Set(), Some(sequenceSource))
       val pepEntry = peptidesHash(entry.pepId)
 
       val proteinList = Seq(ProteinMatch(leadingProteinRef, pepEntry.previousAA, pepEntry.nextAA, pepEntry.startPos, pepEntry.endPos, pepEntry.isDecoy))
 
-      val searchId = if(idTitle.isDefined) idTitle.get + ":" + entry.experiment else entry.experiment
+      val searchId = if(idTitle.isDefined) idTitle.get  + entry.experiment else entry.experiment
       Tuple2(RunId(entry.experiment), PepSpectraMatch(SearchId(searchId), spectrumId, pep, matchInfo, proteinList))
     })
 
@@ -438,7 +471,7 @@ object LoaderMaxQuant {
     val searchInfoHashAux: Map[RunId, SearchInfo] = summaryHash.map({
       val nowDate = Calendar.getInstance().getTime()
       keyVal =>
-        val searchId = if(idTitle.isDefined) idTitle.get + ":" + keyVal._1 else keyVal._1
+        val searchId = if(idTitle.isDefined) idTitle.get + keyVal._1 else keyVal._1
         Tuple2(
         RunId(keyVal._1),
         SearchInfo(searchId=SearchId(searchId),
@@ -448,8 +481,9 @@ object LoaderMaxQuant {
           enzyme=keyVal._2._1,
           parentTolerance=parentTolerance,
           fragmentTolerance=fragmentTolerance,
-          status = new SubmissionStatus("processing", "new SearchId was created"),
-          creationDate=nowDate)
+          status = new SubmissionStatus("loading", "new SearchId was created"),
+          creationDate=nowDate,
+          searchEngine = Some("MaxQuant"))
         )
     })
     val searchInfoHash= searchInfoHashAux.filter({entry=> entry._1.toString !="RunId()"})

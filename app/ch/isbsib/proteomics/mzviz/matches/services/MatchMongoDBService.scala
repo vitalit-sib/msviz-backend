@@ -190,10 +190,10 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
       futSpectrumRefs.map({ spectrumRefs =>
         spectrumRefs
           .groupBy(_.spectrumId.runId) // map[RunIds, Seq[SpectrumRefs]
-          .map(({
+          .map({
           case (runId, spRefs) => //now, transform the list of spref to a map spectrumId -> spRef
             (runId, spRefs.map(spRef => (spRef.spectrumId, spRef)).toMap)
-        }))
+        })
       })
 
     for {

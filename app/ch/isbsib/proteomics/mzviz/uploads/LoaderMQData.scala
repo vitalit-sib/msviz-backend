@@ -16,7 +16,6 @@ import ch.isbsib.proteomics.mzviz.matches.importer.{LoaderMaxQuant}
 import ch.isbsib.proteomics.mzviz.matches.models.{SearchInfo, ProteinIdent, PepSpectraMatch, SubmissionStatus}
 import ch.isbsib.proteomics.mzviz.matches.services.{CommonMatchService, SearchInfoDBService, ProteinMatchMongoDBService, MatchMongoDBService}
 import ch.isbsib.proteomics.mzviz.results.basket.BasketMongoDBService
-import play.api.Logger
 import play.api.libs.json.Json
 import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
@@ -35,149 +34,6 @@ import scala.xml.Elem
  *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
  */
 class LoaderMQData(val db: DefaultDB) {
-
-
-  /*
-  /**
-   * load a zip file containing mzML and txt folder with MQ results
-   *
-   * @param zipPath
-   * @return
-   */
-  def loadZip(zipPath: File, intensityThreshold:Double): Future[Seq[SearchId]] = {
-    // unzip the file
-    val unzipPath = FileFinder.getHighestDir(Unzip.unzip(zipPath))
-
-    // goto highest path but without the txt
-    val innerPath = unzipPath.split("\\/").dropRight(1).mkString("/")
-
-    //parse txt/summary to obtain check if we have all expected files
-    val summaryFile = innerPath + "/txt/summary.txt"
-    val summaryHash = LoaderMaxQuant.parseMaxquantSummaryTableRawSearchId(new File(summaryFile))
-
-
-    //Check if all mzML files are available
-    summaryHash.keys.foreach {
-        key =>
-          val fileToFind = innerPath + "/" + key + ".mzML"
-          if (! Files.exists(Paths.get(fileToFind))) {
-            Future{ throw new RuntimeException("[" + fileToFind + "] not found") }
-          }
-    }
-    try {
-
-      //Load mzML files
-      val itTotalEntries = summaryHash.keys.map {
-        file => {
-          //Load ms1 and ms2
-          val itMs1Ms2 = LoaderMzML().parse(new File(innerPath + "/" + file + ".mzML"), RunId(summaryHash.get(file).get)).partition(_.isLeft)
-          val itMs1: Iterator[ExpMs1Spectrum] = itMs1Ms2._1.map(_.left.get)
-          val itMs2: Iterator[ExpMSnSpectrum] = itMs1Ms2._2.map(_.right.get)
-
-          //Load maxQuant results
-          val maxqResults = LoaderMaxQuant.parse(innerPath.toString + "/txt/", None)
-          maxqResults.foreach({ psmAndProteinList =>
-            new MatchMongoDBService(db).insert(psmAndProteinList._1)
-            new ProteinMatchMongoDBService(db).insert(psmAndProteinList._2)
-            new SearchInfoDBService(db).insert(psmAndProteinList._3)
-          })
-
-          // calculate number of entries per each ms to check in the test
-          for {
-
-          //Load MS1
-            ms1 <- new ExpMs1BinMongoDBService(db).insertMs1spectra(itMs1, intensityThreshold)
-            //Load MS2
-            ms2 <- new ExpMongoDBService(db).insertMs2spectra(itMs2, RunId(summaryHash.get(file).get))
-          } yield {
-            if (ms1) 1 else 0 + ms2
-
-          }
-
-        }
-      }
-      //Future.sequence(itTotalEntries.toList).map(_.sum)
-      val searchIds: Seq[SearchId]= summaryHash.values.map{
-        searchId => SearchId(searchId)
-      }.toSeq
-      Future(searchIds)
-    }catch{
-      case e=>{
-        removeSearches(summaryHash.values)
-        throw e
-      }
-    }
-  }
-
-  def removeSearches (searchIds: Iterable[String]) = {
-    val searchIdList= searchIds.map(SearchId.apply).toSet
-    for {
-      dPsms <- MatchMongoDBService().deleteAllBySearchIds(searchIdList)
-      dProt <- ProteinMatchMongoDBService().deleteAllBySearchIds(searchIdList)
-      dSearchInfo <- SearchInfoDBService().deleteAllBySearchIds(searchIdList)
-      dBasket <- BasketMongoDBService().deleteBySearchId(searchIdList)
-    } yield {
-      Ok(Json.obj(
-        "psms" -> dPsms,
-        "proteinMatches" -> dProt,
-        "searchInfos" -> dSearchInfo,
-        "basket" -> dBasket
-      ))
-    }
-  }
-
-  def loadDir(localPath: String, intensityThreshold:Double): Future[Int] = {
-    //parse txt/summary to obtain check if we have all expected files
-
-    val innerPath= localPath
-    val summaryFile = innerPath  + "/txt/summary.txt"
-    val summaryHash = LoaderMaxQuant.parseMaxquantSummaryTableRawSearchId(new File(summaryFile))
-
-    //Check if all mzML files are available
-    summaryHash.keys.foreach {
-      key =>
-        val fileToFind = innerPath  + "/" + key + ".mzML"
-        if (! Files.exists(Paths.get(fileToFind))) {
-          throw new RuntimeException("[" + fileToFind + "] not found")
-        }
-    }
-
-    //Load mzML files
-    val itTotalEntries=summaryHash.keys.map {
-      file => {
-        //Load ms1 and ms2
-        val itMs1Ms2 = LoaderMzML().parse(new File(innerPath + "/" + file + ".mzML"), RunId(summaryHash.get(file).get)).partition(_.isLeft)
-        val itMs1: Iterator[ExpMs1Spectrum] = itMs1Ms2._1.map(_.left.get)
-        val itMs2: Iterator[ExpMSnSpectrum] = itMs1Ms2._2.map(_.right.get)
-
-        //Load maxQuant results
-        val maxqResults= LoaderMaxQuant.parse(innerPath.toString + "/txt/",None)
-
-        maxqResults.foreach({ psmAndProteinList =>
-          new MatchMongoDBService(db).insert(psmAndProteinList._1)
-          new ProteinMatchMongoDBService(db).insert(psmAndProteinList._2)
-          new SearchInfoDBService(db).insert(psmAndProteinList._3)
-        })
-
-        // calculate number of entries per each ms to check in the test
-        for {
-
-        //Load MS1
-          ms1 <- new ExpMs1BinMongoDBService(db).insertMs1spectra(itMs1, intensityThreshold)
-          //Load MS2
-          ms2 <- new ExpMongoDBService(db).insertMs2spectra(itMs2, RunId(summaryHash.get(file).get))
-        }yield{
-          if(ms1) 1 else 0 + ms2
-
-        }
-
-      }
-    }
-    Future.sequence(itTotalEntries.toList).map(_.sum)
-
-  }
-
-*/
 
   // file types that are required
   val requiredTypes = Set("mzid", "mgf", "mzml")
@@ -200,8 +56,6 @@ class LoaderMQData(val db: DefaultDB) {
     // unzip the file
     val unzipPath: Try[String] = Try(FileFinder.getHighestDir(Unzip.unzip(zipFile)))
 
-    //TO CHECK, path with or without txt folder?????????
-
     // create a searchId with error if unzip fails
     unzipPath.recover({
       case NonFatal(e) => {
@@ -214,7 +68,6 @@ class LoaderMQData(val db: DefaultDB) {
       }
     })
 
-    //TO CHECK
     // goto highest path but without the txt
     val innerPath = unzipPath.get.split("\\/").dropRight(1).mkString("/")
 
@@ -232,10 +85,6 @@ class LoaderMQData(val db: DefaultDB) {
    */
   def loadUnzipped(path: String, intensityThreshold: Double): Future[Seq[SearchId]] = {
 
-
-    // get the list of files in the directory
-    val fileList = FileFinder.getListOfFiles(path)
-
     //parse txt/summary to obtain check if we have all expected files
     val summaryFile = path + "/txt/summary.txt"
     //Check if summary file exists
@@ -252,7 +101,7 @@ class LoaderMQData(val db: DefaultDB) {
 
     // list of searchIds
     val searchIds: Try[List[SearchId]] = summaryHash.map(_.values.map {
-      searchId => SearchId(searchId.toString)
+      searchId => SearchId("MXQ_" + searchId.toString)
     }.toList).recoverWith({
       case NonFatal(e) => {
         val now = Calendar.getInstance().getTime()
@@ -276,21 +125,14 @@ class LoaderMQData(val db: DefaultDB) {
 
     val allMzMlFound = checkMzMlFilesExist(mzMlFiles.get, searchIds.get)
 
-
-
-    // if not all mzML files are available we throw an exception
     // if not all mzML files are available we throw an exception
     if (allMzMlFound) {
       // check if searchIds are already taken
       val searchIdAlreadyExists = checkSearchIdsExists(searchIds.get)
       searchIdAlreadyExists.flatMap(alreadyExists => {
         if (alreadyExists._1) {
-          //val searchIdsString = searchIds.get.map(_.value).reduceLeft(_ + "," + _)
-          //throw new ImporterException(s"Some of the SearchIds [$searchIdsString] already exist.")
           val searchIdsString = searchIds.get.map(_.value).reduceLeft(_ + "," + _)
-          val errorMessage = s"Some of the SearchIds [$searchIdsString] already exist."
-          Logger.error(errorMessage)
-          throw new ImporterException(errorMessage)
+          throw new ImporterException(s"Some of the SearchIds [$searchIdsString] already exist.")
         }
         else insertAllData(searchIds.get, path, mzMlFiles.get, intensityThreshold)
       })
@@ -329,21 +171,22 @@ class LoaderMQData(val db: DefaultDB) {
    */
   def checkSearchIdsExists(searchIds: Seq[SearchId]): Future[(Boolean, List[SearchId])] = {
     // assert that searchIds are not already inserted
-
     val searchIdCheck: Seq[Future[(Boolean, SearchId)]] = searchIds.map({ id =>
       searchInfoService.isSearchIdExist(id).map({ alreadyTaken =>
-        if (alreadyTaken)
-          searchInfoService.createSearchIdWithError(id, s"SearchId [${id.value}] already exists. Please delete SearchIds with this name before reloading")
+        if (alreadyTaken) searchInfoService.createSearchIdWithError(id, s"SearchId [${id.value}] already exists. Please delete SearchIds with this name before reloading")
         (alreadyTaken, id)
       })
     })
+
     // check if all searchIds are ok
     val failedSearchIds: List[SearchId] = List()
 
     val searchIdAlreadyExists: Future[(Boolean, List[SearchId])] = Future.sequence(searchIdCheck).map({
-      found => found.foldLeft((false, failedSearchIds))({ (a, b) => ((a._1 | b._1), if(b._1) b._2 :: a._2 else a._2)
+      found => found.foldLeft((false, failedSearchIds))({ (a, b) =>
+        ((a._1 & b._1), if (b._1) b._2 :: a._2 else a._2)
       })
     })
+
     searchIdAlreadyExists
   }
 
@@ -401,8 +244,8 @@ class LoaderMQData(val db: DefaultDB) {
                       searchIds: List[SearchId],
                       updateStatusCallback: Option[(SearchId, String, String) => Future[Boolean]] = None): Future[Int] = {
     //Load maxQuant results
+    val maxqResults = LoaderMaxQuant.parse(innerPath.toString + "/txt/", Some("MXQ_"))
 
-    val maxqResults = LoaderMaxQuant.parse(innerPath.toString + "/txt/", None)
     val numberEntries: Seq[Future[Int]] = maxqResults.map({ psmAndProteinList: (Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo) =>
       for {
       // and only last the other data

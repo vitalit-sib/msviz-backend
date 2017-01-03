@@ -19,5 +19,6 @@ case class SearchInfo (searchId: SearchId,
                        parentTolerance: Option[String],
                        fragmentTolerance: String,
                        status:SubmissionStatus,
-                       creationDate: Date
+                       creationDate: Date,
+                       searchEngine: Option[String]
                         )
