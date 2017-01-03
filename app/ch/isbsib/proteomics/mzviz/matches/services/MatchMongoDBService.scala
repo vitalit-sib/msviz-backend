@@ -167,8 +167,6 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
     mapper.registerModule(DefaultScalaModule)
     val writer = mapper.writerWithDefaultPrettyPrinter
     val json = writer.writeValueAsString(query)
-    println("weeeee")
-    println(json)
 
     collection.find(query).cursor[PepSpectraMatch].collect[List]()
   }

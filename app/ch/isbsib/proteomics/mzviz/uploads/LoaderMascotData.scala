@@ -55,7 +55,6 @@ class LoaderMascotData(val db: DefaultDB) {
   def loadZip(zipFile: File, intensityThreshold: Double): Future[Seq[SearchId]] = {
 
     val unzipPath:Try[String] = Try ( FileFinder.getHighestDir(Unzip.unzip(zipFile)) )
-
     // create a searchId with error if unzip fails
     unzipPath.recover({
       case NonFatal(e) => {
@@ -157,7 +156,8 @@ class LoaderMascotData(val db: DefaultDB) {
     // assert that searchIds are not already inserted
     val searchIdCheck:Seq[Future[(Boolean, SearchId)]] = searchIds.map({ id =>
       searchInfoService.isSearchIdExist(id).map({ alreadyTaken =>
-        if(alreadyTaken) searchInfoService.createSearchIdWithError(id, s"SearchId [${id.value}] already exists. Please delete SearchIds with this name before reloading")
+        if(alreadyTaken)
+          searchInfoService.createSearchIdWithError(id, s"SearchId [${id.value}] already exists. Please delete SearchIds with this name before reloading")
         (alreadyTaken, id)
       })
     })
@@ -166,11 +166,9 @@ class LoaderMascotData(val db: DefaultDB) {
     val failedSearchIds:List[SearchId] = List()
 
     val searchIdAlreadyExists:Future[(Boolean, List[SearchId])] = Future.sequence(searchIdCheck).map({
-      found => found.foldLeft((false, failedSearchIds))({(a,b) =>
-        ((a._1 | b._1), if(b._1) b._2 :: a._2 else a._2)
+      found => found.foldLeft((false, failedSearchIds))({(a,b) => ((a._1 | b._1), if(b._1) b._2 :: a._2 else a._2)
       })
     })
-
     searchIdAlreadyExists
   }
 

@@ -16,6 +16,7 @@ import ch.isbsib.proteomics.mzviz.matches.importer.{LoaderMaxQuant}
 import ch.isbsib.proteomics.mzviz.matches.models.{SearchInfo, ProteinIdent, PepSpectraMatch, SubmissionStatus}
 import ch.isbsib.proteomics.mzviz.matches.services.{CommonMatchService, SearchInfoDBService, ProteinMatchMongoDBService, MatchMongoDBService}
 import ch.isbsib.proteomics.mzviz.results.basket.BasketMongoDBService
+import play.api.Logger
 import play.api.libs.json.Json
 import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
@@ -199,7 +200,6 @@ class LoaderMQData(val db: DefaultDB) {
     // unzip the file
     val unzipPath: Try[String] = Try(FileFinder.getHighestDir(Unzip.unzip(zipFile)))
 
-
     //TO CHECK, path with or without txt folder?????????
 
     // create a searchId with error if unzip fails
@@ -285,8 +285,12 @@ class LoaderMQData(val db: DefaultDB) {
       val searchIdAlreadyExists = checkSearchIdsExists(searchIds.get)
       searchIdAlreadyExists.flatMap(alreadyExists => {
         if (alreadyExists._1) {
+          //val searchIdsString = searchIds.get.map(_.value).reduceLeft(_ + "," + _)
+          //throw new ImporterException(s"Some of the SearchIds [$searchIdsString] already exist.")
           val searchIdsString = searchIds.get.map(_.value).reduceLeft(_ + "," + _)
-          throw new ImporterException(s"Some of the SearchIds [$searchIdsString] already exist.")
+          val errorMessage = s"Some of the SearchIds [$searchIdsString] already exist."
+          Logger.error(errorMessage)
+          throw new ImporterException(errorMessage)
         }
         else insertAllData(searchIds.get, path, mzMlFiles.get, intensityThreshold)
       })
@@ -325,22 +329,21 @@ class LoaderMQData(val db: DefaultDB) {
    */
   def checkSearchIdsExists(searchIds: Seq[SearchId]): Future[(Boolean, List[SearchId])] = {
     // assert that searchIds are not already inserted
+
     val searchIdCheck: Seq[Future[(Boolean, SearchId)]] = searchIds.map({ id =>
       searchInfoService.isSearchIdExist(id).map({ alreadyTaken =>
-        if (alreadyTaken) searchInfoService.createSearchIdWithError(id, s"SearchId [${id.value}] already exists. Please delete SearchIds with this name before reloading")
+        if (alreadyTaken)
+          searchInfoService.createSearchIdWithError(id, s"SearchId [${id.value}] already exists. Please delete SearchIds with this name before reloading")
         (alreadyTaken, id)
       })
     })
-
     // check if all searchIds are ok
     val failedSearchIds: List[SearchId] = List()
 
     val searchIdAlreadyExists: Future[(Boolean, List[SearchId])] = Future.sequence(searchIdCheck).map({
-      found => found.foldLeft((false, failedSearchIds))({ (a, b) =>
-        ((a._1 & b._1), if (b._1) b._2 :: a._2 else a._2)
+      found => found.foldLeft((false, failedSearchIds))({ (a, b) => ((a._1 | b._1), if(b._1) b._2 :: a._2 else a._2)
       })
     })
-
     searchIdAlreadyExists
   }
 
