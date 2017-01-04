@@ -32,7 +32,6 @@ object LoaderMaxQuant {
   val filename_evidence = "evidence.txt"
   val filename_peptides = "peptides.txt"
 
-
   def parseCommonLines(file: File): (List[List[String]], Map[String, Int]) = {
     val lines: Iterator[String] = fromFile(file).getLines()
     val header = lines.take(1).next.split("\t").toList
