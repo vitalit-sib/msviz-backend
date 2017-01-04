@@ -96,6 +96,11 @@ object JsonExpFormats {
 
     def writes(o: SpectrumUniqueId) = JsString(o.value)
   }
+  implicit val formatMolecularMass = new Format[MolecularMass] {
+    override def reads(json: JsValue): JsResult[MolecularMass] = JsSuccess(MolecularMass(json.as[Double]))
+
+    def writes(o: MolecularMass) = JsNumber(o.value)
+  }
 
 
   // Generates Writes and Reads for Feed and User thanks to Json Macros

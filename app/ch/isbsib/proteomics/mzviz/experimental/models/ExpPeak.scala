@@ -18,6 +18,6 @@ case class ExpPeakMS1(moz: Moz, intensity: Intensity) extends ExpPeak
 
 case class ExpPeakMSn(moz: Moz, intensity: Intensity, intensityRank: IntensityRank, msLevel: MSLevel) extends ExpPeak
 
-case class ExpPeakPrecursor(moz: Moz, intensity: Intensity, retentionTime: RetentionTime, charge: Charge, scanNumber:Option[ScanNumber]) extends ExpPeak{
+case class ExpPeakPrecursor(moz: Moz, intensity: Intensity, retentionTime: RetentionTime, charge: Charge, scanNumber:Option[ScanNumber], molecularMass: MolecularMass) extends ExpPeak{
   val msLevel=MSLevel(1)
 }
