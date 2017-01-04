@@ -225,6 +225,7 @@ object LoaderMaxQuant {
     val sequencePos: Int = if(headerEvidenceMap.contains("Sequence")) headerEvidenceMap("Sequence") else headerEvidenceMap("Diff")
     val experimentPos: Int = headerEvidenceMap("Experiment")
     val molMassPos: Int = headerEvidenceMap("Mass")
+    val mozPos: Int = headerEvidenceMap("m/z")
     val scorePos: Int = headerEvidenceMap("Score")
     val missedCleavagesPos: Int = headerEvidenceMap("Missed cleavages")
     val typePos: Int = headerEvidenceMap("Type")
@@ -269,6 +270,7 @@ object LoaderMaxQuant {
         val lenghtVector=(m(lengthPos).toInt)+2
         val vectorNames= Vector.fill(lenghtVector)(Seq())
         val scanNumber:Int= m(scanNumberPos).toInt
+        val moz: Option[Double] = Try(m(mozPos).toDouble).toOption
 
         //Check if there is any modification
         if(hashPosModification.keys != Set()) {
@@ -278,9 +280,9 @@ object LoaderMaxQuant {
           val modifProbs: Option[Map[ModifName, String]] = parseModifProbs(m, modifProbSet)
           val highestModifProb: Option[Map[ModifName, Double]] = parseHighestModifProb(modifProbs)
 
-          EvidenceTableEntry(id, sequence, experiment, molMass, score, missCleavages, massDiff, charge, ac, pepId,modifNamesVector, modifProbs, highestModifProb, scanNumber)
+          EvidenceTableEntry(id, sequence, experiment, molMass, moz, score, missCleavages, massDiff, charge, ac, pepId,modifNamesVector, modifProbs, highestModifProb, scanNumber)
         }
-        else EvidenceTableEntry(id, sequence, experiment, molMass, score, missCleavages, massDiff, charge, ac, pepId,vectorNames, None, None, scanNumber)
+        else EvidenceTableEntry(id, sequence, experiment, molMass, moz, score, missCleavages, massDiff, charge, ac, pepId,vectorNames, None, None, scanNumber)
 
       }
     })
@@ -431,10 +433,19 @@ object LoaderMaxQuant {
     val runIdToPepSpectraMatchList: List[(RunId, PepSpectraMatch)] = evidenceEntry.map({ entry =>
       val pep = Peptide(entry.sequence, entry.molMass, entry.modificationVector)
       val spectrumId = SpectrumId(SpectrumUniqueId(entry.scanNumber.toString), RunId(idTitle.getOrElse("") + entry.experiment))
-      // we assume that PSM is always rank 1 @TODO does MQ really only indicate first ranks?
-      val matchInfo = PepMatchInfo(IdentScore(entry.score, Map()),
-        entry.missedCleavages, entry.massDiff, Some(PPM), rank=Some(1), None,
-        entry.chargeState, Some(false), entry.modificationProbabilities, entry.highestModifProbability)
+      // we assume that PSM is always rank 1
+      val matchInfo = PepMatchInfo(
+        score = IdentScore(entry.score, Map()),
+        numMissedCleavages = entry.missedCleavages,
+        moz = entry.moz,
+        massDiff = entry.massDiff,
+        massDiffUnit = Some(PPM),
+        rank=Some(1),
+        totalNumIons = None,
+        chargeState = entry.chargeState,
+        isRejected = Some(false),
+        modificationProbabilities = entry.modificationProbabilities,
+        highestModifProbability = entry.highestModifProbability)
 
       val leadingProteinRef = ProteinRef(AccessionCode(entry.ac), Set(), Some(sequenceSource))
       val pepEntry = peptidesHash(entry.pepId)

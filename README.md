@@ -5,7 +5,7 @@ A mass spectrometry visualization platform, developed by the PAF & Vital-IT, SIB
 Visit the [wiki page](../../wiki) to have more details.
 
 ## Copyright
-Copyright (C) 2014-2015 by Roman Mylonas (roman.mylonas@isb-sib.ch), Trinidad Martin (trinidad.martin@isb-ib.ch) and Alexandre Masselot (alexandre.masselot@isb-sib.ch), SIB Swiss Institute of Bioinformatics.
+Copyright (C) 2014-2017 by Roman Mylonas (roman.mylonas@sib.swiss), Trinidad Martin and Alexandre Masselot, SIB Swiss Institute of Bioinformatics.
 
 
 ## Licensing

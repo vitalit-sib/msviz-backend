@@ -4,12 +4,13 @@ import ch.isbsib.proteomics.mzviz.modifications.ModifName
 
 /**
  * @author Roman Mylonas & Trinidad Martín
- * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
+ * copyright 2014-2017, SIB Swiss Institute of Bioinformatics
  */
 case class EvidenceTableEntry ( id:Int,
                                 sequence:String,
                                 experiment:String,
-                                molMass:Option[Double] ,
+                                molMass:Option[Double],
+                                moz: Option[Double],
                                 score:Double,
                                 missedCleavages:Option[Int],
                                 massDiff: Option[Double],

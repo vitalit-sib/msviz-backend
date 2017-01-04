@@ -176,6 +176,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
 
         val psms = service.findAllPSMsByProtein(AccessionCode("AHNK_HUMAN"), notRejected = Some(true)).futureValue
         psms.size must equalTo(9)
+        psms(0).matchInfo.moz mustEqual(None)
       }
 
     }
@@ -195,6 +196,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures {
         val psm = psms.filter(_.spectrumId.id.value == "9477")(0)
         psm.matchInfo.modificationProbabilities.get(ModifName("Phospho")) mustEqual("MEGGLADGEPDRT(0.032)S(0.968)LLGDSK")
         psm.matchInfo.highestModifProbability.get(ModifName("Phospho")) mustEqual(0.968)
+        psm.matchInfo.moz mustEqual(Some(1093.46958))
 
         psm.matchInfo.modificationProbabilities.get(ModifName("Oxidation")) mustEqual("M(1)EGGLADGEPDRTSLLGDSK")
         psm.matchInfo.highestModifProbability.get(ModifName("Oxidation")) mustEqual(1.0)

@@ -83,6 +83,7 @@ class LoaderMzIdentSpecs extends Specification {
         "check peptide match info" in {
           psm(0).matchInfo.isRejected must equalTo(Some(false))
           psm(0).matchInfo.chargeState must equalTo(Some(2))
+          psm(0).matchInfo.moz must equalTo(None)
           // psm(0).matchInfo.massDiff must equalTo(99.99)
           // psm(0).matchInfo.numMissedCleavages must equalTo(999)
           psm(0).matchInfo.rank must equalTo(Some(1))
