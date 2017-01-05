@@ -19,6 +19,7 @@ GET            /exp/spectrum-ref/:runId/:spId                         ch.isbsib.
 GET            /exp/spectra-ref/:runId                                ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findAllSpectraRefByRunId(runId)
 GET            /exp/spectra/:runId/:moz                               ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findSpectrumByMozTol(runId,moz:Double,tolerance:Option[Double])
 GET            /exp/spectra-ref/:runId/:moz                           ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findSpectrumRefByMozTol(runId,moz:Double,tolerance:Option[Double])
+GET            /exp/spectra-ref/:runId/:mass                           ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.findSpectrumRefByMassTol(runId,mass:Double,tolerance:Option[Double])
 
 GET            /api-docs/sequences                                    controllers.ApiHelpController.getResource(path = "/sequences")
 GET            /sequences/list-sources                                ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.listSources

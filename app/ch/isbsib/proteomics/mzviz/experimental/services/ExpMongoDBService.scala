@@ -279,6 +279,32 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
   }
 
   /**
+   * retrieve all spectrum info which have a precursor in the given range
+   * @param runId
+   * @param mass
+   * @param daltonTolerance
+   * @return
+   */
+  def findSpectrumRefByMassTol(runId:RunId, mass:MolecularMass, daltonTolerance:Double): Future[Seq[SpectrumRef]] = {
+    val lowerLimit = mass.value - daltonTolerance
+    val upperLimit = mass.value + daltonTolerance
+    val query = Json.obj(
+      "ref.spectrumId.runId" -> runId.value,
+      "ref.precursor.molecularMass" -> Json.obj("$gte" -> lowerLimit, ("$lte" -> upperLimit))
+    )
+
+    val projection = Json.obj("ref" -> 1)
+
+    collection.find(query, projection)
+      .cursor[JsObject]
+      .collect[List]()
+      .map(lo => lo.map({ o =>
+      Json.fromJson[SpectrumRef](o \ "ref").asOpt.get
+    }))
+
+  }
+
+  /**
    * get the list of the run ids
    * @return
    */
