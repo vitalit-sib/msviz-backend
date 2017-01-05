@@ -18,4 +18,6 @@ package object commons {
 
   case class RetentionTime(value:Double) extends AnyVal
 
+  case class MolecularMass(value:Double) extends AnyVal
+
 }

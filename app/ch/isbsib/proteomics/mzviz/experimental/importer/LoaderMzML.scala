@@ -159,8 +159,11 @@ class MzMLIterator(mzMLObjectIterator: MzMLObjectIterator[Nothing], runId: RunId
     val precCharge = Charge(parseCvEntry(ebiPrecCvs, "MS:1000041").get.toInt)
     val precScanNr:ScanNumber = ScanNumber(scanNumberPattern.findFirstIn(ebiPrec.getSpectrumRef).get.split("=")(1).toInt)
 
+
+    //Calculate molecularMass if possible
+    val molMass= if(precMoz.value !=0 && precCharge.value !=0) ((precMoz.value * precCharge.value) - (1.00728 * precCharge.value)) else -1
     // create precursor
-    val precursor:ExpPeakPrecursor = ExpPeakPrecursor(precMoz, precIntensitiy, precRt, precCharge, Some(precScanNr))
+    val precursor:ExpPeakPrecursor = ExpPeakPrecursor(precMoz, precIntensitiy, precRt, precCharge, Some(precScanNr), MolecularMass(molMass))
 
     // ref spectrum info
     val ref:SpectrumRef = SpectrumRef(Some(scanNr), precursor, spTitle, spId)

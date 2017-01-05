@@ -3,7 +3,7 @@ package ch.isbsib.proteomics.mzviz.controllers.experimental
 import java.io.File
 import javax.ws.rs.PathParam
 
-import ch.isbsib.proteomics.mzviz.commons.{Intensity, RetentionTime, Moz}
+import ch.isbsib.proteomics.mzviz.commons.{MolecularMass, Intensity, RetentionTime, Moz}
 import ch.isbsib.proteomics.mzviz.controllers.CommonController
 import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
 import ch.isbsib.proteomics.mzviz.experimental.importer._
@@ -216,6 +216,33 @@ object ExperimentalController extends CommonController {
         .recover {
           case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
         }
+
+    }
+
+  @ApiOperation(nickname = "findSpectrumRefByMass",
+    value = "find all ms2 information for a given run id which have a precursor around mass with the given tolerance",
+    notes = """Returns for ms1 list of retention times and intensities""",
+    httpMethod = "GET")
+  @ApiImplicitParams(Array(
+    new ApiImplicitParam(name = "tolerance", value = "tolerance", required = false, dataType = "Double", paramType = "query")
+  ))
+  def findSpectrumRefByMassTol(@ApiParam(value = """run id""", required = true) @PathParam("runId") runId: String,
+                              @ApiParam(value = """molecularMass""", required = true) @PathParam("mass") mass: Double,
+                              @ApiParam(name = "tolerance", value = """the mass tolerance in ppm""", defaultValue = "10", required=false) @PathParam("tolerance") tolerance: Option[Double]=None
+                               ) =
+    Action.async {
+
+      // set the default value to 10 ppm
+      val ppmTolerance = tolerance.getOrElse(10.0)
+      val daltonTolerance = mass / 1000000 * ppmTolerance
+
+      // and the corresponding Ms2 precursors
+      val futureMs2List = ExpMongoDBService().findSpectrumRefByMassTol(RunId(runId), MolecularMass(mass), daltonTolerance)
+
+      futureMs2List.map {ms2List  => Ok(Json.toJson(ms2List)) }
+        .recover {
+        case e => BadRequest(e.getMessage + e.getStackTrace.mkString("\n"))
+      }
 
     }
 
