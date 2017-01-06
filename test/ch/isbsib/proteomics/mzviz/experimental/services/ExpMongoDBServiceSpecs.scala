@@ -184,9 +184,7 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures {
       val msnRun1= new MSRun(RunId("test-1"),LoaderMGF.load(new File("test/resources/mascot/M_100.mgf"), RunId("test-1")).toSeq)
       val n= service.insert(msnRun1).futureValue
 
-      //val spRefListMoz = service.findSpectrumRefByMozTol(RunId("test-1"), Moz(406), 0.5).futureValue
-      //spRefListMoz.map (s => print(s.precursor.molecularMass))
-      val spList = service.findSpectrumRefByMassTol(RunId("test-1"), MolecularMass(809.9), 0.5).futureValue
+      val spList = service.findSpectrumRefByMassTol(RunId("test-1"), Moz(406), Charge(2), 1300).futureValue
       spList.length mustEqual(2)
     }
   }

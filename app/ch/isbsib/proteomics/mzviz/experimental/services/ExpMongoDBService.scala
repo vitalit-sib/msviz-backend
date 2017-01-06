@@ -281,13 +281,21 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
   /**
    * retrieve all spectrum info which have a precursor in the given range
    * @param runId
-   * @param mass
-   * @param daltonTolerance
+   * @param moz
+   * @param charge
+   * @param ppmTolerance
    * @return
    */
-  def findSpectrumRefByMassTol(runId:RunId, mass:MolecularMass, daltonTolerance:Double): Future[Seq[SpectrumRef]] = {
+  def findSpectrumRefByMassTol(runId:RunId, moz:Moz, charge: Charge, ppmTolerance:Double): Future[Seq[SpectrumRef]] = {
+
+    def computeMass(moz:Moz, charge:Charge):MolecularMass = MolecularMass((moz.value * charge.value) - (charge.value * 1.00728))
+    val mass: MolecularMass = computeMass(moz, charge)
+
+    val daltonTolerance = mass.value / 1000000 * ppmTolerance
+
     val lowerLimit = mass.value - daltonTolerance
     val upperLimit = mass.value + daltonTolerance
+
     val query = Json.obj(
       "ref.spectrumId.runId" -> runId.value,
       "ref.precursor.molecularMass" -> Json.obj("$gte" -> lowerLimit, ("$lte" -> upperLimit))
@@ -295,13 +303,22 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
 
     val projection = Json.obj("ref" -> 1)
 
-    collection.find(query, projection)
+    val futureSpList:Future[Seq[SpectrumRef]] = collection.find(query, projection)
       .cursor[JsObject]
       .collect[List]()
       .map(lo => lo.map({ o =>
       Json.fromJson[SpectrumRef](o \ "ref").asOpt.get
     }))
 
+    def spIsValid(sp:SpectrumRef, lowerLimit:Double, upperLimit: Double):Boolean = {
+      val spMass = computeMass(sp.precursor.moz, sp.precursor.charge).value
+      (spMass >= lowerLimit && spMass <= upperLimit)
+    }
+
+    // check if they really correspond to this search
+    futureSpList.map({ spList =>
+      spList.filter(sp => spIsValid(sp, lowerLimit, upperLimit))
+    })
   }
 
   /**

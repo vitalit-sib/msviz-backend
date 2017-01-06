@@ -3,13 +3,13 @@ package ch.isbsib.proteomics.mzviz.controllers.experimental
 import java.io.File
 import javax.ws.rs.PathParam
 
-import ch.isbsib.proteomics.mzviz.commons.{MolecularMass, Intensity, RetentionTime, Moz}
+import ch.isbsib.proteomics.mzviz.commons._
 import ch.isbsib.proteomics.mzviz.controllers.CommonController
 import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
 import ch.isbsib.proteomics.mzviz.experimental.importer._
-import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, MSRun, RunId}
+import ch.isbsib.proteomics.mzviz.experimental.{MSRun, RunId, SpectrumUniqueId}
 import ch.isbsib.proteomics.mzviz.experimental.models._
-import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMongoDBService}
+import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import com.wordnik.swagger.annotations._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -18,7 +18,7 @@ import play.api.mvc.Action
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMs1BinMongoDBService
 
 import scala.concurrent.Future
-import scala.util.{Try, Failure, Success}
+import scala.util.{Failure, Success, Try}
 import play.api.Play.current
 import play.api.libs.json.Json
 import play.api.libs.json.Json._
@@ -227,17 +227,17 @@ object ExperimentalController extends CommonController {
     new ApiImplicitParam(name = "tolerance", value = "tolerance", required = false, dataType = "Double", paramType = "query")
   ))
   def findSpectrumRefByMassTol(@ApiParam(value = """run id""", required = true) @PathParam("runId") runId: String,
-                              @ApiParam(value = """molecularMass""", required = true) @PathParam("mass") mass: Double,
+                              @ApiParam(value = """m/z""", required = true) @PathParam("moz") moz: Double,
+                               @ApiParam(value = """charge""", required = true) @PathParam("charge") charge: Int,
                               @ApiParam(name = "tolerance", value = """the mass tolerance in ppm""", defaultValue = "10", required=false) @PathParam("tolerance") tolerance: Option[Double]=None
                                ) =
     Action.async {
 
       // set the default value to 10 ppm
       val ppmTolerance = tolerance.getOrElse(10.0)
-      val daltonTolerance = mass / 1000000 * ppmTolerance
 
       // and the corresponding Ms2 precursors
-      val futureMs2List = ExpMongoDBService().findSpectrumRefByMassTol(RunId(runId), MolecularMass(mass), daltonTolerance)
+      val futureMs2List = ExpMongoDBService().findSpectrumRefByMassTol(RunId(runId), Moz(moz), Charge(charge), ppmTolerance)
 
       futureMs2List.map {ms2List  => Ok(Json.toJson(ms2List)) }
         .recover {

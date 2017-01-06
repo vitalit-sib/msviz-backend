@@ -2,12 +2,13 @@ package ch.isbsib.proteomics.mzviz.experimental.importer
 
 import java.io.File
 
+import ch.isbsib.proteomics.mzviz.commons.MolecularMass
 import ch.isbsib.proteomics.mzviz.experimental.RunId
 import org.specs2.mutable.Specification
 
 /**
  * @author Roman Mylonas & Trinidad Martin
- *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
+ *         copyright 2014-2017, SIB Swiss Institute of Bioinformatics
  */
   class LoaderMzMLSpecs extends Specification {
 
@@ -43,6 +44,7 @@ import org.specs2.mutable.Specification
       sp.ref.precursor.intensity.value mustEqual(9.612146875e05)
       sp.ref.precursor.moz.value mustEqual(738.696250136775)
       sp.ref.precursor.retentionTime.value mustEqual(2109.47532)
+      sp.ref.precursor.molecularMass mustEqual(Some(MolecularMass(2213.066910410325)))
       sp.ref.precursor.scanNumber.get.value mustEqual(6377)
 
       // check peaks
