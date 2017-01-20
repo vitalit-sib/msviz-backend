@@ -182,11 +182,12 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures with TempMo
     val spId = new SpectrumId(SpectrumUniqueId("File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 52.948 min, Period: 1, Cycle(s): 2056 (Experiment 3)"), RunId("test-1"))
 
     "change and check molMass" in {
-      val res = service.findAndUpdateMolMass(spId, MolecularMass(999.99)).futureValue
+      val res = service.findAndUpdateMolMass(spId, MolecularMass(999.99), "MaxQuant-m/z").futureValue
       res mustEqual(true)
 
       val spRef = service.findSpectrumRefByRunIdAndScanNumber(RunId("test-1"), spId.id).futureValue
       spRef.precursor.molecularMass.get.value mustEqual(999.99)
+      spRef.precursor.molecularMassSource.get mustEqual("MaxQuant-m/z")
     }
 
   }

@@ -162,8 +162,9 @@ class MzMLIterator(mzMLObjectIterator: MzMLObjectIterator[Nothing], runId: RunId
 
     //Calculate molecularMass if possible
     val molMass = if(precMoz.value !=0 && precCharge.value !=0) (Some(MolecularMass((precMoz.value * precCharge.value) - (1.00728 * precCharge.value)))) else None
+    val molMassSource = if(molMass.isDefined) Some("mzML-m/z") else None
     // create precursor
-    val precursor:ExpPeakPrecursor = ExpPeakPrecursor(precMoz, precIntensitiy, precRt, precCharge, Some(precScanNr), molMass)
+    val precursor:ExpPeakPrecursor = ExpPeakPrecursor(precMoz, precIntensitiy, precRt, precCharge, Some(precScanNr), molMass, molMassSource)
 
     // ref spectrum info
     val ref:SpectrumRef = SpectrumRef(Some(scanNr), precursor, spTitle, spId)

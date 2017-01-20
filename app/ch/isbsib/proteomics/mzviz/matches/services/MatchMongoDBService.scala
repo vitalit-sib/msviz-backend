@@ -1,16 +1,18 @@
 package ch.isbsib.proteomics.mzviz.matches.services
 
+import ch.isbsib.proteomics.mzviz.commons.helpers.CommonFunctions
+import ch.isbsib.proteomics.mzviz.commons.{Charge, MolecularMass, Moz}
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoDBService, MongoNotFoundException}
 import ch.isbsib.proteomics.mzviz.experimental.services.ExpMongoDBService
-import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
-import ch.isbsib.proteomics.mzviz.experimental.models.{SpectrumRef, SpectrumId}
+import ch.isbsib.proteomics.mzviz.experimental.{RunId, SpectrumUniqueId}
+import ch.isbsib.proteomics.mzviz.experimental.models.{SpectrumId, SpectrumRef}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import ch.isbsib.proteomics.mzviz.modifications.ModifName
 import ch.isbsib.proteomics.mzviz.modifications.services.JsonModificationFormats._
 import ch.isbsib.proteomics.mzviz.matches.SearchId
-import ch.isbsib.proteomics.mzviz.matches.models.{PepSpectraMatchWithSpectrumRef, PepSpectraMatch, ProteinRef}
+import ch.isbsib.proteomics.mzviz.matches.models.{PepSpectraMatch, PepSpectraMatchWithSpectrumRef, ProteinRef}
 import ch.isbsib.proteomics.mzviz.matches.services.JsonMatchFormats._
-import ch.isbsib.proteomics.mzviz.theoretical.{ProteinIdentifier, AccessionCode, SequenceSource}
+import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, ProteinIdentifier, SequenceSource}
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import play.api.Logger
@@ -21,7 +23,7 @@ import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
 import reactivemongo.api.DefaultDB
 import reactivemongo.api.indexes.{Index, IndexType}
-import reactivemongo.bson.{BSONDocument, BSONString, BSONArray}
+import reactivemongo.bson.{BSONArray, BSONDocument, BSONString}
 import reactivemongo.core.commands._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -267,7 +269,6 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
       )
     ))
 
-
     db.command(command).map({
       doc =>
         doc.getAs[List[BSONDocument]]("result").get.map({
@@ -323,6 +324,34 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
       Map("sources" -> nSources, "entries" -> nEntries)
     }
   }
+
+  /**
+    * Find all spectra and molecular masses corresponding to a certain run
+    *
+    * @param runId
+    * @return
+    */
+  def findSpectrumIdWithMolMass(runId:RunId): Future[Seq[(SpectrumId, Option[MolecularMass])]] = {
+
+    val query = Json.obj(
+      "spectrumId.runId" -> runId.value
+    )
+
+    val projection = Json.obj(
+      "spectrumId" -> 1,
+      "pep.molMass" -> 1
+    )
+
+    val futureSpList:Future[Seq[(SpectrumId, Option[MolecularMass])]] = collection.find(query, projection)
+      .cursor[JsObject]
+      .collect[List]()
+      .map(lo => lo.map({ o =>
+        (Json.fromJson[SpectrumId](o \ "ref").asOpt.get, Json.fromJson[MolecularMass](o \ "pep.molMass").asOpt)
+      }))
+
+    futureSpList
+  }
+
 }
 
 object MatchMongoDBService extends Controller with MongoController {

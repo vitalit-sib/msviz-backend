@@ -1,9 +1,10 @@
 package ch.isbsib.proteomics.mzviz.experimental.services
 
 import ch.isbsib.proteomics.mzviz.commons._
+import ch.isbsib.proteomics.mzviz.commons.helpers.CommonFunctions
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoDBService, MongoNotFoundException}
-import ch.isbsib.proteomics.mzviz.experimental.models.{SpectrumId, ExpPeakMSn, ExpMSnSpectrum, SpectrumRef}
-import ch.isbsib.proteomics.mzviz.experimental.{MSRun, SpectrumUniqueId, RunId}
+import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, ExpPeakMSn, SpectrumId, SpectrumRef}
+import ch.isbsib.proteomics.mzviz.experimental.{MSRun, RunId, SpectrumUniqueId}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import play.api.Play
 import play.api.libs.iteratee.Enumerator
@@ -12,12 +13,12 @@ import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
 import play.modules.reactivemongo.json.BSONFormats._
 import reactivemongo.api._
-import reactivemongo.api.indexes.{IndexType, Index}
+import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson._
-import reactivemongo.core.commands.{LastError, RawCommand, Count}
+import reactivemongo.core.commands.{Count, LastError, RawCommand}
+
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
-
 import scala.concurrent.Future
 
 /**
@@ -288,8 +289,7 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
    */
   def findSpectrumRefByMassTol(runId:RunId, moz:Moz, charge: Charge, ppmTolerance:Double): Future[Seq[SpectrumRef]] = {
 
-    def computeMass(moz:Moz, charge:Charge):MolecularMass = MolecularMass((moz.value * charge.value) - (charge.value * 1.00728))
-    val mass: MolecularMass = computeMass(moz, charge)
+    val mass: MolecularMass = CommonFunctions.computeMass(moz, charge)
 
     val daltonTolerance = mass.value / 1000000 * ppmTolerance
 
@@ -310,14 +310,9 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
       Json.fromJson[SpectrumRef](o \ "ref").asOpt.get
     }))
 
-    def spIsValid(sp:SpectrumRef, lowerLimit:Double, upperLimit: Double):Boolean = {
-      val spMass = computeMass(sp.precursor.moz, sp.precursor.charge).value
-      (spMass >= lowerLimit && spMass <= upperLimit)
-    }
-
     // check if they really correspond to this search
     futureSpList.map({ spList =>
-      spList.filter(sp => spIsValid(sp, lowerLimit, upperLimit))
+      spList.filter(sp => CommonFunctions.spIsValid(sp, lowerLimit, upperLimit))
     })
   }
 
@@ -375,14 +370,15 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
     * @param correctedMolMass
     * @return
     */
-  def findAndUpdateMolMass(spectrumId: SpectrumId, correctedMolMass: MolecularMass): Future[Boolean] = {
+  def findAndUpdateMolMass(spectrumId: SpectrumId, correctedMolMass: MolecularMass, molMassSource: String): Future[Boolean] = {
     val query = Json.obj(
       "ref.spectrumId.runId" -> spectrumId.runId.value,
       "ref.spectrumId.id" -> spectrumId.id.value
     )
 
     val update = Json.obj(
-      "$set" -> Json.obj("ref.precursor.molecularMass" -> correctedMolMass.value)
+      "$set" -> Json.obj("ref.precursor.molecularMass" -> correctedMolMass.value),
+      "$set" -> Json.obj("ref.precursor.molecularMassSource" -> molMassSource)
     )
     collection.update(query,update).map {
       case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)

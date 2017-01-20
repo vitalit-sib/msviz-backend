@@ -130,10 +130,11 @@ object LoaderMGF {
       val spId = if(scanNumber.isDefined) scanNumber.get.toString else title
       //Calculate molecularMass if possible
       val molMass= if(moz.value !=0 && Charge(z).value !=0) Some(MolecularMass((moz.value * Charge(z).value) - (1.00728 * Charge(z).value))) else None
+      val molMassSource = if(molMass.isDefined) Some("mgf-m/z") else None
 
       SpectrumRef(
         scanNumber = if(scanNumber.isDefined) Some(ScanNumber(scanNumber.get)) else None,
-        precursor = ExpPeakPrecursor(moz, intens, rt, Charge(z), None, molMass),
+        precursor = ExpPeakPrecursor(moz, intens, rt, Charge(z), None, molMass, molMassSource),
         title = title,
         SpectrumId(id = SpectrumUniqueId(spId), runId = runId)
       )
