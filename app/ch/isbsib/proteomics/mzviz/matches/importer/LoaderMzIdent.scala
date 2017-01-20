@@ -304,7 +304,8 @@ object LoaderMzIdent {
     // create and return a new PepMatchInfo
     PepMatchInfo(score = identScore,
       numMissedCleavages = OptionConverter.convertGoogleOption[Int](mzJavaMatch.getNumMissedCleavages.asInstanceOf[Optional[Int]]),
-      moz = None,
+      correctedMoz = None,
+      correctedMolMass = None,
       massDiff = OptionConverter.convertGoogleOption[Double](mzJavaMatch.getMassDiff.asInstanceOf[Optional[Double]]),
       massDiffUnit = Some(Dalton),
       rank = OptionConverter.convertGoogleOption[Int](mzJavaMatch.getRank.asInstanceOf[Optional[Int]]),

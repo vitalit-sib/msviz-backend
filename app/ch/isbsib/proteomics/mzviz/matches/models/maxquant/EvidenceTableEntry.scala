@@ -1,5 +1,6 @@
 package ch.isbsib.proteomics.mzviz.matches.models.maxquant
 
+import ch.isbsib.proteomics.mzviz.commons.MolecularMass
 import ch.isbsib.proteomics.mzviz.modifications.ModifName
 
 /**
@@ -10,7 +11,8 @@ case class EvidenceTableEntry ( id:Int,
                                 sequence:String,
                                 experiment:String,
                                 molMass:Option[Double],
-                                moz: Option[Double],
+                                correctedMoz: Option[Double],
+                                correctedMolMass: Option[Double],
                                 score:Double,
                                 missedCleavages:Option[Int],
                                 massDiff: Option[Double],

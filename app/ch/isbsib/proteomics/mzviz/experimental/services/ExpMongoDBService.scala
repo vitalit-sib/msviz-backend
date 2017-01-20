@@ -368,6 +368,28 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
 
     }
   }
+
+  /**
+    * find an entry by its spectrumId and set the given correctedMolMass information
+    * @param spectrumId
+    * @param correctedMolMass
+    * @return
+    */
+  def findAndUpdateMolMass(spectrumId: SpectrumId, correctedMolMass: MolecularMass): Future[Boolean] = {
+    val query = Json.obj(
+      "ref.spectrumId.runId" -> spectrumId.runId.value,
+      "ref.spectrumId.id" -> spectrumId.id.value
+    )
+
+    val update = Json.obj(
+      "$set" -> Json.obj("ref.precursor.molecularMass" -> correctedMolMass.value)
+    )
+    collection.update(query,update).map {
+      case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
+      case _ => true
+    }
+  }
+
 }
 
 

@@ -12,7 +12,8 @@ import ch.isbsib.proteomics.mzviz.modifications.ModifName
 case class PepMatchInfo(
                          score: IdentScore,
                          numMissedCleavages: Option[Int],
-                         moz: Option[Double],
+                         correctedMoz: Option[Double],
+                         correctedMolMass: Option[Double],
                          massDiff: Option[Double],
                          massDiffUnit: Option[MassUnit],
                          rank: Option[Int],

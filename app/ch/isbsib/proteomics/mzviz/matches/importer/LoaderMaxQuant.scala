@@ -3,7 +3,7 @@ package ch.isbsib.proteomics.mzviz.matches.importer
 import java.io.{File, IOException}
 import java.util.Calendar
 
-import ch.isbsib.proteomics.mzviz.commons.PPM
+import ch.isbsib.proteomics.mzviz.commons.{MolecularMass, Moz, PPM}
 import ch.isbsib.proteomics.mzviz.commons.helpers.{FileFinder, Unzip}
 import ch.isbsib.proteomics.mzviz.experimental.{RunId, ScanNumber, SpectrumUniqueId}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
@@ -269,7 +269,8 @@ object LoaderMaxQuant {
         val lenghtVector=(m(lengthPos).toInt)+2
         val vectorNames= Vector.fill(lenghtVector)(Seq())
         val scanNumber:Int= m(scanNumberPos).toInt
-        val moz: Option[Double] = Try(m(mozPos).toDouble).toOption
+        val correctedMoz: Option[Double] = Try(m(mozPos).toDouble).toOption
+        val correctedMolMass: Option[Double] = if(correctedMoz.isDefined && charge.isDefined) Some((correctedMoz.get * charge.get) - (1.00728 * charge.get)) else None
 
         //Check if there is any modification
         if(hashPosModification.keys != Set()) {
@@ -279,9 +280,9 @@ object LoaderMaxQuant {
           val modifProbs: Option[Map[ModifName, String]] = parseModifProbs(m, modifProbSet)
           val highestModifProb: Option[Map[ModifName, Double]] = parseHighestModifProb(modifProbs)
 
-          EvidenceTableEntry(id, sequence, experiment, molMass, moz, score, missCleavages, massDiff, charge, ac, pepId,modifNamesVector, modifProbs, highestModifProb, scanNumber)
+          EvidenceTableEntry(id, sequence, experiment, molMass, correctedMoz, correctedMolMass, score, missCleavages, massDiff, charge, ac, pepId,modifNamesVector, modifProbs, highestModifProb, scanNumber)
         }
-        else EvidenceTableEntry(id, sequence, experiment, molMass, moz, score, missCleavages, massDiff, charge, ac, pepId,vectorNames, None, None, scanNumber)
+        else EvidenceTableEntry(id, sequence, experiment, molMass, correctedMoz, correctedMolMass, score, missCleavages, massDiff, charge, ac, pepId,vectorNames, None, None, scanNumber)
 
       }
     })
@@ -436,7 +437,8 @@ object LoaderMaxQuant {
       val matchInfo = PepMatchInfo(
         score = IdentScore(entry.score, Map()),
         numMissedCleavages = entry.missedCleavages,
-        moz = entry.moz,
+        correctedMoz = entry.correctedMoz,
+        correctedMolMass = entry.correctedMolMass,
         massDiff = entry.massDiff,
         massDiffUnit = Some(PPM),
         rank=Some(1),
