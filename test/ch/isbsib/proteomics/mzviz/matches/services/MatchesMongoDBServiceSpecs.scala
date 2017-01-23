@@ -75,7 +75,6 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures with Te
       idList.size must equalTo(62)
 
       //check JSON content
-      println(idList(0))
       val oneEntrie = idList.filter(id => id.id == SpectrumUniqueId("File: 141206_QS_FRB_rafts_SBCL2_complmix.wiff, Sample: 3i, complex mix method (sample number 1), Elution: 52.104 min, Period: 1, Cycle(s): 2049 (Experiment 3)"))
       oneEntrie.size mustEqual(1)
       oneEntrie(0).runId must equalTo(RunId("M_100.mgf"))
@@ -149,6 +148,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures with Te
 
     }
 
+
     "load MXQ data" should {
 
       "insert and delete" in {
@@ -170,6 +170,24 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures with Te
 
       }
     }
+
+  "findSpectrumIdWithMolMass" should {
+
+    "none from mascot data" in {
+      val spMolMassPair = service.findSpectrumIdWithMolMass(RunId("M_100.mgf")).futureValue
+      spMolMassPair.size mustEqual(0)
+    }
+
+    "some from maxquant data" in {
+      val spMolMassPair = service.findSpectrumIdWithMolMass(RunId("yoyoDMSO")).futureValue
+      spMolMassPair.size mustEqual(1231)
+
+      val someData = spMolMassPair.filter(t => t._1.value == "13049")(0)
+      someData._1.value mustEqual("13049")
+      someData._2.value mustEqual(2188.0688)
+    }
+
+  }
 
 
 

@@ -331,25 +331,29 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
     * @param runId
     * @return
     */
-  def findSpectrumIdWithMolMass(runId:RunId): Future[Seq[(SpectrumId, Option[MolecularMass])]] = {
+  def findSpectrumIdWithMolMass(runId:RunId): Future[Seq[(SpectrumUniqueId, MolecularMass)]] = {
 
     val query = Json.obj(
-      "spectrumId.runId" -> runId.value
+      "spectrumId.runId" -> runId.value,
+      "matchInfo.correctedMolMass" -> Json.obj("$exists" -> true)
     )
 
     val projection = Json.obj(
-      "spectrumId" -> 1,
-      "pep.molMass" -> 1
+      "spectrumId.id" -> 1,
+      "matchInfo.correctedMolMass" -> 1
     )
 
-    val futureSpList:Future[Seq[(SpectrumId, Option[MolecularMass])]] = collection.find(query, projection)
+    val futureSpList:Future[Seq[(String, Option[Double])]] = collection.find(query, projection)
       .cursor[JsObject]
       .collect[List]()
       .map(lo => lo.map({ o =>
-        (Json.fromJson[SpectrumId](o \ "ref").asOpt.get, Json.fromJson[MolecularMass](o \ "pep.molMass").asOpt)
+        (Json.fromJson[String](o \ "spectrumId" \ "id").asOpt.get, Json.fromJson[Double](o \ "matchInfo" \ "correctedMolMass").asOpt)
       }))
 
-    futureSpList
+    futureSpList.map(l => l.filter(sp => sp._2.isDefined).map({
+      case (sp:String, mm:Option[Double]) =>
+        (SpectrumUniqueId(sp), MolecularMass(mm.get))
+    }))
   }
 
 }
