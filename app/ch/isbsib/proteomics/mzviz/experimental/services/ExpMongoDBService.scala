@@ -20,6 +20,7 @@ import reactivemongo.core.commands.{Count, LastError, RawCommand}
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.{Failure, Success}
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
@@ -370,7 +371,7 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
     * @param correctedMolMass
     * @return
     */
-  def findAndUpdateMolMass(spectrumId: SpectrumId, correctedMolMass: MolecularMass, molMassSource: String): Future[Boolean] = {
+  def findAndUpdateMolMass(spectrumId: SpectrumId, correctedMolMass: MolecularMass, molMassSource: String): Future[Int] = {
     val query = Json.obj(
       "ref.spectrumId.runId" -> spectrumId.runId.value,
       "ref.spectrumId.id" -> spectrumId.id.value
@@ -380,10 +381,17 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
       "$set" -> Json.obj("ref.precursor.molecularMass" -> correctedMolMass.value),
       "$set" -> Json.obj("ref.precursor.molecularMassSource" -> molMassSource)
     )
-    collection.update(query,update).map {
-      case e: LastError if e.inError => throw MongoNotFoundException(e.errMsg.get)
-      case _ => true
+
+    val future = collection.update(query,update)
+
+    future.onFailure {
+      case e => MongoNotFoundException(e.getMessage)
     }
+
+    future.map({ le =>
+      le.updated
+    })
+
   }
 
 }

@@ -3,7 +3,7 @@ package ch.isbsib.proteomics.mzviz.uploads
 import java.io.File
 
 import ch.isbsib.proteomics.mzviz.commons.{Moz, TempMongoDBForSpecs}
-import ch.isbsib.proteomics.mzviz.experimental.RunId
+import ch.isbsib.proteomics.mzviz.experimental.{RunId, SpectrumUniqueId}
 import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMongoDBService, ExpMs1BinMongoDBService}
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.services.MatchMongoDBService
@@ -48,6 +48,11 @@ class LoaderMQDataSpecs extends Specification with ScalaFutures{
 
         val matchList = matchService.findAllSpectrumIdBySearchId(SearchId("MXQ_DMSO")).futureValue
         matchList.size mustEqual(1231)
+
+        // check on spectrum
+        val oneMs2 = exp2Service.findSpectrumByRunIdAndScanNumber(RunId("MXQ_DMSO"), SpectrumUniqueId("6434")).futureValue
+        oneMs2.ref.precursor.molecularMassSource mustEqual(Some("MaxQuant-m/z"))
+        oneMs2.ref.precursor.molecularMass.get.value mustEqual(1542.763792)
 
     }
   }

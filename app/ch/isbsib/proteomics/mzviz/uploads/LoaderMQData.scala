@@ -1,20 +1,21 @@
 package ch.isbsib.proteomics.mzviz.uploads
 
 import java.io.File
-import java.nio.file.{Paths, Path, Files}
+import java.nio.file.{Files, Path, Paths}
 import java.util.Calendar
 
+import ch.isbsib.proteomics.mzviz.commons.MolecularMass
 import ch.isbsib.proteomics.mzviz.commons.helpers.{FileFinder, Unzip}
 import ch.isbsib.proteomics.mzviz.commons.importers.ImporterException
 import ch.isbsib.proteomics.mzviz.controllers.matches.SearchController._
-import ch.isbsib.proteomics.mzviz.experimental.RunId
+import ch.isbsib.proteomics.mzviz.experimental.{RunId, SpectrumUniqueId}
 import ch.isbsib.proteomics.mzviz.experimental.importer.LoaderMzML
-import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, ExpMs1Spectrum}
+import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, ExpMs1Spectrum, SpectrumId}
 import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMongoDBService, ExpMs1BinMongoDBService}
 import ch.isbsib.proteomics.mzviz.matches.SearchId
-import ch.isbsib.proteomics.mzviz.matches.importer.{LoaderMaxQuant}
-import ch.isbsib.proteomics.mzviz.matches.models.{SearchInfo, ProteinIdent, PepSpectraMatch, SubmissionStatus}
-import ch.isbsib.proteomics.mzviz.matches.services.{CommonMatchService, SearchInfoDBService, ProteinMatchMongoDBService, MatchMongoDBService}
+import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMaxQuant
+import ch.isbsib.proteomics.mzviz.matches.models.{PepSpectraMatch, ProteinIdent, SearchInfo, SubmissionStatus}
+import ch.isbsib.proteomics.mzviz.matches.services.{CommonMatchService, MatchMongoDBService, ProteinMatchMongoDBService, SearchInfoDBService}
 import ch.isbsib.proteomics.mzviz.results.basket.BasketMongoDBService
 import play.api.libs.json.Json
 import play.api.mvc.Controller
@@ -90,7 +91,7 @@ class LoaderMQData(val db: DefaultDB) {
     //Check if summary file exists
 
     if (!Files.exists(Paths.get(summaryFile))){
-      val errM="No summary table detected. Check if you are loading MaxQuant data."
+      val errM = "No summary table detected. Check if you are loading MaxQuant data."
       val now = Calendar.getInstance().getTime()
       searchInfoService.createSearchIdWithError(SearchId(now.toString), errM)
       throw new Exception (errM)
@@ -213,9 +214,14 @@ class LoaderMQData(val db: DefaultDB) {
     val insertedIds = for {
       nrMatch <- insertMatchData(path, searchIds, Some(updateStatus))
       nrExp <- insertExpData(mzMlFiles.zip(searchIds), intensityThreshold, Some(updateStatus))
+      updateOk <- updateMolMasses(searchIds)
     } yield {
-      //nrExp + nrMatch
-      searchIds
+      if(nrExp > 0 && nrMatch > 0 && updateOk > 0){
+        println("many are updated: " + updateOk)
+        searchIds
+      }else{
+        throw new Exception("Something went wrong while inserting the data")
+      }
     }
 
     // if one SearchId fails we remove all SearchIds
@@ -231,6 +237,33 @@ class LoaderMQData(val db: DefaultDB) {
     })
 
   }
+
+
+  /**
+    * update Molecular masses in the Msn spectra with the Molecular masses parsed from the psm's.
+    * @param searchIds
+    * @return
+    */
+  def updateMolMasses(searchIds: List[SearchId]): Future[Int] = {
+
+    val updatedMasses:Future[Seq[Seq[Int]]] = Future.sequence(
+        searchIds.map({ searchId =>
+          val runId = RunId(searchId.value)
+          val spMassTuplesFuture:Future[Seq[(SpectrumUniqueId, MolecularMass)]] = matchService.findSpectrumIdWithMolMass(runId)
+
+          spMassTuplesFuture.flatMap({ spMassT =>
+            Future.sequence(
+              spMassT.map( spM => msnService.findAndUpdateMolMass(SpectrumId(spM._1, runId), spM._2, "MaxQuant-m/z"))
+            )
+          })
+        })
+    )
+
+    // transform Future[Seq[Seq[Boolean]]] to Future[Boolean]
+    updatedMasses.map(ll => ll.foldLeft(0)((a,b) => a + b.reduce(_ + _)))
+
+  }
+
 
   /**
    * insert psm, proteinInfo and searchInfo data from a list of mzId files
@@ -352,7 +385,7 @@ class LoaderMQData(val db: DefaultDB) {
 
 }
 
-  /**
+/**
 * the companion object
 */
 

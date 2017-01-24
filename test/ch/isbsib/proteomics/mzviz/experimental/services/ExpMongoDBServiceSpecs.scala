@@ -94,7 +94,6 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures with TempMo
   "findSpectrumByRunId" should {
     "find one" in {
       val sp = service.findSpectrumByRunId(RunId("test-1")).futureValue.toList
-      println(sp.last.ref.spectrumId.id.value)
 
       sp.length must equalTo(123)
 
@@ -183,11 +182,17 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures with TempMo
 
     "change and check molMass" in {
       val res = service.findAndUpdateMolMass(spId, MolecularMass(999.99), "MaxQuant-m/z").futureValue
-      res mustEqual(true)
+      res mustEqual(1)
 
       val spRef = service.findSpectrumRefByRunIdAndScanNumber(RunId("test-1"), spId.id).futureValue
       spRef.precursor.molecularMass.get.value mustEqual(999.99)
       spRef.precursor.molecularMassSource.get mustEqual("MaxQuant-m/z")
+    }
+
+    "change non existing spId" in {
+      val fakeSpId = new SpectrumId(SpectrumUniqueId("fake one"), RunId("nothing real"))
+      val res = service.findAndUpdateMolMass(fakeSpId, MolecularMass(999.99), "MaxQuant-m/z").futureValue
+      res mustEqual(0)
     }
 
   }
