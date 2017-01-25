@@ -4,7 +4,7 @@ import java.io.File
 import java.nio.file.{Files, Path, Paths}
 import java.util.Calendar
 
-import ch.isbsib.proteomics.mzviz.commons.MolecularMass
+import ch.isbsib.proteomics.mzviz.commons.{Charge, MolecularMass}
 import ch.isbsib.proteomics.mzviz.commons.helpers.{FileFinder, Unzip}
 import ch.isbsib.proteomics.mzviz.commons.importers.ImporterException
 import ch.isbsib.proteomics.mzviz.controllers.matches.SearchController._
@@ -32,7 +32,7 @@ import scala.xml.Elem
 
 /**
  * @author Roman Mylonas & Trinidad Martin
- *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
+ *         copyright 2014-2017, SIB Swiss Institute of Bioinformatics
  */
 class LoaderMQData(val db: DefaultDB) {
 
@@ -216,11 +216,10 @@ class LoaderMQData(val db: DefaultDB) {
       nrExp <- insertExpData(mzMlFiles.zip(searchIds), intensityThreshold, Some(updateStatus))
       updateOk <- updateMolMasses(searchIds)
     } yield {
-      if(nrExp > 0 && nrMatch > 0 && updateOk > 0){
-        println("many are updated: " + updateOk)
+      if(nrExp > 0 && nrMatch > 0 && updateOk._1 == updateOk._2){
         searchIds
       }else{
-        throw new Exception("Something went wrong while inserting the data")
+        throw new Exception("Something went wrong while inserting data")
       }
     }
 
@@ -241,10 +240,11 @@ class LoaderMQData(val db: DefaultDB) {
 
   /**
     * update Molecular masses in the Msn spectra with the Molecular masses parsed from the psm's.
+    * Gives back a tuple of (updatedItems, totalItems)
     * @param searchIds
     * @return
     */
-  def updateMolMasses(searchIds: List[SearchId]): Future[Int] = {
+  def updateMolMasses(searchIds: List[SearchId]): Future[(Int, Int)] = {
 
     val updatedMasses:Future[Seq[Seq[Int]]] = Future.sequence(
         searchIds.map({ searchId =>
@@ -259,8 +259,14 @@ class LoaderMQData(val db: DefaultDB) {
         })
     )
 
-    // transform Future[Seq[Seq[Boolean]]] to Future[Boolean]
-    updatedMasses.map(ll => ll.foldLeft(0)((a,b) => a + b.reduce(_ + _)))
+    // transform Future[Seq[Seq[Int]]] to Future[(Int, Int)]
+    updatedMasses.map({ ll => ll.foldLeft((0, 0))({ (a, b) =>
+        val newTuple = b.foldLeft(0, 0)({ (a2, b2) =>
+          if (b2 > 0) (a2._1 + 1, a2._2 + 1) else (a2._1, a2._2 + 1)
+        })
+        (a._1 + newTuple._1, a._2 + newTuple._2)
+      })
+    })
 
   }
 

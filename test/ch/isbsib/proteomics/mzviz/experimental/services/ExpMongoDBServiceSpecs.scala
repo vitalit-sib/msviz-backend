@@ -187,6 +187,7 @@ class ExpMongoDBServiceSpecs extends Specification with ScalaFutures with TempMo
       val spRef = service.findSpectrumRefByRunIdAndScanNumber(RunId("test-1"), spId.id).futureValue
       spRef.precursor.molecularMass.get.value mustEqual(999.99)
       spRef.precursor.molecularMassSource.get mustEqual("MaxQuant-m/z")
+
     }
 
     "change non existing spId" in {

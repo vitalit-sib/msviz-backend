@@ -3,6 +3,7 @@ package ch.isbsib.proteomics.mzviz.experimental.importer
 import java.io.File
 
 import ch.isbsib.proteomics.mzviz.commons._
+import ch.isbsib.proteomics.mzviz.commons.helpers.CommonFunctions
 import ch.isbsib.proteomics.mzviz.experimental._
 import ch.isbsib.proteomics.mzviz.experimental.models._
 import org.expasy.mzjava.core.ms.spectrum
@@ -129,8 +130,9 @@ object LoaderMGF {
 
       val spId = if(scanNumber.isDefined) scanNumber.get.toString else title
       //Calculate molecularMass if possible
-      val molMass= if(moz.value !=0 && Charge(z).value !=0) Some(MolecularMass((moz.value * Charge(z).value) - (1.00728 * Charge(z).value))) else None
-      val molMassSource = if(molMass.isDefined) Some("mgf-m/z") else None
+      val molMass= if(moz.value !=0 && Charge(z).value !=0) Some(MolecularMass((moz.value * Charge(z).value) - (CommonFunctions.PROTON_MASS * Charge(z).value))) else None
+      // if it's directly from the mgf file we don't set a source
+      val molMassSource = None
 
       SpectrumRef(
         scanNumber = if(scanNumber.isDefined) Some(ScanNumber(scanNumber.get)) else None,

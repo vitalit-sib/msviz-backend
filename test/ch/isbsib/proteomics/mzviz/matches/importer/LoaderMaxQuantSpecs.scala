@@ -15,7 +15,7 @@ import org.specs2.mutable.Specification
 
 /**
  * @author Roman Mylonas & Trinidad Martin
- * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
+ * copyright 2014-2017, SIB Swiss Institute of Bioinformatics
  */
 class LoaderMaxQuantSpecs extends Specification {
 
@@ -24,8 +24,6 @@ class LoaderMaxQuantSpecs extends Specification {
   val runIdsAndRawfiles=runIdsWithEmpty.filter(_._1.value.nonEmpty)
   val runIds = runIdsAndRawfiles.map(_._1)
   val rawfilesRunIdMap: Map[String, RunId] = runIdsAndRawfiles.map(t => Tuple2(t._2, t._1)).toMap
-
-
 
   "parse protein groups" in {
 

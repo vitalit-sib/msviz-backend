@@ -4,7 +4,7 @@ import java.io.{File, IOException}
 import java.util.Calendar
 
 import ch.isbsib.proteomics.mzviz.commons.{MolecularMass, Moz, PPM}
-import ch.isbsib.proteomics.mzviz.commons.helpers.{FileFinder, Unzip}
+import ch.isbsib.proteomics.mzviz.commons.helpers.{CommonFunctions, FileFinder, Unzip}
 import ch.isbsib.proteomics.mzviz.experimental.{RunId, ScanNumber, SpectrumUniqueId}
 import ch.isbsib.proteomics.mzviz.experimental.models.SpectrumId
 import ch.isbsib.proteomics.mzviz.matches.SearchId
@@ -21,7 +21,7 @@ import scala.util.{Failure, Try}
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
- * copyright 2014-2015, SIB Swiss Institute of Bioinformatics
+ * copyright 2014-2017, SIB Swiss Institute of Bioinformatics
  */
 object LoaderMaxQuant {
 
@@ -270,7 +270,7 @@ object LoaderMaxQuant {
         val vectorNames= Vector.fill(lenghtVector)(Seq())
         val scanNumber:Int= m(scanNumberPos).toInt
         val correctedMoz: Option[Double] = Try(m(mozPos).toDouble).toOption
-        val correctedMolMass: Option[Double] = if(correctedMoz.isDefined && charge.isDefined) Some((correctedMoz.get * charge.get) - (1.00728 * charge.get)) else None
+        val correctedMolMass: Option[Double] = if(correctedMoz.isDefined && charge.isDefined) Some((correctedMoz.get * charge.get) - (CommonFunctions.PROTON_MASS * charge.get)) else None
 
         //Check if there is any modification
         if(hashPosModification.keys != Set()) {
@@ -533,10 +533,6 @@ object LoaderMaxQuant {
     val txtDir = if(dirsInTmpDir.length == 1 && dirsInTmpDir(0).getName == "txt") tmpDir + "/txt/" else tmpDir + "/"
 
     parse(txtDir, idTitle)
-
-    // remove tmpDir once we finished parsing (we will have to add scala-io to do so)
-    //val tmpPath:Path = Path(tmpDir)
-    //Try(tmpPath.deleteRecursively(continueOnFailure = true))
 
   }
 

@@ -6,14 +6,16 @@ import org.scalacheck.Prop.Exception
 import uk.ac.ebi.jmzml.model.mzml._
 import uk.ac.ebi.jmzml.xml.io.{MzMLObjectIterator, MzMLUnmarshaller}
 import java.io.File
+
 import scala.collection.JavaConverters._
 import ch.isbsib.proteomics.mzviz.commons._
+import ch.isbsib.proteomics.mzviz.commons.helpers.CommonFunctions
 import ch.isbsib.proteomics.mzviz.experimental.ScanNumber
 
 
 /**
  * @author Roman Mylonas & Trinidad Martin
- *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
+ *         copyright 2014-2017, SIB Swiss Institute of Bioinformatics
  */
 
 
@@ -117,11 +119,11 @@ class MzMLIterator(mzMLObjectIterator: MzMLObjectIterator[Nothing], runId: RunId
 
     // parse info from scanList
     if(sp.getScanList.getCount != 1) throw new IllegalStateException("None or more than one scan found: Don't know how to handle that")
-    val scanListCvParams = sp.getScanList.getScan.get(0).getCvParam.asScala.toSeq
+    val scanListCvParams = sp.getScanList.getScan.get(0).getCvParam.asScala
     // it looks like the rt is in minutes
     val rt: RetentionTime = RetentionTime(parseCvEntry(scanListCvParams, "MS:1000016").get.toDouble * 60)
 
-    val rawPeaks = parseBinaryData(sp.getBinaryDataArrayList.getBinaryDataArray.asScala.toSeq)
+    val rawPeaks = parseBinaryData(sp.getBinaryDataArrayList.getBinaryDataArray.asScala)
     val peaks: List[ExpPeakMS1] = rawPeaks.map(p => ExpPeakMS1(p._1, p._2)).toList
 
     ExpMs1Spectrum(spId, rt, Some(scanNr), peaks)
@@ -134,7 +136,7 @@ class MzMLIterator(mzMLObjectIterator: MzMLObjectIterator[Nothing], runId: RunId
    * @return
    */
   def parseMsN(sp:Spectrum, runId: RunId):ExpMSnSpectrum = {
-    val spCvParams:Seq[CVParam] = sp.getCvParam.asScala.toSeq
+    val spCvParams:Seq[CVParam] = sp.getCvParam.asScala
 
     val scanNr:ScanNumber = ScanNumber(scanNumberPattern.findFirstIn(sp.getId).get.split("=")(1).toInt)
     val msLevel = parseCvEntry(spCvParams, "MS:1000511").get.toInt
@@ -144,7 +146,7 @@ class MzMLIterator(mzMLObjectIterator: MzMLObjectIterator[Nothing], runId: RunId
     // parse info from scanList
     if(sp.getScanList.getCount != 1) throw new IllegalStateException("None or more than one scan found: Don't know how to handle that")
     val scanListCvParams = sp.getScanList.getScan.get(0).getCvParam.asScala.toSeq
-    val precRt: RetentionTime = RetentionTime(parseCvEntry(scanListCvParams, "MS:1000016").get.toDouble.toDouble * 60)
+    val precRt: RetentionTime = RetentionTime(parseCvEntry(scanListCvParams, "MS:1000016").get.toDouble * 60)
 
     // parse precursor info
     if(sp.getPrecursorList.getCount != 1) throw new IllegalStateException("None or more than one precursor found: Don't know how to handle that")
@@ -153,16 +155,16 @@ class MzMLIterator(mzMLObjectIterator: MzMLObjectIterator[Nothing], runId: RunId
     if(selIonList.size() != 1) throw new IllegalStateException("None or more than one selected ion found: Don't know how to handle that")
 
     // parse precursor CV
-    val ebiPrecCvs:Seq[CVParam] = selIonList.get(0).getCvParam.asScala.toSeq
+    val ebiPrecCvs:Seq[CVParam] = selIonList.get(0).getCvParam.asScala
     val precMoz:Moz = Moz(parseCvEntry(ebiPrecCvs, "MS:1000744").get.toDouble)
     val precIntensitiy:Intensity = Intensity(parseCvEntry(ebiPrecCvs, "MS:1000042").getOrElse("0").toDouble)
     val precCharge = Charge(parseCvEntry(ebiPrecCvs, "MS:1000041").get.toInt)
     val precScanNr:ScanNumber = ScanNumber(scanNumberPattern.findFirstIn(ebiPrec.getSpectrumRef).get.split("=")(1).toInt)
 
-
     //Calculate molecularMass if possible
-    val molMass = if(precMoz.value !=0 && precCharge.value !=0) (Some(MolecularMass((precMoz.value * precCharge.value) - (1.00728 * precCharge.value)))) else None
-    val molMassSource = if(molMass.isDefined) Some("mzML-m/z") else None
+    val molMass = if(precMoz.value !=0 && precCharge.value !=0) (Some(MolecularMass((precMoz.value * precCharge.value) - (CommonFunctions.PROTON_MASS * precCharge.value)))) else None
+    // if its directly from the raw file we don't set a source
+    val molMassSource = None
     // create precursor
     val precursor:ExpPeakPrecursor = ExpPeakPrecursor(precMoz, precIntensitiy, precRt, precCharge, Some(precScanNr), molMass, molMassSource)
 
@@ -170,7 +172,7 @@ class MzMLIterator(mzMLObjectIterator: MzMLObjectIterator[Nothing], runId: RunId
     val ref:SpectrumRef = SpectrumRef(Some(scanNr), precursor, spTitle, spId)
 
     // parse peak info
-    val rawPeaks = parseBinaryData(sp.getBinaryDataArrayList.getBinaryDataArray.asScala.toSeq)
+    val rawPeaks = parseBinaryData(sp.getBinaryDataArrayList.getBinaryDataArray.asScala)
 
     // get intensityRanks
     val ordererIndexes = rawPeaks.map(_._2.value).zip(0 to rawPeaks.size-1).sortBy(_._1).map(_._2)

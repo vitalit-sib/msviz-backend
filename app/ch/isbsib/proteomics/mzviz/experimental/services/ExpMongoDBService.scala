@@ -24,7 +24,7 @@ import scala.util.{Failure, Success}
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
- *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
+ *         copyright 2014-2017, SIB Swiss Institute of Bioinformatics
  */
 class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
   val collectionName = "msnSpectra"
@@ -311,10 +311,8 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
       Json.fromJson[SpectrumRef](o \ "ref").asOpt.get
     }))
 
-    // check if they really correspond to this search
-    futureSpList.map({ spList =>
-      spList.filter(sp => CommonFunctions.spIsValid(sp, lowerLimit, upperLimit))
-    })
+    futureSpList
+
   }
 
   /**
@@ -372,6 +370,7 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
     * @return
     */
   def findAndUpdateMolMass(spectrumId: SpectrumId, correctedMolMass: MolecularMass, molMassSource: String): Future[Int] = {
+
     val query = Json.obj(
       "ref.spectrumId.runId" -> spectrumId.runId.value,
       "ref.spectrumId.id" -> spectrumId.id.value

@@ -32,7 +32,7 @@ import scala.concurrent.Future
 
 /**
  * @author Roman Mylonas, Trinidad Martin & Alexandre Masselot
- *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
+ *         copyright 2014-2017, SIB Swiss Institute of Bioinformatics
  */
 class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
   val collectionName = "psm"
@@ -347,7 +347,10 @@ class MatchMongoDBService(val db: DefaultDB) extends MongoDBService {
       .cursor[JsObject]
       .collect[List]()
       .map(lo => lo.map({ o =>
-        (Json.fromJson[String](o \ "spectrumId" \ "id").asOpt.get, Json.fromJson[Double](o \ "matchInfo" \ "correctedMolMass").asOpt)
+        (
+          Json.fromJson[String](o \ "spectrumId" \ "id").asOpt.get,
+          Json.fromJson[Double](o \ "matchInfo" \ "correctedMolMass").asOpt
+          )
       }))
 
     futureSpList.map(l => l.filter(sp => sp._2.isDefined).map({

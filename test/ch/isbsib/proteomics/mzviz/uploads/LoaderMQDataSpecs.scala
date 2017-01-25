@@ -15,7 +15,7 @@ import scala.concurrent.Future
 
 /**
  * @author Roman Mylonas & Trinidad Martin
- *         copyright 2014-2015, SIB Swiss Institute of Bioinformatics
+ *         copyright 2014-2017, SIB Swiss Institute of Bioinformatics
  */
 class LoaderMQDataSpecs extends Specification with ScalaFutures{
 
