@@ -244,8 +244,8 @@ object LoaderMaxQuant {
     //Filter table, remove rows with no score, taking care about "." in the score which are not digits
     val mEvidenceListFiltered = mEvidenceList.filter({ l => l(scorePos).filter(_.isDigit).length > 0})
 
-    // remove entries that are of type MSMS
-    val mEvidenceListFiltered2 = mEvidenceListFiltered.filter({ l => l(typePos) != "MSMS"})
+    // keep only entries with "MULTI-MSMS"
+    val mEvidenceListFiltered2 = mEvidenceListFiltered.filter({ l => l(typePos) == "MULTI-MSMS"})
 
     mEvidenceListFiltered2.map({
       m => {

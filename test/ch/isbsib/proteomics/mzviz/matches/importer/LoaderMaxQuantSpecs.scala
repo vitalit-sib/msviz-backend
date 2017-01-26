@@ -118,7 +118,7 @@ class LoaderMaxQuantSpecs extends Specification {
 
     val listEvidence = LoaderMaxQuant.parseEvidenceTable(new File("test/resources/maxquant/evidence.txt"))
 
-    listEvidence.size mustEqual (2564)
+    listEvidence.size mustEqual (2463)
 
     //Select first row
     val entry:EvidenceTableEntry=listEvidence(0)
@@ -157,8 +157,8 @@ class LoaderMaxQuantSpecs extends Specification {
     // should have 2 runIds
     pepSpectraMap.keys.size mustEqual(2)
 
-    pepSpectraMap(RunId("Nocodazole")).size mustEqual(1330)
-    pepSpectraMap(RunId("DMSO")).size mustEqual(1231)
+    pepSpectraMap(RunId("Nocodazole")).size mustEqual(1273)
+    pepSpectraMap(RunId("DMSO")).size mustEqual(1187)
 
     val pep10 = pepSpectraMap(RunId("Nocodazole")).filter(p => p.pep.sequence == "AIFQQPPVGVR")
     val pep11 = pepSpectraMap(RunId("DMSO")).filter(p => p.pep.sequence == "AIFQQPPVGVR")
@@ -320,14 +320,14 @@ class LoaderMaxQuantSpecs extends Specification {
 
   "ignore entries of type MSMS in evidence" in {
     val parseMaxQuant= LoaderMaxQuant.parse("test/resources/maxquant/", None)
-    parseMaxQuant(0)._1.length mustEqual 1231
-    parseMaxQuant(1)._1.length mustEqual 1330
+    parseMaxQuant(0)._1.length mustEqual 1187
+    parseMaxQuant(1)._1.length mustEqual 1273
 
   }
 
   "parse Michal data" in {
     val parseMaxQuant= LoaderMaxQuant.parse("test/resources/maxquant/michal/", Some("MXQ_"))
-    parseMaxQuant(0)._1.length mustEqual 156
+    parseMaxQuant(0)._1.length mustEqual 154
   }
 
 
@@ -336,7 +336,7 @@ class LoaderMaxQuantSpecs extends Specification {
     val evidences = LoaderMaxQuant.parseEvidenceTable(new File("test/resources/maxquant/evidence.txt"))
 
     "size" in {
-      evidences.size mustEqual(2564)
+      evidences.size mustEqual(2463)
     }
 
     "oxidation" in {
@@ -364,7 +364,7 @@ class LoaderMaxQuantSpecs extends Specification {
 
       val modifProbs = ev.modificationProbabilities.get
       modifProbs.size mustEqual(1)
-      modifProbs(ModifName("Oxidation")) mustEqual("ALYDAELSQM(1)QTHISDTSVVLSM(1)DNNR")
+      modifProbs(ModifName("Oxidation")) mustEqual("ALYDAELSQM(1)QTHISDTSVVLSMDNNR")
 
       val highestModif = ev.highestModifProbability.get
       highestModif.size mustEqual(1)
@@ -372,19 +372,19 @@ class LoaderMaxQuantSpecs extends Specification {
     }
 
     "multi phospho" in {
-      val ev = evidences(260)
+      val ev = evidences(254)
 
       val modifProbs = ev.modificationProbabilities.get
       modifProbs.size mustEqual(1)
-      modifProbs(ModifName("Phospho")) mustEqual("DLHQPS(0.141)LS(0.861)PAS(0.994)PHS(0.005)QGFER")
+      modifProbs(ModifName("Phospho")) mustEqual("DLHQPS(0.02)LS(0.984)PAS(0.983)PHS(0.013)QGFER")
 
       val highestModif = ev.highestModifProbability.get
       highestModif.size mustEqual(1)
-      highestModif(ModifName("Phospho")) mustEqual(0.994)
+      highestModif(ModifName("Phospho")) mustEqual(0.984)
     }
 
     "oxidation and phospho" in {
-      val ev = evidences(313)
+      val ev = evidences(305)
 
       val modifProbs = ev.modificationProbabilities.get
       modifProbs.size mustEqual(2)
@@ -398,7 +398,7 @@ class LoaderMaxQuantSpecs extends Specification {
     }
 
     "acetyl and oxidation" in {
-      val ev = evidences(162)
+      val ev = evidences(160)
 
       val modifProbs = ev.modificationProbabilities.get
       modifProbs.size mustEqual(1)

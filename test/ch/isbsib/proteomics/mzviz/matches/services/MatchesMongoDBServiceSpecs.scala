@@ -157,7 +157,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures with Te
         val psms = service.findAllPSMsByProtein(AccessionCode("Q9BZF1"), notRejected = Some(true)).futureValue
 
         // check sizes
-        psms.size mustEqual(273)
+        psms.size mustEqual(252)
 
         // check one PSM
         val psm = psms.filter(_.spectrumId.id.value == "9477")(0)
@@ -180,7 +180,7 @@ class MatchesMongoDBServiceSpecs extends Specification with ScalaFutures with Te
 
     "some from maxquant data" in {
       val spMolMassPair = service.findSpectrumIdWithMolMass(RunId("yoyoDMSO")).futureValue
-      spMolMassPair.size mustEqual(1231)
+      spMolMassPair.size mustEqual(1187)
 
       val someData = spMolMassPair.filter(t => t._1.value == "13049")(0)
       someData._1.value mustEqual("13049")
