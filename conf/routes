@@ -5,6 +5,7 @@
 # Home page
 
 GET            /                                                      ch.isbsib.proteomics.mzviz.controllers.UtilsController.hello
+GET            /version                                               ch.isbsib.proteomics.mzviz.controllers.UtilsController.version
 
 GET            /api-docs/exp                                          controllers.ApiHelpController.getResource(path = "/exp")
 GET            /exp                                                   ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController.stats
