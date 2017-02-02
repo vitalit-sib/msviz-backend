@@ -280,9 +280,11 @@ object LoaderMaxQuant {
           val modifProbs: Option[Map[ModifName, String]] = parseModifProbs(m, modifProbSet)
           val highestModifProb: Option[Map[ModifName, Double]] = parseHighestModifProb(modifProbs)
 
-          EvidenceTableEntry(id, sequence, experiment, molMass, correctedMoz, correctedMolMass, score, missCleavages, massDiff, charge, ac, pepId,modifNamesVector, modifProbs, highestModifProb, scanNumber)
+          val modifInfos: Option[Map[ModifName, Seq[ModifInfo]]] = parseModificationProbabilityInfo(modifProbs, modifNamesVector)
+
+          EvidenceTableEntry(id, sequence, experiment, molMass, correctedMoz, correctedMolMass, score, missCleavages, massDiff, charge, ac, pepId,modifNamesVector, modifProbs, highestModifProb, modifInfos, scanNumber)
         }
-        else EvidenceTableEntry(id, sequence, experiment, molMass, correctedMoz, correctedMolMass, score, missCleavages, massDiff, charge, ac, pepId,vectorNames, None, None, scanNumber)
+        else EvidenceTableEntry(id, sequence, experiment, molMass, correctedMoz, correctedMolMass, score, missCleavages, massDiff, charge, ac, pepId,vectorNames, None, None, None, scanNumber)
 
       }
     })
@@ -325,6 +327,47 @@ object LoaderMaxQuant {
     }else{
       None
     }
+  }
+
+
+  /**
+    * recursive function to parse the position and probabilities from a string like: VVES(0.977)PDFS(0.023)KDEDYLGK
+    * @param s
+    * @param offset
+    * @return
+    */
+  def parseModifString(s:String, offset:Int):Seq[(Int, Double)] = {
+    val i = s.indexOf("(")
+    if(i>=0){
+      val p = "[\\d|\\.]+".r.findFirstIn(s).get.toDouble
+      val newString = s.substring(s.indexOf(")") + 1)
+      (i + offset, p) +: parseModifString(newString, i + offset)
+    }else{
+      Nil
+    }
+  }
+
+  /**
+    * parse modification infos
+    * @param modifProbs
+    * @param modifNamesVector
+    * @return
+    */
+  def parseModificationProbabilityInfo(modifProbs:  Option[Map[ModifName, String]], modifNamesVector: Vector[Seq[ModifName]]): Option[Map[ModifName, Seq[ModifInfo]]] = {
+    if (modifProbs.isDefined) {
+      val splittedModifs = modifProbs.get.map({ case (modif: ModifName, seq: String) => (modif, parseModifString(seq, 0)) })
+      val modifInfos = splittedModifs.map({ case(modif:ModifName, info:Seq[(Int, Double)]) =>
+        val infoSeq = info.map({ i =>
+          val status = if(modifNamesVector(i._1).contains(modif)) MAIN else CONFLICT
+          ModifInfo(name = modif, position = i._1, modifProb = i._2, status = status)
+        })
+        (modif -> infoSeq)
+      })
+      Some(modifInfos)
+    } else{
+      None
+    }
+
   }
 
 
@@ -446,7 +489,8 @@ object LoaderMaxQuant {
         chargeState = entry.chargeState,
         isRejected = Some(false),
         modificationProbabilities = entry.modificationProbabilities,
-        highestModifProbability = entry.highestModifProbability)
+        highestModifProbability = entry.highestModifProbability,
+        modificationInfos = entry.modificationInfos)
 
       val leadingProteinRef = ProteinRef(AccessionCode(entry.ac), Set(), Some(sequenceSource))
       val pepEntry = peptidesHash(entry.pepId)

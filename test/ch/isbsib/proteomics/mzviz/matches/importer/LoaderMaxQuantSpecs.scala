@@ -2,12 +2,12 @@ package ch.isbsib.proteomics.mzviz.matches.importer
 
 import java.io.File
 
-import ch.isbsib.proteomics.mzviz.experimental.{SpectrumUniqueId, RunId}
+import ch.isbsib.proteomics.mzviz.experimental.{RunId, SpectrumUniqueId}
 import ch.isbsib.proteomics.mzviz.matches.SearchId
-import ch.isbsib.proteomics.mzviz.matches.models.{PepSpectraMatch, ProteinIdent}
-import ch.isbsib.proteomics.mzviz.matches.models.maxquant.{PeptidesTableEntry, EvidenceTableEntry, ProteinGroupsTableEntry}
+import ch.isbsib.proteomics.mzviz.matches.models._
+import ch.isbsib.proteomics.mzviz.matches.models.maxquant.{EvidenceTableEntry, PeptidesTableEntry, ProteinGroupsTableEntry}
 import ch.isbsib.proteomics.mzviz.modifications.ModifName
-import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
+import ch.isbsib.proteomics.mzviz.theoretical.{AccessionCode, SequenceSource}
 import ch.isbsib.proteomics.mzviz.theoretical.models.SearchDatabase
 import net.sf.ehcache.search.expression.EqualTo
 import org.specs2.mutable.Specification
@@ -132,6 +132,23 @@ class LoaderMaxQuantSpecs extends Specification {
     entry.massDiff.get mustEqual(0.29854)
     entry.chargeState.get mustEqual(3)
     entry.ac mustEqual("O00410")
+
+    // check modificationInfos
+    val modifEntries = listEvidence.filter(e => e.modificationInfos.isDefined)
+    modifEntries.size mustEqual(318)
+
+    // check multiModif
+    val multiModifs = modifEntries.filter(e => e.modificationProbabilities.get.size >= 2)
+    val modifEntry = multiModifs(0)
+
+    modifEntry.modificationInfos.get.size mustEqual(2)
+    val phosphoModif = modifEntry.modificationInfos.get(ModifName("Phospho"))
+    phosphoModif.size mustEqual(3)
+    phosphoModif(0) mustEqual(ModifInfo(ModifName("Phospho"), 15, 0.009, CONFLICT))
+    phosphoModif(1) mustEqual(ModifInfo(ModifName("Phospho"), 19, 0.981, MAIN))
+    phosphoModif(2) mustEqual(ModifInfo(ModifName("Phospho"), 24, 0.009, CONFLICT))
+
+
   }
 
   "parse peptides table" in {
@@ -227,6 +244,10 @@ class LoaderMaxQuantSpecs extends Specification {
     list2._1(0).pep.sequence mustEqual("AAAAAEQQQFYLLLGNLLSPDNVVR")
     list2._1(0).pep.modificationNames mustEqual(Vector(Seq(ModifName("Acetyl")),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),
     Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq()))
+
+
+    val withModif = list2._1.filter(a => a.matchInfo.modificationInfos.isDefined)(0)
+    withModif.matchInfo.modificationInfos.get(ModifName("Oxidation"))(0) mustEqual(ModifInfo(ModifName("Oxidation"), 11, 1, MAIN))
 
     //with 2 sources
     parseMQ.size mustEqual(2)

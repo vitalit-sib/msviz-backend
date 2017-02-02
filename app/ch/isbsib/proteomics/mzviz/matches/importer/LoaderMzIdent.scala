@@ -313,7 +313,8 @@ object LoaderMzIdent {
       totalNumIons = OptionConverter.convertGoogleOption[Int](mzJavaMatch.getTotalNumIons.asInstanceOf[Optional[Int]]),
       isRejected = OptionConverter.convertGoogleOption[Boolean](mzJavaMatch.isRejected.asInstanceOf[Optional[Boolean]]),
       modificationProbabilities = None,
-      highestModifProbability = None)
+      highestModifProbability = None,
+      modificationInfos = None)
 
   }
 

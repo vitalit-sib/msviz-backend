@@ -1,6 +1,6 @@
 package ch.isbsib.proteomics.mzviz.matches.models.maxquant
 
-import ch.isbsib.proteomics.mzviz.commons.MolecularMass
+import ch.isbsib.proteomics.mzviz.matches.models.ModifInfo
 import ch.isbsib.proteomics.mzviz.modifications.ModifName
 
 /**
@@ -22,5 +22,6 @@ case class EvidenceTableEntry ( id:Int,
                                 modificationVector: Vector[Seq[ModifName]],
                                 modificationProbabilities: Option[Map[ModifName, String]],
                                 highestModifProbability: Option[Map[ModifName, Double]],
+                                modificationInfos: Option[Map[ModifName, Seq[ModifInfo]]],
                                 scanNumber: Int
                               )

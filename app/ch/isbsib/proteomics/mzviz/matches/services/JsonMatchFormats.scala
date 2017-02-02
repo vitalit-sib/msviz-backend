@@ -121,6 +121,34 @@ object JsonMatchFormats {
 
   }
 
+  implicit val formatModifStatus = new Format[ModifStatus] {
+    override def reads(json: JsValue): JsResult[ModifStatus] = {
+      JsSuccess(json.as[String] match{
+        case "MAIN" => MAIN
+        case "CONFLICT" => CONFLICT
+      })
+    }
+
+    def writes(o: ModifStatus) = JsString(o.value)
+  }
+
+  implicit val formatModifInfo = Json.format[ModifInfo]
+
+  implicit val formatModificationProbabilityInfo = new Format[Map[ModifName, Seq[ModifInfo]]] {
+    override def reads(json: JsValue): JsResult[Map[ModifName, Seq[ModifInfo]]] = {
+      JsSuccess(json.as[Map[String, Seq[ModifInfo]]].map({ case (k, v) =>
+        ModifName(k) -> v
+      }))
+    }
+
+    def writes(o: Map[ModifName, Seq[ModifInfo]]) = Json.obj(
+      o.map({ case(s:ModifName, o:Seq[ModifInfo]) =>
+        val ret: (String, JsValueWrapper) = s.value -> JsArray(o.map({case mi:ModifInfo => Json.toJson(mi)}))
+        ret
+      }).toSeq:_*
+    )
+
+  }
 
   implicit val formatProteinMatch = Json.format[ProteinMatch]
   implicit val formatPeptide = Json.format[Peptide]
@@ -134,8 +162,6 @@ object JsonMatchFormats {
   implicit val formatProteinIdent = Json.format[ProteinIdent]
 
 
-
-
   implicit val writeProteinMatchMultipleSearches = new Writes[ProteinMatchMultipleSearches] {
     override def writes(o: ProteinMatchMultipleSearches): JsValue = {
       JsObject(o.dict.map(acVal =>
@@ -147,6 +173,7 @@ object JsonMatchFormats {
       )
     }
   }
+
   implicit val writesPepSpectraMatchWithSpectrumRef = new Writes[PepSpectraMatchWithSpectrumRef] {
     def writes(o: PepSpectraMatchWithSpectrumRef) =
     Json.toJson(o.asInstanceOf[PepSpectraMatch]).asInstanceOf[JsObject] ++ Json.obj("spectrumRef" -> Json.toJson(o.spectrumRef))
