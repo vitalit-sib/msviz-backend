@@ -230,6 +230,7 @@ class LoaderMQData(val db: DefaultDB) {
           commonMatchService.deleteAllMatchInfo(id)
           ms1Service.deleteAllByRunIds(Set(RunId(id.value)))
           msnService.delete(Set(RunId(id.value)))
+          searchInfoService.createSearchIdWithError(id, e.getMessage)
         })
         throw new ImporterException("Error while loading experimental data. " + e.getMessage, e)
       }
