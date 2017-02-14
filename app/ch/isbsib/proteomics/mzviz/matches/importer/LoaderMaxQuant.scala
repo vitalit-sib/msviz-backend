@@ -490,9 +490,10 @@ object LoaderMaxQuant {
         totalNumIons = None,
         chargeState = entry.chargeState,
         isRejected = Some(false),
-        modificationProbabilities = entry.modificationProbabilities,
-        highestModifProbability = entry.highestModifProbability,
-        modificationInfos = entry.modificationInfos)
+        modificationProbabilities = if(entry.modificationProbabilities.isEmpty) None else Some(entry.modificationProbabilities),
+        highestModifProbability = if(entry.highestModifProbability.isEmpty) None else Some(entry.highestModifProbability),
+        modificationInfos = if(entry.modificationInfos.isEmpty) None else Some(entry.modificationInfos)
+      )
 
       val leadingProteinRef = ProteinRef(AccessionCode(entry.ac), Set(), Some(sequenceSource))
       val pepEntry = peptidesHash(entry.pepId)

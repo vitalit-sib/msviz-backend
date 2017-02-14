@@ -302,7 +302,8 @@ object LoaderMzIdent {
     val identScore = IdentScore(scoreMap.get(MainScoreName).getOrElse(-1.0), scoreMap)
 
     // create and return a new PepMatchInfo
-    PepMatchInfo(score = identScore,
+    PepMatchInfo(
+      score = identScore,
       numMissedCleavages = OptionConverter.convertGoogleOption[Int](mzJavaMatch.getNumMissedCleavages.asInstanceOf[Optional[Int]]),
       correctedMoz = None,
       correctedMolMass = None,
@@ -312,9 +313,10 @@ object LoaderMzIdent {
       chargeState = OptionConverter.convertGoogleOption[Int](mzJavaRes._1.getAssumedCharge.asInstanceOf[Optional[Int]]),
       totalNumIons = OptionConverter.convertGoogleOption[Int](mzJavaMatch.getTotalNumIons.asInstanceOf[Optional[Int]]),
       isRejected = OptionConverter.convertGoogleOption[Boolean](mzJavaMatch.isRejected.asInstanceOf[Optional[Boolean]]),
-      modificationProbabilities = Map(),
-      highestModifProbability = Map(),
-      modificationInfos = Map())
+      modificationProbabilities = None,
+      highestModifProbability = None,
+      modificationInfos = None
+    )
 
   }
 

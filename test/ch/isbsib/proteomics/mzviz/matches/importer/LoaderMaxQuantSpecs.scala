@@ -244,10 +244,10 @@ class LoaderMaxQuantSpecs extends Specification {
     list2._1(0).pep.modificationNames mustEqual(Vector(Seq(ModifName("Acetyl")),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),
     Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq()))
 
-    list2._1(0).matchInfo.modificationInfos.contains(ModifName("Acetyl")) mustEqual(true)
+    list2._1(0).matchInfo.modificationInfos.get.contains(ModifName("Acetyl")) mustEqual(true)
 
     val withModif = list2._1.filter(a => ! a.matchInfo.modificationInfos.isEmpty)(1)
-    withModif.matchInfo.modificationInfos(ModifName("Oxidation"))(0) mustEqual(ModifInfo(11, 1, MAIN))
+    withModif.matchInfo.modificationInfos.get(ModifName("Oxidation"))(0) mustEqual(ModifInfo(11, 1, MAIN))
 
     //with 2 sources
     parseMQ.size mustEqual(2)
