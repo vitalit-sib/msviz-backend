@@ -277,14 +277,28 @@ object LoaderMaxQuant {
           val modifNamesVector: Vector[Seq[ModifName]] = updateVector(hashPosModification,lenghtVector)
 
           // parse the position probabilities
-          val modifProbs: Option[Map[ModifName, String]] = parseModifProbs(m, modifProbSet)
-          val highestModifProb: Option[Map[ModifName, Double]] = parseHighestModifProb(modifProbs)
+          val modifProbs: Map[ModifName, String] = parseModifProbs(m, modifProbSet)
+          val highestModifProb: Map[ModifName, Double] = parseHighestModifProb(modifProbs)
 
-          val modifInfos: Option[Map[ModifName, Seq[ModifInfo]]] = parseModificationProbabilityInfo(modifProbs, modifNamesVector)
+          val modifInfos: Map[ModifName, Seq[ModifInfo]] = parseModificationProbabilityInfo(modifProbs, modifNamesVector)
 
-          EvidenceTableEntry(id, sequence, experiment, molMass, correctedMoz, correctedMolMass, score, missCleavages, massDiff, charge, ac, pepId,modifNamesVector, modifProbs, highestModifProb, modifInfos, scanNumber)
+          // check if we have an N-term modif like Acetyl (in this case there is no probability string)
+          val nTermModifName:Map[ModifName, Seq[ModifInfo]]  = hashPosModification.find(mod => mod._1 == 1).map({mod =>
+            val perfectModifInfo = Seq(ModifInfo(
+              name = ModifName(mod._2),
+              position = 1,
+              // the probability is 1.0, since there is only 1 possible position
+              modifProb = 1.0,
+              status = MAIN
+            ))
+            (ModifName(mod._2) -> perfectModifInfo)
+          }).toMap
+
+          val allModifInfos: Map[ModifName, Seq[ModifInfo]] = modifInfos ++ nTermModifName
+
+          EvidenceTableEntry(id, sequence, experiment, molMass, correctedMoz, correctedMolMass, score, missCleavages, massDiff, charge, ac, pepId,modifNamesVector, modifProbs, highestModifProb, allModifInfos, scanNumber)
         }
-        else EvidenceTableEntry(id, sequence, experiment, molMass, correctedMoz, correctedMolMass, score, missCleavages, massDiff, charge, ac, pepId,vectorNames, None, None, None, scanNumber)
+        else EvidenceTableEntry(id, sequence, experiment, molMass, correctedMoz, correctedMolMass, score, missCleavages, massDiff, charge, ac, pepId,vectorNames, Map(), Map(), Map(), scanNumber)
 
       }
     })
@@ -296,17 +310,14 @@ object LoaderMaxQuant {
     * @param l
     * @param modifProbSet
     */
-  def parseModifProbs(l: List[String], modifProbSet: Set[(String, Int)]): Option[Map[ModifName, String]] = {
+  def parseModifProbs(l: List[String], modifProbSet: Set[(String, Int)]): Map[ModifName, String] = {
 
-    val modifProbs = modifProbSet.foldLeft(Map.empty[ModifName, String]){
+    modifProbSet.foldLeft(Map.empty[ModifName, String]){
       case (a, b) =>
         val seq = l(b._2)
         val modifName = """^(\w+)""".r.findFirstIn(b._1).get
         if(! seq.isEmpty) a ++ Map(ModifName(modifName) -> seq) else a
     }
-
-    if(modifProbs.isEmpty) return None
-    else return Some(modifProbs)
 
   }
 
@@ -317,16 +328,12 @@ object LoaderMaxQuant {
     * @param modifProbs
     * @return
     */
-  def parseHighestModifProb(modifProbs:  Option[Map[ModifName, String]]):  Option[Map[ModifName, Double]] = {
+  def parseHighestModifProb(modifProbs:  Map[ModifName, String]):  Map[ModifName, Double] = {
 
-    if (modifProbs.isDefined) {
-      Some(modifProbs.get.map({ case (modif: ModifName, seq: String) =>
+      modifProbs.map({ case (modif: ModifName, seq: String) =>
         val maxProb = """([\d|\.]+)""".r.findAllMatchIn(seq).map(_.group(1).toDouble).max
         (modif, maxProb)
-      }))
-    }else{
-      None
-    }
+      })
   }
 
 
@@ -353,20 +360,16 @@ object LoaderMaxQuant {
     * @param modifNamesVector
     * @return
     */
-  def parseModificationProbabilityInfo(modifProbs:  Option[Map[ModifName, String]], modifNamesVector: Vector[Seq[ModifName]]): Option[Map[ModifName, Seq[ModifInfo]]] = {
-    if (modifProbs.isDefined) {
-      val splittedModifs = modifProbs.get.map({ case (modif: ModifName, seq: String) => (modif, parseModifString(seq, 0)) })
-      val modifInfos = splittedModifs.map({ case(modif:ModifName, info:Seq[(Int, Double)]) =>
+  def parseModificationProbabilityInfo(modifProbs:  Map[ModifName, String], modifNamesVector: Vector[Seq[ModifName]]): Map[ModifName, Seq[ModifInfo]] = {
+      val splittedModifs = modifProbs.map({ case (modif: ModifName, seq: String) => (modif, parseModifString(seq, 0)) })
+
+      splittedModifs.map({ case(modif:ModifName, info:Seq[(Int, Double)]) =>
         val infoSeq = info.map({ i =>
           val status = if(modifNamesVector(i._1).contains(modif)) MAIN else CONFLICT
           ModifInfo(name = modif, position = i._1, modifProb = i._2, status = status)
         })
         (modif -> infoSeq)
       })
-      Some(modifInfos)
-    } else{
-      None
-    }
 
   }
 

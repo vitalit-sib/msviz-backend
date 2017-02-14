@@ -134,20 +134,19 @@ class LoaderMaxQuantSpecs extends Specification {
     entry.ac mustEqual("O00410")
 
     // check modificationInfos
-    val modifEntries = listEvidence.filter(e => e.modificationInfos.isDefined)
-    modifEntries.size mustEqual(318)
+    val modifEntries = listEvidence.filter(e => ! e.modificationInfos.isEmpty)
+    modifEntries.size mustEqual(333)
 
     // check multiModif
-    val multiModifs = modifEntries.filter(e => e.modificationProbabilities.get.size >= 2)
+    val multiModifs = modifEntries.filter(e => e.modificationProbabilities.size >= 2)
     val modifEntry = multiModifs(0)
 
-    modifEntry.modificationInfos.get.size mustEqual(2)
-    val phosphoModif = modifEntry.modificationInfos.get(ModifName("Phospho"))
+    modifEntry.modificationInfos.size mustEqual(2)
+    val phosphoModif:Seq[ModifInfo] = modifEntry.modificationInfos(ModifName("Phospho"))
     phosphoModif.size mustEqual(3)
     phosphoModif(0) mustEqual(ModifInfo(ModifName("Phospho"), 15, 0.009, CONFLICT))
     phosphoModif(1) mustEqual(ModifInfo(ModifName("Phospho"), 19, 0.981, MAIN))
     phosphoModif(2) mustEqual(ModifInfo(ModifName("Phospho"), 24, 0.009, CONFLICT))
-
 
   }
 
@@ -245,9 +244,10 @@ class LoaderMaxQuantSpecs extends Specification {
     list2._1(0).pep.modificationNames mustEqual(Vector(Seq(ModifName("Acetyl")),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),
     Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq(),Seq()))
 
+    list2._1(0).matchInfo.modificationInfos.contains(ModifName("Acetyl")) mustEqual(true)
 
-    val withModif = list2._1.filter(a => a.matchInfo.modificationInfos.isDefined)(0)
-    withModif.matchInfo.modificationInfos.get(ModifName("Oxidation"))(0) mustEqual(ModifInfo(ModifName("Oxidation"), 11, 1, MAIN))
+    val withModif = list2._1.filter(a => ! a.matchInfo.modificationInfos.isEmpty)(1)
+    withModif.matchInfo.modificationInfos(ModifName("Oxidation"))(0) mustEqual(ModifInfo(ModifName("Oxidation"), 11, 1, MAIN))
 
     //with 2 sources
     parseMQ.size mustEqual(2)
@@ -363,31 +363,31 @@ class LoaderMaxQuantSpecs extends Specification {
     "oxidation" in {
       val ev = evidences(1)
 
-      val modifProbs = ev.modificationProbabilities.get
+      val modifProbs = ev.modificationProbabilities
       modifProbs.size mustEqual(1)
       modifProbs(ModifName("Oxidation")) mustEqual("AAAPQAWAGPM(1)EEPPQAQAPPR")
 
-      val highestModif = ev.highestModifProbability.get
+      val highestModif = ev.highestModifProbability
       highestModif.size mustEqual(1)
       highestModif(ModifName("Oxidation")) mustEqual(1)
     }
 
     "acetylation" in {
       val ev = evidences(0)
-      ev.modificationProbabilities mustEqual(None)
+      ev.modificationProbabilities.isEmpty mustEqual(true)
 
-      ev.highestModifProbability mustEqual(None)
+      ev.highestModifProbability.isEmpty mustEqual(true)
 
     }
 
     "multi oxidation" in {
       val ev = evidences(112)
 
-      val modifProbs = ev.modificationProbabilities.get
+      val modifProbs = ev.modificationProbabilities
       modifProbs.size mustEqual(1)
       modifProbs(ModifName("Oxidation")) mustEqual("ALYDAELSQM(1)QTHISDTSVVLSMDNNR")
 
-      val highestModif = ev.highestModifProbability.get
+      val highestModif = ev.highestModifProbability
       highestModif.size mustEqual(1)
       highestModif(ModifName("Oxidation")) mustEqual(1)
     }
@@ -395,11 +395,11 @@ class LoaderMaxQuantSpecs extends Specification {
     "multi phospho" in {
       val ev = evidences(254)
 
-      val modifProbs = ev.modificationProbabilities.get
+      val modifProbs = ev.modificationProbabilities
       modifProbs.size mustEqual(1)
       modifProbs(ModifName("Phospho")) mustEqual("DLHQPS(0.02)LS(0.984)PAS(0.983)PHS(0.013)QGFER")
 
-      val highestModif = ev.highestModifProbability.get
+      val highestModif = ev.highestModifProbability
       highestModif.size mustEqual(1)
       highestModif(ModifName("Phospho")) mustEqual(0.984)
     }
@@ -407,12 +407,12 @@ class LoaderMaxQuantSpecs extends Specification {
     "oxidation and phospho" in {
       val ev = evidences(305)
 
-      val modifProbs = ev.modificationProbabilities.get
+      val modifProbs = ev.modificationProbabilities
       modifProbs.size mustEqual(2)
       modifProbs(ModifName("Oxidation")) mustEqual("DVLGPSTVVANSDESQLLTPGKM(1)SQR")
       modifProbs(ModifName("Phospho")) mustEqual("DVLGPSTVVANSDES(0.009)QLLT(0.981)PGKMS(0.009)QR")
 
-      val highestModif = ev.highestModifProbability.get
+      val highestModif = ev.highestModifProbability
       highestModif.size mustEqual(2)
       highestModif(ModifName("Oxidation")) mustEqual(1)
       highestModif(ModifName("Phospho")) mustEqual(0.981)
@@ -421,11 +421,11 @@ class LoaderMaxQuantSpecs extends Specification {
     "acetyl and oxidation" in {
       val ev = evidences(160)
 
-      val modifProbs = ev.modificationProbabilities.get
+      val modifProbs = ev.modificationProbabilities
       modifProbs.size mustEqual(1)
       modifProbs(ModifName("Oxidation")) mustEqual("AQVAM(1)STLPVEDEESSESR")
 
-      val highestModif = ev.highestModifProbability.get
+      val highestModif = ev.highestModifProbability
       highestModif.size mustEqual(1)
       highestModif(ModifName("Oxidation")) mustEqual(1)
 

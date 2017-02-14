@@ -27,10 +27,10 @@ case class PepMatchInfo(
                          totalNumIons: Option[Int],
                          chargeState: Option[Int],
                          isRejected: Option[Boolean],
-                         modificationProbabilities: Option[Map[ModifName, String]],
-                         highestModifProbability: Option[Map[ModifName, Double]],
+                         modificationProbabilities: Map[ModifName, String],
+                         highestModifProbability: Map[ModifName, Double],
                          // @TODO this is a kind of redundant with Peptide.modificationNames. The one here should be the main one.
-                         modificationInfos: Option[Map[ModifName, Seq[ModifInfo]]]
+                         modificationInfos: Map[ModifName, Seq[ModifInfo]]
                          )
 
 
