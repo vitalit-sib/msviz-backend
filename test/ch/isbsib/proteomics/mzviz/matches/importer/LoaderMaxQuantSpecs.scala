@@ -144,9 +144,9 @@ class LoaderMaxQuantSpecs extends Specification {
     modifEntry.modificationInfos.size mustEqual(2)
     val phosphoModif:Seq[ModifInfo] = modifEntry.modificationInfos(ModifName("Phospho"))
     phosphoModif.size mustEqual(3)
-    phosphoModif(0) mustEqual(ModifInfo(ModifName("Phospho"), 15, 0.009, CONFLICT))
-    phosphoModif(1) mustEqual(ModifInfo(ModifName("Phospho"), 19, 0.981, MAIN))
-    phosphoModif(2) mustEqual(ModifInfo(ModifName("Phospho"), 24, 0.009, CONFLICT))
+    phosphoModif(0) mustEqual(ModifInfo(15, 0.009, CONFLICT))
+    phosphoModif(1) mustEqual(ModifInfo(19, 0.981, MAIN))
+    phosphoModif(2) mustEqual(ModifInfo(24, 0.009, CONFLICT))
 
   }
 
@@ -247,7 +247,7 @@ class LoaderMaxQuantSpecs extends Specification {
     list2._1(0).matchInfo.modificationInfos.contains(ModifName("Acetyl")) mustEqual(true)
 
     val withModif = list2._1.filter(a => ! a.matchInfo.modificationInfos.isEmpty)(1)
-    withModif.matchInfo.modificationInfos(ModifName("Oxidation"))(0) mustEqual(ModifInfo(ModifName("Oxidation"), 11, 1, MAIN))
+    withModif.matchInfo.modificationInfos(ModifName("Oxidation"))(0) mustEqual(ModifInfo(11, 1, MAIN))
 
     //with 2 sources
     parseMQ.size mustEqual(2)

@@ -14,7 +14,7 @@ sealed trait ModifStatus {def value: String}
 case object MAIN extends ModifStatus {val value = "MAIN"}
 case object CONFLICT extends ModifStatus {val value = "CONFLICT"}
 
-case class ModifInfo(name: ModifName, position: Int, modifProb: Double, status: ModifStatus)
+case class ModifInfo(position: Int, modifProb: Double, status: ModifStatus)
 
 case class PepMatchInfo(
                          score: IdentScore,

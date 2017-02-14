@@ -285,7 +285,6 @@ object LoaderMaxQuant {
           // check if we have an N-term modif like Acetyl (in this case there is no probability string)
           val nTermModifName:Map[ModifName, Seq[ModifInfo]]  = hashPosModification.find(mod => mod._1 == 1).map({mod =>
             val perfectModifInfo = Seq(ModifInfo(
-              name = ModifName(mod._2),
               position = 1,
               // the probability is 1.0, since there is only 1 possible position
               modifProb = 1.0,
@@ -366,7 +365,7 @@ object LoaderMaxQuant {
       splittedModifs.map({ case(modif:ModifName, info:Seq[(Int, Double)]) =>
         val infoSeq = info.map({ i =>
           val status = if(modifNamesVector(i._1).contains(modif)) MAIN else CONFLICT
-          ModifInfo(name = modif, position = i._1, modifProb = i._2, status = status)
+          ModifInfo(position = i._1, modifProb = i._2, status = status)
         })
         (modif -> infoSeq)
       })
