@@ -10,7 +10,7 @@ scalaVersion := "2.11.6"
 
 resolvers ++= Seq(
   "mvnrepository" at "http://mvnrepository.com/artifact",
-  "expasy" at "http://mzjava.expasy.org/maven",
+  //"expasy" at "http://mzjava.expasy.org/maven",
   "csvjdbc" at "http://csvjdbc.sourceforge.net/maven2",
   "netbeans" at "http://bits.netbeans.org/maven2/",
    "ebi-repo" at "http://www.ebi.ac.uk/~maven/m2repo",
@@ -24,13 +24,14 @@ libraryDependencies ++= Seq(
   cache,
   "org.scalatest" % "scalatest_2.11" % "2.2.1" % "test",
   "org.specs2" %% "specs2" % "2.3.11" % "test",
-  "org.expasy.mzjava" % "mzjava-core" %"1.1.1-SNAPSHOT",
-  "org.expasy.mzjava" % "mzjava-proteomics" %"1.1.1-SNAPSHOT",
+ // "org.expasy.mzjava" % "mzjava-core" %"1.1.1-SNAPSHOT",
+ // "org.expasy.mzjava" % "mzjava-proteomics" %"1.1.1-SNAPSHOT",
   "org.reactivemongo" %% "play2-reactivemongo" % "0.10.5.0.akka23",
   "com.wordnik" %% "swagger-play2" % "1.3.10",
   "org.scalamock" %% "scalamock-specs2-support" % "3.2",
   "net.lingala.zip4j" % "zip4j" % "1.3.2",
-  "uk.ac.ebi.jmzml" % "jmzml" % "1.7.4"
+  "uk.ac.ebi.jmzml" % "jmzml" % "1.7.4",
+  "net.sf.trove4j" % "trove4j" % "3.0.1"
 )
 
 javaOptions in Test += "-Dconfig.file=conf/application.test.conf"
