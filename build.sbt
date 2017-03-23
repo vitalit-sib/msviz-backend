@@ -31,7 +31,8 @@ libraryDependencies ++= Seq(
   "org.scalamock" %% "scalamock-specs2-support" % "3.2",
   "net.lingala.zip4j" % "zip4j" % "1.3.2",
   "uk.ac.ebi.jmzml" % "jmzml" % "1.7.4",
-  "net.sf.trove4j" % "trove4j" % "3.0.1"
+  "net.sf.trove4j" % "trove4j" % "3.0.1",
+  "colt" % "colt" % "1.2.0"
 )
 
 javaOptions in Test += "-Dconfig.file=conf/application.test.conf"
