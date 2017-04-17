@@ -19,7 +19,7 @@ import scala.collection.mutable
 
 class FastaParserSpecs extends Specification with ScalaFutures {
   implicit val defaultPatience =
-    PatienceConfig(timeout = Span(15, Seconds), interval = Span(5000, Millis))
+    PatienceConfig(timeout = Span(15, Seconds), interval = Span(2000, Millis))
 
   "FastaExtractorACFromHeader.parse()" should {
     def check(header:String, ac:String, ids:String) = {
