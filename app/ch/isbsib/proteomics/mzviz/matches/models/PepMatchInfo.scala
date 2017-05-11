@@ -27,6 +27,7 @@ case class PepMatchInfo(
                          totalNumIons: Option[Int],
                          chargeState: Option[Int],
                          isRejected: Option[Boolean],
+                         isContaminant: Option[Boolean],
                          modificationProbabilities: Option[Map[ModifName, String]],
                          highestModifProbability: Option[Map[ModifName, Double]],
                          // @TODO this is a kind of redundant with Peptide.modificationNames. The one here should be the main one.

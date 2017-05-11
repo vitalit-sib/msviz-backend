@@ -16,7 +16,11 @@ import ch.isbsib.proteomics.mzviz.theoretical.{SequenceSource, AccessionCode}
  * @param mainProt
  * @param subsetProts
  */
-case class ProteinIdent(searchId: SearchId, mainProt: ProteinIdentInfo, subsetProts: Seq[ProteinIdentInfo])
+case class ProteinIdent(
+                         searchId: SearchId,
+                         mainProt: ProteinIdentInfo,
+                         subsetProts: Seq[ProteinIdentInfo]
+                       )
 
 /**
  * Information on possible protein subsets of a protein identification.
@@ -27,5 +31,13 @@ case class ProteinIdent(searchId: SearchId, mainProt: ProteinIdentInfo, subsetPr
  * @param nrSequences
  * @param nrPsms
  */
-case class ProteinIdentInfo(proteinAC: AccessionCode, source: SequenceSource, score: IdentScore, nrSequences: Int, nrPsms: Int, passThreshold: Boolean)
+case class ProteinIdentInfo(
+                             proteinAC: AccessionCode,
+                             source: SequenceSource,
+                             score: IdentScore,
+                             nrSequences: Int,
+                             nrPsms: Int,
+                             passThreshold: Boolean,
+                             isContaminant: Option[Boolean]
+                           )
 

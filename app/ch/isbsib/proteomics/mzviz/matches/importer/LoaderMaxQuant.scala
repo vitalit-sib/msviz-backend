@@ -192,16 +192,24 @@ object LoaderMaxQuant {
       runIdsList.map({ runId =>
 
         val ac: String = entry.majorityProtein(0)
+
+        // check if we have a contaminant
+        val (corrAc, isContaminant) = if(ac.contains("CON__")){
+          (ac.replaceFirst("CON__", ""), Some(true))
+        }else{
+          (ac, Some(false))
+        }
+
         val scoreHash = obtainMsMsScoreById(entry.bestMsMs, msmsHash)
 
         // get scores of current runId (make it -1 if there is none for this RunId)
         val identScore = IdentScore(scoreHash.getOrElse(runId, -1), Map())
 
         val subset = entry.majorityProtein.drop(1).map({ protein: String =>
-          ProteinIdentInfo(AccessionCode(protein), sequenceSource, identScore, entry.uniquePeptides(runId), entry.msCount(runId), true)
+          ProteinIdentInfo(AccessionCode(protein), sequenceSource, identScore, entry.uniquePeptides(runId), entry.msCount(runId), true, isContaminant)
         })
 
-        val protInfo = ProteinIdentInfo(AccessionCode(ac), sequenceSource, identScore, entry.uniquePeptides(runId), entry.msCount(runId), true)
+        val protInfo = ProteinIdentInfo(AccessionCode(corrAc), sequenceSource, identScore, entry.uniquePeptides(runId), entry.msCount(runId), true, isContaminant)
 
         val searchId = if(idTitle.isDefined) idTitle.get + runId.value else runId.value
         Tuple2(runId, ProteinIdent(SearchId(searchId), protInfo, subset))
@@ -272,6 +280,13 @@ object LoaderMaxQuant {
         val correctedMoz: Option[Double] = Try(m(mozPos).toDouble).toOption
         val correctedMolMass: Option[Double] = if(correctedMoz.isDefined && charge.isDefined) Some((correctedMoz.get * charge.get) - (CommonFunctions.PROTON_MASS * charge.get)) else None
 
+        // check if we have a contaminant
+        val (corrAc, isContaminant) = if(ac.contains("CON__")){
+          (ac.replaceFirst("CON__", ""), Some(true))
+        }else{
+          (ac, Some(false))
+        }
+
         //Check if there is any modification
         if(hashPosModification.keys != Set()) {
           val modifNamesVector: Vector[Seq[ModifName]] = updateVector(hashPosModification,lenghtVector)
@@ -295,9 +310,9 @@ object LoaderMaxQuant {
 
           val allModifInfos: Map[ModifName, Seq[ModifInfo]] = modifInfos ++ nTermModifName
 
-          EvidenceTableEntry(id, sequence, experiment, molMass, correctedMoz, correctedMolMass, score, missCleavages, massDiff, charge, ac, pepId,modifNamesVector, modifProbs, highestModifProb, allModifInfos, scanNumber)
+          EvidenceTableEntry(id, sequence, experiment, molMass, correctedMoz, correctedMolMass, score, missCleavages, massDiff, charge, corrAc, pepId,modifNamesVector, modifProbs, highestModifProb, allModifInfos, scanNumber, isContaminant)
         }
-        else EvidenceTableEntry(id, sequence, experiment, molMass, correctedMoz, correctedMolMass, score, missCleavages, massDiff, charge, ac, pepId,vectorNames, Map(), Map(), Map(), scanNumber)
+        else EvidenceTableEntry(id, sequence, experiment, molMass, correctedMoz, correctedMolMass, score, missCleavages, massDiff, charge, corrAc, pepId,vectorNames, Map(), Map(), Map(), scanNumber, isContaminant)
 
       }
     })
@@ -490,6 +505,7 @@ object LoaderMaxQuant {
         totalNumIons = None,
         chargeState = entry.chargeState,
         isRejected = Some(false),
+        isContaminant = entry.isContaminant,
         modificationProbabilities = if(entry.modificationProbabilities.isEmpty) None else Some(entry.modificationProbabilities),
         highestModifProbability = if(entry.highestModifProbability.isEmpty) None else Some(entry.highestModifProbability),
         modificationInfos = if(entry.modificationInfos.isEmpty) None else Some(entry.modificationInfos)

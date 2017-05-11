@@ -17,7 +17,7 @@ import play.api.test.Helpers._
 class ProteinMatchMultipleSearchesSpecs extends Specification {
 
   "proteinMatchMultipleSearches" should {
-    def protIdentInfo(ac:String) = ProteinIdentInfo(AccessionCode(ac), SequenceSource("db"), IdentScore(1.0, Map()), 1, 2, true)
+    def protIdentInfo(ac:String) = ProteinIdentInfo(AccessionCode(ac), SequenceSource("db"), IdentScore(1.0, Map()), 1, 2, true, None)
     def protIdent(searchId:String, ac:String) =
       ProteinIdent(SearchId(searchId), protIdentInfo(ac), Seq())
 

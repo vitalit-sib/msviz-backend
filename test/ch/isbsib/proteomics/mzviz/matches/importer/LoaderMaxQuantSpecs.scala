@@ -103,14 +103,20 @@ class LoaderMaxQuantSpecs extends Specification {
     // should have 2 runIds
     proteinIdMap.keys.size mustEqual(2)
 
-    proteinIdMap(RunId("Nocodazole")).size mustEqual(136)
-    proteinIdMap(RunId("DMSO")).size mustEqual(121)
+    val protIdent1 = proteinIdMap(RunId("Nocodazole"))
+    val protIdent2 = proteinIdMap(RunId("DMSO"))
 
-    val oneProt53 = proteinIdMap(RunId("DMSO")).filter(p => p.mainProt.proteinAC.value == "Q99613")
-    val oneProt54 = proteinIdMap(RunId("Nocodazole")).filter(p => p.mainProt.proteinAC.value == "Q99613")
+    protIdent1.size mustEqual(136)
+    protIdent2.size mustEqual(121)
+
+    val oneProt53 = protIdent2.filter(p => p.mainProt.proteinAC.value == "Q99613")
+    val oneProt54 = protIdent1.filter(p => p.mainProt.proteinAC.value == "Q99613")
 
     oneProt53.head.mainProt.score.mainScore mustEqual(246.776)
     oneProt54.head.mainProt.score.mainScore mustEqual(114.41499999999999)
+
+    val contaminants = protIdent1.filter(p => p.mainProt.isContaminant == Some(true))
+    contaminants.length mustEqual(22)
 
   }
 

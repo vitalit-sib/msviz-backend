@@ -42,7 +42,7 @@ object ParseProteinMatches {
           val sspCv = (oneDH \\ "cvParam").find(_.attributes.exists(_.value.text == CvSpectrumSubsetProtein))
 
           // give back a tuple of protIdInfo and a boolean telling if it is a main protein
-          (ProteinIdentInfo(acAndDbSeqId._1, acAndDbSeqId._2, score, dps, nrPsms, passThreshold), sspCv.isEmpty)
+          (ProteinIdentInfo(acAndDbSeqId._1, acAndDbSeqId._2, score, dps, nrPsms, passThreshold, None), sspCv.isEmpty)
         })
 
         // split the list into main and subset proteins
@@ -56,7 +56,7 @@ object ParseProteinMatches {
   }
 
 
-  def convertDbSeqId(dbSeqId: String, searchDbSourceInfo: Seq[SearchDatabase]): Option[Tuple2[AccessionCode, SequenceSource]] = {
+  def convertDbSeqId(dbSeqId: String, searchDbSourceInfo: Seq[SearchDatabase]): Option[(AccessionCode, SequenceSource)] = {
     // we assume that the name DB names will always be coherent
     val pattern = "DBSeq_(\\d+)_(.+)".r
 

@@ -23,5 +23,6 @@ case class EvidenceTableEntry ( id:Int,
                                 modificationProbabilities: Map[ModifName, String],
                                 highestModifProbability: Map[ModifName, Double],
                                 modificationInfos: Map[ModifName, Seq[ModifInfo]],
-                                scanNumber: Int
+                                scanNumber: Int,
+                                isContaminant: Option[Boolean]
                               )

@@ -313,6 +313,7 @@ object LoaderMzIdent {
       chargeState = OptionConverter.convertGoogleOption[Int](mzJavaRes._1.getAssumedCharge.asInstanceOf[Optional[Int]]),
       totalNumIons = OptionConverter.convertGoogleOption[Int](mzJavaMatch.getTotalNumIons.asInstanceOf[Optional[Int]]),
       isRejected = OptionConverter.convertGoogleOption[Boolean](mzJavaMatch.isRejected.asInstanceOf[Optional[Boolean]]),
+      isContaminant = None,
       modificationProbabilities = None,
       highestModifProbability = None,
       modificationInfos = None
