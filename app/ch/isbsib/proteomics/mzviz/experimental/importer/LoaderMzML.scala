@@ -159,14 +159,15 @@ class MzMLIterator(mzMLObjectIterator: MzMLObjectIterator[Nothing], runId: RunId
     val precMoz:Moz = Moz(parseCvEntry(ebiPrecCvs, "MS:1000744").get.toDouble)
     val precIntensitiy:Intensity = Intensity(parseCvEntry(ebiPrecCvs, "MS:1000042").getOrElse("0").toDouble)
     val precCharge = Charge(parseCvEntry(ebiPrecCvs, "MS:1000041").get.toInt)
-    val precScanNr:ScanNumber = ScanNumber(scanNumberPattern.findFirstIn(ebiPrec.getSpectrumRef).get.split("=")(1).toInt)
+    val precSpRef:Option[String] = Option(ebiPrec.getSpectrumRef)
+    val precScanNr:Option[ScanNumber] =  precSpRef.flatMap( spRef => (scanNumberPattern.findFirstIn(spRef)).map( a => ScanNumber(a.split("=")(1).toInt)) )
 
     //Calculate molecularMass if possible
     val molMass = if(precMoz.value !=0 && precCharge.value !=0) (Some(MolecularMass((precMoz.value * precCharge.value) - (CommonFunctions.PROTON_MASS * precCharge.value)))) else None
     // if its directly from the raw file we don't set a source
     val molMassSource = None
     // create precursor
-    val precursor:ExpPeakPrecursor = ExpPeakPrecursor(precMoz, precIntensitiy, precRt, precCharge, Some(precScanNr), molMass, molMassSource)
+    val precursor:ExpPeakPrecursor = ExpPeakPrecursor(precMoz, precIntensitiy, precRt, precCharge, precScanNr, molMass, molMassSource)
 
     // ref spectrum info
     val ref:SpectrumRef = SpectrumRef(Some(scanNr), precursor, spTitle, spId)

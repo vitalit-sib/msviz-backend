@@ -8,25 +8,27 @@ import ch.isbsib.proteomics.mzviz.commons.importers.ImporterException
 import ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalController._
 import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, ExpMs1Spectrum}
 import ch.isbsib.proteomics.mzviz.experimental.RunId
-import ch.isbsib.proteomics.mzviz.experimental.importer.{LoaderMGF, LoaderMzML}
+import ch.isbsib.proteomics.mzviz.experimental.importer.{LoaderMGF, LoaderMzML, MzMLIterator}
 import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMongoDBService, ExpMs1BinMongoDBService}
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
 import ch.isbsib.proteomics.mzviz.matches.models.SubmissionStatus
-import ch.isbsib.proteomics.mzviz.matches.services.{CommonMatchService, SearchInfoDBService, ProteinMatchMongoDBService, MatchMongoDBService}
+import ch.isbsib.proteomics.mzviz.matches.services.{CommonMatchService, MatchMongoDBService, ProteinMatchMongoDBService, SearchInfoDBService}
 import ch.isbsib.proteomics.mzviz.uploads.LoaderMQData._
 import play.api.mvc.Controller
 import play.modules.reactivemongo.MongoController
 import reactivemongo.api.DefaultDB
+
 import scala.util.control.NonFatal
 import play.api.Logger
 
 import scala.concurrent.Future
 import java.nio.file.Files
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import java.io.File
 
-import scala.util.{Try, Failure}
+import scala.util.{Failure, Try}
 import scala.xml.Elem
 
 /**
@@ -252,6 +254,7 @@ class LoaderMascotData(val db: DefaultDB) {
    */
   def insertMatchData(mzIdFiles: List[(File, (SearchId, Elem))],
                       updateStatusCallback: Option[(SearchId, String, String) => Future[Boolean]] = None): Future[Int] = {
+
     // insert one by one
     mzIdFiles.foldLeft(Future{0})( (futureA, b) =>
       for {
@@ -337,7 +340,7 @@ class LoaderMascotData(val db: DefaultDB) {
                    intensityThreshold: Double,
                    updateStatusCallback: Option[(SearchId, String, String) => Future[Boolean]] = None): Future[Int] = {
 
-    val itMs1Ms2 = Try( LoaderMzML().parse(mzMlFile, RunId(id.value)) ).recoverWith({
+    val itMs1Ms2:Try[MzMLIterator] = Try( LoaderMzML().parse(mzMlFile, RunId(id.value)) ).recoverWith({
       case NonFatal(e) => {
         val errorMessage = s"Error while parsing MzML file. There is something wrong with MzML file [${mzMlFile.getName}]"
         Logger.error(errorMessage)

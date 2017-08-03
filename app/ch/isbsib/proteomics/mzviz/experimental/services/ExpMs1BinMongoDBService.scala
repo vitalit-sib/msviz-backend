@@ -56,7 +56,6 @@ class ExpMs1BinMongoDBService (val db: DefaultDB) extends MongoDBService {
 
       // split the iterator into slices
       val slidingIt = ms1Iterator.sliding(bufferSize, bufferSize)
-      var slideNr = 1
 
       // loop through all slices
       val resIt:Iterator[Boolean] = for (slice <- slidingIt) yield {
@@ -68,7 +67,6 @@ class ExpMs1BinMongoDBService (val db: DefaultDB) extends MongoDBService {
         // insert bins into the database (serial insert only, to not block the db access)
         val res: Future[Boolean] = insertMs1Bin(resMap)
 
-        slideNr += 1
         val status:Boolean = Await.result(res, dbTimeout minutes)
 
         status
