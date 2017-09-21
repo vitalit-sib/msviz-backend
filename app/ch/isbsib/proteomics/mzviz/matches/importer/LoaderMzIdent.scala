@@ -89,10 +89,10 @@ object LoaderMzIdent {
   def parsePsm(file: File, searchId: SearchId, runId: RunId, searchDbSourceInfo:Seq[SearchDatabase]): Seq[PepSpectraMatch] = {
 
     // data from MzJava parser are stored in a list
-    val searchResults = mzJavaParse(file)
-    
+    val searchResults:ListBuffer[(SpectrumIdentifier, PeptideMatch)] = mzJavaParse(file)
+
     // convert the resulting list into our proper object
-    searchResults.map({ t =>
+    val psms = searchResults.map({ t =>
 
       val spectrumTitle:String= t._1.getSpectrum
       val reTitleScan = """.*\.(\d+)\.\d$""".r
@@ -111,6 +111,18 @@ object LoaderMzIdent {
         matchInfo = convertPepMatch(t),
         proteinList = convertProtMatches(t._2, searchDbSourceInfo))
     })
+
+    // entries that have the exact same score as the preceding entry are considered to have the same rank
+    val psmsWithExtraFirst:Seq[PepSpectraMatch] = psms(0)+:psms
+    psmsWithExtraFirst.sliding(2,1).map({ psmsPair =>
+     val (p1:PepSpectraMatch, p2:PepSpectraMatch) = (psmsPair(0), psmsPair(1))
+      if(p1.spectrumId == p2.spectrumId && p1.matchInfo.score.mainScore == p2.matchInfo.score.mainScore){
+        val newMatchInfo = p2.matchInfo.copy(rank=p1.matchInfo.rank)
+        p2.copy(matchInfo = newMatchInfo)
+      }else{
+        p2
+      }
+    }).toSeq
 
   }
   /**
