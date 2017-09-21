@@ -26,6 +26,10 @@ class FileFinderSpecs extends Specification {
 
     val dir = "test/resources/uploads"
 
+    // remove .DS_Store
+    val f = new File(dir + "/.DS_Store")
+    f.delete()
+
     val files = FileFinder.getListOfFiles(dir)
 
     files.length mustEqual(4)
