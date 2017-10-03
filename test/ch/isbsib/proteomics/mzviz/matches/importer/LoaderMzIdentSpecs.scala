@@ -305,7 +305,7 @@ class LoaderMzIdentSpecs extends Specification {
   }
 
   "parse MzId with equal scores" should {
-    val psmAndProtLists: Tuple3[Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo] = LoaderMzIdent.parse(new File("test/resources/mascot/9501_fly_broad.mzid"), SearchId("modif"), RunId("9501_fly_broad"), None)
+    val psmAndProtLists: (Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo) = LoaderMzIdent.parse(new File("test/resources/mascot/9501_fly_broad.mzid"), SearchId("modif"), RunId("9501_fly_broad"), None)
     val psms = psmAndProtLists._1
     val psmsFlt:Seq[PepSpectraMatch] = psms.filter({ psm =>
       psm.pep.sequence == "TLTLVDTGIGMTK"
@@ -320,5 +320,23 @@ class LoaderMzIdentSpecs extends Specification {
     }
 
   }
+
+  "parse MzID with equal scores but also equal proteins" should {
+    val psmAndProtLists: (Seq[PepSpectraMatch], Seq[ProteinIdent], SearchInfo) = LoaderMzIdent.parse(new File("test/resources/mascot/F002388.mzid"), SearchId("modif"), RunId("9501_fly_broad"), None)
+    val psms = psmAndProtLists._1
+    val psmsFlt:Seq[PepSpectraMatch] = psms.filter({ psm =>
+      psm.pep.sequence == "AHSPAEGASVESSSPGPK" && psm.matchInfo.score.mainScore == 37.34
+    })
+
+    "check if we find AHSPAEGASVESSSPGPK" in {
+      psmsFlt.size mustEqual(3)
+    }
+
+    "check if AHSPAEGASVESSSPGPK is available with all ranks" in {
+      val ranks = psmsFlt.map(_.matchInfo.rank.get)
+      ranks mustEqual(Seq(1,2,3))
+    }
+  }
+
 
 }

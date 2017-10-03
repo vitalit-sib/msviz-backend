@@ -116,7 +116,10 @@ object LoaderMzIdent {
     val psmsWithExtraFirst:Seq[PepSpectraMatch] = psms(0)+:psms
     psmsWithExtraFirst.sliding(2,1).map({ psmsPair =>
      val (p1:PepSpectraMatch, p2:PepSpectraMatch) = (psmsPair(0), psmsPair(1))
-      if(p1.spectrumId == p2.spectrumId && p1.matchInfo.score.mainScore == p2.matchInfo.score.mainScore){
+      if(p1.pep.sequence != p2.pep.sequence &&
+        p1.spectrumId == p2.spectrumId &&
+        p1.matchInfo.score.mainScore == p2.matchInfo.score.mainScore
+      ){
         val newMatchInfo = p2.matchInfo.copy(rank=p1.matchInfo.rank)
         p2.copy(matchInfo = newMatchInfo)
       }else{
