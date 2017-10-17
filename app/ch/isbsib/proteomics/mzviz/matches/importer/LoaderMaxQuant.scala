@@ -32,17 +32,18 @@ object LoaderMaxQuant {
   val filename_evidence = "evidence.txt"
   val filename_peptides = "peptides.txt"
 
-  def parseCommonLines(file: File): (List[List[String]], Map[String, Int]) = {
+  def parseCommonLines(file: File): (List[List[String]], Map[String, (Int, String)]) = {
     val lines: Iterator[String] = fromFile(file).getLines()
-    val header = lines.take(1).next.split("\t").toList
+    val header = lines.take(1).next.split("\t")
+    val lowerCaseHeader = header.map(s => s.toLowerCase)
     val range = 0 until header.length
-    val headerMap: Map[String, Int] = (header zip range).toMap
-    Tuple2(lines.toList.map(s => (s.split("\t")).toList), headerMap)
+    val headerMap: Map[String, (Int, String)] = (lowerCaseHeader zip (range zip header)).toMap
+    (lines.toList.map(s => (s.split("\t")).toList), headerMap)
   }
 
   def getRunIds(file: File): Seq[(RunId, String)] = {
     val (mLines, headerMap) = parseCommonLines(file)
-    val runIdsAndRawfilesWithEmpties: Seq[(RunId, String)] = mLines.map(row => Tuple2(RunId(row(headerMap("Experiment"))), row(headerMap("Raw file"))))
+    val runIdsAndRawfilesWithEmpties: Seq[(RunId, String)] = mLines.map(row => Tuple2(RunId(row(headerMap("experiment")._1)), row(headerMap("raw file")._1)))
     // remove empty entries
     runIdsAndRawfilesWithEmpties.filter(_._1.value.nonEmpty)
   }
@@ -52,18 +53,18 @@ object LoaderMaxQuant {
     //From proteinGroups.txt
     //Obtain position for unique peptides, MS/MS IDs, Majority proteinIDs and MS Count for runId
     val (mProteinsList, headerProtMap) = parseCommonLines(file)
-    val msmsPos: Int = headerProtMap("MS/MS IDs")
-    val mainProts: Int = headerProtMap("Majority protein IDs")
+    val msmsPos: Int = headerProtMap("ms/ms ids")._1
+    val mainProts: Int = headerProtMap("majority protein ids")._1
 
     val countPosHash: Map[RunId, Int] = runIds.map({ runId =>
-      val msmsCount = if(headerProtMap.contains("MS/MS Count " + runId.value)) {
-        headerProtMap("MS/MS Count " + runId.value)
+      val msmsCount = if(headerProtMap.contains("ms/ms count " + runId.value.toLowerCase)) {
+        headerProtMap("ms/ms count " + runId.value.toLowerCase)._1
       } else {
-        headerProtMap("MS/MS Count")
+        headerProtMap("ms/ms count")._1
       }
       Tuple2(runId, msmsCount)
     }).toMap
-    val uniquePepPosHash = runIds.map(runId => Tuple2(runId, headerProtMap("Unique peptides " + runId.value))).toMap
+    val uniquePepPosHash = runIds.map(runId => Tuple2(runId, headerProtMap("unique peptides " + runId.value.toLowerCase)._1)).toMap
 
     // filter out entries without a corresponding msmsId
     val filteredProteinsList = mProteinsList.filter(_.length > msmsPos)
@@ -116,9 +117,9 @@ object LoaderMaxQuant {
 
     val (mSummaryList, headerSummaryMap) = parseCommonLines(file)
 
-    val experimentPos: Int = headerSummaryMap("Experiment")
-    val enzymePos: Int = headerSummaryMap("Enzyme")
-    val rawFilePos: Int = headerSummaryMap("Raw file")
+    val experimentPos: Int = headerSummaryMap("experiment")._1
+    val enzymePos: Int = headerSummaryMap("enzyme")._1
+    val rawFilePos: Int = headerSummaryMap("raw file")._1
 
     val summaryMap = mSummaryList.map {(
         entry => Tuple2(entry(experimentPos), (entry(enzymePos), entry(rawFilePos)))
@@ -133,8 +134,8 @@ object LoaderMaxQuant {
   def parseMaxquantSummaryTableRawSearchId(file: File): Map[String, String] = {
 
     val (mSummaryList, headerSummaryMap) = parseCommonLines(file)
-    val experimentPos: Int = headerSummaryMap("Experiment")
-    val rawPos: Int = headerSummaryMap("Raw file")
+    val experimentPos: Int = headerSummaryMap("experiment")._1
+    val rawPos: Int = headerSummaryMap("raw file")._1
     val summaryMap = mSummaryList.map {
       (
         entry => Tuple2(entry(rawPos),entry(experimentPos))
@@ -150,9 +151,9 @@ object LoaderMaxQuant {
 
     val headerScansMap = parseCommonLines(file)._2
     val mScansList: List[List[String]] = parseCommonLines(file)._1
-    val msmsIdPos: Int = headerScansMap("id")
-    val scorePos: Int = headerScansMap("Score")
-    val rawFilePos: Int = headerScansMap("Raw file")
+    val msmsIdPos: Int = headerScansMap("id")._1
+    val scorePos: Int = headerScansMap("score")._1
+    val rawFilePos: Int = headerScansMap("raw file")._1
 
     //map from id -> info
     val msmsMap = mScansList.map({
@@ -190,7 +191,6 @@ object LoaderMaxQuant {
     val runIdToProtIdentList: List[(RunId, ProteinIdent)] = proteinGroupEntry.flatMap({ entry =>
 
       runIdsList.map({ runId =>
-
         val ac: String = entry.majorityProtein(0)
 
         // check if we have a contaminant
@@ -228,26 +228,26 @@ object LoaderMaxQuant {
   //PepSpectraMatch object
   def parseEvidenceTable(file: File): List[EvidenceTableEntry] = {
     val (mEvidenceList, headerEvidenceMap) = parseCommonLines(file)
-    val idPos: Int = headerEvidenceMap("id")
-    val sequencePos: Int = if(headerEvidenceMap.contains("Sequence")) headerEvidenceMap("Sequence") else headerEvidenceMap("Diff")
-    val experimentPos: Int = headerEvidenceMap("Experiment")
-    val molMassPos: Int = headerEvidenceMap("Mass")
-    val mozPos: Int = headerEvidenceMap("m/z")
-    val scorePos: Int = headerEvidenceMap("Score")
-    val missedCleavagesPos: Int = headerEvidenceMap("Missed cleavages")
-    val typePos: Int = headerEvidenceMap("Type")
-    val massDiffPos: Int = headerEvidenceMap("Mass Error [ppm]")
-    val chargePos: Int = headerEvidenceMap("Charge")
-    val acPos: Int = if(headerEvidenceMap.contains("Leading Razor Protein")) headerEvidenceMap("Leading Razor Protein") else headerEvidenceMap("Leading razor protein")
-    val pepIdPos: Int = headerEvidenceMap("Peptide ID")
-    val modifSeqPos: Int= headerEvidenceMap("Modified sequence")
-    val modifNamePos: Int= headerEvidenceMap("Modifications")
-    val lengthPos: Int = headerEvidenceMap("Length")
-    val scanNumberPos: Int= headerEvidenceMap("MS/MS Scan Number")
+    val idPos: Int = headerEvidenceMap("id")._1
+    val sequencePos: Int = if(headerEvidenceMap.contains("sequence")) headerEvidenceMap("sequence")._1 else headerEvidenceMap("diff")._1
+    val experimentPos: Int = headerEvidenceMap("experiment")._1
+    val molMassPos: Int = headerEvidenceMap("mass")._1
+    val mozPos: Int = headerEvidenceMap("m/z")._1
+    val scorePos: Int = headerEvidenceMap("score")._1
+    val missedCleavagesPos: Int = headerEvidenceMap("missed cleavages")._1
+    val typePos: Int = headerEvidenceMap("type")._1
+    val massDiffPos: Int = headerEvidenceMap("mass error [ppm]")._1
+    val chargePos: Int = headerEvidenceMap("charge")._1
+    val acPos: Int = headerEvidenceMap("leading razor protein")._1
+    val pepIdPos: Int = headerEvidenceMap("peptide id")._1
+    val modifSeqPos: Int= headerEvidenceMap("modified sequence")._1
+    val modifNamePos: Int= headerEvidenceMap("modifications")._1
+    val lengthPos: Int = headerEvidenceMap("length")._1
+    val scanNumberPos: Int= headerEvidenceMap("ms/ms scan number")._1
 
     // get the fields concerning position probabilites
-    val positionProbKeys = headerEvidenceMap.keySet.filter(_ matches ".+\\s+Probabilities")
-    val modifProbSet: Set[(String, Int)] = positionProbKeys.map(_ replace("""(\w+)\(\w+\)\s+Probabilities""", "'$1")).zip(positionProbKeys.map(k => headerEvidenceMap(k)))
+    val positionProbKeys = headerEvidenceMap.keySet.filter(_ matches ".+\\s+probabilities")
+    val modifProbSet: Set[(String, (Int, String))] = positionProbKeys.map(_ replace("""(\w+)\(\w+\)\s+probabilities""", "'$1")).zip(positionProbKeys.map(k => headerEvidenceMap(k)))
 
     //Filter table, remove rows with no score, taking care about "." in the score which are not digits
     val mEvidenceListFiltered = mEvidenceList.filter({ l => l(scorePos).filter(_.isDigit).length > 0})
@@ -324,12 +324,12 @@ object LoaderMaxQuant {
     * @param l
     * @param modifProbSet
     */
-  def parseModifProbs(l: List[String], modifProbSet: Set[(String, Int)]): Map[ModifName, String] = {
+  def parseModifProbs(l: List[String], modifProbSet: Set[(String, (Int, String))]): Map[ModifName, String] = {
 
     modifProbSet.foldLeft(Map.empty[ModifName, String]){
       case (a, b) =>
-        val seq = l(b._2)
-        val modifName = """^(\w+)""".r.findFirstIn(b._1).get
+        val seq = l(b._2._1)
+        val modifName = """^(\w+)""".r.findFirstIn(b._2._2).get
         if(! seq.isEmpty) a ++ Map(ModifName(modifName) -> seq) else a
     }
 
@@ -443,13 +443,13 @@ object LoaderMaxQuant {
   }
   def parsePeptidesTable(file: File): (Map [Int, Int] ,Map[Int, PeptidesTableEntry]) = {
     val (mPeptidesList, headerPeptidesMap) = parseCommonLines(file)
-    val evidenceIdPos: Int = headerPeptidesMap("Evidence IDs")
-    val peptideIdPos: Int = headerPeptidesMap("id")
-    val previousAAPos: Int = headerPeptidesMap("Amino acid before")
-    val nextAAPos: Int = headerPeptidesMap("Amino acid after")
-    val startPos: Int = headerPeptidesMap("Start position")
-    val endPos: Int = headerPeptidesMap("End position")
-    val isDecoyPos: Int = headerPeptidesMap("Reverse")
+    val evidenceIdPos: Int = headerPeptidesMap("evidence ids")._1
+    val peptideIdPos: Int = headerPeptidesMap("id")._1
+    val previousAAPos: Int = headerPeptidesMap("amino acid before")._1
+    val nextAAPos: Int = headerPeptidesMap("amino acid after")._1
+    val startPos: Int = headerPeptidesMap("start position")._1
+    val endPos: Int = headerPeptidesMap("end position")._1
+    val isDecoyPos: Int = headerPeptidesMap("reverse")._1
 
     //Filter mPeptidesList, remove entries with no start or end position, coming from REV_
     val mPeptidesListFiltered = mPeptidesList.filter({ l => !l(startPos).isEmpty() && !l(endPos).isEmpty()})
