@@ -51,30 +51,33 @@ class ExpMs1BinMongoDBService (val db: DefaultDB) extends MongoDBService {
 
       // timeout in minutes for inserting one buffer of ms1 data
       val dbTimeout = if(Play.maybeApplication.isDefined){
-        Play.current.configuration.getString("experimental.ms1.timeout").get.toInt
+        Play.current.configuration.getString("experimental.db.timeout").get.toInt
       } else 10
 
       // split the iterator into slices
       val slidingIt = ms1Iterator.sliding(bufferSize, bufferSize)
 
       // loop through all slices
-      val resIt:Iterator[Boolean] = for (slice <- slidingIt) yield {
-        val initMap: Map[String, (Seq[Moz], Seq[Intensity], Seq[RetentionTime])] = Map()
-
-        // make use of parallelization to create the bins of moz values
-        val resMap = slice.par.aggregate(initMap)((a, b) => mergeBinMaps(a, parseMs1spectrum(b, intensityThreshold)), mergeBinMaps(_,_))
-
-        // insert bins into the database (serial insert only, to not block the db access)
-        val res: Future[Boolean] = insertMs1Bin(resMap)
-
-        val status:Boolean = Await.result(res, dbTimeout minutes)
-
-        status
+      val resIt:Iterator[Future[Boolean]] = for (slice <- slidingIt) yield {
+        this.insertMs1Slice(slice, intensityThreshold, dbTimeout)
       }
 
-      val ms1Inserted: Future[Boolean] = Future{ resIt.foldLeft(true)((a, b) => a & b) }
+      val ms1Inserted: Future[Boolean] = resIt.foldLeft(Future{true})((a, b) => a.flatMap(a2 => b.map(b2 => a2 & b2)))
 
       ms1Inserted
+  }
+
+  def insertMs1Slice(ms1Spectra: Seq[ExpMs1Spectrum], intensityThreshold: Double, dbTimeout: Int): Future[Boolean] = {
+    val initMap: Map[String, (Seq[Moz], Seq[Intensity], Seq[RetentionTime])] = Map()
+
+    // make use of parallelization to create the bins of moz values
+    val resMap = ms1Spectra.par.aggregate(initMap)((a, b) => mergeBinMaps(a, parseMs1spectrum(b, intensityThreshold)), mergeBinMaps(_,_))
+
+    // insert bins into the database (serial insert only, to not block the db access)
+    val res: Future[Boolean] = insertMs1Bin(resMap)
+
+    val status:Boolean = Await.result(res, dbTimeout minutes)
+    Future{status}
   }
 
   /**

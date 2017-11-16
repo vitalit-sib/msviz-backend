@@ -127,7 +127,4 @@ class LoaderMascotDataSpecs extends Specification with ScalaFutures {
 
   }
 
-
-
-
 }

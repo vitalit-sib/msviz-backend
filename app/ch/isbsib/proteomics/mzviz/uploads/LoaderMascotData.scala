@@ -9,7 +9,7 @@ import ch.isbsib.proteomics.mzviz.controllers.experimental.ExperimentalControlle
 import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, ExpMs1Spectrum}
 import ch.isbsib.proteomics.mzviz.experimental.RunId
 import ch.isbsib.proteomics.mzviz.experimental.importer.{LoaderMGF, LoaderMzML, MzMLIterator}
-import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMongoDBService, ExpMs1BinMongoDBService}
+import ch.isbsib.proteomics.mzviz.experimental.services.{ExpMongoDBService, ExpMs1AndMs2MongoDBService, ExpMs1BinMongoDBService}
 import ch.isbsib.proteomics.mzviz.matches.SearchId
 import ch.isbsib.proteomics.mzviz.matches.importer.LoaderMzIdent
 import ch.isbsib.proteomics.mzviz.matches.models.SubmissionStatus
@@ -43,6 +43,7 @@ class LoaderMascotData(val db: DefaultDB) {
   // define services
   val ms1Service = new ExpMs1BinMongoDBService(db)
   val msnService = new ExpMongoDBService(db)
+  val ms1And2Service = new ExpMs1AndMs2MongoDBService(db)
   val matchService = new MatchMongoDBService(db)
   val protMatchService = new ProteinMatchMongoDBService(db)
   val searchInfoService = new SearchInfoDBService(db)
@@ -315,15 +316,15 @@ class LoaderMascotData(val db: DefaultDB) {
    */
   def insertExpData(mzMlFiles: List[(File, SearchId)],
                     intensityThreshold: Double,
-                    updateStatusCallback: Option[(SearchId, String, String) => Future[Boolean]] = None): Future[Int] = {
+                    updateStatusCallback: Option[(SearchId, String, String) => Future[Boolean]] = None): Future[Boolean] = {
 
     // insert one by one
-    mzMlFiles.foldLeft(Future{0})( (futureA, b) =>
+    mzMlFiles.foldLeft(Future{true})( (futureA, b) =>
       for {
         a <- futureA
         c <- insertOneExp(b._1, b._2, intensityThreshold, updateStatusCallback)
       } yield {
-        a + c
+        a & c
       })
   }
 
@@ -338,7 +339,7 @@ class LoaderMascotData(val db: DefaultDB) {
   def insertOneExp(mzMlFile: File,
                    id: SearchId,
                    intensityThreshold: Double,
-                   updateStatusCallback: Option[(SearchId, String, String) => Future[Boolean]] = None): Future[Int] = {
+                   updateStatusCallback: Option[(SearchId, String, String) => Future[Boolean]] = None): Future[Boolean] = {
 
     val itMs1Ms2:Try[MzMLIterator] = Try( LoaderMzML().parse(mzMlFile, RunId(id.value)) ).recoverWith({
       case NonFatal(e) => {
@@ -348,6 +349,25 @@ class LoaderMascotData(val db: DefaultDB) {
         Failure(new ImporterException(errorMessage, e))
       }
     })
+
+    updateStatusCallback.get.apply(id, "loading", "loading experimental data")
+
+    val insertMs1And2 = ms1And2Service.insertMs1And2spectra(itMs1Ms2.get, RunId(id.value), intensityThreshold).recover({
+      case NonFatal(e) => {
+        val errorMessage = s"Error while loading experimental data."
+        searchInfoService.createSearchIdWithError(id, errorMessage)
+        throw new ImporterException(errorMessage, e)
+      }
+    })
+
+
+    insertMs1And2.map({ ok =>
+      if (ok) updateStatusCallback.get.apply(id, "done", "all data is loaded")
+    })
+
+    insertMs1And2
+
+    /*
 
     val itMs1Ms2parts = itMs1Ms2.get.partition(_.isLeft)
 
@@ -388,6 +408,9 @@ class LoaderMascotData(val db: DefaultDB) {
         (if(ms1Inserted) 0 else 1) + ms2Inserted
       })
     })
+
+    */
+
 
   }
 }

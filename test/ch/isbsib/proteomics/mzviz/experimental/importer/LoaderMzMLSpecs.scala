@@ -12,6 +12,7 @@ import org.specs2.mutable.Specification
  */
   class LoaderMzMLSpecs extends Specification {
 
+
   "load MzXML" should {
 
     val mzMlFile = new File("test/resources/ms2/20160215_Fujita_8133B_subset.mzML")

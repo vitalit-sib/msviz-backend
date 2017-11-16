@@ -58,14 +58,13 @@ class MzMLIterator(mzMLObjectIterator: MzMLObjectIterator[Nothing], runId: RunId
   def next(): Either[ExpMs1Spectrum, ExpMSnSpectrum] = {
     val sp:Spectrum = mzMLObjectIterator.next().asInstanceOf[Spectrum]
 
-    val cvParams:Seq[CVParam] = sp.getCvParam.asScala.toSeq
+    val cvParams:Seq[CVParam] = sp.getCvParam.asScala
 
     // CV accession for ms-level is MS:1000511
     val msLevel = parseCvEntry(cvParams, "MS:1000511").get.toInt
 
     if(msLevel == 1) Left(parseMs1(sp, runId))
     else Right(parseMsN(sp, runId))
-
   }
 
   /**

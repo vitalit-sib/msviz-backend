@@ -3,7 +3,7 @@ package ch.isbsib.proteomics.mzviz.experimental.services
 import ch.isbsib.proteomics.mzviz.commons._
 import ch.isbsib.proteomics.mzviz.commons.helpers.CommonFunctions
 import ch.isbsib.proteomics.mzviz.commons.services.{MongoDBService, MongoNotFoundException}
-import ch.isbsib.proteomics.mzviz.experimental.models.{ExpMSnSpectrum, ExpPeakMSn, SpectrumId, SpectrumRef}
+import ch.isbsib.proteomics.mzviz.experimental.models._
 import ch.isbsib.proteomics.mzviz.experimental.{MSRun, RunId, SpectrumUniqueId}
 import ch.isbsib.proteomics.mzviz.experimental.services.JsonExpFormats._
 import play.api.Play
@@ -84,7 +84,7 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
 
 
   /**
-   * Insert all Msn spectra from an iterator using a cetrain buffer size
+   * Insert all Msn spectra from an iterator using a given buffer size
    *
    * @param ms2Iterator
    * @param runId
@@ -106,12 +106,21 @@ class ExpMongoDBService(val db: DefaultDB) extends MongoDBService {
     while(slidingIt.hasNext){
       val someList = slidingIt.next()
 
-      resList += this.insert(new MSRun(runId, someList.toSeq))
+      resList += insertMs2slice(someList, runId)
     }
 
-    if(true) Future {throw new Exception("some artificial exception") }
-
     Future.sequence(resList.toList).map(_.sum)
+  }
+
+
+  /**
+    * Insert one slice of MS2 spectra
+    * @param ms2list
+    * @param runId
+    * @return
+    */
+  def insertMs2slice(ms2list: Seq[ExpMSnSpectrum], runId: RunId): Future[Int] = {
+    this.insert(new MSRun(runId, ms2list))
   }
 
 
