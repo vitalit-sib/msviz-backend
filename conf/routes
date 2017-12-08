@@ -25,6 +25,7 @@ GET            /exp/spectra-ref/:runId/by-mass/:moz/:charge           ch.isbsib.
 GET            /api-docs/sequences                                    controllers.ApiHelpController.getResource(path = "/sequences")
 GET            /sequences/list-sources                                ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.listSources
 POST           /sequences/:sourceId/fasta                             ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.loadFasta(sourceId, regexp:Option[String])
+POST           /sequences/:sourceId/local/:filename                   ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.loadFastaLocal(sourceId, regexp:Option[String], filename)
 DELETE         /sequences/:sourceId                                   ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.deleteSource(sourceId)
 OPTIONS        /sequences/:sourceId                                   ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.optionsId(sourceId)
 OPTIONS        /sequences/:sourceId/fasta                             ch.isbsib.proteomics.mzviz.controllers.theoretical.SequenceController.optionsId(sourceId)

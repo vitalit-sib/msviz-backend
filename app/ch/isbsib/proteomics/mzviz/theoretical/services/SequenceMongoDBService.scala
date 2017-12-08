@@ -46,6 +46,23 @@ class SequenceMongoDBService(val db: DefaultDB) extends MongoDBService {
   }
 
   /**
+    * insert a list of Fasta entries sequentially
+    * @param entries to be inserted
+    * @param blockSize size of entries to be inserted at once
+    * @return a Future of the number of entries loaded
+    */
+  def insertSequentially(entries: Iterator[FastaEntry], blockSize: Int): Future[Int] = {
+    val entryBlocks = entries.sliding(blockSize, blockSize)
+
+    val blockResIt:Iterator[Future[Int]] = for (block <- entryBlocks) yield {
+      val enumerator = Enumerator.enumerate(block)
+      collection.bulkInsert(enumerator)
+    }
+
+    blockResIt.foldLeft(Future(0))((a,b) => a.flatMap(a2 => b.map(_ + a2)))
+  }
+
+  /**
    * remove all entries from the mongodb
    * @param source the datasource
    * @return

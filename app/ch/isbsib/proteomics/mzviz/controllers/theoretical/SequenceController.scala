@@ -11,6 +11,7 @@ import ch.isbsib.proteomics.mzviz.controllers.JsonCommonsFormats._
 import ch.isbsib.proteomics.mzviz.theoretical.services.SequenceMongoDBService
 import ch.isbsib.proteomics.mzviz.uploads.LoaderMQData
 import com.wordnik.swagger.annotations._
+import play.api.Play
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json._
 import play.api.mvc.Action
@@ -87,6 +88,26 @@ object SequenceController extends CommonController {
       request =>
         val entries = FastaParser(request.body.file, SequenceSource(sourceId), regexp).parse
         SequenceMongoDBService().insert(entries).map { n => Ok(Json.obj("inserted" -> n))
+        }.recover {
+          case e => BadRequest(Json.toJson(e))
+        }
+    }
+
+
+  @ApiOperation(nickname = "loadFastaLocal",
+    value = "Loads a fasta file from the local filesystem",
+    notes = """ source will be a unique descriptor on the source """,
+    response = classOf[String],
+    httpMethod = "POST")
+  def loadFastaLocal(@ApiParam(value = """sourceId""", defaultValue = "uniprot_sprot_20231224") @PathParam("sourceId") sourceId: String,
+                @ApiParam(value = """regexp""", defaultValue = "None") @PathParam("regexp") regexp:Option[String]=None,
+                     @ApiParam(value = """filename""", defaultValue = "None") @PathParam("fasta filename") filename:String) =
+    Action.async {
+        val pathFolder = Play.current.configuration.getString("upload.dir").get.toString
+        val blockSize = Play.current.configuration.getString("theoretical.block.size").get.toInt
+
+        val entries = FastaParser(pathFolder+filename, SequenceSource(sourceId), regexp).parse
+        SequenceMongoDBService().insertSequentially(entries, blockSize).map { n => Ok(Json.obj("inserted" -> n))
         }.recover {
           case e => BadRequest(Json.toJson(e))
         }
