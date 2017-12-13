@@ -1,7 +1,7 @@
 logs
 project/project
 project/target
-/target
+.DS_Store
 /tmp
 .history
 dist
@@ -14,3 +14,8 @@ dist
 /RUNNING_PID
 /.settings
 /projectFilesBackup*
+target/*
+!target/universal
+target/universal/*
+!target/universal/msviz-backend-1.0-SNAPSHOT.zip
+
